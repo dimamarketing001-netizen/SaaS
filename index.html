@@ -280,6 +280,40 @@ tbody tr:hover{background:#fbfcfd}
 @media(max-width:760px){.ai-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ai-preview{height:175px;padding:14px}.ai-art{padding:13px;min-height:130px}.ai-art strong{font-size:15px}.ai-card-body{padding:14px}.ai-card-top{align-items:flex-start;flex-direction:column}.ai-toolbar{gap:8px}.ai-filter{flex:1;min-width:120px}}
 @media(max-width:520px){.ai-grid{grid-template-columns:minmax(0,1fr)}.ai-preview{height:225px}.ai-art{padding:19px}.ai-art strong{font-size:20px}.ai-card-body{padding:18px}.ai-card-top{flex-direction:row}.ai-search{min-width:100%}.ai-filter{min-width:calc(50% - 5px)}.ai-drawer{padding:20px}}
 
+
+/* Ad Intelligence secondary workspace views */
+.ai-tabs{display:flex;gap:6px;overflow:auto;border-bottom:1px solid #e7eaee;margin:5px 0 23px;padding-bottom:10px}
+.ai-tab{display:flex;align-items:center;gap:8px;white-space:nowrap;border:0;background:transparent;color:#75808c;border-radius:10px;padding:11px 14px;font-size:11px;font-weight:700;cursor:pointer}
+.ai-tab.active{background:#eaf8ef;color:#16884b}
+.ai-tab-panel[hidden]{display:none!important}
+.ai-collection-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.ai-collection-card{border:1px solid #e7eaee;border-radius:19px;background:#fff;padding:23px;min-height:205px;display:flex;flex-direction:column;gap:13px}
+.ai-collection-icon{width:46px;height:46px;border-radius:15px;background:#eaf8ef;color:#16884b;display:grid;place-items:center}
+.ai-collection-card h3{font-size:15px;margin:0;color:#252c36}
+.ai-collection-card p{font-size:11px;line-height:1.6;color:#7b8491;margin:0;flex:1}
+.ai-collection-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #edf0f3;padding-top:14px;color:#7b8491;font-size:10px}
+.ai-job-list{display:flex;flex-direction:column;gap:12px}
+.ai-job{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(100px,.6fr) minmax(100px,.6fr) auto;gap:16px;align-items:center;padding:19px 21px;background:#fff;border:1px solid #e7eaee;border-radius:16px}
+.ai-job-name{display:flex;align-items:center;gap:12px;min-width:0}
+.ai-job-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:13px;background:#f0ecfd;color:#8065d8;flex-shrink:0}
+.ai-job-name strong{display:block;font-size:12px;color:#303843;margin-bottom:5px}
+.ai-job-name span,.ai-job-meta span{font-size:10px;color:#8b94a0}
+.ai-job-meta strong{display:block;font-size:11px;color:#4b5663;margin-bottom:4px}
+.ai-job-status{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 9px;background:#eaf8ef;color:#16884b;font-size:10px;white-space:nowrap}
+.ai-job-status:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.ai-job-status.partial{background:#fff4e5;color:#a87521}
+.ai-job-status.failed{background:#fff0f0;color:#b84a4a}
+.ai-coverage-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.ai-coverage-card{padding:22px;background:#fff;border:1px solid #e7eaee;border-radius:18px}
+.ai-coverage-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:20px}
+.ai-coverage-top strong{font-size:13px;color:#303843}
+.ai-coverage-card .coverage-number{font-size:28px;letter-spacing:-.04em;font-weight:800;color:#252c36;margin-bottom:5px}
+.ai-coverage-card p{font-size:10px;color:#7b8491;line-height:1.6;margin:0}
+.ai-progress{height:6px;border-radius:20px;background:#edf0f3;margin:15px 0 10px;overflow:hidden}
+.ai-progress span{display:block;height:100%;border-radius:20px;background:#39c978}
+@media(max-width:1100px){.ai-collection-grid,.ai-coverage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ai-job{grid-template-columns:minmax(0,1fr) auto}.ai-job-meta{display:none}}
+@media(max-width:600px){.ai-collection-grid,.ai-coverage-grid{grid-template-columns:1fr}.ai-job{grid-template-columns:minmax(0,1fr);gap:12px}.ai-job-status{justify-self:start}}
+
 </style>
 </head>
 <body>
@@ -358,6 +392,14 @@ tbody tr:hover{background:#fbfcfd}
   </section>
 
   <section id="adsWorkspace" hidden>
+
+    <div class="ai-tabs" role="tablist" aria-label="Разделы Ad Intelligence">
+      <button class="ai-tab active" data-ai-tab="library" role="tab"><i data-lucide="layout-grid"></i> Библиотека</button>
+      <button class="ai-tab" data-ai-tab="collections" role="tab"><i data-lucide="folder-heart"></i> Подборки</button>
+      <button class="ai-tab" data-ai-tab="scans" role="tab"><i data-lucide="radar"></i> Сканирования</button>
+      <button class="ai-tab" data-ai-tab="coverage" role="tab"><i data-lucide="activity"></i> Источники и качество</button>
+    </div>
+    <div class="ai-tab-panel" data-ai-panel="library">
     <div class="ai-summary">
       <div class="ai-summary-item"><i data-lucide="layers" style="width:16px;color:#25ad64"></i><span>Креативов в демо-библиотеке</span><strong>6</strong></div>
       <div class="ai-summary-item"><i data-lucide="radar" style="width:16px;color:#8b73e6"></i><span>Источники в макете</span><strong>4</strong></div>
@@ -396,6 +438,42 @@ tbody tr:hover{background:#fbfcfd}
         <div class="ai-card-body"><div class="ai-card-top"><span class="ai-brand">EcoHome</span><span class="ai-format">Изображение</span></div><p class="ai-copy">Уютные решения для дома с вниманием к деталям и материалам.</p><div class="ai-meta"><div><span>Впервые замечено</span><strong>7 окт 2026</strong></div><div><span>Источник</span><strong>Демо-страница</strong></div></div><div class="ai-card-foot"><span class="ai-source">Пример макета</span><button class="ai-detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div>
       </article>
     </div></div>
+
+    </div>
+    <section class="ai-tab-panel" data-ai-panel="collections" hidden>
+      <div class="ai-results-head"><div><h2>Сохранённые подборки</h2><p>Организуйте креативы конкурентов и идеи для тестов.</p></div><button class="btn btn-primary" id="aiCreateCollection"><i data-lucide="folder-plus"></i> Новая подборка</button></div>
+      <div class="ai-collection-grid">
+        <article class="ai-collection-card"><div class="ai-collection-icon"><i data-lucide="target"></i></div><h3>Конкуренты</h3><p>Креативы для наблюдения за сообщениями, форматами и предложениями в вашей нише.</p><div class="ai-collection-foot"><span>Системная подборка</span><strong id="aiCompetitorCount">0 креативов</strong></div></article>
+        <article class="ai-collection-card"><div class="ai-collection-icon" style="background:#f0ecfd;color:#8065d8"><i data-lucide="flask-conical"></i></div><h3>Идеи для тестов</h3><p>Объявления, к которым команда хочет вернуться при подготовке новых кампаний.</p><div class="ai-collection-foot"><span>Системная подборка</span><strong id="aiTestCount">0 креативов</strong></div></article>
+        <article class="ai-collection-card"><div class="ai-collection-icon" style="background:#fff4e5;color:#a87521"><i data-lucide="bookmark-check"></i></div><h3>Все сохранённые</h3><p>Общий список отмеченных креативов из демонстрационной библиотеки.</p><div class="ai-collection-foot"><span>Обновляется автоматически</span><strong id="aiAllSavedCount">0 креативов</strong></div></article>
+      </div>
+      <div class="ai-results-head" style="margin-top:28px"><div><h2>Сохранённые креативы</h2><p>Сохранение пока действует в рамках открытой демо-сессии.</p></div></div>
+      <div class="ai-grid" id="aiCollectionGrid"></div>
+      <div class="ai-empty" id="aiCollectionEmpty"><i data-lucide="bookmark" style="width:25px;height:25px"></i><strong>Пока нет сохранённых креативов</strong>Нажмите на значок закладки в библиотеке, чтобы добавить первый.</div>
+    </section>
+    <section class="ai-tab-panel" data-ai-panel="scans" hidden>
+      <div class="ai-results-head"><div><h2>Задачи сканирования</h2><p>Контролируйте запуски, результаты распознавания и ошибки источников.</p></div><button class="btn btn-primary" id="aiNewScanFromTab"><i data-lucide="plus"></i> Новое сканирование</button></div>
+      <div class="ai-summary">
+        <div class="ai-summary-item"><span>Всего задач</span><strong id="aiJobsTotal">3</strong></div>
+        <div class="ai-summary-item"><span>Успешно</span><strong>1</strong></div>
+        <div class="ai-summary-item"><span>Требуют проверки</span><strong>1</strong></div>
+      </div>
+      <div class="ai-job-list" id="aiJobList">
+        <article class="ai-job"><div class="ai-job-name"><div class="ai-job-icon"><i data-lucide="network"></i></div><div><strong>Тест источника · Яндекс / РСЯ</strong><span>Демо-задача · запуск 12 окт 2026, 10:42</span></div></div><div class="ai-job-meta"><strong>18 элементов</strong><span>Обнаружено в примере</span></div><div class="ai-job-meta"><strong>72%</strong><span>Условное распознавание</span></div><span class="ai-job-status partial">Частичный результат</span></article>
+        <article class="ai-job"><div class="ai-job-name"><div class="ai-job-icon" style="background:#eaf8ef;color:#16884b"><i data-lucide="share-2"></i></div><div><strong>Тест источника · VK Ads</strong><span>Демо-задача · запуск 12 окт 2026, 09:15</span></div></div><div class="ai-job-meta"><strong>24 элемента</strong><span>Обнаружено в примере</span></div><div class="ai-job-meta"><strong>100%</strong><span>Условное распознавание</span></div><span class="ai-job-status">Завершено</span></article>
+        <article class="ai-job"><div class="ai-job-name"><div class="ai-job-icon" style="background:#fff0f0;color:#b84a4a"><i data-lucide="globe"></i></div><div><strong>Тест источника · Web display</strong><span>Демо-задача · запуск 11 окт 2026, 18:20</span></div></div><div class="ai-job-meta"><strong>—</strong><span>Элементов в примере</span></div><div class="ai-job-meta"><strong>—</strong><span>Распознавание</span></div><span class="ai-job-status failed">Ошибка источника</span></article>
+      </div>
+      <div class="ai-demo-note"><strong>Демонстрационные задачи.</strong> Статусы, объёмы и проценты не получены из реального парсера и нужны только для проверки интерфейса.</div>
+    </section>
+    <section class="ai-tab-panel" data-ai-panel="coverage" hidden>
+      <div class="ai-results-head"><div><h2>Источники и качество парсинга</h2><p>Отделяйте найденные рекламные элементы от полностью распознанных креативов.</p></div></div>
+      <div class="ai-coverage-grid">
+        <article class="ai-coverage-card"><div class="ai-coverage-top"><strong>Яндекс / РСЯ</strong><span class="ai-job-status partial">Тестовый</span></div><div class="coverage-number">72%</div><p>Условная доля распознанных элементов в макете</p><div class="ai-progress"><span style="width:72%"></span></div><p>Данные будут заменены результатами адаптера парсера.</p></article>
+        <article class="ai-coverage-card"><div class="ai-coverage-top"><strong>VK Ads</strong><span class="ai-job-status">Тестовый</span></div><div class="coverage-number">100%</div><p>Условная доля распознанных элементов в макете</p><div class="ai-progress"><span style="width:100%"></span></div><p>Демо-показатель, не подтверждение реального покрытия.</p></article>
+        <article class="ai-coverage-card"><div class="ai-coverage-top"><strong>Web display</strong><span class="ai-job-status failed">Требует проверки</span></div><div class="coverage-number">—</div><p>Нет подтверждённых данных о качестве источника</p><div class="ai-progress"><span style="width:4%;background:#d7dce2"></span></div><p>При интеграции будут доступны ошибки и версия парсера.</p></article>
+      </div>
+      <div class="ai-demo-note"><strong>Принцип достоверности.</strong> Все проценты на этом экране условные. В рабочей версии у каждого источника появятся время последнего успешного запуска, версия адаптера, найденные элементы, распознанные креативы и примеры неизвестной разметки.</div>
+    </section>
     <div class="ai-demo-note"><strong>Демонстрационный режим.</strong> Карточки и даты созданы для проверки интерфейса и не являются результатами реального сканирования. Подключение источников, история наблюдений и распознавание креативов будут реализованы через API парсера.</div>
   </section>
 
