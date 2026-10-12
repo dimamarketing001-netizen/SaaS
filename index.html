@@ -117,6 +117,90 @@ tbody tr:hover{background:#f9fbfc}
 .workspace-menu .chosen{color:#16884b}
 @media(max-width:520px){.welcome h1{font-size:24px}.stat-card{padding:14px}.stat-value{font-size:24px}}
 
+
+/* STRUCTURE & COMPONENT SHAPE — inspired by the reference dashboard, not a palette change */
+.app{grid-template-columns:258px minmax(0,1fr);gap:0;background:#f5f7f8}
+.sidebar{padding:26px 18px 20px;border-right:1px solid #e9edf0;background:#fff}
+.brand{padding:2px 8px 28px;gap:12px}
+.brandmark{width:38px;height:38px;border-radius:13px}
+.brandname{font-size:14px;letter-spacing:.12em}
+.workspace{padding:12px;border-radius:14px;margin-bottom:28px;gap:11px}
+.workspace-icon{width:36px;height:36px;border-radius:11px;flex-shrink:0}
+.section-label{padding:0 11px 10px;font-size:9px;letter-spacing:.12em}
+.nav{gap:5px}
+.nav button{padding:11px 12px;border-radius:11px;border:0;min-height:42px;font-size:12px;gap:12px}
+.nav button svg{width:17px;height:17px}
+.nav button.active{box-shadow:none;font-weight:700}
+.nav-separator{margin:18px 8px}
+.usage{border-radius:15px;padding:15px;border:1px solid #edf0f2;background:#fafbfc;margin:18px 0}
+.user{padding:14px 5px 0}
+.topbar{height:76px;padding:0 36px;background:#ffffff;border-bottom:1px solid #eceff2;backdrop-filter:none}
+.breadcrumbs{font-size:12px;gap:11px}
+.top-actions{gap:10px}
+.global-search{width:250px;border-radius:12px;padding:10px 12px}
+.icon-btn{width:38px;height:38px;border-radius:12px}
+.content{padding:34px 36px 48px;max-width:1680px}
+.welcome{align-items:center;margin-bottom:28px}
+.welcome h1{font-size:29px;letter-spacing:-.045em;margin:8px 0}
+.welcome p{font-size:12px;line-height:1.65}
+.welcome-actions{padding-top:0}
+.btn{padding:11px 15px;border-radius:11px;font-size:11px}
+.stats{gap:16px;margin-bottom:20px}
+.stat-card{border:0;border-radius:18px;padding:20px;background:#fff;box-shadow:0 3px 14px #27344406;min-height:142px}
+.stat-top{font-size:11px}
+.stat-icon{width:34px;height:34px;border-radius:12px;border:0;background:#f4f7f5}
+.stat-value{font-size:30px;margin:16px 0 9px}
+.spark{width:75px;height:29px;right:17px;bottom:17px;opacity:.65}
+.grid-main{gap:18px;margin-bottom:22px}
+.panel{border:0;border-radius:19px;box-shadow:0 3px 16px #27344407}
+.panel-head{padding:20px 22px;border-bottom:1px solid #f0f2f4}
+.panel-title{font-size:13px;letter-spacing:-.01em}
+.panel-sub{font-size:11px;line-height:1.5}
+.select{border-radius:10px;padding:9px 11px}
+.chart-area{padding:20px 22px 14px}
+.chart{height:200px}
+.chart .gridline{stroke:#edf0f2;stroke-dasharray:0}
+.channel-list{padding:5px 22px 17px}
+.channel{padding:14px 0;border-color:#f0f2f4}
+.channel-logo{width:36px;height:36px;border-radius:12px}
+.section-head{margin:30px 0 15px}
+.section-head h2{font-size:15px}
+.section-head p{font-size:11px;line-height:1.5}
+.product-grid{gap:16px}
+.product-card{border:0;border-radius:18px;padding:19px;background:#fff;box-shadow:0 3px 14px #27344406;min-height:205px}
+.product-card:before{display:none}
+.product-card:hover{transform:translateY(-3px);box-shadow:0 10px 26px #2734440d;border-color:transparent}
+.product-top{margin-bottom:19px}
+.product-icon{width:42px;height:42px;border-radius:14px;border:0}
+.status-pill{border:0;background:#f5f7f8;border-radius:8px;padding:6px 8px;font-size:9px}
+.product-card h3{font-size:14px;letter-spacing:-.02em;margin-bottom:8px}
+.product-card p{font-size:11px;line-height:1.65;min-height:36px;margin-bottom:18px}
+.product-foot{padding-top:14px;border-color:#eff1f3;font-size:10px}
+.lower-grid{gap:18px;margin-top:22px}
+.table-tools{gap:10px}
+.table-search{border:0;background:#f5f7f8;border-radius:10px;padding:9px 11px}
+.table-search input{font-size:11px}
+th{background:#fafbfc;padding:13px 17px;border-color:#edf0f2;font-size:9px}
+td{padding:15px 17px;border-color:#f0f2f4;font-size:11px}
+tbody tr:hover{background:#fbfcfd}
+.campaign-mark{width:30px;height:30px;border-radius:10px}
+.campaign-name strong{font-size:11px}
+.campaign-name span{font-size:10px}
+.pill{border:0;border-radius:7px;padding:5px 8px}
+.activity{padding:7px 21px 14px}
+.activity-item{padding:14px 0;border-color:#f0f2f4;gap:12px}
+.activity-icon{width:34px;height:34px;border-radius:12px;flex-shrink:0}
+.activity-text{font-size:11px;line-height:1.6}
+.activity-text span{font-size:10px}
+.modal{border:0;border-radius:20px;padding:26px;box-shadow:0 24px 80px #1e293b24}
+.form-row input,.form-row select{border-radius:11px;padding:12px}
+.toast{border:0;border-radius:14px;box-shadow:0 10px 35px #1e293b20}
+.workspace-menu{top:76px;left:18px;width:222px;border:1px solid #eceff2;border-radius:15px;padding:8px;box-shadow:0 18px 50px #1e293b17}
+.workspace-menu button{padding:12px;border-radius:10px}
+@media(max-width:1200px){.content{padding:28px 24px 38px}.topbar{padding:0 24px}.product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.sidebar{padding:18px 12px}.topbar{height:64px;padding:0 16px}.content{padding:24px 16px 32px}.welcome{align-items:flex-start;flex-direction:column}.welcome-actions{width:100%;flex-wrap:wrap}.grid-main,.lower-grid{grid-template-columns:minmax(0,1fr)}.product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.panel-head{padding:17px}.chart-area{padding:16px}.stat-card{padding:16px}.product-card{padding:16px}}
+@media(max-width:520px){.product-grid{grid-template-columns:minmax(0,1fr)}.stats{gap:10px}.stat-card{min-height:130px}.stat-value{font-size:25px}.global-search{width:155px}.welcome h1{font-size:25px}}
+
 </style>
 </head>
 <body>
