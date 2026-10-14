@@ -47,6 +47,7 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
     scanRow = page.locator('#jobList .job').filter({ hasText: 'Browser scan task' });
     assert.equal(await scanRow.getAttribute('data-job-status'), 'completed', 'demo scan should finish explicitly');
     await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('[data-tab="scans"]').click();
     scanRow = page.locator('#jobList .job').filter({ hasText: 'Browser scan task' });
     assert.equal(await scanRow.getAttribute('data-job-status'), 'completed', 'scan state should persist after reload');
     await page.locator('#jobSearch').fill('Browser scan task');
