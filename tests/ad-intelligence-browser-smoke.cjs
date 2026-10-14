@@ -67,7 +67,11 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
     assert.equal(await page.locator('#exportHistoryList .job').count(), 1, 'export history should persist after reload');
 
     await page.goto('http://127.0.0.1:' + port + '/index.html', { waitUntil: 'domcontentloaded' });
-    await page.locator('[data-page="ads"]').click();
+    const mainNavCount = await page.locator('[data-page="ads"]').count();
+    if (!mainNavCount) {
+      throw new Error('main navigation item missing; url=' + page.url() + '; title=' + await page.title() + '; body=' + (await page.locator('body').innerText()).slice(0, 500));
+    }
+    await page.locator('[data-page="ads"]').first().click();
     assert.equal(await page.locator('#adsWorkspace a[href="./ad-intelligence.html"]').count(), 1, 'main dashboard should expose the expanded Ad Intelligence link');
 
     assert.deepEqual(pageErrors, [], 'no uncaught browser JavaScript errors should occur');
