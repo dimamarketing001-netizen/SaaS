@@ -506,7 +506,7 @@ function applyAiFilters(){
  const q=($('#aiQuery')?.value||'').trim().toLowerCase();
  const platform=$('#aiPlatform')?.value||'all', format=$('#aiFormat')?.value||'all';
  let visible=0;
- $('#aiGrid .ai-card').forEach(card=>{
+ $$('#aiGrid .ai-card').forEach(card=>{
   const saved=card.dataset.saved==='1';
   const ok=(!q||(card.dataset.brand+' '+card.dataset.copy+' '+card.dataset.domain+' '+card.dataset.platform).toLowerCase().includes(q))&&(platform==='all'||card.dataset.platform===platform)&&(format==='all'||card.dataset.format===format)&&(!aiSavedOnly||saved);
   card.hidden=!ok;if(ok)visible++;
@@ -519,7 +519,7 @@ $('#aiPlatform').addEventListener('change',applyAiFilters);
 $('#aiFormat').addEventListener('change',applyAiFilters);
 $('#aiReset').addEventListener('click',()=>{$('#aiQuery').value='';$('#aiPlatform').value='all';$('#aiFormat').value='all';aiSavedOnly=false;$('#aiSavedOnly').classList.remove('btn-primary');applyAiFilters();});
 $('#aiSavedOnly').addEventListener('click',()=>{aiSavedOnly=!aiSavedOnly;$('#aiSavedOnly').classList.toggle('btn-primary',aiSavedOnly);applyAiFilters();});
-$('.ai-save').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const card=btn.closest('.ai-card');const save=card.dataset.saved!=='1';card.dataset.saved=save?'1':'0';btn.classList.toggle('saved',save);btn.innerHTML=save?'<i data-lucide="bookmark-check"></i>':'<i data-lucide="bookmark"></i>';if(window.lucide)lucide.createIcons();applyAiFilters();toast(save?'Креатив сохранён':'Удалено из сохранённых',card.dataset.brand+' · демо-подборка');}));
+$$('.ai-save').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const card=btn.closest('.ai-card');const save=card.dataset.saved!=='1';card.dataset.saved=save?'1':'0';btn.classList.toggle('saved',save);btn.innerHTML=save?'<i data-lucide="bookmark-check"></i>':'<i data-lucide="bookmark"></i>';if(window.lucide)lucide.createIcons();applyAiFilters();toast(save?'Креатив сохранён':'Удалено из сохранённых',card.dataset.brand+' · демо-подборка');}));
 function openAiDetail(card){
  aiCurrentCard=card;const art=card.querySelector('.ai-art').outerHTML;
  $('#aiDrawerTitle').textContent=card.dataset.brand;
@@ -532,7 +532,7 @@ function openAiDetail(card){
  '<div class="ai-demo-note">Это демонстрационная карточка. Реальные исходный HTML, URL, даты обнаружения и метаданные появятся после подключения парсера.</div>';
  $('#aiDetailOverlay').classList.add('show');if(window.lucide)lucide.createIcons();
 }
-$('#aiGrid .ai-detail').forEach(btn=>btn.addEventListener('click',()=>openAiDetail(btn.closest('.ai-card'))));
+$$('#aiGrid .ai-detail').forEach(btn=>btn.addEventListener('click',()=>openAiDetail(btn.closest('.ai-card'))));
 $('#aiDrawerClose').addEventListener('click',()=>$('#aiDetailOverlay').classList.remove('show'));
 $('#aiDetailOverlay').addEventListener('click',e=>{if(e.target===$('#aiDetailOverlay'))$('#aiDetailOverlay').classList.remove('show')});
 $('#aiDrawerSave').addEventListener('click',()=>{if(!aiCurrentCard)return;const btn=aiCurrentCard.querySelector('.ai-save');if(aiCurrentCard.dataset.saved!=='1')btn.click();$('#aiDetailOverlay').classList.remove('show')});
