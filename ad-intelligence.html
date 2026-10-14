@@ -415,7 +415,7 @@ function savedCards(){return $$('.creative').filter(c=>c.dataset.saved==='1')}
 function applyFilters(){
  const q=$('#query').value.trim().toLowerCase(),p=$('#platform').value,f=$('#format').value,sf=$('#savedFilter').value,sort=$('#sort').value;
  const quick=document.querySelector('.quickfilter.active')?.dataset.quick||'all';
- const cards=$('#cards .creative');let visible=[];
+ const cards=$$('#cards .creative');let visible=[];
  cards.forEach(c=>{
   const text=(c.dataset.brand+' '+c.dataset.copy+' '+c.dataset.domain+' '+c.dataset.platform+' '+(c.querySelector('.adart .kicker')?.innerText||'')).toLowerCase();
   const saved=c.dataset.saved==='1';
