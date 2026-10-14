@@ -199,13 +199,19 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
     assert.ok(bulkCollectionCopy, 'duplicate collection should be persisted');
     assert.deepEqual(bulkCollectionCopy.ids, originalBulkCollection.ids, 'duplicated collection should preserve its creative membership');
     const copyCollectionRow = page.locator('#userCollectionGrid .usercollection').filter({ hasText: 'Bulk created collection — копия' });
-    const collectionDownloadPromise = page.waitForEvent('download');
+    const collectionDownloadPromise = page.waitForEvent('download', { timeout: 5000 }).then(download => ({ download }), error => ({ error: error.message }));
     await copyCollectionRow.locator('[data-collection-export]').click();
-    const collectionDownload = await collectionDownloadPromise;
-    assert.ok(collectionDownload.suggestedFilename().startsWith('neon-ad-intelligence-collection-'), 'collection export should download a JSON report');
+    await page.waitForTimeout(100);
     const collectionExportHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('neon-ad-intelligence-exports') || '[]'));
-    assert.equal(collectionExportHistory[0].kind, 'collection', 'collection export should be identified in export history');
-    assert.equal(collectionExportHistory[0].count, originalBulkCollection.ids.length, 'collection export should include all collection creatives');
+    const latestCollectionExport = collectionExportHistory.find(item => item.kind === 'collection' && item.collectionName === 'Bulk created collection — копия');
+    if (!latestCollectionExport) {
+      const diagnostic = await page.evaluate(() => ({ buttonCount: document.querySelectorAll('[data-collection-export]').length, copyButton: document.querySelector('[data-collection-export]')?.outerHTML, pageText: document.querySelector('#userCollectionGrid')?.innerText }));
+      throw new Error('Collection export action did not update local history: ' + JSON.stringify(diagnostic));
+    }
+    const collectionDownloadResult = await collectionDownloadPromise;
+    assert.ok(collectionDownloadResult.download, 'collection export should trigger a download; result=' + JSON.stringify(collectionDownloadResult));
+    assert.ok(collectionDownloadResult.download.suggestedFilename().startsWith('neon-ad-intelligence-collection-'), 'collection export should download a JSON report');
+    assert.equal(latestCollectionExport.count, originalBulkCollection.ids.length, 'collection export should include all collection creatives');
 
     await page.locator('[data-tab="exports"]').click();
     const libraryDownloadPromise = page.waitForEvent('download');
