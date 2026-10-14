@@ -251,7 +251,7 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
 .quickfilter:hover{background:#f7f6fc;color:#5e50a9}
 .quickfilter.active{background:#f0edff;color:#7158dc;border-color:#e6e0ff}
 .activefilters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #f0f0f5;padding-top:13px;margin-top:13px}
-.activefilterlabel{font-size:9px;color:#9a9baa}
+.activefilterlabel{font-size:9px;color:#9a9baa}.savedsearches{margin:0 0 18px;padding:16px;background:#fafbfc;border:1px solid #e6e9ef;border-radius:15px}.savedsearches[hidden]{display:none!important}.savedsearchhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}.savedsearchhead strong{font-size:12px;color:#303743}.savedsearchhead p{font-size:10px;color:#838b98;line-height:1.5;margin:4px 0 0}.savedsearchlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.savedsearchitem{min-width:0;display:flex;align-items:center;gap:12px;padding:12px;background:#fff;border:1px solid #e4e7ee;border-radius:12px}.savedsearchbody{min-width:0;flex:1}.savedsearchbody strong{display:block;font-size:11px;color:#303743;overflow-wrap:anywhere}.savedsearchbody span{display:block;font-size:10px;color:#858c99;line-height:1.5;margin-top:4px;overflow-wrap:anywhere}.savedsearchactions{display:flex;gap:5px;flex-shrink:0}.savedsearchactions button{width:31px;height:31px;border:1px solid #e6e8ee;border-radius:8px;background:#fff;color:#586273;display:grid;place-items:center}.savedsearchactions button[data-delete-saved-search]{color:#b64d56}.savedsearchactions button:hover{background:#f3f5f8}@media(max-width:760px){.savedsearchlist{grid-template-columns:1fr}.savedsearchitem{align-items:flex-start}}
 .filterchips{display:flex;gap:7px;flex-wrap:wrap;flex:1}
 .filterchip{display:inline-flex;align-items:center;gap:9px;border:1px solid #e8e4fa;background:#f8f6ff;border-radius:8px;padding:7px 9px;color:#7059cf;font-size:10px;cursor:pointer;max-width:100%}
 .filterchip span{font-size:14px;line-height:10px}
@@ -337,7 +337,8 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
     <div class="quickfilters" aria-label="Быстрые фильтры"><button class="quickfilter active" data-quick="all">Все креативы</button><button class="quickfilter" data-quick="saved"><i data-lucide="bookmark"></i> Сохранённые</button><button class="quickfilter" data-quick="yandex">Яндекс / РСЯ</button><button class="quickfilter" data-quick="social">Соцсети</button></div>
     <div class="activefilters" id="activeFilters" hidden><span class="activefilterlabel">Активные фильтры</span><div id="filterChips" class="filterchips"></div><button class="clearfilters" id="clearFilters">Очистить всё</button></div>
    </div>
-   <div class="resulthead"><div><h2>Библиотека рекламных креативов</h2><p id="resultCount" aria-live="polite">6 демонстрационных объявлений</p></div><div class="resultactions"><button class="secondary" id="savedOnly"><i data-lucide="bookmark"></i> Сохранённые</button><button class="secondary" id="export"><i data-lucide="download"></i> Экспорт JSON</button></div></div>
+   <div class="savedsearches" id="savedSearchesPanel" hidden><div class="savedsearchhead"><div><strong>Сохранённые поиски</strong><p>Наборы фильтров хранятся в этом браузере и применяются к демонстрационной библиотеке.</p></div></div><div class="savedsearchlist" id="savedSearchesList"></div></div>
+   <div class="resulthead"><div><h2>Библиотека рекламных креативов</h2><p id="resultCount" aria-live="polite">6 демонстрационных объявлений</p></div><div class="resultactions"><button class="secondary" id="saveSearch"><i data-lucide="bookmark-plus"></i> Сохранить поиск</button><button class="secondary" id="savedOnly"><i data-lucide="bookmark"></i> Сохранённые</button><button class="secondary" id="export"><i data-lucide="download"></i> Экспорт JSON</button></div></div>
    <div class="empty-filter" id="emptyFilter" hidden><div class="empty-filter-icon"><i data-lucide="search-x"></i></div><h3>Ничего не найдено</h3><p>По текущему запросу и фильтрам нет совпадений. Попробуйте изменить запрос или снять часть фильтров.</p><button class="secondary" id="emptyReset">Очистить поиск и фильтры</button></div>
    <div class="cards" id="cards">
     <article class="creative" data-platform="Яндекс / РСЯ" data-format="Изображение" data-brand="Право Плюс" data-copy="Помогаем разобраться в сложных юридических вопросах. Запишитесь на консультацию." data-domain="pravo-plus.example" data-date="12 окт 2026"><div class="preview"><span class="platform"><i data-lucide="network"></i> Яндекс · РСЯ</span><button class="save" aria-label="Сохранить креатив"><i data-lucide="bookmark"></i></button><div class="adart"><span class="kicker">Правовая помощь</span><strong>Сложный вопрос?<br>Начните с решения.</strong><p>Консультация по вашей ситуации.</p><span class="cta">Узнать больше ↗</span></div></div><div class="cardbody"><div class="cardtop"><span class="brand">Право Плюс</span><span class="format">Изображение</span></div><p class="copy">Помогаем разобраться в сложных юридических вопросах. Запишитесь на консультацию.</p><div class="metadata"><div><span>Впервые замечено</span><strong>12 окт 2026 · демо</strong></div><div><span>Источник</span><strong>Пример страницы</strong></div></div><div class="cardfoot"><span class="source">Демо-данные</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div></article>
@@ -472,6 +473,94 @@ $$('[data-tab]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)
 $('#query').addEventListener('input',applyFilters);['platform','format','savedFilter','sort'].forEach(id=>$('#'+id).addEventListener('change',applyFilters));
 $('#advancedToggle').addEventListener('click',()=>{const open=$('#advancedFilters').hidden;$('#advancedFilters').hidden=!open;$('#advancedToggle').setAttribute('aria-expanded',String(open));$('#advancedToggle').classList.toggle('primary',open)});
 $$('.quickfilter').forEach(b=>b.addEventListener('click',()=>{$$('.quickfilter').forEach(x=>x.classList.toggle('active',x===b));savedOnly=false;applyFilters()}));
+const SAVED_SEARCHES_STORAGE_KEY='neon-ad-intelligence-saved-searches';
+function readSavedSearches(){
+ try{
+  const value=JSON.parse(localStorage.getItem(SAVED_SEARCHES_STORAGE_KEY)||'[]');
+  if(!Array.isArray(value))return [];
+  return value.filter(item=>item&&typeof item.id==='string'&&typeof item.name==='string'&&item.state&&typeof item.state==='object').slice(0,50);
+ }catch{return []}
+}
+let savedSearches=readSavedSearches();
+function persistSavedSearches(){
+ try{localStorage.setItem(SAVED_SEARCHES_STORAGE_KEY,JSON.stringify(savedSearches));return true}
+ catch{notify('Не удалось сохранить поиск','Хранилище браузера недоступно или заполнено.');return false}
+}
+function captureSearchState(){
+ return {query:$('#query').value,platform:$('#platform').value,format:$('#format').value,savedFilter:$('#savedFilter').value,sort:$('#sort').value,quick:document.querySelector('.quickfilter.active')?.dataset.quick||'all',savedOnly:!!savedOnly};
+}
+function searchSummary(state){
+ const parts=[];
+ if(state.query)parts.push('Запрос: '+state.query);
+ if(state.platform!=='all')parts.push(state.platform);
+ if(state.format!=='all')parts.push(state.format);
+ if(state.savedFilter!=='all')parts.push(state.savedFilter==='saved'?'Сохранённые':'Не сохранённые');
+ if(state.quick&&state.quick!=='all')parts.push(({saved:'Быстрый фильтр: сохранённые',yandex:'Яндекс / РСЯ',social:'Соцсети'})[state.quick]||state.quick);
+ return parts.length?parts.join(' · '):'Без фильтров · все демонстрационные объявления';
+}
+function renderSavedSearches(){
+ const panel=$('#savedSearchesPanel'),host=$('#savedSearchesList');
+ if(!panel||!host)return;
+ host.replaceChildren();panel.hidden=savedSearches.length===0;
+ savedSearches.forEach(item=>{
+  const row=document.createElement('article');row.className='savedsearchitem';
+  const body=document.createElement('div');body.className='savedsearchbody';
+  const title=document.createElement('strong');title.textContent=item.name;
+  const meta=document.createElement('span');meta.textContent=searchSummary(item.state);
+  body.append(title,meta);
+  const actions=document.createElement('div');actions.className='savedsearchactions';
+  const use=document.createElement('button');use.type='button';use.dataset.useSavedSearch=item.id;use.setAttribute('aria-label','Применить сохранённый поиск: '+item.name);use.title='Применить поиск';use.innerHTML='<i data-lucide="play"></i>';
+  const del=document.createElement('button');del.type='button';del.dataset.deleteSavedSearch=item.id;del.setAttribute('aria-label','Удалить сохранённый поиск: '+item.name);del.title='Удалить поиск';del.innerHTML='<i data-lucide="trash-2"></i>';
+  actions.append(use,del);row.append(body,actions);host.appendChild(row);
+ });
+ if(window.lucide)lucide.createIcons();
+}
+function applySavedSearch(item){
+ const state=item.state||{};
+ $('#query').value=String(state.query||'');
+ $('#platform').value=['Яндекс / РСЯ','VK Ads','Telegram Ads','Web display'].includes(state.platform)?state.platform:'all';
+ $('#format').value=['Изображение','Нативное','Видео'].includes(state.format)?state.format:'all';
+ $('#savedFilter').value=['saved','unsaved'].includes(state.savedFilter)?state.savedFilter:'all';
+ $('#sort').value=['recent','oldest','brand'].includes(state.sort)?state.sort:'recent';
+ const quick=['all','saved','yandex','social'].includes(state.quick)?state.quick:'all';
+ $$('.quickfilter').forEach(button=>button.classList.toggle('active',button.dataset.quick===quick));
+ savedOnly=!!state.savedOnly;
+ $('#savedOnly').style.background=savedOnly?'#e7f8ed':'#fff';
+ $('#savedOnly').style.color=savedOnly?'#16884b':'#505966';
+ const advanced=$('#platform').value!=='all'||$('#format').value!=='all'||$('#savedFilter').value!=='all';
+ $('#advancedFilters').hidden=!advanced;
+ $('#advancedToggle').setAttribute('aria-expanded',String(advanced));
+ applyFilters();notify('Поиск применён',item.name);
+}
+$('#saveSearch').addEventListener('click',()=>{
+ const state=captureSearchState();
+ if(!state.query&&state.platform==='all'&&state.format==='all'&&state.savedFilter==='all'&&state.quick==='all'&&!state.savedOnly){
+  notify('Сначала настройте поиск','Введите запрос или выберите хотя бы один фильтр.');return;
+ }
+ const suggested=state.query?'Поиск: '+state.query:'Мой поиск';
+ const response=window.prompt('Название сохранённого поиска',suggested);
+ if(response===null)return;
+ const name=response.trim();
+ if(!name){notify('Название не сохранено','Введите непустое название поиска.');return}
+ if(savedSearches.some(item=>item.name.toLocaleLowerCase('ru')===name.toLocaleLowerCase('ru'))){notify('Такой поиск уже есть','Задайте другое название.');return}
+ const item={id:'search-'+Date.now(),name,state,createdAt:new Date().toISOString(),demo:true};
+ savedSearches.unshift(item);savedSearches=savedSearches.slice(0,50);
+ if(!persistSavedSearches()){savedSearches=savedSearches.filter(x=>x.id!==item.id);return}
+ renderSavedSearches();notify('Поиск сохранён',name+' · локально в этом браузере');
+});
+$('#savedSearchesList').addEventListener('click',e=>{
+ const use=e.target.closest('[data-use-saved-search]');
+ if(use){const item=savedSearches.find(x=>x.id===use.dataset.useSavedSearch);if(item)applySavedSearch(item);return}
+ const del=e.target.closest('[data-delete-saved-search]');
+ if(!del)return;
+ const item=savedSearches.find(x=>x.id===del.dataset.deleteSavedSearch);
+ if(!item)return;
+ if(!window.confirm('Удалить сохранённый поиск «'+item.name+'»?'))return;
+ savedSearches=savedSearches.filter(x=>x.id!==item.id);
+ if(!persistSavedSearches()){savedSearches.push(item);renderSavedSearches();return}
+ renderSavedSearches();notify('Поиск удалён',item.name);
+});
+
 function resetFilters(){ $('#query').value='';$('#platform').value='all';$('#format').value='all';$('#savedFilter').value='all';$('#sort').value='recent';savedOnly=false;$$('.quickfilter').forEach(b=>b.classList.toggle('active',b.dataset.quick==='all'));$('#savedOnly').style.background='#fff';$('#savedOnly').style.color='#505966';applyFilters() }
 $('#reset').addEventListener('click',resetFilters);$('#clearFilters').addEventListener('click',resetFilters);$('#emptyReset').addEventListener('click',resetFilters);
 $('#filterChips').addEventListener('click',e=>{const b=e.target.closest('[data-clear]');if(!b)return;const k=b.dataset.clear;if(k==='q')$('#query').value='';else if(k==='quick'){$$('.quickfilter').forEach(x=>x.classList.toggle('active',x.dataset.quick==='all'));savedOnly=false}else $('#'+k).value=k==='platform'||k==='format'?'all':'all';applyFilters()});
@@ -860,7 +949,7 @@ $$('[data-view]').forEach(b=>b.addEventListener('click',()=>{if(window.matchMedi
 $('#spaceSelect').addEventListener('change',e=>{if(e.target.value!=='Ad Intelligence'){notify('Пространство ещё не собрано',e.target.value+' будет разработано отдельным этапом.');e.target.value='Ad Intelligence'}});
 $('#helpBtn').addEventListener('click',()=>notify('Ad Intelligence','В этом прототипе данные демонстрационные. Интеграции не подключены.'));$('#notifications').addEventListener('click',()=>notify('Уведомления','Пока нет реальных событий от парсера.'));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#detailOverlay').classList.remove('show');$('#modalWrap').classList.remove('show')}});
-applyFilters();setTab('library');
+renderSavedSearches();applyFilters();setTab('library');
 </script>
 </body>
 </html>
