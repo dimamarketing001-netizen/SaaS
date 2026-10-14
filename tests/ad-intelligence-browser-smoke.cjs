@@ -197,10 +197,12 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
     await page.locator('#exportNow').click();
     const download = await libraryDownloadPromise;
     assert.equal(download.suggestedFilename(), 'neon-ad-intelligence-demo.json', 'export should produce the expected JSON file');
-    assert.equal(await page.locator('#exportHistoryList .job').count(), 1, 'export should be recorded in local history');
+    assert.equal(await page.locator('#exportHistoryList .job').count(), 2, 'library export should be recorded alongside the earlier selected-creatives export');
+    assert.equal(await page.locator('#exportHistoryList').getByText('neon-ad-intelligence-demo.json').count(), 1, 'library export should have its own history entry');
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.locator('[data-tab="exports"]').click();
-    assert.equal(await page.locator('#exportHistoryList .job').count(), 1, 'export history should persist after reload');
+    assert.equal(await page.locator('#exportHistoryList .job').count(), 2, 'both export history entries should persist after reload');
+    assert.equal(await page.locator('#exportHistoryList').getByText('neon-ad-intelligence-selected-demo.json').count(), 1, 'selected export entry should persist after reload');
 
     await page.goto('http://127.0.0.1:' + port + '/index.html', { waitUntil: 'domcontentloaded' });
     const mainNavCount = await page.locator('[data-page="ads"]').count();
