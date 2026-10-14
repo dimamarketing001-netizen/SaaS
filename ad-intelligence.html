@@ -407,7 +407,7 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
  </div>
 </main>
 </div>
-<div class="scan-detail-overlay" id="scanDetailOverlay" aria-hidden="true"><aside class="scan-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="scanDetailTitle"><div class="scan-detail-head"><div><div class="eyebrow">AD INTELLIGENCE / SCAN REPORT</div><h2 id="scanDetailTitle">Детали задачи</h2><p id="scanDetailSubtitle">Демонстрационный отчёт. Источник не опрашивался.</p></div><button class="scan-detail-close" id="closeScanDetail" type="button" aria-label="Закрыть детали задачи"><i data-lucide="x"></i></button></div><div id="scanDetailContent"></div><div class="scan-detail-footer"><button id="closeScanDetailFooter" type="button">Закрыть отчёт</button></div></aside></div>
+<div class="scan-detail-overlay" id="scanDetailOverlay" aria-hidden="true"><aside class="scan-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="scanDetailTitle"><div class="scan-detail-head"><div><div class="eyebrow">AD INTELLIGENCE / SCAN REPORT</div><h2 id="scanDetailTitle">Детали задачи</h2><p id="scanDetailSubtitle">Демонстрационный отчёт. Источник не опрашивался.</p></div><button class="scan-detail-close" id="closeScanDetail" type="button" aria-label="Закрыть детали задачи"><i data-lucide="x"></i></button></div><div id="scanDetailContent"></div><div class="scan-detail-footer"><button id="copyUnknownHtml" type="button">Копировать HTML-фрагмент</button><button id="downloadScanReport" type="button">Скачать JSON-отчёт</button><button id="closeScanDetailFooter" type="button">Закрыть отчёт</button></div></aside></div>
 <div class="overlay" id="detailOverlay"><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><div class="drawerhead"><div><div class="eyebrow">AD INTELLIGENCE / CREATIVE</div><h2 id="detailTitle">Карточка креатива</h2></div><button class="iconbtn" id="closeDetail" aria-label="Закрыть"><i data-lucide="x"></i></button></div><div id="detailContent"></div><button class="primary" id="detailSave"><i data-lucide="bookmark"></i> Сохранить креатив</button></aside></div>
 <div class="modalwrap" id="modalWrap"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h2 id="modalTitle">Новое сканирование</h2><p id="modalDesc">Создайте демонстрационную задачу.</p><form id="taskForm"><div class="field"><label for="taskName" id="taskNameLabel">Название задачи</label><input id="taskName" required placeholder="Например, конкуренты в нише" maxlength="80"></div><div class="field" id="collectionDescriptionField" hidden><label for="collectionDescription">Описание подборки (необязательно)</label><textarea id="collectionDescription" class="collectiondesc" maxlength="240" placeholder="Например, сильные офферы и визуальные подходы конкурентов"></textarea></div><div class="field"><label for="taskSource">Источник</label><select id="taskSource"><option>Яндекс / РСЯ</option><option>VK Ads</option><option>Telegram Ads</option><option>Web display</option></select></div><div class="field"><label for="taskTarget">Стартовый URL или примечание (необязательно)</label><input id="taskTarget" placeholder="https://example.com"></div><div class="note">Макет добавит задачу в демонстрационный список. Он не запускает сетевые запросы и не выполняет настоящий парсинг.</div><div class="modalactions"><button type="button" class="secondary" id="cancelModal">Отмена</button><button type="submit" class="primary">Создать задачу</button></div></form></div></div>
 <div class="toast" id="toast"><strong id="toastTitle">Готово</strong><span id="toastText"></span></div>
@@ -626,8 +626,10 @@ function createScanArtifact(type,values){
  }
  return article;
 }
+let currentScanJob=null;
 function openScanJobDetails(job){
  const overlay=$('#scanDetailOverlay'),content=$('#scanDetailContent');
+ currentScanJob=job;
  $('#scanDetailTitle').textContent=job.name;
  $('#scanDetailSubtitle').textContent='Локальный демонстрационный отчёт · источник не опрашивался';
  content.replaceChildren();
@@ -655,6 +657,21 @@ function openScanJobDetails(job){
 function closeScanJobDetails(){const overlay=$('#scanDetailOverlay');overlay.classList.remove('show');overlay.setAttribute('aria-hidden','true')}
 $('#closeScanDetail').addEventListener('click',closeScanJobDetails);
 $('#closeScanDetailFooter').addEventListener('click',closeScanJobDetails);
+$('#copyUnknownHtml').addEventListener('click',async()=>{
+ const raw=$('#scanDetailContent .scan-raw');
+ if(!raw){notify('HTML-фрагмент отсутствует','В отчёте нет демонстрационного неизвестного фрагмента.');return}
+ try{await navigator.clipboard.writeText(raw.textContent);notify('Фрагмент скопирован','HTML скопирован как текст, он не выполняется.')}
+ catch{const area=document.createElement('textarea');area.value=raw.textContent;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();const ok=document.execCommand('copy');area.remove();notify(ok?'Фрагмент скопирован':'Не удалось скопировать',ok?'HTML скопирован как текст.':'Выделите фрагмент вручную.')}
+});
+$('#downloadScanReport').addEventListener('click',()=>{
+ if(!currentScanJob)return;
+ const raw=$('#scanDetailContent .scan-raw')?.textContent||null;
+ const report={reportType:'NEON Ad Intelligence demo scan report',isDemo:true,sourceQueried:false,exportedAt:new Date().toISOString(),task:{id:currentScanJob.id,name:currentScanJob.name,source:currentScanJob.source,target:currentScanJob.target,createdAt:currentScanJob.createdAt,status:currentScanJob.status,items:currentScanJob.items,recognition:currentScanJob.recognition,note:currentScanJob.note},artifacts:[{id:'DEMO-AD-001',type:'recognized-demo',advertiser:'EcoHome',selector:'[data-ad-card="demo"]',headline:'Дом начинается с простых решений',copy:'Демонстрационный текст рекламного объявления для макета карточки.',cta:'Подробнее',format:'Native card',confidence:94},{id:'DEMO-HTML-017',type:'unknown-html-demo',selector:'div.visibility-slot[data-zone="feed"]',html:raw,executed:false}],notice:'Все записи в этом файле демонстрационные, не извлечены с реальной площадки.'};
+ const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json;charset=utf-8'});
+ const url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download='neon-scan-demo-'+currentScanJob.id+'.json';document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
+ notify('JSON-отчёт подготовлен','Скачивается демонстрационный отчёт. Он не содержит результатов реального парсинга.');
+});
 $('#scanDetailOverlay').addEventListener('click',e=>{if(e.target===$('#scanDetailOverlay'))closeScanJobDetails()});
 
 function applyScanJobFilters(){
