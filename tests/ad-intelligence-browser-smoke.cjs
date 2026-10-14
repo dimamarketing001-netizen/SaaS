@@ -21,7 +21,7 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
     browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
     const page = await browser.newPage({ acceptDownloads: true });
     const pageErrors = [];
-    page.on('pageerror', error => pageErrors.push(error.message));
+    page.on('pageerror', error => pageErrors.push(page.url() + ': ' + error.message));
 
     await page.goto('http://127.0.0.1:' + port + '/ad-intelligence.html', { waitUntil: 'domcontentloaded' });
     await page.locator('[data-tab="advertisers"]').click();
