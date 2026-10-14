@@ -201,6 +201,37 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
 .drawer #detailSave{position:sticky;bottom:0;width:100%;justify-content:center;margin-top:8px}
 @media(max-width:760px){.detailpreview{padding:15px;min-height:190px}.detailpreview .adart{min-height:145px;padding:18px}.detailpreview .adart strong{font-size:19px}}
 
+
+/* Library discovery controls */
+.librarycontrols{background:#fff;border:1px solid #ededf4;border-radius:21px;padding:17px 18px 14px;margin-bottom:24px;box-shadow:0 5px 20px #28274204}
+.librarycontrols .toolbar{margin-bottom:13px;gap:10px}
+.librarycontrols .search{flex:1;min-width:230px}
+.librarycontrols .search kbd{font-size:10px;color:#a2a3b1;background:#f5f4f9;border:1px solid #eae9f1;border-radius:6px;padding:3px 6px}
+.filtertoggle{white-space:nowrap}
+.filtercounter{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:6px;background:#39ff88;color:#1c4931;font-size:9px;font-weight:800}
+.advancedfilters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;padding:15px 0;border-top:1px solid #f0f0f5;margin-bottom:12px}
+.filterfield{display:flex;flex-direction:column;gap:7px;font-size:10px;color:#898b9b}
+.filterfield .filter{width:100%;height:43px}
+.quickfilters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.quickfilter{display:inline-flex;align-items:center;gap:7px;border:1px solid transparent;background:transparent;color:#858799;border-radius:10px;padding:9px 12px;font:600 10px "DM Sans",sans-serif;cursor:pointer;transition:all .18s}
+.quickfilter svg{width:13px;height:13px}
+.quickfilter:hover{background:#f7f6fc;color:#5e50a9}
+.quickfilter.active{background:#f0edff;color:#7158dc;border-color:#e6e0ff}
+.activefilters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #f0f0f5;padding-top:13px;margin-top:13px}
+.activefilterlabel{font-size:9px;color:#9a9baa}
+.filterchips{display:flex;gap:7px;flex-wrap:wrap;flex:1}
+.filterchip{display:inline-flex;align-items:center;gap:9px;border:1px solid #e8e4fa;background:#f8f6ff;border-radius:8px;padding:7px 9px;color:#7059cf;font-size:10px;cursor:pointer;max-width:100%}
+.filterchip span{font-size:14px;line-height:10px}
+.clearfilters{border:0;background:none;color:#858799;font:600 10px "DM Sans",sans-serif;cursor:pointer}
+.clearfilters:hover{color:#7158dc}
+.empty-filter{padding:55px 22px;text-align:center;border:1px dashed #dedbea;border-radius:22px;background:#fff}
+.empty-filter-icon{display:grid;place-items:center;width:52px;height:52px;margin:0 auto 15px;border-radius:17px;background:#f0edff;color:#8066e8}
+.empty-filter-icon svg{width:23px;height:23px}
+.empty-filter h3{font:800 17px Manrope,sans-serif;letter-spacing:-.04em;color:#2b2c39;margin:0 0 8px}
+.empty-filter p{font-size:11px;line-height:1.7;color:#8c8e9f;max-width:410px;margin:0 auto 18px}
+@media(max-width:1000px){.librarycontrols .toolbar{flex-wrap:wrap}.librarycontrols .search{flex-basis:100%}.advancedfilters{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.librarycontrols{padding:13px;border-radius:18px}.librarycontrols .toolbar{display:grid;grid-template-columns:1fr 1fr}.librarycontrols .search{grid-column:1/-1;min-width:0}.librarycontrols .filtertoggle,.librarycontrols #sort,.librarycontrols #reset{width:100%;min-width:0}.advancedfilters{grid-template-columns:1fr}.quickfilters{flex-wrap:nowrap;overflow-x:auto;padding-bottom:3px}.quickfilter{white-space:nowrap}.activefilters{align-items:flex-start}.activefilterlabel{width:100%}.clearfilters{margin-left:auto}}
+
 </style>
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -233,8 +264,18 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
   </section>
   <div class="tabs" role="tablist"><button class="tab active" data-tab="library"><i data-lucide="layout-grid"></i> Библиотека</button><button class="tab" data-tab="collections"><i data-lucide="folder-heart"></i> Подборки</button><button class="tab" data-tab="scans"><i data-lucide="radar"></i> Сканирования</button><button class="tab" data-tab="coverage"><i data-lucide="activity"></i> Источники и качество</button></div>
   <section class="panel" data-panel="library">
-   <div class="toolbar"><label class="search"><i data-lucide="search"></i><input id="query" placeholder="Поиск по бренду, тексту объявления или домену…" autocomplete="off"><span style="font-size:10px;color:#9ba2ac">⌕</span></label><select class="filter" id="platform"><option value="all">Все площадки</option><option>Яндекс / РСЯ</option><option>VK Ads</option><option>Telegram Ads</option><option>Web display</option></select><select class="filter" id="format"><option value="all">Все форматы</option><option>Изображение</option><option>Нативное</option><option>Видео</option></select><button class="secondary" id="reset"><i data-lucide="rotate-ccw"></i> Сбросить</button></div>
-   <div class="resulthead"><div><h2>Библиотека креативов</h2><p id="resultCount">6 демонстрационных объявлений</p></div><div class="resultactions"><button class="secondary" id="savedOnly"><i data-lucide="bookmark"></i> Сохранённые</button><button class="secondary" id="export"><i data-lucide="download"></i> Экспорт JSON</button></div></div>
+   <div class="librarycontrols">
+    <div class="toolbar"><label class="search"><i data-lucide="search"></i><input id="query" placeholder="Поиск по рекламодателю, тексту, домену или площадке…" autocomplete="off"><kbd> / </kbd></label><button class="secondary filtertoggle" id="advancedToggle" aria-expanded="false"><i data-lucide="sliders-horizontal"></i> Фильтры <span class="filtercounter" id="filterCounter" hidden>0</span></button><select class="filter" id="sort"><option value="recent">Сначала новые</option><option value="oldest">Сначала старые</option><option value="brand">По рекламодателю А–Я</option></select><button class="secondary" id="reset"><i data-lucide="rotate-ccw"></i> Сбросить</button></div>
+    <div class="advancedfilters" id="advancedFilters" hidden>
+     <label class="filterfield"><span>Рекламная площадка</span><select class="filter" id="platform"><option value="all">Все площадки</option><option>Яндекс / РСЯ</option><option>VK Ads</option><option>Telegram Ads</option><option>Web display</option></select></label>
+     <label class="filterfield"><span>Формат объявления</span><select class="filter" id="format"><option value="all">Все форматы</option><option>Изображение</option><option>Нативное</option><option>Видео</option></select></label>
+     <label class="filterfield"><span>Сохранение</span><select class="filter" id="savedFilter"><option value="all">Все креативы</option><option value="saved">Только сохранённые</option><option value="unsaved">Не сохранённые</option></select></label>
+    </div>
+    <div class="quickfilters" aria-label="Быстрые фильтры"><button class="quickfilter active" data-quick="all">Все креативы</button><button class="quickfilter" data-quick="saved"><i data-lucide="bookmark"></i> Сохранённые</button><button class="quickfilter" data-quick="yandex">Яндекс / РСЯ</button><button class="quickfilter" data-quick="social">Соцсети</button></div>
+    <div class="activefilters" id="activeFilters" hidden><span class="activefilterlabel">Активные фильтры</span><div id="filterChips" class="filterchips"></div><button class="clearfilters" id="clearFilters">Очистить всё</button></div>
+   </div>
+   <div class="resulthead"><div><h2>Библиотека рекламных креативов</h2><p id="resultCount" aria-live="polite">6 демонстрационных объявлений</p></div><div class="resultactions"><button class="secondary" id="savedOnly"><i data-lucide="bookmark"></i> Сохранённые</button><button class="secondary" id="export"><i data-lucide="download"></i> Экспорт JSON</button></div></div>
+   <div class="empty-filter" id="emptyFilter" hidden><div class="empty-filter-icon"><i data-lucide="search-x"></i></div><h3>Ничего не найдено</h3><p>По текущему запросу и фильтрам нет совпадений. Попробуйте изменить запрос или снять часть фильтров.</p><button class="secondary" id="emptyReset">Очистить поиск и фильтры</button></div>
    <div class="cards" id="cards">
     <article class="creative" data-platform="Яндекс / РСЯ" data-format="Изображение" data-brand="Право Плюс" data-copy="Помогаем разобраться в сложных юридических вопросах. Запишитесь на консультацию." data-domain="pravo-plus.example" data-date="12 окт 2026"><div class="preview"><span class="platform"><i data-lucide="network"></i> Яндекс · РСЯ</span><button class="save" aria-label="Сохранить креатив"><i data-lucide="bookmark"></i></button><div class="adart"><span class="kicker">Правовая помощь</span><strong>Сложный вопрос?<br>Начните с решения.</strong><p>Консультация по вашей ситуации.</p><span class="cta">Узнать больше ↗</span></div></div><div class="cardbody"><div class="cardtop"><span class="brand">Право Плюс</span><span class="format">Изображение</span></div><p class="copy">Помогаем разобраться в сложных юридических вопросах. Запишитесь на консультацию.</p><div class="metadata"><div><span>Впервые замечено</span><strong>12 окт 2026 · демо</strong></div><div><span>Источник</span><strong>Пример страницы</strong></div></div><div class="cardfoot"><span class="source">Демо-данные</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div></article>
     <article class="creative" data-platform="VK Ads" data-format="Видео" data-brand="FinStart" data-copy="Финансовые инструменты для новых целей. Посмотрите, как это работает." data-domain="finstart.example" data-date="11 окт 2026"><div class="preview"><span class="platform"><i data-lucide="share-2"></i> VK Ads</span><button class="save" aria-label="Сохранить креатив"><i data-lucide="bookmark"></i></button><div class="adart violet"><span class="kicker">FinStart · новый взгляд</span><strong>Ваш следующий<br>финансовый шаг.</strong><p>Инструменты, которые работают на ваши цели.</p><span class="cta">Смотреть обзор ▶</span></div></div><div class="cardbody"><div class="cardtop"><span class="brand">FinStart</span><span class="format">Видео</span></div><p class="copy">Финансовые инструменты для новых целей. Посмотрите, как это работает.</p><div class="metadata"><div><span>Впервые замечено</span><strong>11 окт 2026 · демо</strong></div><div><span>Источник</span><strong>Пример страницы</strong></div></div><div class="cardfoot"><span class="source">Демо-данные</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div></article>
@@ -288,13 +329,39 @@ if(window.lucide)lucide.createIcons();
 let savedOnly=false,currentCard=null,toastTimer=null;
 function notify(title,message){$('#toastTitle').textContent=title;$('#toastText').textContent=message;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),3000)}
 function savedCards(){return $$('.creative').filter(c=>c.dataset.saved==='1')}
-function applyFilters(){const q=$('#query').value.trim().toLowerCase(),p=$('#platform').value,f=$('#format').value;let n=0;$$('#cards .creative').forEach(c=>{const ok=(!q||(c.dataset.brand+' '+c.dataset.copy+' '+c.dataset.domain+' '+c.dataset.platform).toLowerCase().includes(q))&&(p==='all'||c.dataset.platform===p)&&(f==='all'||c.dataset.format===f)&&(!savedOnly||c.dataset.saved==='1');c.hidden=!ok;if(ok)n++});$('#resultCount').textContent=n+' объявлени'+(n===1?'е':'й')+(savedOnly?' в сохранённых':' · демонстрационные данные');updateSaved()}
+function applyFilters(){
+ const q=$('#query').value.trim().toLowerCase(),p=$('#platform').value,f=$('#format').value,sf=$('#savedFilter').value,sort=$('#sort').value;
+ const quick=document.querySelector('.quickfilter.active')?.dataset.quick||'all';
+ const cards=$('#cards .creative');let visible=[];
+ cards.forEach(c=>{
+  const text=(c.dataset.brand+' '+c.dataset.copy+' '+c.dataset.domain+' '+c.dataset.platform+' '+(c.querySelector('.adart .kicker')?.innerText||'')).toLowerCase();
+  const saved=c.dataset.saved==='1';
+  const ok=(!q||text.includes(q))&&(p==='all'||c.dataset.platform===p)&&(f==='all'||c.dataset.format===f)&&(sf==='all'||(sf==='saved'?saved:!saved))&&(!savedOnly||saved)&&(quick==='all'||(quick==='saved'?saved:quick==='yandex'?c.dataset.platform==='Яндекс / РСЯ':quick==='social'?['VK Ads','Telegram Ads'].includes(c.dataset.platform):true));
+  c.hidden=!ok;if(ok)visible.push(c);
+ });
+ visible.sort((a,b)=>sort==='brand'?a.dataset.brand.localeCompare(b.dataset.brand,'ru'):sort==='oldest'?dateKey(a)-dateKey(b):dateKey(b)-dateKey(a));
+ const host=$('#cards');visible.forEach(c=>host.appendChild(c));
+ const n=visible.length;$('#resultCount').textContent=n+' '+(n===1?'креатив':n>1&&n<5?'креатива':'креативов')+' · '+(n?'демонстрационные данные':'нет результатов');
+ $('#emptyFilter').hidden=n!==0;host.hidden=n===0;
+ const chips=[];
+ if(q)chips.push(['q','Поиск: '+q]);if(p!=='all')chips.push(['platform',p]);if(f!=='all')chips.push(['format',f]);if(sf!=='all')chips.push(['savedFilter',sf==='saved'?'Сохранённые':'Не сохранённые']);if(quick!=='all')chips.push(['quick',({saved:'Сохранённые',yandex:'Яндекс / РСЯ',social:'Соцсети'})[quick]||quick]);
+ $('#activeFilters').hidden=chips.length===0;
+ $('#filterChips').innerHTML=chips.map(([k,v])=>'<button class="filterchip" data-clear="'+k+'">'+escapeHTML(v)+' <span aria-hidden="true">×</span></button>').join('');
+ const activeCount=chips.length;$('#filterCounter').hidden=!activeCount;$('#filterCounter').textContent=activeCount;
+ $('.quickfilter').forEach(b=>b.classList.toggle('active',b.dataset.quick===quick));
+ updateSaved();if(window.lucide)lucide.createIcons();
+}
+function dateKey(c){const raw=c.dataset.date||'';const m=raw.match(/(\d{1,2})\s+(янв|фев|мар|апр|май|июн|июл|авг|сен|окт|ноя|дек)[а-я]*\s+(\d{4})/i);if(!m)return 0;const months={янв:0,фев:1,мар:2,апр:3,май:4,июн:5,июл:6,авг:7,сен:8,окт:9,ноя:10,дек:11};return new Date(+m[3],months[m[2].toLowerCase()],+m[1]).getTime()}
 function updateSaved(){const n=savedCards().length;$('#savedStat').textContent=String(n).padStart(2,'0');$('#allSavedCount').textContent=n+' креативов';$('#competitorCount').textContent=n+' креативов';$('#testCount').textContent=n+' креативов';$('#collectionEmpty').hidden=n>0;$('#collectionCards').innerHTML='';savedCards().forEach(c=>{const clone=c.cloneNode(true);clone.querySelector('.save')?.remove();clone.querySelector('.detail')?.remove();$('#collectionCards').append(clone)});if(window.lucide)lucide.createIcons()}
 function setTab(tab){$$('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));$$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===tab));$$('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==tab);const titles={library:['Найдите рекламу раньше конкурентов','Исследуйте креативы, отслеживайте рекламные подходы и сохраняйте находки в одном рабочем пространстве.','Новое сканирование'],collections:['Ваши подборки креативов','Собирайте идеи, наблюдайте за конкурентами и готовьте гипотезы для тестов.','Новая подборка'],scans:['Контроль задач парсинга','Следите за прогрессом, распознаванием и ошибками по каждому источнику.','Новое сканирование'],coverage:['Качество данных под контролем','Понимайте, что найдено, что распознано и где парсеру нужна доработка.','Источники и качество'],settings:['Настройки парсера','Хранение артефактов, версии адаптеров и безопасная обработка неизвестной разметки.','Настройки'],integrations:['Источники и интеграции','Подключения к реальным источникам появятся после интеграции адаптеров.','Интеграции']};const t=titles[tab]||titles.library;$('#pageTitle').textContent=t[0];$('#pageSubtitle').textContent=t[1];$('#topAction span:not(.spark)').textContent=t[2];$('#crumb').textContent='Ad Intelligence / '+({library:'Библиотека',collections:'Подборки',scans:'Сканирования',coverage:'Качество',settings:'Настройки',integrations:'Интеграции'}[tab]||'Библиотека');$('#topAction').style.display=['library','scans'].includes(tab)?'inline-flex':'none';if(tab==='collections')updateSaved();if(window.lucide)lucide.createIcons()}
 $$('[data-tab]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));$$('[data-view]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.view)));
-$('#query').addEventListener('input',applyFilters);$('#platform').addEventListener('change',applyFilters);$('#format').addEventListener('change',applyFilters);
-$('#reset').addEventListener('click',()=>{$('#query').value='';$('#platform').value='all';$('#format').value='all';savedOnly=false;$('#savedOnly').classList.remove('primary');applyFilters()});
-$('#savedOnly').addEventListener('click',()=>{savedOnly=!savedOnly;$('#savedOnly').style.background=savedOnly?'#e7f8ed':'#fff';$('#savedOnly').style.color=savedOnly?'#16884b':'#505966';applyFilters()});
+$('#query').addEventListener('input',applyFilters);['platform','format','savedFilter','sort'].forEach(id=>$('#'+id).addEventListener('change',applyFilters));
+$('#advancedToggle').addEventListener('click',()=>{const open=$('#advancedFilters').hidden;$('#advancedFilters').hidden=!open;$('#advancedToggle').setAttribute('aria-expanded',String(open));$('#advancedToggle').classList.toggle('primary',open)});
+$('.quickfilter').forEach(b=>b.addEventListener('click',()=>{$('.quickfilter').forEach(x=>x.classList.toggle('active',x===b));savedOnly=false;applyFilters()}));
+function resetFilters(){ $('#query').value='';$('#platform').value='all';$('#format').value='all';$('#savedFilter').value='all';$('#sort').value='recent';savedOnly=false;$('.quickfilter').forEach(b=>b.classList.toggle('active',b.dataset.quick==='all'));$('#savedOnly').style.background='#fff';$('#savedOnly').style.color='#505966';applyFilters() }
+$('#reset').addEventListener('click',resetFilters);$('#clearFilters').addEventListener('click',resetFilters);$('#emptyReset').addEventListener('click',resetFilters);
+$('#filterChips').addEventListener('click',e=>{const b=e.target.closest('[data-clear]');if(!b)return;const k=b.dataset.clear;if(k==='q')$('#query').value='';else if(k==='quick'){$('.quickfilter').forEach(x=>x.classList.toggle('active',x.dataset.quick==='all'));savedOnly=false}else $('#'+k).value=k==='platform'||k==='format'?'all':'all';applyFilters()});
+$('#savedOnly').addEventListener('click',()=>{savedOnly=!savedOnly;$('#savedOnly').style.background=savedOnly?'#e7f8ed':'#fff';$('#savedOnly').style.color=savedOnly?'#16884b':'#505966';$('.quickfilter').forEach(x=>x.classList.toggle('active',x.dataset.quick===(savedOnly?'saved':'all')));applyFilters()});
 $$('.save').forEach(b=>b.addEventListener('click',()=>{const c=b.closest('.creative');c.dataset.saved=c.dataset.saved==='1'?'0':'1';b.classList.toggle('saved',c.dataset.saved==='1');b.innerHTML=c.dataset.saved==='1'?'<i data-lucide="bookmark-check"></i>':'<i data-lucide="bookmark"></i>';if(window.lucide)lucide.createIcons();applyFilters();notify(c.dataset.saved==='1'?'Креатив сохранён':'Сохранение отменено',c.dataset.brand+' · демо-подборка')}));
 function openDetail(c){
  currentCard=c;
