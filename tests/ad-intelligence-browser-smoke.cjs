@@ -25,7 +25,17 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
     await page.goto('http://127.0.0.1:' + port + '/ad-intelligence.html', { waitUntil: 'domcontentloaded' });
     await page.locator('[data-tab="advertisers"]').click();
-    assert.equal(await page.locator('#advertiserList .job').count(), 6, 'advertiser list should group the six demo creatives');
+    const advertiserCount = await page.locator('#advertiserList .job').count();
+    if (advertiserCount !== 6) {
+      const state = await page.evaluate(() => ({
+        tabClass: document.querySelector('[data-tab="advertisers"]')?.className,
+        panelHidden: document.querySelector('[data-panel="advertisers"]')?.hidden,
+        listExists: !!document.querySelector('#advertiserList'),
+        listHtml: document.querySelector('#advertiserList')?.innerHTML,
+        pageTitle: document.querySelector('#pageTitle')?.textContent
+      }));
+      throw new Error('advertiser list expected 6 rows, got ' + advertiserCount + '; state=' + JSON.stringify(state) + '; pageErrors=' + JSON.stringify(pageErrors));
+    }
     await page.locator('[data-advertiser-filter="EcoHome"]').click();
     assert.equal(await page.locator('#query').inputValue(), 'EcoHome', 'advertiser action should populate the library search');
     assert.equal(await page.locator('#cards .creative:not([hidden])').count(), 1, 'advertiser action should filter the matching creative');
