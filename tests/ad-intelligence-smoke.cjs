@@ -10,7 +10,7 @@ const main = fs.readFileSync(root + '/index.html', 'utf8');
 const ads = fs.readFileSync(root + '/ad-intelligence.html', 'utf8');
 
 function inlineScriptsCompile(html, name) {
-  const scripts = [...html.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script>/gi)]
+  const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)]
     .map(match => match[1])
     .filter(source => source.trim());
 
@@ -32,9 +32,9 @@ assert.ok(
   'main dashboard must link to the expanded Ad Intelligence workspace'
 );
 
-const dateLine = ads.split('\\n').find(line => line.includes('function parseDemoDate(value)'));
+const dateLine = ads.split('\n').find(line => line.includes('function parseDemoDate(value)'));
 assert.ok(dateLine, 'date parser must exist');
-const parseDemoDate = new Function(dateLine + '\\nreturn parseDemoDate;')();
+const parseDemoDate = new Function(dateLine + '\nreturn parseDemoDate;')();
 for (const [input, expected] of [
   ['12 окт 2026', '2026-10-12'],
   ['11 окт 2026', '2026-10-11'],
