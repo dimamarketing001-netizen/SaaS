@@ -71,7 +71,9 @@ for (const tab of ['advertisers', 'alerts', 'exports']) {
 for (const marker of ['function renderAdvertisers()', 'function saveAlertSettings()', 'function renderExportHistory()', "localStorage.setItem('neon-ad-intelligence-exports'", "localStorage.setItem('neon-ad-intelligence-alerts'"]) {
   assert.ok(ads.includes(marker), 'new workspace feature missing: ' + marker);
 }
-assert.doesNotMatch(ads, /(?<!\$)\$\([^)]*\)\.(?:forEach|map|filter|reduce|some|every)\(/, 'querySelector helper must not be used as a collection');
+for (const [name, html] of [['index.html', main], ['ad-intelligence.html', ads]]) {
+  assert.doesNotMatch(html, /(?<!\$)\$\([^)]*\)\.(?:forEach|map|filter|reduce|some|every)\(/, name + ': querySelector helper must not be used as a collection');
+}
 console.log('PASS: selector helpers distinguish single elements from collections');
 console.log('PASS: advertiser, alert and export-history panels are wired');
 console.log('NOTE: these are static/syntax smoke tests, not full browser or backend integration tests.');
