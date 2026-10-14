@@ -8,17 +8,6 @@ on:
       - 'tests/ad-intelligence-smoke.cjs'
       - 'tests/ad-intelligence-browser-smoke.cjs'
       - '.github/workflows/ad-intelligence-smoke.yml'
-  push:
-    branches:
-      - main
-      - 'fix/**'
-    paths:
-      - 'index.html'
-      - 'ad-intelligence.html'
-      - 'tests/ad-intelligence-smoke.cjs'
-      - 'tests/ad-intelligence-browser-smoke.cjs'
-      - '.github/workflows/ad-intelligence-smoke.yml'
-
 permissions:
   contents: read
 
