@@ -47,6 +47,10 @@ for (const [input, expected] of [
 assert.equal(parseDemoDate('not a date'), null, 'invalid date must return null');
 
 for (const marker of [
+  'function loadSavedCreativeIds()',
+  'function persistSavedCreativeIds()',
+  "localStorage.getItem('neon-ad-intelligence-saved')",
+  "localStorage.setItem('neon-ad-intelligence-saved'",
   'function loadUserCollections()',
   'function persistUserCollections()',
   "localStorage.getItem('neon-ad-intelligence-collections')",
