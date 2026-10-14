@@ -47,6 +47,12 @@ for (const [input, expected] of [
 assert.equal(parseDemoDate('not a date'), null, 'invalid date must return null');
 
 for (const marker of [
+  'const SCAN_STORAGE_KEY=\'neon-ad-intelligence-scan-jobs\'',
+  'function readScanJobs()',
+  'function persistScanJobs()',
+  'function applyScanJobFilters()',
+  'function createDemoScanJob(name,source,target)',
+  'data-scan-action=',
   'function loadSavedCreativeIds()',
   'function persistSavedCreativeIds()',
   "localStorage.getItem('neon-ad-intelligence-saved')",
