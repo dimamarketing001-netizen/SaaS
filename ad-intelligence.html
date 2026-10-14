@@ -325,7 +325,7 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
    <article class="stat"><div class="stathead">Сохранено креативов <span class="staticon gray"><i data-lucide="bookmark-check"></i></span></div><div class="statvalue" id="savedStat">00</div><div class="statfoot">Сохраняется в этом браузере</div></article>
    <article class="stat"><div class="stathead">Задачи сканирования <span class="staticon amber"><i data-lucide="scan-search"></i></span></div><div class="statvalue" id="jobsStat">03</div><div class="statfoot">Тестовые статусы интерфейса</div></article>
   </section>
-  <div class="tabs" role="tablist"><button class="tab active" data-tab="library"><i data-lucide="layout-grid"></i> Библиотека</button><button class="tab" data-tab="collections"><i data-lucide="folder-heart"></i> Подборки</button><button class="tab" data-tab="scans"><i data-lucide="radar"></i> Сканирования</button><button class="tab" data-tab="coverage"><i data-lucide="activity"></i> Источники и качество</button><button class="tab" data-tab="advertisers"><i data-lucide="users"></i> Рекламодатели</button><button class="tab" data-tab="alerts"><i data-lucide="bell-ring"></i> Оповещения</button><button class="tab" data-tab="exports"><i data-lucide="file-down"></i> История экспорта</button></div>
+  <div class="tabs" role="tablist"><button class="tab active" data-tab="library"><i data-lucide="layout-grid"></i> Библиотека</button><button class="tab" data-tab="collections"><i data-lucide="folder-heart"></i> Подборки</button><button class="tab" data-tab="scans"><i data-lucide="radar"></i> Сканирования</button><button class="tab" data-tab="coverage"><i data-lucide="activity"></i> Источники и качество</button><button class="tab" data-tab="advertisers"><i data-lucide="users"></i> Рекламодатели</button><button class="tab" data-tab="alerts"><i data-lucide="bell-ring"></i> Оповещения</button><button class="tab" data-tab="exports"><i data-lucide="file-down"></i> История экспорта</button><button class="tab" data-tab="integrations"><i data-lucide="plug"></i> Интеграции</button><button class="tab" data-tab="settings"><i data-lucide="settings-2"></i> Настройки</button></div>
   <section class="panel" data-panel="library">
    <div class="librarycontrols">
     <div class="toolbar"><label class="search"><i data-lucide="search"></i><input id="query" placeholder="Поиск по рекламодателю, тексту, домену или площадке…" autocomplete="off"><kbd> / </kbd></label><button class="secondary filtertoggle" id="advancedToggle" aria-expanded="false"><i data-lucide="sliders-horizontal"></i> Фильтры <span class="filtercounter" id="filterCounter" hidden>0</span></button><select class="filter" id="sort"><option value="recent">Сначала новые</option><option value="oldest">Сначала старые</option><option value="brand">По рекламодателю А–Я</option></select><button class="secondary" id="reset"><i data-lucide="rotate-ccw"></i> Сбросить</button></div>
@@ -366,7 +366,7 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
       <div class="securityhint"><i data-lucide="shield-check"></i><span><strong>Безопасный просмотр</strong><small>Сохранённый HTML должен отображаться как недоверенный текст или в изолированном sandbox без выполнения скриптов.</small></span></div>
      </article>
     </div>
-    <aside class="settingsaside"><div class="settingsasideicon"><i data-lucide="sliders-horizontal"></i></div><h3>Конфигурация пространства</h3><p>Настройки сохраняются только в интерфейсе текущего демо-сеанса. Серверное хранение подключим на этапе backend.</p><div class="settingstat"><span>Версия интерфейса</span><strong>Ad Intelligence · UI v0.2</strong></div><div class="settingstat"><span>Адаптеры источников</span><strong>Не подключены</strong></div><div class="settingstat"><span>Политика выполнения HTML</span><strong>Без исполнения</strong></div><button class="secondary" id="resetParserSettings" style="width:100%;margin-top:17px"><i data-lucide="rotate-ccw"></i> Сбросить параметры</button></aside>
+    <aside class="settingsaside"><div class="settingsasideicon"><i data-lucide="sliders-horizontal"></i></div><h3>Конфигурация пространства</h3><p>Настройки сохраняются в этом браузере. Серверное хранение, применение к реальному парсеру и синхронизация между устройствами не подключены.</p><div class="settingstat"><span>Версия интерфейса</span><strong>Ad Intelligence · UI v0.2</strong></div><div class="settingstat"><span>Адаптеры источников</span><strong>Не подключены</strong></div><div class="settingstat"><span>Политика выполнения HTML</span><strong>Без исполнения</strong></div><button class="secondary" id="resetParserSettings" style="width:100%;margin-top:17px"><i data-lucide="rotate-ccw"></i> Сбросить параметры</button></aside>
    </div>
   </section>
   <section class="panel" data-panel="integrations" hidden>
@@ -765,8 +765,47 @@ $('#collectionView').addEventListener('click',e=>{if(e.target.closest('[data-col
 $('#detailContent').addEventListener('click',e=>{const add=e.target.closest('#addCreativeToCollection');if(!add||!currentCard)return;const select=$('#addToCollection'),col=userCollections.find(x=>x.id===select.value);if(!col){notify('Выберите подборку','Сначала создайте подборку и выберите её в списке.');return}if(col.ids.includes(currentCard.dataset.id)){notify('Уже добавлен',col.name+' уже содержит этот креатив.');return}col.ids.push(currentCard.dataset.id);persistUserCollections();renderUserCollections();if(activeCollectionId)renderCollectionView(activeCollectionId);notify('Добавлено в подборку',col.name);select.value=''});
 $('#export').addEventListener('click',()=>{const data=$$('#cards .creative').filter(c=>!c.hidden).map(c=>({brand:c.dataset.brand,platform:c.dataset.platform,format:c.dataset.format,text:c.dataset.copy,domain:c.dataset.domain,exampleDate:c.dataset.date,demo:true}));const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='neon-ad-intelligence-demo.json';a.click();URL.revokeObjectURL(url);try{const entries=JSON.parse(localStorage.getItem('neon-ad-intelligence-exports')||'[]');entries.unshift({filename:'neon-ad-intelligence-demo.json',count:data.length,date:new Date().toLocaleString('ru-RU'),demo:true});localStorage.setItem('neon-ad-intelligence-exports',JSON.stringify(entries.slice(0,50)))}catch{}renderExportHistory();notify('Экспорт подготовлен','JSON сформирован из '+data.length+' видимых демо-креативов.');});
 
-$('#saveParserSettings').addEventListener('click',()=>notify('Настройки обновлены','Параметры применены в демо-интерфейсе. Серверное сохранение ещё не подключено.'));
-$('#resetParserSettings').addEventListener('click',()=>{$('#saveUnknown').checked=true;$('#saveScreenshot').checked=true;$('#trackChanges').checked=true;$('#retention').value='30';$('#maxSize').value='512';notify('Параметры сброшены','Возвращены значения по умолчанию.')});
+const PARSER_UI_SETTINGS_KEY='neon-ad-intelligence-parser-settings';
+const DEFAULT_PARSER_UI_SETTINGS={saveUnknown:true,saveScreenshot:true,trackChanges:true,retention:'30',maxSize:'512'};
+function readParserUiSettings(){
+ try{
+  const value=JSON.parse(localStorage.getItem(PARSER_UI_SETTINGS_KEY)||'{}');
+  if(!value||typeof value!=='object'||Array.isArray(value))return {...DEFAULT_PARSER_UI_SETTINGS};
+  return {
+   saveUnknown:typeof value.saveUnknown==='boolean'?value.saveUnknown:DEFAULT_PARSER_UI_SETTINGS.saveUnknown,
+   saveScreenshot:typeof value.saveScreenshot==='boolean'?value.saveScreenshot:DEFAULT_PARSER_UI_SETTINGS.saveScreenshot,
+   trackChanges:typeof value.trackChanges==='boolean'?value.trackChanges:DEFAULT_PARSER_UI_SETTINGS.trackChanges,
+   retention:['7','30','90','365'].includes(String(value.retention))?String(value.retention):DEFAULT_PARSER_UI_SETTINGS.retention,
+   maxSize:['256','512','1024','2048'].includes(String(value.maxSize))?String(value.maxSize):DEFAULT_PARSER_UI_SETTINGS.maxSize
+  };
+ }catch{return {...DEFAULT_PARSER_UI_SETTINGS}}
+}
+function applyParserUiSettings(settings){
+ $('#saveUnknown').checked=settings.saveUnknown;
+ $('#saveScreenshot').checked=settings.saveScreenshot;
+ $('#trackChanges').checked=settings.trackChanges;
+ $('#retention').value=settings.retention;
+ $('#maxSize').value=settings.maxSize;
+}
+function saveParserUiSettings(silent=false){
+ const settings={saveUnknown:$('#saveUnknown').checked,saveScreenshot:$('#saveScreenshot').checked,trackChanges:$('#trackChanges').checked,retention:$('#retention').value,maxSize:$('#maxSize').value};
+ try{
+  localStorage.setItem(PARSER_UI_SETTINGS_KEY,JSON.stringify(settings));
+  if(!silent)notify('Настройки сохранены','Параметры сохранены в этом браузере. На реальный сбор данных они пока не влияют.');
+  return true;
+ }catch{
+  notify('Не удалось сохранить','Хранилище браузера недоступно или заполнено.');
+  return false;
+ }
+}
+function restoreParserUiSettings(){applyParserUiSettings(readParserUiSettings())}
+restoreParserUiSettings();
+$('#saveParserSettings').addEventListener('click',()=>saveParserUiSettings());
+$('#resetParserSettings').addEventListener('click',()=>{
+ applyParserUiSettings({...DEFAULT_PARSER_UI_SETTINGS});
+ const saved=saveParserUiSettings(true);
+ notify(saved?'Параметры сброшены':'Не удалось сохранить',saved?'Значения по умолчанию сохранены в этом браузере.':'Хранилище браузера недоступно.');
+});
 $('#refreshIntegrations').addEventListener('click',()=>notify('Статусы обновлены','Показаны статусы демо-режима; запросы к платформам не выполнялись.'));
 $$('.integrationtest').forEach(b=>b.addEventListener('click',()=>notify('Интеграция не подключена',b.dataset.source+': сначала требуется настроить и развернуть адаптер.')));
 $('.mobilemenu').addEventListener('click',()=>{const nav=$('.sidebar');const opened=nav.classList.toggle('mobile-open');if(opened){const close=document.createElement('button');close.className='mobile-nav-close';close.type='button';close.setAttribute('aria-label','Закрыть меню');close.innerHTML='<i data-lucide="x"></i>';nav.prepend(close);if(window.lucide)lucide.createIcons();close.addEventListener('click',()=>{nav.classList.remove('mobile-open');close.remove()})}else nav.querySelector('.mobile-nav-close')?.remove()});
