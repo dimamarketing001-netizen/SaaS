@@ -100,9 +100,9 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
     assert.equal(await page.locator('#userCollectionGrid').getByText('Browser smoke collection').count(), 1, 'collection should persist after reload');
 
     await page.locator('[data-tab="exports"]').click();
-    const downloadPromise = page.waitForEvent('download');
+    const libraryDownloadPromise = page.waitForEvent('download');
     await page.locator('#exportNow').click();
-    const download = await downloadPromise;
+    const download = await libraryDownloadPromise;
     assert.equal(download.suggestedFilename(), 'neon-ad-intelligence-demo.json', 'export should produce the expected JSON file');
     assert.equal(await page.locator('#exportHistoryList .job').count(), 1, 'export should be recorded in local history');
     await page.reload({ waitUntil: 'domcontentloaded' });
