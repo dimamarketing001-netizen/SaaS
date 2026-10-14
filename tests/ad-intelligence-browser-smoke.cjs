@@ -24,6 +24,10 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
     page.on('pageerror', error => pageErrors.push(page.url() + ': ' + error.message));
 
     await page.goto('http://127.0.0.1:' + port + '/ad-intelligence.html', { waitUntil: 'domcontentloaded' });
+    await page.locator('#cards .creative[data-id="creative-1"] .save').click();
+    assert.equal(await page.locator('#cards .creative[data-id="creative-1"]').getAttribute('data-saved'), '1', 'save action should mark the creative');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    assert.equal(await page.locator('#cards .creative[data-id="creative-1"]').getAttribute('data-saved'), '1', 'saved creative should persist after reload');
     await page.locator('[data-tab="advertisers"]').click();
     const advertiserCount = await page.locator('#advertiserList .job').count();
     if (advertiserCount !== 6) {
@@ -75,6 +79,7 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
     assert.equal(await page.locator('#adsWorkspace a[href="./ad-intelligence.html"]').count(), 1, 'main dashboard should expose the expanded Ad Intelligence link');
 
     assert.deepEqual(pageErrors, [], 'no uncaught browser JavaScript errors should occur');
+    console.log('PASS: saved creative persists after reload');
     console.log('PASS: advertiser list and filter navigation');
     console.log('PASS: alert preferences persist after reload');
     console.log('PASS: collections persist after reload');
