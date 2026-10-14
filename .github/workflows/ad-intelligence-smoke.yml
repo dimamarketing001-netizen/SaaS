@@ -6,6 +6,7 @@ on:
       - 'index.html'
       - 'ad-intelligence.html'
       - 'tests/ad-intelligence-smoke.cjs'
+      - 'tests/ad-intelligence-browser-smoke.cjs'
       - '.github/workflows/ad-intelligence-smoke.yml'
   push:
     branches:
@@ -30,5 +31,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Run Ad Intelligence smoke tests
+      - name: Run static smoke tests
         run: node tests/ad-intelligence-smoke.cjs
+      - name: Install Playwright
+        run: npm install --no-save playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run browser interaction tests
+        run: node tests/ad-intelligence-browser-smoke.cjs
