@@ -104,6 +104,20 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
     await page.locator('[data-tab="alerts"]').click();
     assert.equal(await page.locator('#alertNewCreative').isChecked(), false, 'alert preference should persist after reload');
 
+    await page.locator('[data-tab="settings"]').click();
+    await page.locator('#saveUnknown').uncheck();
+    await page.locator('#retention').selectOption('90');
+    await page.locator('#maxSize').selectOption('1024');
+    await page.locator('#saveParserSettings').click();
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('[data-tab="settings"]').click();
+    assert.equal(await page.locator('#saveUnknown').isChecked(), false, 'parser settings checkbox should persist');
+    assert.equal(await page.locator('#retention').inputValue(), '90', 'parser retention setting should persist');
+    assert.equal(await page.locator('#maxSize').inputValue(), '1024', 'maximum HTML size setting should persist');
+    await page.locator('#resetParserSettings').click();
+    assert.equal(await page.locator('#saveUnknown').isChecked(), true, 'reset should restore parser setting defaults');
+    assert.equal(await page.locator('#retention').inputValue(), '30', 'reset should restore default retention');
+    
     await page.locator('[data-tab="collections"]').click();
     await page.locator('#newCollection').click();
     await page.locator('#taskName').fill('Browser smoke collection');
@@ -139,6 +153,7 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
     console.log('PASS: scan report JSON download');
     console.log('PASS: advertiser list and filter navigation');
     console.log('PASS: alert preferences persist after reload');
+    console.log('PASS: parser settings persist and reset to defaults');
     console.log('PASS: collections persist after reload');
     console.log('PASS: JSON download and export history persist after reload');
     console.log('PASS: main dashboard opens the expanded Ad Intelligence workspace');
