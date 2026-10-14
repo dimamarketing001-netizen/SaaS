@@ -64,4 +64,12 @@ console.log('PASS: inline JavaScript parses (' + mainScripts + ' main, ' + adScr
 console.log('PASS: main dashboard links to expanded Ad Intelligence');
 console.log('PASS: Russian date parsing and invalid-date handling');
 console.log('PASS: collection persistence hooks cover create, rename, delete, add and remove');
+for (const tab of ['advertisers', 'alerts', 'exports']) {
+  assert.ok(ads.includes('data-tab="' + tab + '"'), 'missing navigation tab: ' + tab);
+  assert.ok(ads.includes('data-panel="' + tab + '"'), 'missing panel for navigation tab: ' + tab);
+}
+for (const marker of ['function renderAdvertisers()', 'function saveAlertSettings()', 'function renderExportHistory()', "localStorage.setItem('neon-ad-intelligence-exports'", "localStorage.setItem('neon-ad-intelligence-alerts'"]) {
+  assert.ok(ads.includes(marker), 'new workspace feature missing: ' + marker);
+}
+console.log('PASS: advertiser, alert and export-history panels are wired');
 console.log('NOTE: these are static/syntax smoke tests, not full browser or backend integration tests.');
