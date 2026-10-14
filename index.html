@@ -512,7 +512,7 @@ function applyAiFilters(){
   card.hidden=!ok;if(ok)visible++;
  });
  $('#aiResultCount').textContent=visible+' объявлени'+(visible===1?'е':'й')+(aiSavedOnly?' в сохранённых':' · демонстрационные данные');
- $('#aiSavedCount').textContent=$('#aiGrid .ai-card[data-saved="1"]').length;
+ $('#aiSavedCount').textContent=$$('#aiGrid .ai-card[data-saved="1"]').length;
 }
 $('#aiQuery').addEventListener('input',applyAiFilters);
 $('#aiPlatform').addEventListener('change',applyAiFilters);
