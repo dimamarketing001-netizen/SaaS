@@ -112,6 +112,9 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
 .collectionfoot{border-color:#f0f0f5;color:#9698a9}
 .job{border:1px solid #ededf4;border-radius:19px;padding:21px 23px;box-shadow:0 4px 18px #28274204}
 .scan-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:18px 0 12px}.scan-search{display:flex;align-items:center;gap:9px;flex:1;min-width:230px;background:#fff;border:1px solid #e5e7ee;border-radius:12px;padding:0 13px;color:#85899a}.scan-search input{width:100%;min-width:0;border:0;outline:0;padding:12px 0;background:transparent;color:#20242e}.scan-status-filter{display:flex;align-items:center;gap:8px;color:#777c8e}.scan-status-filter select{border:1px solid #e5e7ee;background:#fff;border-radius:11px;padding:11px 12px;color:#303441}.scan-demo-note{display:flex;gap:10px;align-items:flex-start;margin:0 0 15px;padding:12px 14px;background:#f4f1ff;border:1px solid #e8e1ff;border-radius:12px;color:#6751a9;font-size:11px;line-height:1.6}.scan-demo-note svg{width:16px;min-width:16px;margin-top:1px}.scan-demo-note strong{display:block;color:#4d3a8b}.job{display:flex;flex-wrap:wrap;align-items:center;gap:14px}.jobname{flex:1;min-width:220px}.jobmeta{min-width:100px}.job-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;width:100%;padding-top:12px;border-top:1px solid #f0f1f5}.job-actions button{border:1px solid #e1e4eb;background:#fff;color:#51586a;border-radius:9px;padding:7px 10px;font-size:11px}.job-actions button.primary-action{background:#e9fbf0;border-color:#d0f3dc;color:#16884b}.job-actions button.danger-action{color:#b84a4a}.job-actions button:disabled{opacity:.45;cursor:not-allowed}.job-empty{padding:28px;text-align:center;color:#85899a;border:1px dashed #dfe2e9;border-radius:16px;background:#fff}.job-empty strong{display:block;color:#414656;margin-bottom:6px}.job.is-filtered-out{display:none}
+.scan-detail-overlay{position:fixed;inset:0;z-index:120;background:#15132a66;display:none;justify-content:flex-end;backdrop-filter:blur(3px)}.scan-detail-overlay.show{display:flex}.scan-detail-drawer{height:100%;width:min(720px,100%);overflow:auto;background:#fbfbfd;padding:26px;box-shadow:-20px 0 70px #17142c24}.scan-detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding-bottom:18px;border-bottom:1px solid #ececf2}.scan-detail-head h2{font-size:22px;margin:6px 0}.scan-detail-head p{font-size:12px;color:#777d8d;line-height:1.6;margin:0}.scan-detail-close{border:1px solid #e2e4ec;background:#fff;border-radius:10px;width:38px;height:38px;flex:0 0 38px}.scan-detail-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}.scan-detail-metric{background:#fff;border:1px solid #e9eaf0;border-radius:13px;padding:13px}.scan-detail-metric span{display:block;font-size:10px;color:#85899a;margin-bottom:7px}.scan-detail-metric strong{font-size:17px;color:#272a35}.scan-detail-section{margin-top:22px}.scan-detail-section h3{font-size:14px;margin:0 0 10px}.scan-detail-section>p{font-size:12px;line-height:1.65;color:#777d8d;margin:0 0 12px}.scan-artifact{background:#fff;border:1px solid #e5e7ee;border-radius:15px;padding:15px;margin:10px 0}.scan-artifact-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}.scan-artifact-head strong{font-size:12px}.scan-artifact-head small{display:block;font-size:10px;color:#85899a;margin-top:4px}.scan-artifact-preview{background:#f5f6fa;border-radius:11px;padding:14px}.scan-artifact-preview .preview-label{display:inline-block;background:#e6f7ec;color:#16884b;border-radius:6px;padding:4px 7px;font-size:10px;margin-bottom:8px}.scan-artifact-preview h4{font-size:14px;margin:0 0 7px}.scan-artifact-preview p{font-size:12px;line-height:1.6;color:#666c7b;margin:0 0 10px}.scan-artifact-preview button{border:0;background:#26233f;color:white;padding:8px 11px;border-radius:8px;font-size:11px}.scan-raw{margin:10px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;background:#191a24;color:#d9e3f7;border-radius:10px;padding:14px;font:11px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;max-height:250px;overflow:auto}.scan-artifact-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.scan-artifact-meta span{background:#f2f3f7;color:#697080;border-radius:6px;padding:5px 7px;font-size:10px}.scan-unknown{border-color:#f0d9ae;background:#fffcf6}.scan-unknown .scan-artifact-preview{background:#fff8e9}.scan-detail-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}.scan-detail-footer button{border:1px solid #e0e3eb;background:#fff;border-radius:10px;padding:10px 13px;font-size:12px}
+@media(max-width:640px){.scan-detail-drawer{padding:18px}.scan-detail-metrics{grid-template-columns:1fr}.scan-detail-metric{display:flex;align-items:center;justify-content:space-between;gap:10px}.scan-detail-metric span{margin:0}.scan-detail-head h2{font-size:18px}}
+
 @media(max-width:1250px){.jobmeta{display:block}.job-actions{width:100%}}@media(max-width:760px){.scan-controls{align-items:stretch}.scan-search{min-width:100%}.scan-status-filter{justify-content:space-between}.scan-status-filter select{flex:1}.job{padding:17px}.job-actions button{flex:1}.jobmeta{display:block;min-width:calc(50% - 10px)}}
 .jobicon{width:44px;height:44px;border-radius:15px}
 .jobname strong{font-size:12px;letter-spacing:-.02em}
@@ -404,6 +407,7 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
  </div>
 </main>
 </div>
+<div class="scan-detail-overlay" id="scanDetailOverlay" aria-hidden="true"><aside class="scan-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="scanDetailTitle"><div class="scan-detail-head"><div><div class="eyebrow">AD INTELLIGENCE / SCAN REPORT</div><h2 id="scanDetailTitle">Детали задачи</h2><p id="scanDetailSubtitle">Демонстрационный отчёт. Источник не опрашивался.</p></div><button class="scan-detail-close" id="closeScanDetail" type="button" aria-label="Закрыть детали задачи"><i data-lucide="x"></i></button></div><div id="scanDetailContent"></div><div class="scan-detail-footer"><button id="closeScanDetailFooter" type="button">Закрыть отчёт</button></div></aside></div>
 <div class="overlay" id="detailOverlay"><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><div class="drawerhead"><div><div class="eyebrow">AD INTELLIGENCE / CREATIVE</div><h2 id="detailTitle">Карточка креатива</h2></div><button class="iconbtn" id="closeDetail" aria-label="Закрыть"><i data-lucide="x"></i></button></div><div id="detailContent"></div><button class="primary" id="detailSave"><i data-lucide="bookmark"></i> Сохранить креатив</button></aside></div>
 <div class="modalwrap" id="modalWrap"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h2 id="modalTitle">Новое сканирование</h2><p id="modalDesc">Создайте демонстрационную задачу.</p><form id="taskForm"><div class="field"><label for="taskName" id="taskNameLabel">Название задачи</label><input id="taskName" required placeholder="Например, конкуренты в нише" maxlength="80"></div><div class="field" id="collectionDescriptionField" hidden><label for="collectionDescription">Описание подборки (необязательно)</label><textarea id="collectionDescription" class="collectiondesc" maxlength="240" placeholder="Например, сильные офферы и визуальные подходы конкурентов"></textarea></div><div class="field"><label for="taskSource">Источник</label><select id="taskSource"><option>Яндекс / РСЯ</option><option>VK Ads</option><option>Telegram Ads</option><option>Web display</option></select></div><div class="field"><label for="taskTarget">Стартовый URL или примечание (необязательно)</label><input id="taskTarget" placeholder="https://example.com"></div><div class="note">Макет добавит задачу в демонстрационный список. Он не запускает сетевые запросы и не выполняет настоящий парсинг.</div><div class="modalactions"><button type="button" class="secondary" id="cancelModal">Отмена</button><button type="submit" class="primary">Создать задачу</button></div></form></div></div>
 <div class="toast" id="toast"><strong id="toastTitle">Готово</strong><span id="toastText"></span></div>
@@ -519,7 +523,7 @@ $$('.detail').forEach(b=>b.addEventListener('click',()=>openDetail(b.closest('.c
 function closeDetail(){$('#detailOverlay').classList.remove('show')}
 $('#closeDetail').addEventListener('click',closeDetail);
 $('#detailOverlay').addEventListener('click',e=>{if(e.target===$('#detailOverlay'))closeDetail()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDetail();$('#modalWrap').classList.remove('show')}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDetail();closeScanJobDetails();$('#modalWrap').classList.remove('show')}});
 $('#detailContent').addEventListener('click',async e=>{const b=e.target.closest('[data-copy-value]');if(!b)return;const value=b.dataset.copyValue||'';try{await navigator.clipboard.writeText(value);notify('Скопировано',b.dataset.copyLabel||'Текст скопирован')}catch(err){const area=document.createElement('textarea');area.value=value;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();const ok=document.execCommand('copy');area.remove();notify(ok?'Скопировано':'Не удалось скопировать',ok?(b.dataset.copyLabel||'Текст скопирован'):'Скопируйте текст вручную из карточки')}});$('#detailSave').addEventListener('click',()=>{if(currentCard){const saveButton=currentCard.querySelector('.save');const isSaved=currentCard.dataset.saved==='1';if(isSaved){currentCard.dataset.saved='0';saveButton.classList.remove('saved');saveButton.innerHTML='<i data-lucide="bookmark"></i>';notify('Убрано из сохранённых',currentCard.dataset.brand+' · демо-подборка')}else{currentCard.dataset.saved='1';saveButton.classList.add('saved');saveButton.innerHTML='<i data-lucide="bookmark-check"></i>';notify('Креатив сохранён',currentCard.dataset.brand+' · демо-подборка')}if(window.lucide)lucide.createIcons();persistSavedCreativeIds();applyFilters();$('#detailSave').innerHTML=currentCard.dataset.saved==='1'?'<i data-lucide="bookmark-check"></i> Убрать из сохранённых':'<i data-lucide="bookmark"></i> Сохранить креатив';if(window.lucide)lucide.createIcons()}});
 function loadUserCollections(){try{const value=JSON.parse(localStorage.getItem('neon-ad-intelligence-collections')||'[]');return Array.isArray(value)?value.filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&Array.isArray(x.ids)):[]}catch{return[]}}
 function persistUserCollections(){try{localStorage.setItem('neon-ad-intelligence-collections',JSON.stringify(userCollections))}catch{notify('Не удалось сохранить подборки','Хранилище браузера недоступно или заполнено.')}}
@@ -593,6 +597,66 @@ function updateScanSummary(){
  $('#jobTotal').textContent=String(scanJobs.length).padStart(2,'0');
  $('#jobsStat').textContent=String(scanJobs.length).padStart(2,'0');
 }
+function createScanArtifact(type,values){
+ const article=document.createElement('article');
+ article.className='scan-artifact'+(type==='unknown'?' scan-unknown':'');
+ const head=document.createElement('div');head.className='scan-artifact-head';
+ const title=document.createElement('div');
+ const strong=document.createElement('strong');strong.textContent=type==='unknown'?'Нераспознанный HTML-фрагмент':'Распознанный рекламный блок';
+ const small=document.createElement('small');small.textContent=values.id+' · '+values.selector;
+ title.append(strong,small);
+ const badge=document.createElement('span');badge.className='status '+(type==='unknown'?'partial':'');badge.textContent=type==='unknown'?'Нужна разметка':'Распознано · демо';
+ head.append(title,badge);article.appendChild(head);
+ if(type==='recognized'){
+  const preview=document.createElement('div');preview.className='scan-artifact-preview';
+  const label=document.createElement('span');label.className='preview-label';label.textContent=values.advertiser+' · демонстрация';
+  const headline=document.createElement('h4');headline.textContent=values.headline;
+  const copy=document.createElement('p');copy.textContent=values.copy;
+  const cta=document.createElement('button');cta.type='button';cta.textContent=values.cta;cta.disabled=true;
+  preview.append(label,headline,copy,cta);article.appendChild(preview);
+  const meta=document.createElement('div');meta.className='scan-artifact-meta';
+  [values.format,'Уверенность '+values.confidence+'%','Рекламодатель: '+values.advertiser].forEach(text=>{const tag=document.createElement('span');tag.textContent=text;meta.appendChild(tag)});
+  article.appendChild(meta);
+ }else{
+  const reason=document.createElement('p');reason.textContent='Причина: '+values.reason;reason.style.cssText='font-size:12px;line-height:1.6;color:#8a682f;margin:0 0 10px';article.appendChild(reason);
+  const raw=document.createElement('pre');raw.className='scan-raw';raw.setAttribute('aria-label','Исходный HTML-фрагмент, показан как текст');raw.textContent=values.html;article.appendChild(raw);
+  const meta=document.createElement('div');meta.className='scan-artifact-meta';
+  ['Селектор: '+values.selector,'Распознаватель: отсутствует','Без выполнения HTML/JavaScript'].forEach(text=>{const tag=document.createElement('span');tag.textContent=text;meta.appendChild(tag)});
+  article.appendChild(meta);
+ }
+ return article;
+}
+function openScanJobDetails(job){
+ const overlay=$('#scanDetailOverlay'),content=$('#scanDetailContent');
+ $('#scanDetailTitle').textContent=job.name;
+ $('#scanDetailSubtitle').textContent='Локальный демонстрационный отчёт · источник не опрашивался';
+ content.replaceChildren();
+ const metrics=document.createElement('div');metrics.className='scan-detail-metrics';
+ const meta=scanStatusMeta[job.status];
+ [[ 'Статус',meta.label ],['Элементы',job.items],['Распознавание',job.recognition]].forEach(([label,value])=>{const card=document.createElement('div');card.className='scan-detail-metric';const name=document.createElement('span');name.textContent=label;const val=document.createElement('strong');val.textContent=value;card.append(name,val);metrics.appendChild(card)});
+ content.appendChild(metrics);
+ const info=document.createElement('section');info.className='scan-detail-section';
+ const infoTitle=document.createElement('h3');infoTitle.textContent='Параметры задачи';info.appendChild(infoTitle);
+ const infoText=document.createElement('p');infoText.textContent='Создана: '+job.createdAt+' · Источник: '+job.source+(job.target?' · Адрес: '+job.target:'')+' · '+job.note;info.appendChild(infoText);content.appendChild(info);
+ const results=document.createElement('section');results.className='scan-detail-section';
+ const resultsTitle=document.createElement('h3');resultsTitle.textContent='Примеры результатов';results.appendChild(resultsTitle);
+ const resultsNote=document.createElement('p');resultsNote.textContent='Карточки ниже — статические примеры для проверки интерфейса. Они не были извлечены с сайта и не подтверждают работу распознавателя.';results.appendChild(resultsNote);
+ const artifacts=[
+  {type:'recognized',id:'DEMO-AD-001',selector:'[data-ad-card="demo"]',advertiser:'EcoHome',headline:'Дом начинается с простых решений',copy:'Демонстрационный текст рекламного объявления для макета карточки.',cta:'Подробнее',format:'Native card',confidence:94},
+  {type:'unknown',id:'DEMO-HTML-017',selector:'div.visibility-slot[data-zone="feed"]',reason:'Внутри условного рекламного контейнера не найдено соответствие известным правилам.',html:'<div class="visibility-slot" data-zone="feed">\\n  <div class="rtb-slot" data-ad-id="unknown-17">\\n    <span class="ad-label">Sponsored</span>\\n    <div class="creative-root">\\n      <img data-src="/demo/creative.webp" alt="Ad creative">\\n      <div class="copy-node">Example headline</div>\\n      <a class="action-link" href="#">Learn more</a>\\n    </div>\\n  </div>\\n</div>'}
+ ];
+ artifacts.forEach(item=>results.appendChild(createScanArtifact(item.type,item)));
+ content.appendChild(results);
+ const notice=document.createElement('div');notice.className='scan-demo-note';notice.innerHTML='<i data-lucide="shield-check"></i><span><strong>Безопасный просмотр HTML.</strong> Фрагмент отображается как текст в pre, его теги и атрибуты не выполняются.</span>';content.appendChild(notice);
+ overlay.classList.add('show');overlay.setAttribute('aria-hidden','false');
+ if(window.lucide)lucide.createIcons();
+ $('#closeScanDetail').focus();
+}
+function closeScanJobDetails(){const overlay=$('#scanDetailOverlay');overlay.classList.remove('show');overlay.setAttribute('aria-hidden','true')}
+$('#closeScanDetail').addEventListener('click',closeScanJobDetails);
+$('#closeScanDetailFooter').addEventListener('click',closeScanJobDetails);
+$('#scanDetailOverlay').addEventListener('click',e=>{if(e.target===$('#scanDetailOverlay'))closeScanJobDetails()});
+
 function applyScanJobFilters(){
  const query=$('#jobSearch').value.trim().toLocaleLowerCase('ru');
  const status=$('#jobStatusFilter').value;
@@ -620,7 +684,7 @@ $('#jobList').addEventListener('click',e=>{
  const row=button.closest('.job'),job=scanJobs.find(x=>x.id===row?.dataset.jobId);
  if(!job)return;
  const action=button.dataset.scanAction;
- if(action==='details'){notify(job.name,scanStatusMeta[job.status].label+' · '+job.note);return}
+ if(action==='details'){openScanJobDetails(job);return}
  if(action==='start'){job.status='running';job.note='Симуляция начата вручную. Источники не запрашиваются.';job.items='Обработка демо';job.recognition='—'}
  else if(action==='finish'){job.status='completed';job.note='Демо-цикл завершён. Результаты условные и не получены из рекламной сети.';job.items='6 демо-элементов';job.recognition='83% · демо'}
  else if(action==='retry'){job.status='queued';job.note='Повторная демо-задача поставлена в очередь. Никакой сетевой запрос не выполняется.';job.items='—';job.recognition='—'}
