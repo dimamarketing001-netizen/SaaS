@@ -174,6 +174,33 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
 
 @media(max-width:760px){aside.sidebar.mobile-open{display:flex!important;position:fixed;z-index:60;inset:0 auto 0 0;width:min(310px,88vw);height:100dvh;overflow-y:auto;box-shadow:20px 0 70px #20203030;padding-top:22px}.mobile-nav-close{align-self:flex-end;display:grid;place-items:center;width:36px;height:36px;border:1px solid #ededf4;background:#fff;border-radius:12px;color:#727386;margin:-8px 4px -10px 0}.mobile-nav-close svg{width:17px;height:17px}}
 
+
+/* Creative detail panel — advertiser-first research view */
+.detailpreview{padding:24px;border-radius:19px;background:radial-gradient(ellipse at 80% 10%,#b5a6ff45,transparent 42%),radial-gradient(ellipse at 10% 100%,#39ff8825,transparent 38%),#f3f2fa;display:flex;justify-content:center;align-items:center;min-height:220px;margin:18px 0 16px;overflow:hidden}
+.detailpreview .adart{max-width:100%;transform:none}
+.detailbadges{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+.detailbadge{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;background:#f4f3fa;border:1px solid #eeedf5;border-radius:10px;color:#686a7e;font-size:10px}
+.detailbadge svg{width:13px;height:13px;color:#8066e8}
+.detailbadge.demo{background:#eafaf0;border-color:#d8f5e3;color:#208e58}
+.detailbadge.demo svg{color:#208e58}
+.detailsection{padding:19px 0;border-top:1px solid #efeff5}
+.detailsectiontitle{font:800 13px Manrope,sans-serif;letter-spacing:-.025em;color:#30313f;margin-bottom:14px}
+.detailfield{display:flex;flex-direction:column;gap:6px;padding:10px 0}
+.detailfield>span{font-size:10px;color:#999aaa}
+.detailfield strong{font-size:12px;line-height:1.65;color:#414252;font-weight:700;overflow-wrap:anywhere}
+.detailfield p{font-size:12px;line-height:1.75;color:#6f7184;margin:0}
+.timeline{display:flex;flex-direction:column;gap:0}
+.timelineitem{position:relative;display:grid;grid-template-columns:12px 1fr;gap:11px;padding:0 0 17px}
+.timelineitem:not(:last-child):before{content:"";position:absolute;left:5px;top:12px;bottom:-1px;width:1px;background:#e6e2f7}
+.timelinedot{position:relative;z-index:1;width:11px;height:11px;border-radius:50%;background:#c7c1e8;border:3px solid #f0edff;margin-top:3px}
+.timelinedot.current{background:#39d982;border-color:#e3faec}
+.timelineitem strong{font-size:11px;color:#4a4b5a}
+.timelineitem p{font-size:10px;color:#9092a2;line-height:1.65;margin:5px 0 0}
+.detaildisclaimer{display:flex;gap:9px;align-items:flex-start;background:#f5f4fa;border-radius:13px;padding:13px;color:#858699;font-size:10px;line-height:1.65;margin:4px 0 18px}
+.detaildisclaimer svg{width:15px;height:15px;flex-shrink:0;color:#8c72f6}
+.drawer #detailSave{position:sticky;bottom:0;width:100%;justify-content:center;margin-top:8px}
+@media(max-width:760px){.detailpreview{padding:15px;min-height:190px}.detailpreview .adart{min-height:145px;padding:18px}.detailpreview .adart strong{font-size:19px}}
+
 </style>
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -269,7 +296,38 @@ $('#query').addEventListener('input',applyFilters);$('#platform').addEventListen
 $('#reset').addEventListener('click',()=>{$('#query').value='';$('#platform').value='all';$('#format').value='all';savedOnly=false;$('#savedOnly').classList.remove('primary');applyFilters()});
 $('#savedOnly').addEventListener('click',()=>{savedOnly=!savedOnly;$('#savedOnly').style.background=savedOnly?'#e7f8ed':'#fff';$('#savedOnly').style.color=savedOnly?'#16884b':'#505966';applyFilters()});
 $$('.save').forEach(b=>b.addEventListener('click',()=>{const c=b.closest('.creative');c.dataset.saved=c.dataset.saved==='1'?'0':'1';b.classList.toggle('saved',c.dataset.saved==='1');b.innerHTML=c.dataset.saved==='1'?'<i data-lucide="bookmark-check"></i>':'<i data-lucide="bookmark"></i>';if(window.lucide)lucide.createIcons();applyFilters();notify(c.dataset.saved==='1'?'Креатив сохранён':'Сохранение отменено',c.dataset.brand+' · демо-подборка')}));
-function openDetail(c){currentCard=c;$('#detailTitle').textContent=c.dataset.brand;$('#detailContent').innerHTML='<div class="detailpreview">'+c.querySelector('.adart').outerHTML+'</div><div class="detailrow"><span>Площадка</span><strong>'+c.dataset.platform+'</strong></div><div class="detailrow"><span>Формат</span><strong>'+c.dataset.format+'</strong></div><div class="detailrow"><span>Текст объявления</span><strong>'+c.dataset.copy+'</strong></div><div class="detailrow"><span>Домен в демонстрационных данных</span><strong>'+c.dataset.domain+'</strong></div><div class="detailrow"><span>Дата примера</span><strong>'+c.dataset.date+'</strong></div><div class="detailrow"><span>Исходный HTML</span><strong>Появится после подключения парсера и сохранения артефакта</strong></div><div class="note">Демонстрационная карточка: источник, URL, даты и HTML не получены от реального рекламного сканера.</div>';$('#detailOverlay').classList.add('show');if(window.lucide)lucide.createIcons()}
+function openDetail(c){
+ currentCard=c;
+ const art=c.querySelector('.adart');
+ const headline=art?.querySelector('strong')?.innerText.replace(/\n/g,' ')||'Креатив без заголовка';
+ const cta=art?.querySelector('.cta')?.innerText||'Не указан';
+ const firstSeen=c.dataset.date||'Дата не указана';
+ const advertiser=c.dataset.brand||'Не указан';
+ const domain=c.dataset.domain||'Не указан';
+ const copy=c.dataset.copy||'Текст не указан';
+ const platform=c.dataset.platform||'Источник не указан';
+ const format=c.dataset.format||'Формат не указан';
+ $('#detailTitle').textContent=advertiser;
+ $('#detailContent').innerHTML=
+  '<div class="detailpreview">'+art.outerHTML+'</div>'+
+  '<div class="detailbadges"><span class="detailbadge"><i data-lucide="radio-tower"></i>'+platform+'</span><span class="detailbadge"><i data-lucide="image"></i>'+format+'</span><span class="detailbadge demo"><i data-lucide="flask-conical"></i>Демо-пример</span></div>'+
+  '<section class="detailsection"><div class="detailsectiontitle">Содержание объявления</div>'+
+  '<div class="detailfield"><span>Заголовок</span><strong>'+escapeHTML(headline)+'</strong></div>'+
+  '<div class="detailfield"><span>Текст объявления</span><p>'+escapeHTML(copy)+'</p></div>'+
+  '<div class="detailfield"><span>Призыв к действию (CTA)</span><strong>'+escapeHTML(cta)+'</strong></div></section>'+
+  '<section class="detailsection"><div class="detailsectiontitle">Рекламодатель и источник</div>'+
+  '<div class="detailfield"><span>Рекламодатель</span><strong>'+escapeHTML(advertiser)+'</strong></div>'+
+  '<div class="detailfield"><span>Домен</span><strong>'+escapeHTML(domain)+'</strong></div>'+
+  '<div class="detailfield"><span>Площадка</span><strong>'+escapeHTML(platform)+'</strong></div>'+
+  '<div class="detailfield"><span>Формат</span><strong>'+escapeHTML(format)+'</strong></div></section>'+
+  '<section class="detailsection"><div class="detailsectiontitle">История наблюдений</div>'+
+  '<div class="timeline"><div class="timelineitem"><span class="timelinedot"></span><div><strong>Первое обнаружение</strong><p>'+escapeHTML(firstSeen)+' · дата демонстрационного примера</p></div></div>'+
+  '<div class="timelineitem"><span class="timelinedot current"></span><div><strong>Последнее наблюдение</strong><p>'+escapeHTML(firstSeen)+' · история реальных повторных проверок появится после подключения источников</p></div></div></div></section>'+
+  '<div class="detaildisclaimer"><i data-lucide="info"></i><span>Демонстрационные данные. Реальный рекламодатель, домен и даты будут заполняться из подключённых источников.</span></div>';
+ $('#detailOverlay').classList.add('show');
+ if(window.lucide)lucide.createIcons();
+}
+function escapeHTML(value){return String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
 $$('.detail').forEach(b=>b.addEventListener('click',()=>openDetail(b.closest('.creative'))));$('#closeDetail').addEventListener('click',()=>$('#detailOverlay').classList.remove('show'));$('#detailOverlay').addEventListener('click',e=>{if(e.target===$('#detailOverlay'))$('#detailOverlay').classList.remove('show')});$('#detailSave').addEventListener('click',()=>{if(currentCard&&currentCard.dataset.saved!=='1')currentCard.querySelector('.save').click();$('#detailOverlay').classList.remove('show')});
 let modalMode='scan';function openModal(mode){modalMode=mode;$('#modalTitle').textContent=mode==='scan'?'Новое сканирование':'Новая подборка';$('#modalDesc').textContent=mode==='scan'?'Создайте задачу в демонстрационном списке. Настоящий парсер не запускается.':'Создание пользовательских подборок подключим к серверному хранилищу. Сейчас можно проверить форму.';$('#taskName').placeholder=mode==='scan'?'Например, конкуренты в нише':'Например, Идеи для тестов';$('#taskSource').closest('.field').hidden=mode!=='scan';$('#taskTarget').closest('.field').hidden=mode!=='scan';$('#modalWrap').classList.add('show');$('#taskName').focus()}
 $('#topAction').addEventListener('click',()=>openModal('scan'));$('#newScan').addEventListener('click',()=>openModal('scan'));$('#newCollection').addEventListener('click',()=>openModal('collection'));$('#cancelModal').addEventListener('click',()=>$('#modalWrap').classList.remove('show'));$('#modalWrap').addEventListener('click',e=>{if(e.target===$('#modalWrap'))$('#modalWrap').classList.remove('show')});
