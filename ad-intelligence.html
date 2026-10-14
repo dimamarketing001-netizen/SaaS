@@ -196,6 +196,30 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
 .timelinedot.current{background:#39d982;border-color:#e3faec}
 .timelineitem strong{font-size:11px;color:#4a4b5a}
 .timelineitem p{font-size:10px;color:#9092a2;line-height:1.65;margin:5px 0 0}
+.historytoolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 15px}
+.historytoolbar label{font-size:10px;font-weight:700;color:#66677a}
+.historytoolbar select{height:35px;border:1px solid #e8e6f0;border-radius:9px;padding:0 10px;background:#fff;color:#55566a;font:500 10px "DM Sans",sans-serif}
+.historysummary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0 0 16px}
+.historymetric{padding:12px;border:1px solid #eeedf5;border-radius:12px;background:#fbfbfe}
+.historymetric span{display:block;font-size:9px;color:#9293a4;margin-bottom:6px}
+.historymetric strong{font:800 13px Manrope,sans-serif;color:#444456;overflow-wrap:anywhere}
+.historyevent{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid #eeedf5;border-radius:12px;background:#fff;margin:0 0 9px}
+.historyeventicon{width:30px;height:30px;display:grid;place-items:center;border-radius:10px;background:#f0edff;color:#8064d9;flex-shrink:0}
+.historyeventicon svg{width:14px;height:14px}
+.historyeventcopy{min-width:0;flex:1}
+.historyeventcopy strong{display:block;font-size:11px;color:#48495a;line-height:1.5}
+.historyeventcopy p{font-size:10px;line-height:1.6;color:#898a9a;margin:4px 0 0}
+.historytag{display:inline-flex;margin-top:7px;padding:4px 6px;border-radius:6px;background:#fff4e5;color:#a87521;font-size:9px}
+.historyempty{padding:16px;border:1px dashed #dedbea;border-radius:12px;background:#fbfaff;font-size:10px;line-height:1.7;color:#858699}
+.historyempty strong{display:block;color:#515165;margin-bottom:4px}
+.versionrow{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:9px;align-items:start;padding:12px 0;border-bottom:1px solid #f0eff5}
+.versionrow:last-child{border-bottom:0}
+.versiondot{width:8px;height:8px;border-radius:50%;background:#b6a8f8;margin-top:4px}
+.versionrow strong{font-size:10px;color:#515165}
+.versionrow p{font-size:10px;color:#8b8c9d;line-height:1.6;margin:4px 0 0}
+.versionrow button{border:1px solid #e8e5f4;border-radius:8px;background:#fff;padding:6px 8px;color:#7961d5;font:600 9px "DM Sans",sans-serif;cursor:pointer}
+.versionrow button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:520px){.historysummary{grid-template-columns:1fr 1fr}.historytoolbar{align-items:flex-start}.historytoolbar select{max-width:100%}}
 .detaildisclaimer{display:flex;gap:9px;align-items:flex-start;background:#f5f4fa;border-radius:13px;padding:13px;color:#858699;font-size:10px;line-height:1.65;margin:4px 0 18px}
 .detaildisclaimer svg{width:15px;height:15px;flex-shrink:0;color:#8c72f6}
 .detailactions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px}
@@ -428,8 +452,11 @@ function openDetail(c){
   '<div class="detailfield"><span>Площадка</span><strong>'+escapeHTML(platform)+'</strong></div>'+
   '<div class="detailfield"><span>Формат</span><strong>'+escapeHTML(format)+'</strong></div></section>'+
   '<section class="detailsection"><div class="detailsectiontitle">История наблюдений</div>'+
-  '<div class="timeline"><div class="timelineitem"><span class="timelinedot"></span><div><strong>Первое обнаружение</strong><p>'+escapeHTML(firstSeen)+' · дата демонстрационного примера</p></div></div>'+
-  '<div class="timelineitem"><span class="timelinedot current"></span><div><strong>Последнее наблюдение</strong><p>'+escapeHTML(firstSeen)+' · история реальных повторных проверок появится после подключения источников</p></div></div></div></section>'+
+  '<div class="historysummary"><div class="historymetric"><span>Первое обнаружение</span><strong>'+escapeHTML(firstSeen)+'</strong></div><div class="historymetric"><span>Последнее подтверждённое</span><strong>'+escapeHTML(firstSeen)+'</strong></div></div>'+
+  '<div class="historytoolbar"><label for="historyPeriod">Период истории</label><select id="historyPeriod"><option value="all">За всё время</option><option value="7">Последние 7 дней</option><option value="30" selected>Последние 30 дней</option><option value="90">Последние 90 дней</option></select></div>'+
+  '<div id="historyEvents"><div class="historyevent"><span class="historyeventicon"><i data-lucide="scan-eye"></i></span><div class="historyeventcopy"><strong>Первое обнаружение креатива</strong><p>'+escapeHTML(firstSeen)+' · сохранено как начальная версия демонстрационного примера.</p><span class="historytag">Демо-событие · не подтверждено источником</span></div></div></div>'+
+  '<div class="historyempty" id="historyNoRepeat"><strong>Повторных наблюдений пока нет</strong>После подключения источников здесь появятся следующие проверки, изменения объявления и подтверждённые даты. Мы не подставляем вымышленные события в историю.</div></section>'+
+  '<section class="detailsection"><div class="detailsectiontitle">Версии креатива</div><div class="versionrow"><span class="versiondot"></span><div><strong>Версия 1 · исходное состояние</strong><p>'+escapeHTML(firstSeen)+' · текущий пример для макета. Сравнение версий станет доступно, когда появится как минимум две сохранённые версии.</p></div><button type="button" disabled>Сравнить</button></div><div class="historyempty"><strong>Пока доступна одна версия</strong>При изменении заголовка, текста, изображения или CTA система сможет сохранить новую версию и показать различия.</div></section>'+
   '<div class="detaildisclaimer"><i data-lucide="info"></i><span>Демонстрационные данные. Реальный рекламодатель, домен и даты будут заполняться из подключённых источников.</span></div>';
  const isSaved=currentCard?.dataset.saved==='1';
  $('#detailSave').innerHTML=isSaved?'<i data-lucide="bookmark-check"></i> Убрать из сохранённых':'<i data-lucide="bookmark"></i> Сохранить креатив';
@@ -437,6 +464,9 @@ function openDetail(c){
  if(window.lucide)lucide.createIcons();
 }
 function escapeHTML(value){return String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+function parseDemoDate(value){const m=String(value||'').match(/^(\\d{1,2})\\s+([а-яё]+)\\s+(\\d{4})$/i);if(!m)return null;const months={янв:0,фев:1,мар:2,апр:3,май:4,июн:5,июл:6,авг:7,сен:8,окт:9,ноя:10,дек:11};const key=m[2].toLowerCase().slice(0,3);if(!(key in months))return null;return new Date(Number(m[3]),months[key],Number(m[1]))}
+$('#detailContent').addEventListener('change',e=>{if(e.target.id!=='historyPeriod')return;const events=$('#historyEvents'),empty=$('#historyNoRepeat'),days=e.target.value;const date=parseDemoDate(currentCard?.dataset.date);const now=new Date(2026,9,14);const within=days==='all'||!date||((now-date)/(86400000)<=Number(days));events.hidden=!within;empty.hidden=!within?false:true;if(!within){empty.innerHTML='<strong>За выбранный период событий нет</strong>Первое обнаружение креатива было за пределами выбранного окна. Попробуйте расширить период.';events.hidden=true}else{empty.innerHTML='<strong>Повторных наблюдений пока нет</strong>После подключения источников здесь появятся следующие проверки, изменения объявления и подтверждённые даты. Мы не подставляем вымышленные события в историю.';empty.hidden=false}});
+
 $('.detail').forEach(b=>b.addEventListener('click',()=>openDetail(b.closest('.creative'))));
 function closeDetail(){$('#detailOverlay').classList.remove('show')}
 $('#closeDetail').addEventListener('click',closeDetail);
