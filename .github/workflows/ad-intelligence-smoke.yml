@@ -16,6 +16,7 @@ on:
       - 'index.html'
       - 'ad-intelligence.html'
       - 'tests/ad-intelligence-smoke.cjs'
+      - 'tests/ad-intelligence-browser-smoke.cjs'
       - '.github/workflows/ad-intelligence-smoke.yml'
 
 permissions:
