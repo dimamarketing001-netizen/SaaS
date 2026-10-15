@@ -393,6 +393,7 @@ tbody tr:hover{background:#fbfcfd}
 
   <section id="adsWorkspace" hidden>
 
+    <div style="display:flex;justify-content:flex-end;margin:0 0 12px"><a class="btn" href="./ad-intelligence.html" aria-label="Открыть расширенное пространство Ad Intelligence">Открыть расширенное пространство <i data-lucide="arrow-up-right"></i></a></div>
     <div class="ai-tabs" role="tablist" aria-label="Разделы Ad Intelligence">
       <button class="ai-tab active" data-ai-tab="library" role="tab"><i data-lucide="layout-grid"></i> Библиотека</button>
       <button class="ai-tab" data-ai-tab="collections" role="tab"><i data-lucide="folder-heart"></i> Подборки</button>
@@ -487,7 +488,7 @@ tbody tr:hover{background:#fbfcfd}
 <div class="overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal"><div class="modal-head"><h2 id="modalTitle">Создать проект</h2><button class="icon-btn" id="closeModal" aria-label="Закрыть"><i data-lucide="x"></i></button></div><p id="modalDescription">Выберите направление и задайте название — проект появится в рабочем пространстве.</p><form id="projectForm"><div class="form-row"><label for="projectName">Название проекта</label><input id="projectName" required placeholder="Например, Лидогенерация Q4"></div><div class="form-row"><label for="projectType">Продуктовое пространство</label><select id="projectType"><option value="ads">Ad Intelligence — парсер рекламы</option><option value="automation">Ad Automation — запуск рекламы</option><option value="seo">SEO Intelligence — продвижение</option><option value="builder">Website Builder — сайты и виджеты</option></select></div><div class="modal-actions"><button type="button" class="btn" id="cancelModal">Отмена</button><button class="btn btn-primary" type="submit"><i data-lucide="plus"></i> Создать проект</button></div></form></div></div>
 <div class="toast" id="toast"><i data-lucide="check-circle-2"></i><div><strong id="toastTitle">Готово</strong><span id="toastText">Действие выполнено.</span></div></div>
 <script>
-const $=s=>document.querySelector(s), $=s=>[...document.querySelectorAll(s)];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 
 const overviewIds=['stats','overviewChart','productSectionHead','productGrid','overviewLower'];
 function showWorkspace(page){
@@ -505,20 +506,20 @@ function applyAiFilters(){
  const q=($('#aiQuery')?.value||'').trim().toLowerCase();
  const platform=$('#aiPlatform')?.value||'all', format=$('#aiFormat')?.value||'all';
  let visible=0;
- $('#aiGrid .ai-card').forEach(card=>{
+ $$('#aiGrid .ai-card').forEach(card=>{
   const saved=card.dataset.saved==='1';
   const ok=(!q||(card.dataset.brand+' '+card.dataset.copy+' '+card.dataset.domain+' '+card.dataset.platform).toLowerCase().includes(q))&&(platform==='all'||card.dataset.platform===platform)&&(format==='all'||card.dataset.format===format)&&(!aiSavedOnly||saved);
   card.hidden=!ok;if(ok)visible++;
  });
  $('#aiResultCount').textContent=visible+' объявлени'+(visible===1?'е':'й')+(aiSavedOnly?' в сохранённых':' · демонстрационные данные');
- $('#aiSavedCount').textContent=$('#aiGrid .ai-card[data-saved="1"]').length;
+ $('#aiSavedCount').textContent=$$('#aiGrid .ai-card[data-saved="1"]').length;
 }
 $('#aiQuery').addEventListener('input',applyAiFilters);
 $('#aiPlatform').addEventListener('change',applyAiFilters);
 $('#aiFormat').addEventListener('change',applyAiFilters);
 $('#aiReset').addEventListener('click',()=>{$('#aiQuery').value='';$('#aiPlatform').value='all';$('#aiFormat').value='all';aiSavedOnly=false;$('#aiSavedOnly').classList.remove('btn-primary');applyAiFilters();});
 $('#aiSavedOnly').addEventListener('click',()=>{aiSavedOnly=!aiSavedOnly;$('#aiSavedOnly').classList.toggle('btn-primary',aiSavedOnly);applyAiFilters();});
-$('.ai-save').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const card=btn.closest('.ai-card');const save=card.dataset.saved!=='1';card.dataset.saved=save?'1':'0';btn.classList.toggle('saved',save);btn.innerHTML=save?'<i data-lucide="bookmark-check"></i>':'<i data-lucide="bookmark"></i>';if(window.lucide)lucide.createIcons();applyAiFilters();toast(save?'Креатив сохранён':'Удалено из сохранённых',card.dataset.brand+' · демо-подборка');}));
+$$('.ai-save').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const card=btn.closest('.ai-card');const save=card.dataset.saved!=='1';card.dataset.saved=save?'1':'0';btn.classList.toggle('saved',save);btn.innerHTML=save?'<i data-lucide="bookmark-check"></i>':'<i data-lucide="bookmark"></i>';if(window.lucide)lucide.createIcons();applyAiFilters();toast(save?'Креатив сохранён':'Удалено из сохранённых',card.dataset.brand+' · демо-подборка');}));
 function openAiDetail(card){
  aiCurrentCard=card;const art=card.querySelector('.ai-art').outerHTML;
  $('#aiDrawerTitle').textContent=card.dataset.brand;
@@ -531,7 +532,7 @@ function openAiDetail(card){
  '<div class="ai-demo-note">Это демонстрационная карточка. Реальные исходный HTML, URL, даты обнаружения и метаданные появятся после подключения парсера.</div>';
  $('#aiDetailOverlay').classList.add('show');if(window.lucide)lucide.createIcons();
 }
-$('#aiGrid .ai-detail').forEach(btn=>btn.addEventListener('click',()=>openAiDetail(btn.closest('.ai-card'))));
+$$('#aiGrid .ai-detail').forEach(btn=>btn.addEventListener('click',()=>openAiDetail(btn.closest('.ai-card'))));
 $('#aiDrawerClose').addEventListener('click',()=>$('#aiDetailOverlay').classList.remove('show'));
 $('#aiDetailOverlay').addEventListener('click',e=>{if(e.target===$('#aiDetailOverlay'))$('#aiDetailOverlay').classList.remove('show')});
 $('#aiDrawerSave').addEventListener('click',()=>{if(!aiCurrentCard)return;const btn=aiCurrentCard.querySelector('.ai-save');if(aiCurrentCard.dataset.saved!=='1')btn.click();$('#aiDetailOverlay').classList.remove('show')});

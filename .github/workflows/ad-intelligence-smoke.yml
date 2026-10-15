@@ -1,0 +1,31 @@
+name: Ad Intelligence smoke tests
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'ad-intelligence.html'
+      - 'tests/ad-intelligence-smoke.cjs'
+      - 'tests/ad-intelligence-browser-smoke.cjs'
+      - '.github/workflows/ad-intelligence-smoke.yml'
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run static smoke tests
+        run: node tests/ad-intelligence-smoke.cjs
+      - name: Install Playwright
+        run: npm install --no-save playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run browser interaction tests
+        run: node tests/ad-intelligence-browser-smoke.cjs
