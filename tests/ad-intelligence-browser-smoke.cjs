@@ -191,6 +191,26 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.locator('[data-tab="collections"]').click();
     assert.equal(await page.locator('#userCollectionGrid').getByText('Browser smoke collection').count(), 1, 'collection should persist after reload');
+
+    await page.locator('[data-system-collection="competitors"]').click();
+    assert.equal(await page.locator('#collectionView h3').textContent(), 'Конкуренты', 'competitor system collection should open');
+    assert.equal(await page.locator('#collectionView .creative').count(), 6, 'competitor system collection should include all demo creatives');
+    await page.locator('#collectionView [data-collection-back]').click();
+
+    await page.locator('[data-tab="library"]').click();
+    await page.locator('#cards .creative[data-id="creative-1"] [data-test-idea]').check();
+    assert.ok(await page.evaluate(() => JSON.parse(localStorage.getItem('neon-ad-intelligence-test-ideas') || '[]').includes('creative-1')), 'test idea selection should persist locally');
+    await page.locator('[data-tab="collections"]').click();
+    assert.equal(await page.locator('#testCount').textContent(), '1 креативов', 'test ideas system counter should reflect selected ideas');
+    await page.locator('[data-system-collection="testIdeas"]').click();
+    assert.equal(await page.locator('#collectionView .creative').count(), 1, 'test ideas collection should show only marked creatives');
+    assert.equal(await page.locator('#collectionView .creative').first().getAttribute('data-id'), 'creative-1', 'test ideas collection should show the marked creative');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('[data-tab="collections"]').click();
+    assert.equal(await page.locator('#testCount').textContent(), '1 креативов', 'test idea selection should persist after reload');
+    await page.locator('[data-system-collection="saved"]').click();
+    assert.ok(await page.locator('#collectionView .creative').count() >= 1, 'saved system collection should display saved creatives');
+
     const sourceBulkCollectionRow = page.locator('#userCollectionGrid .usercollection').filter({ hasText: 'Bulk created collection' });
     const originalBulkCollection = await page.evaluate(() => JSON.parse(localStorage.getItem('neon-ad-intelligence-collections') || '[]').find(item => item.name === 'Bulk created collection'));
     page.once('dialog', dialog => dialog.accept('Bulk created collection — копия'));
@@ -246,6 +266,7 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
     console.log('PASS: alert preferences persist after reload');
     console.log('PASS: parser settings persist and reset to defaults');
     console.log('PASS: collections persist after reload');
+    console.log('PASS: system collections open and test ideas can be marked, filtered and persisted');
     console.log('PASS: user collections can be duplicated and exported with their creatives');
     console.log('PASS: JSON download and export history persist after reload');
     console.log('PASS: main dashboard opens the expanded Ad Intelligence workspace');
