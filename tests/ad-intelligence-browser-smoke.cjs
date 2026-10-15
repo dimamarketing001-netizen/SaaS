@@ -264,7 +264,7 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
       await page.locator('[data-compare-select="' + id + '"]').check();
     }
     assert.equal(await page.locator('#compareSelectionCount').textContent(), '4 / 4 выбрано', 'comparison should allow up to four creatives');
-    await page.locator('[data-compare-select="creative-5"]').check();
+    await page.locator('[data-compare-select="creative-5"]').click();
     assert.equal(await page.locator('[data-compare-select="creative-5"]').isChecked(), false, 'comparison should refuse a fifth creative');
     assert.equal(await page.locator('#compareTable tbody tr').count(), 10, 'comparison matrix should expose ten comparable fields');
     page.once('dialog', dialog => dialog.accept('Browser creative comparison'));
