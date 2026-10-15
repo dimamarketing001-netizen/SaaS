@@ -245,6 +245,52 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
     assert.equal(await page.locator('#exportHistoryList .job').count(), 3, 'all three export history entries should persist after reload');
     assert.equal(await page.locator('#exportHistoryList').getByText('neon-ad-intelligence-selected-demo.json').count(), 1, 'selected export entry should persist after reload');
 
+    await page.locator('[data-tab="compare"]').click();
+    assert.equal(await page.locator('#compareCandidates .compare-candidate').count(), 6, 'comparison panel should display all demo creatives initially');
+    assert.equal(await page.locator('#compareAdvertiser option').count(), 7, 'advertiser filter should include all six brands and the all option');
+    await page.locator('#comparePlatform').selectOption('VK Ads');
+    assert.equal(await page.locator('#compareCandidates .compare-candidate').count(), 2, 'platform filter should show the two VK demo creatives');
+    await page.locator('#compareFormat').selectOption('Изображение');
+    assert.equal(await page.locator('#compareCandidates .compare-candidate').count(), 1, 'format filter should narrow VK results to its image creative');
+    await page.locator('#compareDateFrom').fill('2026-10-10');
+    await page.locator('#compareDateTo').fill('2026-10-10');
+    await page.locator('#comparePlatform').selectOption('all');
+    await page.locator('#compareFormat').selectOption('all');
+    assert.equal(await page.locator('#compareCandidates .compare-candidate').count(), 1, 'date range should isolate the creative observed on 10 October');
+    assert.ok((await page.locator('#compareCandidates').innerText()).includes('Growth Notes'), 'date filter should return the correctly dated creative');
+    await page.locator('#clearCompareFilters').click();
+    assert.equal(await page.locator('#compareCandidates .compare-candidate').count(), 6, 'clear filters should restore all comparison candidates');
+    for (const id of ['creative-1', 'creative-2', 'creative-3', 'creative-4']) {
+      await page.locator('[data-compare-select="' + id + '"]').check();
+    }
+    assert.equal(await page.locator('#compareSelectionCount').textContent(), '4 / 4 выбрано', 'comparison should allow up to four creatives');
+    await page.locator('[data-compare-select="creative-5"]').check();
+    assert.equal(await page.locator('[data-compare-select="creative-5"]').isChecked(), false, 'comparison should refuse a fifth creative');
+    assert.equal(await page.locator('#compareTable tbody tr').count(), 10, 'comparison matrix should expose ten comparable fields');
+    page.once('dialog', dialog => dialog.accept('Browser creative comparison'));
+    await page.locator('#saveCurrentComparison').click();
+    assert.equal(await page.locator('#savedComparisonsList .saved-comparison-item').count(), 1, 'comparison should be saved to the list');
+    const savedComparison = await page.evaluate(() => JSON.parse(localStorage.getItem('neon-ad-intelligence-saved-comparisons') || '[]')[0]);
+    assert.deepEqual(savedComparison.creativeIds, ['creative-1', 'creative-2', 'creative-3', 'creative-4'], 'saved comparison should preserve selected creative IDs');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('[data-tab="compare"]').click();
+    assert.equal(await page.locator('#savedComparisonsList .saved-comparison-item').count(), 1, 'saved comparison should persist after reload');
+    await page.locator('[data-apply-comparison]').click();
+    assert.equal(await page.locator('#compareSelectionCount').textContent(), '4 / 4 выбрано', 'saved comparison should restore its selected creatives');
+    assert.equal(await page.locator('#compareTable tbody tr').count(), 10, 'applying saved comparison should rebuild the matrix');
+    const comparisonDownloadPromise = page.waitForEvent('download');
+    await page.locator('#exportCurrentComparison').click();
+    const comparisonDownload = await comparisonDownloadPromise;
+    assert.equal(comparisonDownload.suggestedFilename(), 'neon-creative-comparison-demo.json', 'comparison export should produce a JSON file');
+    const comparisonExportHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('neon-ad-intelligence-exports') || '[]'));
+    assert.equal(comparisonExportHistory[0].kind, 'comparison', 'comparison export should be registered in export history');
+    page.once('dialog', dialog => dialog.accept());
+    await page.locator('[data-delete-comparison]').click();
+    assert.equal(await page.locator('#savedComparisonsList .saved-comparison-item').count(), 0, 'saved comparison should be deletable');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('[data-tab="compare"]').click();
+    assert.equal(await page.locator('#savedComparisonsList .saved-comparison-item').count(), 0, 'deleted comparison should stay deleted after reload');
+
     await page.goto('http://127.0.0.1:' + port + '/index.html', { waitUntil: 'domcontentloaded' });
     const mainNavCount = await page.locator('[data-page="ads"]').count();
     if (!mainNavCount) {
@@ -269,6 +315,7 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
     console.log('PASS: system collections open and test ideas can be marked, filtered and persisted');
     console.log('PASS: user collections can be duplicated and exported with their creatives');
     console.log('PASS: JSON download and export history persist after reload');
+    console.log('PASS: creative comparison filters, 2–4 selection, matrix rendering, saved sets and JSON export');
     console.log('PASS: main dashboard opens the expanded Ad Intelligence workspace');
     console.log('PASS: no uncaught browser JavaScript errors');
   } finally {
