@@ -7,10 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f7f7fb;--panel:#fff;--ink:#20212a;--muted:#9294a3;--line:#ececf3;--green:#39ff88;--green-dark:#20a66a;--violet:#8c72f6}
+:root{--bg:#f7f7fb;--panel:#fff;--ink:#20212a;--muted:#9294a3;--line:#ececf3;--green:#39ff88;--green-dark:#20a66a;--violet:#8c72f6;--red:#c0455a}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",sans-serif;font-size:13px;letter-spacing:-.01em}
-button,input{font:inherit}
+button,input,select{font:inherit}
 button{cursor:pointer}
 .shell{min-height:100vh;display:flex;flex-direction:column}
 header.topbar{height:68px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,4vw,38px);gap:14px}
@@ -20,23 +20,40 @@ header.topbar{height:68px;background:#fff;border-bottom:1px solid var(--line);di
 .topright{display:flex;align-items:center;gap:10px}
 .rolebadge{font-size:10px;padding:5px 9px;border-radius:7px;background:#f0edff;color:#7158dc;font-weight:700}
 .userchip{font-size:11px;color:#596371}
-.linkbtn,button.secondary{border:1px solid var(--line);background:#fff;color:#505966;border-radius:10px;padding:9px 13px;font-size:11px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
-.linkbtn:hover,button.secondary:hover{border-color:#c9c0f6;color:#333}
+.linkbtn,button.secondary,button.iconbtn{border:1px solid var(--line);background:#fff;color:#505966;border-radius:10px;padding:9px 13px;font-size:11px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.linkbtn:hover,button.secondary:hover,button.iconbtn:hover{border-color:#c9c0f6;color:#333}
+button.iconbtn{padding:9px;width:36px;height:36px;justify-content:center}
+button.primary{border:0;border-radius:10px;background:#24242f;color:#fff;padding:10px 15px;font-size:11px;font-weight:700}
+button.primary:hover{background:#3a384b}
+button.primary:disabled{opacity:.5;cursor:default}
 .content{max-width:1280px;margin:0 auto;padding:30px clamp(16px,4vw,38px) 60px;width:100%}
 h1{font:800 clamp(22px,2.6vw,28px)/1.2 Manrope,sans-serif;letter-spacing:-.04em;margin:0 0 8px}
-p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-width:640px}
+p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-width:680px}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.tab{border:0;background:transparent;color:var(--muted);padding:11px 4px;margin-right:18px;font-size:12px;font-weight:700;border-bottom:2px solid transparent}
+.tab.active{color:#20212a;border-color:#24242f}
+.view[hidden]{display:none!important}
 .searchbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
 .search{flex:1;min-width:240px;display:flex;align-items:center;gap:10px;padding:0 14px;background:#fff;border:1px solid var(--line);border-radius:13px;height:48px}
 .search input{flex:1;border:0;outline:0;background:transparent;font-size:12px;color:#343b45}
 .search svg,.icon{width:16px;height:16px;flex-shrink:0;color:#9398a8}
+.filterbadge{display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;border-radius:5px;background:var(--violet);color:#fff;font-size:9px;font-weight:800;margin-left:6px}
+.filterspanel{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:14px;margin-bottom:14px}
+.filterspanel[hidden]{display:none}
+.filterfield{display:flex;flex-direction:column;gap:5px;font-size:10px;color:var(--muted)}
+.filterfield select,.filterfield input{border:1px solid var(--line);border-radius:9px;padding:8px 9px;font-size:11px;background:#fbfbfe}
+.filterfield.checkrow{flex-direction:row;align-items:center;gap:7px;padding-top:16px}
+.filterfield.checkrow label{font-size:11px;color:#343b45}
+.filtersfoot{grid-column:1/-1;display:flex;justify-content:flex-end}
+@media(max-width:900px){.filterspanel{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
 .chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 11px;font-size:11px;color:#525a68;cursor:pointer}
 .chip:hover{border-color:#c9c0f6}
-.chip.active{background:#f0edff;border-color:#e0d7ff;color:#7158dc;font-weight:700}
 .chip .inn{color:#9298a8;font-size:9px}
-.advertiserbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fbfaff;border:1px solid #ece6fc;border-radius:14px;padding:14px 16px;margin-bottom:18px}
-.advertiserbar strong{font-size:13px}
-.advertiserbar span{display:block;font-size:11px;color:#8a8ea0;margin-top:3px}
+.contextbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fbfaff;border:1px solid #ece6fc;border-radius:14px;padding:14px 16px;margin-bottom:18px}
+.contextbar[hidden]{display:none}
+.contextbar strong{font-size:13px}
+.contextbar span{display:block;font-size:11px;color:#8a8ea0;margin-top:3px}
 .resultinfo{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 14px;color:var(--muted);font-size:11px}
 .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 @media(max-width:1050px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -60,7 +77,9 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
 .loading{grid-column:1/-1;padding:40px;text-align:center;color:var(--muted)}
 .overlay{position:fixed;inset:0;background:#171d2680;z-index:20;display:none;justify-content:flex-end}
 .overlay.show{display:flex}
+.overlay.center{align-items:center;justify-content:center}
 .drawer{height:100%;width:min(480px,100%);overflow:auto;background:#fff;padding:26px}
+.modal{width:min(420px,92vw);background:#fff;border-radius:18px;padding:24px;max-height:90vh;overflow:auto}
 .drawerhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
 .drawerhead h2{font:800 18px Manrope,sans-serif;margin:0 0 4px;letter-spacing:-.03em}
 .drawerhead p{margin:0;font-size:11px;color:var(--muted)}
@@ -84,6 +103,28 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
 .occ span{color:#9298a8;font-size:10px}
 .hidden{display:none!important}
 .note{margin-top:18px;padding:12px 14px;background:#f4f3fa;border:1px solid #eeedf5;border-radius:12px;color:#6f7184;font-size:10px;line-height:1.7}
+.note.error{background:#fdf0f1;border-color:#f6d9dc;color:var(--red)}
+.note.success{background:#eafaf0;border-color:#d8f0e0;color:var(--green-dark)}
+.runform{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:22px}
+.runform h3{margin:0 0 4px;font:800 14px Manrope,sans-serif}
+.runform p{margin:0 0 16px;color:var(--muted);font-size:11px}
+.runformgrid{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
+.runformgrid .field{display:flex;flex-direction:column;gap:5px}
+.runformgrid label{font-size:10px;color:var(--muted);font-weight:700}
+.runformgrid input{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:12px}
+@media(max-width:700px){.runformgrid{grid-template-columns:1fr}}
+.runlist{display:flex;flex-direction:column;gap:10px}
+.runrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.runrow strong{font-size:12px}
+.runrow .meta{font-size:10px;color:var(--muted);margin-top:3px}
+.statusbadge{font-size:9px;font-weight:800;padding:5px 8px;border-radius:7px;text-transform:uppercase;letter-spacing:.03em}
+.statusbadge.queued{background:#f0edff;color:#7158dc}
+.statusbadge.running{background:#fff4e0;color:#a97724}
+.statusbadge.succeeded{background:#eafaf0;color:var(--green-dark)}
+.statusbadge.failed{background:#fdf0f1;color:var(--red)}
+.field{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.field label{font-size:10px;color:#596371;font-weight:700}
+.field input{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;outline:none}
 </style>
 </head>
 <body>
@@ -93,28 +134,79 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
   <div class="topright">
    <span class="rolebadge hidden" id="roleBadge"></span>
    <span class="userchip" id="userChip"></span>
+   <button class="iconbtn" id="settingsBtn" title="Настройки">⚙</button>
    <a class="linkbtn hidden" id="adminLink" href="#" target="_blank" rel="noopener">Админка SaaS ↗</a>
    <button class="secondary" id="logoutBtn">Выйти</button>
   </div>
  </header>
  <div class="content">
-  <h1>Библиотека рекламных креативов</h1>
-  <p class="lead">Найдите рекламу по ИНН рекламодателя, названию компании, домену или тексту объявления. Один и тот же креатив, показанный под разными campaign ID или на разных площадках, собран в одну карточку.</p>
-  <div class="searchbar">
-   <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-    <input id="query" placeholder="ИНН, название рекламодателя, домен или текст объявления…" autocomplete="off"></label>
-   <button class="secondary" id="resetBtn">Сбросить</button>
+  <h1>ParsYa Ads</h1>
+  <p class="lead">Запускайте сканирование под свои параметры и находите рекламу по ИНН рекламодателя, названию компании, домену или тексту объявления. Один и тот же креатив, показанный под разными campaign ID или на разных площадках, собран в одну карточку.</p>
+  <div class="tabs">
+   <button class="tab active" data-tab="library">Библиотека</button>
+   <button class="tab" data-tab="scans">Сканирования</button>
   </div>
-  <div class="chips hidden" id="advertiserChips"></div>
-  <div class="advertiserbar hidden" id="advertiserBar">
-   <div><strong id="advertiserName"></strong><span id="advertiserMeta"></span></div>
-   <button class="secondary" id="clearAdvertiser">✕ Показать все результаты</button>
-  </div>
-  <div class="resultinfo"><span id="resultCount"></span></div>
-  <div class="cards" id="cards"><div class="loading">Введите запрос, чтобы начать поиск.</div></div>
+
+  <section class="view" id="viewLibrary">
+   <div class="searchbar">
+    <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+     <input id="query" placeholder="ИНН, название рекламодателя, домен или текст объявления…" autocomplete="off"></label>
+    <button class="secondary" id="filterToggle">Фильтры<span class="filterbadge hidden" id="filterBadge">0</span></button>
+    <button class="secondary" id="resetBtn">Сбросить</button>
+   </div>
+   <div class="filterspanel" id="filtersPanel" hidden>
+    <div class="filterfield"><span>Площадка</span><select id="filterPlatform"><option value="">Все площадки</option></select></div>
+    <div class="filterfield"><span>Статус распознавания</span><select id="filterStatus"><option value="">Любой</option><option value="recognized">Полностью распознан</option><option value="partial">Частично</option></select></div>
+    <div class="filterfield"><span>Дата от</span><input type="date" id="filterDateFrom"></div>
+    <div class="filterfield"><span>Дата до</span><input type="date" id="filterDateTo"></div>
+    <div class="filterfield"><span>Сортировка</span><select id="filterSort"><option value="recent">Сначала новые</option><option value="oldest">Сначала старые</option><option value="domain">По домену А-Я</option></select></div>
+    <div class="filterfield checkrow"><input type="checkbox" id="filterHasInn"><label for="filterHasInn">Только с раскрытым ИНН</label></div>
+    <div class="filtersfoot"><button class="secondary" id="filtersClear">Сбросить фильтры</button></div>
+   </div>
+   <div class="chips hidden" id="advertiserChips"></div>
+   <div class="contextbar" id="advertiserBar" hidden>
+    <div><strong id="advertiserName"></strong><span id="advertiserMeta"></span></div>
+    <button class="secondary" id="clearAdvertiser">✕ Показать все результаты</button>
+   </div>
+   <div class="contextbar" id="jobBar" hidden>
+    <div><strong id="jobBarTitle"></strong><span id="jobBarMeta"></span></div>
+    <button class="secondary" id="clearJobFilter">✕ Убрать фильтр по запуску</button>
+   </div>
+   <div class="resultinfo"><span id="resultCount"></span></div>
+   <div class="cards" id="cards"><div class="loading">Введите запрос или настройте фильтры, чтобы начать поиск.</div></div>
+  </section>
+
+  <section class="view" id="viewScans" hidden>
+   <div class="runform">
+    <h3>Новое сканирование</h3>
+    <p>Воркер в WSL подберёт задание при следующем опросе и начнёт собирать креативы по вашему запросу. Можно держать до 3 запусков в очереди/работе одновременно.</p>
+    <form id="runForm" class="runformgrid">
+     <div class="field"><label>Город</label><input id="runCity" value="Екатеринбург" maxlength="100" required></div>
+     <div class="field"><label>Поисковый запрос</label><input id="runKeyText" placeholder="например, кредиты наличными" maxlength="300" required></div>
+     <button class="primary" type="submit">Запустить</button>
+    </form>
+    <div id="runFormNote"></div>
+   </div>
+   <div class="resulthead" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <h3 style="margin:0;font:800 14px Manrope,sans-serif">Мои сканирования</h3>
+    <button class="secondary" id="refreshRuns">Обновить</button>
+   </div>
+   <div class="runlist" id="runList"><div class="loading">Загрузка…</div></div>
+  </section>
  </div>
 </div>
 <div class="overlay" id="detailOverlay"><aside class="drawer" role="dialog" aria-modal="true"><div class="drawerhead"><div><h2 id="detailTitle">Креатив</h2><p id="detailSubtitle"></p></div><button class="closebtn" id="closeDetail">✕</button></div><div id="detailContent"></div></aside></div>
+<div class="overlay center" id="settingsOverlay">
+ <div class="modal" role="dialog" aria-modal="true">
+  <div class="drawerhead"><div><h2>Настройки</h2><p>Смена пароля для входа в ParsYa Ads</p></div><button class="closebtn" id="closeSettings">✕</button></div>
+  <form id="passwordForm">
+   <div class="field"><label>Текущий пароль</label><input type="password" id="currentPassword" required autocomplete="current-password"></div>
+   <div class="field"><label>Новый пароль (минимум 8 символов)</label><input type="password" id="newPassword" minlength="8" required autocomplete="new-password"></div>
+   <button class="primary" type="submit" style="width:100%">Сменить пароль</button>
+  </form>
+  <div id="passwordNote"></div>
+ </div>
+</div>
 <script>
 const DEFAULT_API_BASE = "https://xn--80ak2afbe.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai";
 const session = JSON.parse(localStorage.getItem("parsya_session") || "null");
@@ -123,17 +215,25 @@ if (!session || !session.token) {
 }
 const API_BASE = (localStorage.getItem("parsya_api_base") || DEFAULT_API_BASE).replace(/\/+$/, "");
 
-async function api(path, params) {
+async function api(path, params, options) {
   const url = new URL(API_BASE + path);
-  Object.entries(params || {}).forEach(([k, v]) => { if (v !== undefined && v !== "") url.searchParams.set(k, v); });
-  const response = await fetch(url, { headers: { Authorization: "Bearer " + session.token } });
+  Object.entries(params || {}).forEach(([k, v]) => { if (v !== undefined && v !== "" && v !== false) url.searchParams.set(k, v === true ? "true" : v); });
+  const response = await fetch(url, { ...(options || {}), headers: { Authorization: "Bearer " + session.token, ...((options || {}).headers || {}) } });
   if (response.status === 401) {
     localStorage.removeItem("parsya_session");
     location.replace("index.html");
     throw new Error("session expired");
   }
-  if (!response.ok) throw new Error("API error " + response.status);
+  if (!response.ok) {
+    let detail = "API error " + response.status;
+    try { detail = (await response.json()).detail || detail; } catch (e) {}
+    throw new Error(detail);
+  }
   return response.json();
+}
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 
 document.getElementById("userChip").textContent = session.email || "";
@@ -152,22 +252,93 @@ document.getElementById("logoutBtn").addEventListener("click", async () => {
   location.replace("index.html");
 });
 
+/* ---------- Tabs ---------- */
+const tabs = document.querySelectorAll(".tab");
+const views = { library: document.getElementById("viewLibrary"), scans: document.getElementById("viewScans") };
+tabs.forEach((tab) => tab.addEventListener("click", () => {
+  tabs.forEach((t) => t.classList.toggle("active", t === tab));
+  Object.entries(views).forEach(([key, el]) => { el.hidden = key !== tab.dataset.tab; });
+  if (tab.dataset.tab === "scans") loadRuns();
+}));
+
+/* ---------- Settings / change password ---------- */
+const settingsOverlay = document.getElementById("settingsOverlay");
+document.getElementById("settingsBtn").addEventListener("click", () => settingsOverlay.classList.add("show"));
+document.getElementById("closeSettings").addEventListener("click", () => settingsOverlay.classList.remove("show"));
+settingsOverlay.addEventListener("click", (e) => { if (e.target === settingsOverlay) settingsOverlay.classList.remove("show"); });
+document.getElementById("passwordForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const note = document.getElementById("passwordNote");
+  note.innerHTML = "";
+  const current_password = document.getElementById("currentPassword").value;
+  const new_password = document.getElementById("newPassword").value;
+  try {
+    await api("/api/v1/auth/change-password", {}, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ current_password, new_password }) });
+    note.innerHTML = '<div class="note success">Пароль изменён.</div>';
+    document.getElementById("passwordForm").reset();
+  } catch (err) {
+    note.innerHTML = `<div class="note error">${esc(err.message)}</div>`;
+  }
+});
+
+/* ---------- Library state ---------- */
 const cardsEl = document.getElementById("cards");
 const resultCountEl = document.getElementById("resultCount");
 const advertiserChipsEl = document.getElementById("advertiserChips");
 const advertiserBarEl = document.getElementById("advertiserBar");
+const jobBarEl = document.getElementById("jobBar");
 let activeAdvertiser = null; // {inn, name}
-let groupCache = {}; // group_key -> group object, for the drawer
+let activeJob = null; // {id, label}
+let groupCache = {};
+const filters = { platform: "", status: "", dateFrom: "", dateTo: "", hasInn: false, sort: "recent" };
 
-function esc(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function countActiveFilters() {
+  return Object.values(filters).filter((v) => v !== "" && v !== false && v !== "recent").length;
 }
+function refreshFilterBadge() {
+  const n = countActiveFilters();
+  const badge = document.getElementById("filterBadge");
+  badge.textContent = n;
+  badge.classList.toggle("hidden", n === 0);
+}
+
+const filterToggle = document.getElementById("filterToggle");
+const filtersPanel = document.getElementById("filtersPanel");
+filterToggle.addEventListener("click", () => { filtersPanel.hidden = !filtersPanel.hidden; });
+["filterPlatform", "filterStatus", "filterDateFrom", "filterDateTo", "filterSort"].forEach((id) => {
+  document.getElementById(id).addEventListener("change", (e) => {
+    const map = { filterPlatform: "platform", filterStatus: "status", filterDateFrom: "dateFrom", filterDateTo: "dateTo", filterSort: "sort" };
+    filters[map[id]] = e.target.value;
+    refreshFilterBadge();
+    runSearch();
+  });
+});
+document.getElementById("filterHasInn").addEventListener("change", (e) => { filters.hasInn = e.target.checked; refreshFilterBadge(); runSearch(); });
+document.getElementById("filtersClear").addEventListener("click", () => {
+  filters.platform = filters.status = filters.dateFrom = filters.dateTo = "";
+  filters.hasInn = false; filters.sort = "recent";
+  document.getElementById("filterPlatform").value = "";
+  document.getElementById("filterStatus").value = "";
+  document.getElementById("filterDateFrom").value = "";
+  document.getElementById("filterDateTo").value = "";
+  document.getElementById("filterSort").value = "recent";
+  document.getElementById("filterHasInn").checked = false;
+  refreshFilterBadge();
+  runSearch();
+});
+
+api("/api/v1/platforms").then((data) => {
+  const select = document.getElementById("filterPlatform");
+  data.items.forEach((row) => {
+    const opt = document.createElement("option");
+    opt.value = row.platform;
+    opt.textContent = `${row.platform} (${row.creatives_count})`;
+    select.appendChild(opt);
+  });
+}).catch(() => {});
 
 function renderLoading() { cardsEl.innerHTML = '<div class="loading">Загрузка…</div>'; }
-
-function renderEmpty(text) {
-  cardsEl.innerHTML = `<div class="empty"><strong>Ничего не найдено</strong>${esc(text)}</div>`;
-}
+function renderEmpty(text) { cardsEl.innerHTML = `<div class="empty"><strong>Ничего не найдено</strong>${esc(text)}</div>`; }
 
 function cardHtml(group) {
   const rep = group.representative;
@@ -195,7 +366,7 @@ function renderGroups(groups, countLabel) {
   groupCache = {};
   groups.forEach((g) => { groupCache[g.group_key] = g; });
   resultCountEl.textContent = countLabel;
-  if (!groups.length) { renderEmpty("Попробуйте другой ИНН, название, домен или часть текста объявления."); return; }
+  if (!groups.length) { renderEmpty("Попробуйте другой запрос или снимите часть фильтров."); return; }
   cardsEl.innerHTML = groups.map(cardHtml).join("");
   cardsEl.querySelectorAll("[data-open]").forEach((btn) => {
     btn.addEventListener("click", () => openDetail(groupCache[btn.dataset.open]));
@@ -220,6 +391,15 @@ function groupFlatCreatives(items) {
   return order.map((k) => groups[k]);
 }
 
+function applyClientFilters(groups) {
+  let out = groups;
+  if (filters.platform) out = out.filter((g) => (g.platforms || []).includes(filters.platform));
+  if (filters.sort === "domain") out = [...out].sort((a, b) => (a.representative.domain || "").localeCompare(b.representative.domain || ""));
+  else if (filters.sort === "oldest") out = [...out].sort((a, b) => (a.first_seen_at || "").localeCompare(b.first_seen_at || ""));
+  else out = [...out].sort((a, b) => (b.last_seen_at || "").localeCompare(a.last_seen_at || ""));
+  return out;
+}
+
 async function openDetail(group) {
   const overlay = document.getElementById("detailOverlay");
   const repId = group.creative_ids[0];
@@ -231,7 +411,7 @@ async function openDetail(group) {
     const detail = await api(`/api/v1/creatives/${repId}`);
     renderDetail(group, detail);
   } catch (e) {
-    document.getElementById("detailContent").innerHTML = '<div class="note">Не удалось загрузить детали креатива.</div>';
+    document.getElementById("detailContent").innerHTML = '<div class="note error">Не удалось загрузить детали креатива.</div>';
   }
 }
 
@@ -243,8 +423,6 @@ function renderDetail(group, detail) {
     : '<div class="note">Рекламодатель не был однозначно раскрыт для этого креатива.</div>';
   const byType = {};
   detail.identifiers.forEach((i) => { (byType[i.identifier_type] = byType[i.identifier_type] || []).push(i.identifier_value); });
-  // In advertiser mode the card already aggregates IDs across every row sharing this
-  // content_fingerprint; merge those in so the drawer never shows fewer IDs than the card did.
   const groupTypeMap = { campaign_ids: "campaign_id_candidate", banner_ids: "banner_id_candidate", client_ids: "client_id_candidate" };
   Object.entries(groupTypeMap).forEach(([groupKey, idType]) => {
     (group[groupKey] || []).forEach((value) => {
@@ -279,23 +457,31 @@ document.getElementById("closeDetail").addEventListener("click", () => document.
 document.getElementById("detailOverlay").addEventListener("click", (e) => { if (e.target.id === "detailOverlay") e.currentTarget.classList.remove("show"); });
 
 async function loadAdvertiser(inn) {
+  activeJob = null;
+  jobBarEl.hidden = true;
   renderLoading();
   try {
     const data = await api(`/api/v1/advertisers/${encodeURIComponent(inn)}/creatives`, { limit: 60 });
     activeAdvertiser = { inn: data.advertiser.inn, name: data.advertiser.name };
     document.getElementById("advertiserName").textContent = data.advertiser.name || "Без названия";
     document.getElementById("advertiserMeta").textContent = `ИНН ${data.advertiser.inn} · ${data.total_variants} уникальных креативов из ${data.total_creative_rows} обнаружений`;
-    advertiserBarEl.classList.remove("hidden");
+    advertiserBarEl.hidden = false;
     advertiserChipsEl.classList.add("hidden");
-    renderGroups(data.variants, `${data.total_variants} уникальных креативов`);
+    const filtered = applyClientFilters(data.variants);
+    renderGroups(filtered, `${filtered.length} уникальных креативов`);
   } catch (e) {
-    renderEmpty("Не удалось загрузить креативы этого рекламодателя.");
+    renderEmpty(e.message || "Не удалось загрузить креативы этого рекламодателя.");
   }
 }
 
 document.getElementById("clearAdvertiser").addEventListener("click", () => {
   activeAdvertiser = null;
-  advertiserBarEl.classList.add("hidden");
+  advertiserBarEl.hidden = true;
+  runSearch();
+});
+document.getElementById("clearJobFilter").addEventListener("click", () => {
+  activeJob = null;
+  jobBarEl.hidden = true;
   runSearch();
 });
 
@@ -307,42 +493,118 @@ document.getElementById("query").addEventListener("input", () => {
 document.getElementById("resetBtn").addEventListener("click", () => {
   document.getElementById("query").value = "";
   activeAdvertiser = null;
-  advertiserBarEl.classList.add("hidden");
+  activeJob = null;
+  advertiserBarEl.hidden = true;
+  jobBarEl.hidden = true;
   advertiserChipsEl.classList.add("hidden");
-  cardsEl.innerHTML = '<div class="loading">Введите запрос, чтобы начать поиск.</div>';
+  cardsEl.innerHTML = '<div class="loading">Введите запрос или настройте фильтры, чтобы начать поиск.</div>';
   resultCountEl.textContent = "";
 });
 
 async function runSearch() {
+  if (activeAdvertiser) return loadAdvertiser(activeAdvertiser.inn);
   const query = document.getElementById("query").value.trim();
-  if (activeAdvertiser) return; // advertiser view has its own "show all" exit
-  if (!query) {
+  const hasFilters = countActiveFilters() > 0;
+  if (!query && !hasFilters && !activeJob) {
     advertiserChipsEl.classList.add("hidden");
-    cardsEl.innerHTML = '<div class="loading">Введите запрос, чтобы начать поиск.</div>';
+    cardsEl.innerHTML = '<div class="loading">Введите запрос или настройте фильтры, чтобы начать поиск.</div>';
     resultCountEl.textContent = "";
     return;
   }
   renderLoading();
   try {
-    const advertisers = await api("/api/v1/advertisers", { q: query, limit: 6 });
-    if (advertisers.items.length) {
-      advertiserChipsEl.innerHTML = advertisers.items.map((a) =>
-        `<button class="chip" data-inn="${esc(a.inn || "")}">${esc(a.name || "Без названия")} <span class="inn">ИНН ${esc(a.inn || "—")}</span></button>`
-      ).join("");
-      advertiserChipsEl.classList.remove("hidden");
-      advertiserChipsEl.querySelectorAll("[data-inn]").forEach((chip) => {
-        chip.addEventListener("click", () => loadAdvertiser(chip.dataset.inn));
-      });
+    if (query) {
+      const advertisers = await api("/api/v1/advertisers", { q: query, limit: 6 });
+      if (advertisers.items.length) {
+        advertiserChipsEl.innerHTML = advertisers.items.map((a) =>
+          `<button class="chip" data-inn="${esc(a.inn || "")}">${esc(a.name || "Без названия")} <span class="inn">ИНН ${esc(a.inn || "—")}</span></button>`
+        ).join("");
+        advertiserChipsEl.classList.remove("hidden");
+        advertiserChipsEl.querySelectorAll("[data-inn]").forEach((chip) => {
+          chip.addEventListener("click", () => loadAdvertiser(chip.dataset.inn));
+        });
+      } else {
+        advertiserChipsEl.classList.add("hidden");
+      }
     } else {
       advertiserChipsEl.classList.add("hidden");
     }
-    const creatives = await api("/api/v1/creatives", { q: query, limit: 90 });
+    const creatives = await api("/api/v1/creatives", {
+      q: query, limit: 90, platform: filters.platform, status: filters.status,
+      date_from: filters.dateFrom, date_to: filters.dateTo,
+      has_advertiser: filters.hasInn ? true : undefined, sort: filters.sort,
+      job_id: activeJob ? activeJob.id : undefined,
+    });
     const groups = groupFlatCreatives(creatives.items);
     renderGroups(groups, `${groups.length} уникальных креативов · ${creatives.total} записей`);
   } catch (e) {
-    renderEmpty("Поиск не выполнен. Проверьте соединение с сервисом.");
+    renderEmpty(e.message || "Поиск не выполнен. Проверьте соединение с сервисом.");
   }
 }
+
+/* ---------- Scans tab ---------- */
+let runsPollTimer = null;
+document.getElementById("runForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const note = document.getElementById("runFormNote");
+  note.innerHTML = "";
+  const city = document.getElementById("runCity").value.trim();
+  const key_text = document.getElementById("runKeyText").value.trim();
+  try {
+    await api("/api/v1/runs", {}, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ city, key_text }) });
+    note.innerHTML = '<div class="note success">Запуск поставлен в очередь — воркер подхватит его в течение нескольких секунд.</div>';
+    document.getElementById("runKeyText").value = "";
+    loadRuns();
+  } catch (err) {
+    note.innerHTML = `<div class="note error">${esc(err.message)}</div>`;
+  }
+});
+
+function statusLabel(status) {
+  return { queued: "в очереди", running: "выполняется", succeeded: "готово", failed: "ошибка" }[status] || status;
+}
+
+function runRowHtml(run) {
+  const meta = [`Город: ${esc(run.city)}`, `Запрос: «${esc(run.key_text)}»`, `Креативов: ${run.total_creatives}`].join(" · ");
+  const canBrowse = run.total_creatives > 0;
+  return `<div class="runrow">
+    <div><strong>#${run.id} — ${esc(run.key_text)}</strong><div class="meta">${meta}${run.error_text ? " · <span style='color:var(--red)'>" + esc(run.error_text) + "</span>" : ""}</div></div>
+    <div style="display:flex;align-items:center;gap:10px">
+     <span class="statusbadge ${esc(run.status)}">${statusLabel(run.status)}</span>
+     <button class="secondary" data-browse="${run.id}" data-label="${esc(run.key_text)}" ${canBrowse ? "" : "disabled"}>Показать креативы</button>
+    </div>
+   </div>`;
+}
+
+async function loadRuns() {
+  const list = document.getElementById("runList");
+  try {
+    const data = await api("/api/v1/runs", { limit: 50 });
+    if (!data.items.length) {
+      list.innerHTML = '<div class="empty">Вы ещё не запускали сканирование — создайте первое выше.</div>';
+    } else {
+      list.innerHTML = data.items.map(runRowHtml).join("");
+      list.querySelectorAll("[data-browse]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeJob = { id: Number(btn.dataset.browse), label: btn.dataset.label };
+          activeAdvertiser = null;
+          advertiserBarEl.hidden = true;
+          document.getElementById("jobBarTitle").textContent = `Фильтр: результаты запуска #${activeJob.id}`;
+          document.getElementById("jobBarMeta").textContent = `«${activeJob.label}»`;
+          jobBarEl.hidden = false;
+          document.querySelector('.tab[data-tab="library"]').click();
+          runSearch();
+        });
+      });
+    }
+    const hasActive = data.items.some((r) => r.status === "queued" || r.status === "running");
+    clearTimeout(runsPollTimer);
+    if (hasActive) runsPollTimer = setTimeout(loadRuns, 5000);
+  } catch (e) {
+    list.innerHTML = `<div class="note error">${esc(e.message)}</div>`;
+  }
+}
+document.getElementById("refreshRuns").addEventListener("click", loadRuns);
 </script>
 </body>
 </html>
