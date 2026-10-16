@@ -3,495 +3,346 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#111318">
-<title>NEON / Ad Intelligence</title>
+<title>ParsYa Ads — библиотека креативов</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f5f6f7;--panel:#fff;--ink:#222630;--muted:#838b98;--line:#e7e9ed;--green:#39ff88;--green-dark:#16884b;--violet:#a78bfa;--nav:#14171c;--nav-muted:#9da4ae}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",sans-serif;font-size:13px}button,input,select{font:inherit}button{cursor:pointer}.shell{min-height:100vh;display:grid;grid-template-columns:248px minmax(0,1fr)}aside.sidebar{background:var(--nav);color:#fff;padding:24px 15px;display:flex;flex-direction:column;gap:26px}.brand{display:flex;align-items:center;gap:11px;padding:0 10px}.brandmark{width:35px;height:35px;border-radius:12px;background:var(--green);color:#102117;display:grid;place-items:center;font-weight:900;font-size:19px}.brandname{font-family:Manrope,sans-serif;font-weight:800;letter-spacing:.12em;font-size:14px}.brandname small{display:block;font-family:"DM Sans",sans-serif;font-size:9px;color:var(--nav-muted);font-weight:500;letter-spacing:.17em;margin-top:3px}.workspace{margin:0 3px;padding:13px;border:1px solid #30343b;background:#1b1f25;border-radius:13px}.workspace label{display:block;color:#8e97a3;font-size:9px;text-transform:uppercase;letter-spacing:.12em;margin-bottom:9px}.workspace select{width:100%;background:#252a31;color:#f4f6f8;border:1px solid #3b414b;padding:10px;border-radius:8px;outline:none}.navgroup{display:flex;flex-direction:column;gap:5px}.navlabel{font-size:9px;color:#747d89;letter-spacing:.15em;text-transform:uppercase;padding:0 12px 7px}.navitem{border:0;background:transparent;color:var(--nav-muted);border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px;text-align:left;width:100%;font-size:12px}.navitem svg{width:17px;height:17px;flex-shrink:0}.navitem:hover{background:#22272e;color:#fff}.navitem.active{background:#25332b;color:var(--green)}.navitem .count{margin-left:auto;font-size:10px;color:#9ea6b1}.sidebarbottom{margin-top:auto;border-top:1px solid #2b3038;padding:16px 8px 0;display:flex;align-items:center;gap:10px}.avatar{width:34px;height:34px;background:#33294a;color:#c7b5ff;border-radius:11px;display:grid;place-items:center;font-weight:800}.usercopy strong{display:block;font-size:11px}.usercopy span{display:block;color:#8c95a1;font-size:10px;margin-top:3px}.main{min-width:0}.topbar{height:76px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 34px;gap:15px}.crumb{font-size:11px;color:var(--muted)}.crumb strong{color:#353b46}.top-actions{display:flex;align-items:center;gap:10px}.iconbtn{width:38px;height:38px;border:1px solid var(--line);background:#fff;border-radius:11px;display:grid;place-items:center;color:#69727f}.profiledot{width:34px;height:34px;border-radius:50%;background:#ece7ff;color:#6954a7;display:grid;place-items:center;font-weight:800}.content{max-width:1640px;padding:31px 34px 45px;margin:0 auto}.headline{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:25px}.eyebrow{font-size:10px;color:var(--green-dark);font-weight:800;letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;gap:8px}.eyebrow:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green-dark);box-shadow:0 0 0 4px #39ff882e}.h1{font:800 clamp(25px,3vw,34px)/1.2 Manrope,sans-serif;letter-spacing:-.045em;margin:12px 0 8px}.subtitle{font-size:12px;color:var(--muted);line-height:1.65;max-width:700px}.primary,.secondary{border-radius:11px;padding:12px 15px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:11px;white-space:nowrap}.primary{background:#20252b;color:#fff;border:1px solid #20252b}.primary:hover{background:#343b44}.primary .spark{color:var(--green)}.secondary{background:#fff;border:1px solid var(--line);color:#505966}.secondary:hover{border-color:#bfc6ce}.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:25px}.stat{padding:20px 21px;background:#fff;border:1px solid var(--line);border-radius:17px;min-width:0}.stathead{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#7e8794;font-size:11px}.staticon{width:35px;height:35px;display:grid;place-items:center;border-radius:11px;background:#ebf9f0;color:#19874c}.staticon.violet{background:#f1edff;color:#8064d9}.staticon.gray{background:#f0f2f4;color:#69727e}.staticon.amber{background:#fff4e4;color:#a97724}.statvalue{font:800 27px Manrope,sans-serif;letter-spacing:-.04em;margin:14px 0 7px}.statfoot{font-size:10px;color:#8a929e}.statfoot b{color:#258b53}.tabs{display:flex;gap:5px;overflow:auto;border-bottom:1px solid var(--line);margin-bottom:22px;padding-bottom:10px}.tab{border:0;background:transparent;color:#7b8490;border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:11px;font-weight:700}.tab.active{background:#e7f8ed;color:#16884b}.tab svg{width:15px;height:15px}.panel[hidden]{display:none!important}.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 18px}.search{flex:1;min-width:220px;display:flex;align-items:center;gap:10px;padding:0 14px;background:#fff;border:1px solid var(--line);border-radius:12px;height:45px;color:#8a929e}.search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#343b45;font-size:11px}.filter{height:45px;min-width:145px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:0 12px;color:#535d69;outline:none;font-size:11px}.resulthead{display:flex;justify-content:space-between;align-items:center;gap:15px;margin:24px 0 15px}.resulthead h2{font:800 16px Manrope,sans-serif;margin:0;letter-spacing:-.025em}.resulthead p{color:var(--muted);font-size:10px;margin:6px 0 0}.resultactions{display:flex;gap:8px;flex-wrap:wrap}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.creative{border:1px solid var(--line);background:#fff;border-radius:21px;overflow:hidden;min-width:0;transition:transform .2s,border-color .2s,box-shadow .2s;display:flex;flex-direction:column}.creative:hover{transform:translateY(-3px);border-color:#dcd6fa;box-shadow:0 16px 34px #34256d12}.creative:focus-within{outline:3px solid #8c72f626;outline-offset:2px}.creative[hidden]{display:none}.preview{flex-shrink:0}.cardbody{display:flex;flex-direction:column;flex:1}.cardtop{min-height:26px}.brand{font-size:14px}.copy{font-size:11px;line-height:1.7;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:56px}.metadata{margin-top:auto}.save{cursor:pointer;transition:background .18s,border-color .18s,transform .18s}.save:hover{transform:translateY(-1px);border-color:#c9c0f6}.save:focus-visible,.textbtn:focus-visible{outline:3px solid #8c72f64a;outline-offset:3px}.textbtn{padding:7px 0 7px 8px;white-space:nowrap}.cardfoot{padding-top:12px;border-top:1px solid #f0f1f5}.source{min-width:0}.source:before{flex-shrink:0}.preview{height:225px;background:#eef1f3;position:relative;display:flex;align-items:center;justify-content:center;padding:23px;overflow:hidden}.preview:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 15%,#39ff8830,transparent 40%),linear-gradient(135deg,#fafbfc,#e8edf0)}.platform{position:absolute;top:13px;left:13px;z-index:2;background:#ffffffed;border:1px solid #e7eaee;border-radius:8px;padding:7px 9px;font-size:9px;color:#596371;display:flex;align-items:center;gap:6px}.platform svg{width:13px;height:13px;color:#238b52}.save{position:absolute;top:12px;right:12px;z-index:3;width:34px;height:34px;border:1px solid #e4e8ec;border-radius:10px;background:#ffffffed;color:#65707d;display:grid;place-items:center}.save.saved{background:#e6f8ed;color:#16884b;border-color:#ccebd7}.save svg{width:15px;height:15px}.adart{position:relative;z-index:1;width:min(100%,330px);min-height:157px;border-radius:14px;background:#fff;box-shadow:0 9px 28px #17202b18;padding:20px;display:flex;flex-direction:column;justify-content:center;gap:9px}.adart .kicker{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#7b8490}.adart strong{font:800 20px/1.15 Manrope,sans-serif;letter-spacing:-.04em;color:#252b34}.adart p{font-size:10px;line-height:1.5;color:#687382;margin:0}.cta{align-self:flex-start;background:#39c978;color:#102117;padding:8px 10px;border-radius:7px;font-size:9px;font-weight:800;margin-top:3px}.adart.violet{background:#211936}.adart.violet strong{color:#fff}.adart.violet p,.adart.violet .kicker{color:#c4b8e5}.adart.violet .cta{background:#a78bfa;color:#201633}.adart.dark{background:#111820}.adart.dark strong{color:#fff}.adart.dark p,.adart.dark .kicker{color:#aeb9c7}.adart.dark .cta{background:#39ff88;color:#112016}.adart.orange{background:#fff2df}.adart.orange .cta{background:#dc943b;color:#fff}.cardbody{padding:19px 20px 17px}.cardtop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.brand{font-size:13px;font-weight:800;color:#252c36;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.format{font-size:9px;color:#687382;background:#f3f5f7;border-radius:7px;padding:6px 8px;white-space:nowrap}.copy{font-size:11px;line-height:1.6;color:#65707d;min-height:36px;margin:0 0 15px}.metadata{display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:1px solid #edf0f3;padding-top:14px}.metadata span{display:block;font-size:9px;color:#929aa5;margin-bottom:4px}.metadata strong{font-size:10px;color:#414b58}.cardfoot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:15px}.source{font-size:9px;color:#89929e;display:flex;align-items:center;gap:6px}.source:before{content:"";width:6px;height:6px;border-radius:50%;background:#39c978}.textbtn{border:0;background:transparent;color:#16884b;font-size:10px;font-weight:800;display:flex;align-items:center;gap:5px}.textbtn svg{width:13px;height:13px}.empty{grid-column:1/-1;padding:55px 20px;text-align:center;background:#fff;border:1px dashed #d8dfe5;border-radius:18px;color:#7b8491}.empty strong{display:block;margin:10px 0;color:#303843}.note{margin-top:20px;padding:13px 15px;background:#eff9f2;border:1px solid #d8f0e0;border-radius:12px;color:#5c8068;font-size:10px;line-height:1.7}.collectiongrid,.coveragegrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.collection{border:1px solid var(--line);border-radius:18px;background:#fff;padding:23px;min-height:205px;display:flex;flex-direction:column;gap:13px}.collectionicon{width:46px;height:46px;border-radius:15px;background:#eaf8ef;color:#16884b;display:grid;place-items:center}.collection h3{font:800 15px Manrope,sans-serif;margin:0}.collection p{font-size:11px;line-height:1.6;color:#7b8491;margin:0;flex:1}.collectionfoot{display:flex;justify-content:space-between;gap:8px;border-top:1px solid #edf0f3;padding-top:14px;color:#7b8491;font-size:10px}.joblist{display:flex;flex-direction:column;gap:12px}.job{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(100px,.6fr) minmax(100px,.6fr) auto;gap:16px;align-items:center;padding:19px 21px;background:#fff;border:1px solid var(--line);border-radius:16px}.jobname{display:flex;align-items:center;gap:12px;min-width:0}.jobicon{width:40px;height:40px;display:grid;place-items:center;border-radius:13px;background:#f0ecfd;color:#8065d8;flex-shrink:0}.jobname strong{display:block;font-size:12px;margin-bottom:5px}.jobname span,.jobmeta span{font-size:10px;color:#8b94a0}.jobmeta strong{display:block;font-size:11px;margin-bottom:4px}.status{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 9px;background:#eaf8ef;color:#16884b;font-size:10px;white-space:nowrap}.status:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}.status.partial{background:#fff4e5;color:#a87521}.status.failed{background:#fff0f0;color:#b84a4a}.coverage{padding:22px;background:#fff;border:1px solid var(--line);border-radius:18px}.coveragetop{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:20px}.coveragetop strong{font-size:13px}.coveragevalue{font:800 28px Manrope,sans-serif;margin-bottom:5px}.coverage p{font-size:10px;color:#7b8491;line-height:1.6;margin:0}.progress{height:6px;border-radius:20px;background:#edf0f3;margin:15px 0 10px;overflow:hidden}.progress span{display:block;height:100%;border-radius:20px;background:#39c978}.overlay{position:fixed;inset:0;background:#171d2680;z-index:20;display:none;justify-content:flex-end}.overlay.show{display:flex}.drawer{height:100%;width:min(500px,100%);overflow:auto;background:#fff;padding:28px;box-shadow:-15px 0 60px #17202b22}.drawerhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px}.drawer h2{font:800 22px Manrope,sans-serif;margin:8px 0;color:#20262f}.drawer p{font-size:12px;color:#6f7986;line-height:1.7}.detailpreview{border-radius:16px;overflow:hidden;margin:18px 0}.detailrow{padding:14px 0;border-bottom:1px solid #edf0f3}.detailrow span{display:block;font-size:10px;color:#89929e;margin-bottom:5px}.detailrow strong{font-size:12px;overflow-wrap:anywhere}.modalwrap{position:fixed;inset:0;background:#171d2680;z-index:30;display:none;align-items:center;justify-content:center;padding:18px}.modalwrap.show{display:flex}.modal{width:min(490px,100%);background:#fff;border-radius:20px;padding:25px;box-shadow:0 24px 90px #11182735}.modal h2{font:800 21px Manrope,sans-serif;margin:0 0 8px}.modal p{color:#7b8491;font-size:11px;line-height:1.6;margin:0 0 20px}.field{display:flex;flex-direction:column;gap:8px;margin-bottom:15px}.field label{font-size:10px;color:#596371;font-weight:700}.field input,.field select{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;outline:none;background:#fff}.modalactions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}.toast{position:fixed;right:22px;bottom:22px;z-index:50;background:#20252b;color:#fff;padding:14px 17px;border-radius:12px;box-shadow:0 12px 30px #11182725;display:none;max-width:340px;font-size:11px}.toast.show{display:block}.toast strong{display:block;margin-bottom:4px}.mobilemenu{display:none}
-@media(max-width:1250px){.shell{grid-template-columns:220px minmax(0,1fr)}.content{padding:27px 25px}.topbar{padding:0 25px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.collectiongrid,.coveragegrid{grid-template-columns:repeat(2,minmax(0,1fr))}.job{grid-template-columns:minmax(0,1fr) auto}.jobmeta{display:none}}
-@media(max-width:760px){.shell{grid-template-columns:1fr}.sidebar{display:none!important}.topbar{height:62px;padding:0 16px}.content{padding:22px 15px 35px}.headline{flex-direction:column}.headline>.primary{width:100%}.summary{gap:10px}.stat{padding:15px}.statvalue{font-size:23px}.cards{grid-template-columns:1fr;gap:14px}.preview{height:230px}.collectiongrid,.coveragegrid{grid-template-columns:1fr}.toolbar{gap:8px}.search{min-width:100%}.filter{flex:1;min-width:calc(50% - 5px)}.resulthead{align-items:flex-start;flex-direction:column}.resultactions{width:100%}.resultactions button{flex:1}.job{grid-template-columns:1fr;gap:12px}.job .status{justify-self:start}.top-actions .hide-mobile{display:none}.mobilemenu{display:grid}.drawer{padding:21px}.ai-placeholder{display:none}}
-
-/* Premium fintech dashboard refresh — layout and component styling */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
-:root{--bg:#f7f7fb;--panel:#fff;--ink:#20212a;--muted:#9294a3;--line:#ececf3;--green:#39ff88;--green-dark:#20a66a;--violet:#8c72f6;--nav:#fff;--nav-muted:#777b8d}
-body{background:#f7f7fb;color:#222431;font-family:"DM Sans",sans-serif;letter-spacing:-.012em}
-.shell{grid-template-columns:258px minmax(0,1fr);gap:0}
-aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:1px solid #eeeef4;gap:29px}
-.brand{padding:0 11px;gap:12px}
-.brandmark{width:39px;height:39px;border-radius:14px;background:#24242f;color:#39ff88;box-shadow:0 5px 12px #25253216;font-size:20px}
-.brandname{font-size:15px;letter-spacing:.13em;color:#242530}
-.brandname small{color:#9b9dac;letter-spacing:.14em;font-size:8px}
-.workspace{background:#f8f8fc;border:1px solid #eeeeF5;border-radius:16px;padding:14px}
-.workspace label{color:#989aaa}
-.workspace select{background:#fff;color:#333443;border:1px solid #e9e9f1;border-radius:11px;padding:11px}
-.navgroup{gap:6px}
-.navlabel{color:#a0a1af;font-size:9px;letter-spacing:.16em;padding:0 13px 8px}
-.navitem{color:#777b8c;border-radius:12px;padding:13px 12px;gap:12px;font-size:12px;transition:background .18s,color .18s,transform .18s}
-.navitem svg{width:18px;height:18px}
-.navitem:hover{background:#f7f6fc;color:#363448;transform:translateX(2px)}
-.navitem.active{background:#f0edff;color:#7057dd;font-weight:700}
-.navitem.active svg{color:#8168ed}
-.navitem .count{color:#8e7ae7;background:#e4ddff;border-radius:7px;padding:3px 6px}
-.sidebarbottom{border-top:1px solid #f0f0f5}
-.avatar{border-radius:13px;background:#ece7ff;color:#7259dc}
-.usercopy strong{color:#30313d}.usercopy span{color:#9a9baa}
-.topbar{height:78px;background:#f7f7fb;border-bottom:1px solid #eeeef4;padding:0 38px}
-.crumb{color:#a0a1af;font-size:11px}.crumb strong{color:#373746;font-weight:700}
-.iconbtn{width:40px;height:40px;border:1px solid #ebebf2;background:#fff;border-radius:13px;color:#77798b;box-shadow:0 2px 5px #29294204}
-.iconbtn:hover{background:#f0edff;color:#7057dd}
-.profiledot{width:38px;height:38px;background:#282735;color:#39ff88;border:3px solid #fff;box-shadow:0 0 0 1px #e9e8f0}
-.content{max-width:1740px;padding:35px 38px 52px}
-.headline{align-items:center;margin-bottom:30px}
-.eyebrow{color:#7158dc;font-size:9px;letter-spacing:.16em}
-.eyebrow:before{background:#39ff88;box-shadow:0 0 0 4px #39ff8825}
-.h1{font-size:clamp(29px,3vw,39px);letter-spacing:-.055em;line-height:1.12;margin:13px 0 10px;color:#22232e}
-.subtitle{font-size:13px;line-height:1.75;color:#858798;max-width:680px}
-.primary,.secondary{border-radius:13px;padding:13px 17px;font-size:11px;transition:transform .18s,box-shadow .18s,background .18s}
-.primary{background:#272633;border-color:#272633;box-shadow:0 6px 14px #25243514}
-.primary:hover{background:#3a384b;transform:translateY(-1px);box-shadow:0 8px 18px #2524351c}
-.primary .spark{color:#39ff88}
-.secondary{background:#fff;border-color:#e9e9f1;color:#626477}
-.secondary:hover{border-color:#d4cdf8;background:#fbfaff}
-.summary{gap:18px;margin-bottom:29px}
-.stat{padding:23px 24px;background:#fff;border:1px solid #eeeef4;border-radius:22px;box-shadow:0 5px 20px #2b294a04;min-height:145px}
-.stathead{font-size:11px;color:#858799}
-.staticon{width:40px;height:40px;border-radius:14px;background:#e9faef;color:#21a76a}
-.staticon.violet{background:#f0edff;color:#8066e8}
-.staticon.gray{background:#f2f2f7;color:#73758b}
-.staticon.amber{background:#fff5e7;color:#c18b3e}
-.statvalue{font-size:31px;letter-spacing:-.055em;margin:17px 0 7px;color:#242431}
-.statfoot{font-size:10px;color:#9a9baa}
-.statfoot b{color:#21a76a}
-.tabs{gap:7px;border-bottom:1px solid #e9e9f1;margin-bottom:25px;padding-bottom:12px}
-.tab{border-radius:12px;padding:12px 16px;color:#85879a;font-size:11px}
-.tab.active{background:#eeebff;color:#7158dc}
-.toolbar{gap:11px;margin-bottom:22px}
-.search{height:49px;border-color:#e9e9f1;border-radius:14px;box-shadow:0 3px 12px #28274203;padding:0 16px}
-.search input{font-size:12px}
-.filter{height:49px;border-color:#e9e9f1;border-radius:14px;padding:0 15px;background:#fff}
-.resulthead{margin:28px 0 17px}
-.resulthead h2{font-size:18px;letter-spacing:-.04em;color:#272733}
-.resulthead p{font-size:11px;color:#999aaa}
-.cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
-.creative{border:1px solid #ededf4;border-radius:23px;box-shadow:0 5px 20px #28274205;transition:transform .22s ease,box-shadow .22s ease,border-color .22s}
-.creative:hover{transform:translateY(-4px);box-shadow:0 18px 42px #2a28450d;border-color:#e1dcfb}
-.preview{height:248px;padding:26px;background:#f0eff8}
-.preview:before{background:radial-gradient(ellipse at 80% 18%,#a99aff42,transparent 38%),radial-gradient(ellipse at 10% 95%,#39ff882b,transparent 42%),linear-gradient(135deg,#f8f7fc,#ececf6)}
-.platform{top:15px;left:15px;background:#ffffffdc;border:1px solid #ffffff;border-radius:9px;padding:8px 10px;box-shadow:0 3px 10px #24233a08;font-size:9px}
-.save{top:14px;right:14px;width:36px;height:36px;border-radius:12px;border-color:#ffffff;background:#ffffffdf;box-shadow:0 3px 10px #24233a08}
-.save.saved{background:#e7faef;color:#17965b;border-color:#d4f3df}
-.adart{width:min(100%,340px);min-height:170px;border-radius:18px;padding:23px;gap:10px;box-shadow:0 15px 38px #25243a18;transform:rotate(-1deg);transition:transform .22s}
-.creative:hover .adart{transform:rotate(0) scale(1.015)}
-.adart .kicker{font-size:8px;letter-spacing:.15em}
-.adart strong{font-size:22px;line-height:1.12;letter-spacing:-.055em}
-.adart p{font-size:10px;line-height:1.65}
-.adart .cta{border-radius:9px;padding:9px 12px;font-size:9px}
-.adart.violet{background:linear-gradient(140deg,#28213f,#1b172e)}
-.adart.dark{background:linear-gradient(140deg,#171b27,#10131b)}
-.adart.orange{background:linear-gradient(140deg,#fff6e9,#f8e9d6)}
-.cardbody{padding:21px 22px 19px}
-.cardtop{margin-bottom:12px}
-.brand{font-size:14px;letter-spacing:-.025em}
-.format{border-radius:8px;background:#f4f3f9;color:#7d7e90;padding:7px 9px}
-.copy{font-size:11px;line-height:1.75;color:#777a8d;min-height:39px;margin-bottom:18px}
-.metadata{gap:13px;border-top:1px solid #f0f0f5;padding-top:16px}
-.metadata span{font-size:9px;color:#a0a1af}
-.metadata strong{font-size:10px;color:#555668}
-.cardfoot{margin-top:17px}
-.source{font-size:9px;color:#9698a9}
-.source:before{background:#39d982;box-shadow:0 0 0 3px #39d98220}
-.textbtn{color:#7158dc;font-size:10px}
-.empty{border-color:#e3e1ef;border-radius:20px;background:#fff}
-.note{background:#f0edff;border:1px solid #e5dfff;border-radius:14px;color:#77709b;font-size:10px;padding:15px 17px}
-.collectiongrid,.coveragegrid{gap:20px}
-.collection{border:1px solid #ededf4;border-radius:22px;padding:25px;min-height:225px;box-shadow:0 5px 20px #28274204}
-.collectionicon{width:50px;height:50px;border-radius:16px;background:#e8faef;color:#20a66a}
-.collection h3{font-size:16px;letter-spacing:-.035em}
-.collection p{font-size:11px;line-height:1.75;color:#838598}
-.collectionfoot{border-color:#f0f0f5;color:#9698a9}
-.job{border:1px solid #ededf4;border-radius:19px;padding:21px 23px;box-shadow:0 4px 18px #28274204}
-.jobicon{width:44px;height:44px;border-radius:15px}
-.jobname strong{font-size:12px;letter-spacing:-.02em}
-.status{border-radius:9px;padding:8px 10px}
-.coverage{padding:25px;border:1px solid #ededf4;border-radius:22px;box-shadow:0 5px 20px #28274204}
-.coveragevalue{font-size:32px;letter-spacing:-.05em}
-.progress{height:7px;border-radius:20px;background:#f0eff6}
-.progress span{background:linear-gradient(90deg,#39ff88,#8c72f6)}
-.drawer{padding:32px;border-radius:24px 0 0 24px}
-.drawer h2{letter-spacing:-.045em}
-.modal{border-radius:24px;padding:29px;box-shadow:0 25px 90px #22203924}
-.modal h2{letter-spacing:-.045em}
-.field input,.field select{border-color:#e9e9f1;border-radius:12px;padding:13px}
-.toast{border-radius:14px;box-shadow:0 14px 35px #22203922}
-@media(min-width:1500px){.cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}.preview{height:265px}.cardbody{padding:23px 24px 21px}.stat{padding:25px 27px}}
-@media(max-width:1250px){.shell{grid-template-columns:230px minmax(0,1fr)}.content{padding:28px 26px}.topbar{padding:0 26px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:760px){.shell{grid-template-columns:1fr}.topbar{padding:0 16px}.content{padding:22px 15px 35px}.headline{align-items:stretch}.summary{gap:10px}.stat{padding:16px;border-radius:17px;min-height:130px}.statvalue{font-size:25px}.cards{grid-template-columns:1fr;gap:16px}.preview{height:245px}.collectiongrid,.coveragegrid{grid-template-columns:1fr}.drawer{border-radius:22px 22px 0 0}.adart{transform:none}}
-
-
-/* Workspace screens: settings and integrations */
-.settingslayout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(250px,.8fr);gap:20px;align-items:start}
-.settingsmain{display:flex;flex-direction:column;gap:18px}
-.settingscard,.settingsaside{background:#fff;border:1px solid #ededf4;border-radius:22px;padding:25px;box-shadow:0 5px 20px #28274204}
-.settingscardhead{display:flex;align-items:center;gap:14px;margin-bottom:16px}
-.settingscardhead h3,.settingsaside h3{font:800 15px Manrope,sans-serif;letter-spacing:-.035em;margin:0 0 6px}
-.settingscardhead p,.settingsaside>p{font-size:11px;line-height:1.7;color:#858799;margin:0}
-.settingrow{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:17px 0;border-top:1px solid #f0f0f5;cursor:pointer}
-.settingrow>span{display:flex;flex-direction:column;gap:5px}
-.settingrow strong{font-size:11px;color:#393a49}
-.settingrow small,.securityhint small{font-size:10px;line-height:1.6;color:#9395a5}
-.switch{appearance:none;position:relative;flex-shrink:0;width:42px;height:24px;border-radius:20px;background:#dedee8;border:0;cursor:pointer;transition:background .18s}
-.switch:before{content:"";position:absolute;width:18px;height:18px;top:3px;left:3px;border-radius:50%;background:#fff;box-shadow:0 1px 4px #20203022;transition:transform .18s}
-.switch:checked{background:#39d982}
-.switch:checked:before{transform:translateX(18px)}
-.settingformgrid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-.settingformgrid .field{margin-bottom:0}
-.securityhint{display:flex;gap:11px;align-items:flex-start;background:#f4f1ff;border:1px solid #ebe5ff;border-radius:13px;padding:14px;color:#775ee2;margin-top:18px}
-.securityhint>i{width:18px;height:18px;flex-shrink:0}
-.securityhint span{display:flex;flex-direction:column;gap:5px}
-.securityhint strong{font-size:10px}
-.settingsasideicon{width:46px;height:46px;display:grid;place-items:center;border-radius:15px;background:#242431;color:#39ff88;margin-bottom:17px}
-.settingstat{display:flex;flex-direction:column;gap:5px;padding:14px 0;border-bottom:1px solid #f0f0f5}
-.settingstat span{font-size:10px;color:#9799a8}
-.settingstat strong{font-size:11px;color:#3d3d4c}
-.integrationbanner{display:flex;align-items:center;gap:15px;padding:19px 21px;background:#f1efff;border:1px solid #e6e1ff;border-radius:18px;margin-bottom:18px}
-.integrationbannericon{width:44px;height:44px;display:grid;place-items:center;background:#fff;border-radius:14px;color:#7b62e8;flex-shrink:0}
-.integrationbanner>div:nth-child(2){flex:1}
-.integrationbanner strong{font-size:12px;color:#343247}
-.integrationbanner p{font-size:10px;color:#77758e;line-height:1.6;margin:5px 0 0}
-.integrationlist{display:flex;flex-direction:column;gap:12px}
-.integrationrow{display:grid;grid-template-columns:48px minmax(0,1fr) auto auto;gap:16px;align-items:center;padding:19px 20px;background:#fff;border:1px solid #ededf4;border-radius:18px;box-shadow:0 4px 18px #28274204}
-.integrationlogo{width:46px;height:46px;display:grid;place-items:center;border-radius:15px;font-weight:800;font-size:15px}
-.integrationlogo.yandex{background:#fff0ed;color:#ed4738}.integrationlogo.vk{background:#eaf2ff;color:#4779cb}.integrationlogo.tg{background:#e8f6ff;color:#2497ce}.integrationlogo.web{background:#f0edff;color:#8066e8}
-.integrationcopy{min-width:0;display:flex;flex-direction:column;gap:5px}
-.integrationcopy strong{font-size:12px;color:#343543}
-.integrationcopy span{font-size:10px;color:#797b8d;line-height:1.5}
-.integrationcopy small{font-size:9px;color:#a0a1af}
-.integrationtest{min-width:108px}
-@media(max-width:1000px){.settingslayout{grid-template-columns:1fr}.settingsaside{order:-1}.integrationrow{grid-template-columns:44px minmax(0,1fr) auto}.integrationrow .integrationstatus{grid-column:2;justify-self:start}.integrationtest{grid-column:3;grid-row:1/3}}
-@media(max-width:760px){.settingscard,.settingsaside{padding:19px;border-radius:18px}.settingformgrid{grid-template-columns:1fr}.integrationbanner{align-items:flex-start;flex-wrap:wrap}.integrationbanner .status{margin-left:58px}.integrationrow{grid-template-columns:42px minmax(0,1fr);gap:12px;padding:16px}.integrationrow .integrationstatus{grid-column:2}.integrationtest{grid-column:2;grid-row:auto;justify-self:start}.integrationcopy span{line-height:1.6}}
-
-
-@media(max-width:760px){aside.sidebar.mobile-open{display:flex!important;position:fixed;z-index:60;inset:0 auto 0 0;width:min(310px,88vw);height:100dvh;overflow-y:auto;box-shadow:20px 0 70px #20203030;padding-top:22px}.mobile-nav-close{align-self:flex-end;display:grid;place-items:center;width:36px;height:36px;border:1px solid #ededf4;background:#fff;border-radius:12px;color:#727386;margin:-8px 4px -10px 0}.mobile-nav-close svg{width:17px;height:17px}}
-
-
-/* Creative detail panel — advertiser-first research view */
-.detailpreview{padding:24px;border-radius:19px;background:radial-gradient(ellipse at 80% 10%,#b5a6ff45,transparent 42%),radial-gradient(ellipse at 10% 100%,#39ff8825,transparent 38%),#f3f2fa;display:flex;justify-content:center;align-items:center;min-height:220px;margin:18px 0 16px;overflow:hidden}
-.detailpreview .adart{max-width:100%;transform:none}
-.detailbadges{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
-.detailbadge{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;background:#f4f3fa;border:1px solid #eeedf5;border-radius:10px;color:#686a7e;font-size:10px}
-.detailbadge svg{width:13px;height:13px;color:#8066e8}
-.detailbadge.demo{background:#eafaf0;border-color:#d8f5e3;color:#208e58}
-.detailbadge.demo svg{color:#208e58}
-.detailsection{padding:19px 0;border-top:1px solid #efeff5}
-.detailsectiontitle{font:800 13px Manrope,sans-serif;letter-spacing:-.025em;color:#30313f;margin-bottom:14px}
-.detailfield{display:flex;flex-direction:column;gap:6px;padding:10px 0}
-.detailfield>span{font-size:10px;color:#999aaa}
-.detailfield strong{font-size:12px;line-height:1.65;color:#414252;font-weight:700;overflow-wrap:anywhere}
-.detailfield p{font-size:12px;line-height:1.75;color:#6f7184;margin:0}
-.timeline{display:flex;flex-direction:column;gap:0}
-.timelineitem{position:relative;display:grid;grid-template-columns:12px 1fr;gap:11px;padding:0 0 17px}
-.timelineitem:not(:last-child):before{content:"";position:absolute;left:5px;top:12px;bottom:-1px;width:1px;background:#e6e2f7}
-.timelinedot{position:relative;z-index:1;width:11px;height:11px;border-radius:50%;background:#c7c1e8;border:3px solid #f0edff;margin-top:3px}
-.timelinedot.current{background:#39d982;border-color:#e3faec}
-.timelineitem strong{font-size:11px;color:#4a4b5a}
-.timelineitem p{font-size:10px;color:#9092a2;line-height:1.65;margin:5px 0 0}
-.historytoolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 15px}
-.historytoolbar label{font-size:10px;font-weight:700;color:#66677a}
-.historytoolbar select{height:35px;border:1px solid #e8e6f0;border-radius:9px;padding:0 10px;background:#fff;color:#55566a;font:500 10px "DM Sans",sans-serif}
-.historysummary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0 0 16px}
-.historymetric{padding:12px;border:1px solid #eeedf5;border-radius:12px;background:#fbfbfe}
-.historymetric span{display:block;font-size:9px;color:#9293a4;margin-bottom:6px}
-.historymetric strong{font:800 13px Manrope,sans-serif;color:#444456;overflow-wrap:anywhere}
-.historyevent{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid #eeedf5;border-radius:12px;background:#fff;margin:0 0 9px}
-.historyeventicon{width:30px;height:30px;display:grid;place-items:center;border-radius:10px;background:#f0edff;color:#8064d9;flex-shrink:0}
-.historyeventicon svg{width:14px;height:14px}
-.historyeventcopy{min-width:0;flex:1}
-.historyeventcopy strong{display:block;font-size:11px;color:#48495a;line-height:1.5}
-.historyeventcopy p{font-size:10px;line-height:1.6;color:#898a9a;margin:4px 0 0}
-.historytag{display:inline-flex;margin-top:7px;padding:4px 6px;border-radius:6px;background:#fff4e5;color:#a87521;font-size:9px}
-.historyempty{padding:16px;border:1px dashed #dedbea;border-radius:12px;background:#fbfaff;font-size:10px;line-height:1.7;color:#858699}
-.historyempty strong{display:block;color:#515165;margin-bottom:4px}
-.versionrow{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:9px;align-items:start;padding:12px 0;border-bottom:1px solid #f0eff5}
-.versionrow:last-child{border-bottom:0}
-.versiondot{width:8px;height:8px;border-radius:50%;background:#b6a8f8;margin-top:4px}
-.versionrow strong{font-size:10px;color:#515165}
-.versionrow p{font-size:10px;color:#8b8c9d;line-height:1.6;margin:4px 0 0}
-.versionrow button{border:1px solid #e8e5f4;border-radius:8px;background:#fff;padding:6px 8px;color:#7961d5;font:600 9px "DM Sans",sans-serif;cursor:pointer}
-.versionrow button:disabled{opacity:.45;cursor:not-allowed}
-@media(max-width:520px){.historysummary{grid-template-columns:1fr 1fr}.historytoolbar{align-items:flex-start}.historytoolbar select{max-width:100%}}
-.detaildisclaimer{display:flex;gap:9px;align-items:flex-start;background:#f5f4fa;border-radius:13px;padding:13px;color:#858699;font-size:10px;line-height:1.65;margin:4px 0 18px}
-.detaildisclaimer svg{width:15px;height:15px;flex-shrink:0;color:#8c72f6}
-.detailactions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px}
-.detailactions .secondary{display:inline-flex;align-items:center;gap:7px;padding:9px 11px;font-size:10px}
-.detailactions svg{width:13px;height:13px}
-@media(max-width:520px){.detailactions{display:grid;grid-template-columns:1fr 1fr}.detailactions .secondary:last-child{grid-column:1/-1;justify-content:center}}
-.drawer #detailSave{position:sticky;bottom:0;width:100%;justify-content:center;margin-top:8px}
-@media(max-width:760px){.detailpreview{padding:15px;min-height:190px}.detailpreview .adart{min-height:145px;padding:18px}.detailpreview .adart strong{font-size:19px}}
-
-
-/* Library discovery controls */
-.librarycontrols{background:#fff;border:1px solid #ededf4;border-radius:21px;padding:17px 18px 14px;margin-bottom:24px;box-shadow:0 5px 20px #28274204}
-.librarycontrols .toolbar{margin-bottom:13px;gap:10px}
-.librarycontrols .search{flex:1;min-width:230px}
-.librarycontrols .search kbd{font-size:10px;color:#a2a3b1;background:#f5f4f9;border:1px solid #eae9f1;border-radius:6px;padding:3px 6px}
-.filtertoggle{white-space:nowrap}
-.filtercounter{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:6px;background:#39ff88;color:#1c4931;font-size:9px;font-weight:800}
-.advancedfilters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;padding:15px 0;border-top:1px solid #f0f0f5;margin-bottom:12px}
-.filterfield{display:flex;flex-direction:column;gap:7px;font-size:10px;color:#898b9b}
-.filterfield .filter{width:100%;height:43px}
-.quickfilters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.quickfilter{display:inline-flex;align-items:center;gap:7px;border:1px solid transparent;background:transparent;color:#858799;border-radius:10px;padding:9px 12px;font:600 10px "DM Sans",sans-serif;cursor:pointer;transition:all .18s}
-.quickfilter svg{width:13px;height:13px}
-.quickfilter:hover{background:#f7f6fc;color:#5e50a9}
-.quickfilter.active{background:#f0edff;color:#7158dc;border-color:#e6e0ff}
-.activefilters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #f0f0f5;padding-top:13px;margin-top:13px}
-.activefilterlabel{font-size:9px;color:#9a9baa}
-.filterchips{display:flex;gap:7px;flex-wrap:wrap;flex:1}
-.filterchip{display:inline-flex;align-items:center;gap:9px;border:1px solid #e8e4fa;background:#f8f6ff;border-radius:8px;padding:7px 9px;color:#7059cf;font-size:10px;cursor:pointer;max-width:100%}
-.filterchip span{font-size:14px;line-height:10px}
-.clearfilters{border:0;background:none;color:#858799;font:600 10px "DM Sans",sans-serif;cursor:pointer}
-.clearfilters:hover{color:#7158dc}
-.empty-filter{padding:55px 22px;text-align:center;border:1px dashed #dedbea;border-radius:22px;background:#fff}
-.empty-filter-icon{display:grid;place-items:center;width:52px;height:52px;margin:0 auto 15px;border-radius:17px;background:#f0edff;color:#8066e8}
-.empty-filter-icon svg{width:23px;height:23px}
-.empty-filter h3{font:800 17px Manrope,sans-serif;letter-spacing:-.04em;color:#2b2c39;margin:0 0 8px}
-.empty-filter p{font-size:11px;line-height:1.7;color:#8c8e9f;max-width:410px;margin:0 auto 18px}
-@media(max-width:1000px){.librarycontrols .toolbar{flex-wrap:wrap}.librarycontrols .search{flex-basis:100%}.advancedfilters{grid-template-columns:1fr 1fr}}
-@media(max-width:760px){.librarycontrols{padding:13px;border-radius:18px}.librarycontrols .toolbar{display:grid;grid-template-columns:1fr 1fr}.librarycontrols .search{grid-column:1/-1;min-width:0}.librarycontrols .filtertoggle,.librarycontrols #sort,.librarycontrols #reset{width:100%;min-width:0}.advancedfilters{grid-template-columns:1fr}.quickfilters{flex-wrap:nowrap;overflow-x:auto;padding-bottom:3px}.quickfilter{white-space:nowrap}.activefilters{align-items:flex-start}.activefilterlabel{width:100%}.clearfilters{margin-left:auto}}
-
-
-/* User collection workspace */
-.usercollections{margin:18px 0 28px}
-.collection.usercollection{position:relative;min-height:225px;cursor:default;transition:border-color .18s,box-shadow .18s,transform .18s}
-.collection.usercollection:hover{border-color:#dcd6fa;box-shadow:0 12px 26px #34256d0c;transform:translateY(-2px)}
-.collection.usercollection .collectionicon{background:#f0edff;color:#8064d9}
-.collectionactions{display:flex;align-items:center;gap:7px;margin-top:2px}
-.collectionactions button{border:1px solid #e9e7f0;background:#fff;color:#6e7080;border-radius:9px;padding:8px 10px;font:600 10px "DM Sans",sans-serif;cursor:pointer}
-.collectionactions button:hover{border-color:#d8d0fa;color:#7158dc;background:#faf9ff}
-.collectionactions .collectionopen{background:#f0edff;border-color:#e6e0ff;color:#7058d4;flex:1}
-.collectionactions .collectiondelete:hover{color:#b84a4a;border-color:#f0d4d4;background:#fff8f8}
-.collectionview{margin:0 0 25px;padding:20px;background:#fbfaff;border:1px solid #e8e3fb;border-radius:18px}
-.collectionviewhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:17px}
-.collectionviewhead h3{font:800 16px Manrope,sans-serif;margin:0 0 5px}
-.collectionviewhead p{margin:0;font-size:10px;color:#858799}
-.collectionview .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
-.collectionitem{position:relative}
-.collectionitemremove{position:absolute;right:12px;top:12px;z-index:4;border:1px solid #e8e6ef;background:#ffffffed;border-radius:9px;width:32px;height:32px;display:grid;place-items:center;color:#8b8c9b;cursor:pointer}
-.collectionitemremove:hover{color:#b84a4a;border-color:#f0d4d4}
-.collectionempty{padding:35px 18px;border:1px dashed #d9d3f3;border-radius:14px;background:#fff;text-align:center;color:#89899a;font-size:11px;line-height:1.7}
-.collectionempty strong{display:block;color:#4c4a5b;margin-bottom:6px}
-.collectiondesc{width:100%;min-height:84px;resize:vertical}
-.detailcollection{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;margin:0 0 18px;padding:15px;border:1px solid #ece9f7;border-radius:14px;background:#fbfaff}
-.detailcollection label{grid-column:1/-1;font-size:10px;font-weight:700;color:#565468}
-.detailcollection select{min-width:0;width:100%;height:40px;border:1px solid #e7e5ef;border-radius:10px;padding:0 10px;background:#fff;color:#4d4d5d;font:500 11px "DM Sans",sans-serif}
-.detailcollection button{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;background:#8c72f6;color:white;padding:0 13px;font:700 10px "DM Sans",sans-serif;cursor:pointer;white-space:nowrap}
-.detailcollection button:disabled{opacity:.45;cursor:not-allowed}
-.detailcollection svg{width:13px;height:13px}
-@media(max-width:900px){.collection.usercollection{min-height:210px}.collectionview .cards{grid-template-columns:1fr}}
-@media(max-width:560px){.collectionactions{flex-wrap:wrap}.collectionactions .collectionopen{flex-basis:100%}.collectionview{padding:12px}.collectionviewhead{align-items:flex-start}.detailcollection{grid-template-columns:1fr}.detailcollection label{grid-column:auto}.detailcollection button{min-height:40px}}
+:root{--bg:#f7f7fb;--panel:#fff;--ink:#20212a;--muted:#9294a3;--line:#ececf3;--green:#39ff88;--green-dark:#20a66a;--violet:#8c72f6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",sans-serif;font-size:13px;letter-spacing:-.01em}
+button,input{font:inherit}
+button{cursor:pointer}
+.shell{min-height:100vh;display:flex;flex-direction:column}
+header.topbar{height:68px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,4vw,38px);gap:14px}
+.brand{display:flex;align-items:center;gap:11px}
+.brandmark{width:36px;height:36px;border-radius:12px;background:#24242f;color:var(--green);display:grid;place-items:center;font:800 17px Manrope,sans-serif;flex-shrink:0}
+.brandname{font:800 14px Manrope,sans-serif;letter-spacing:.03em}
+.topright{display:flex;align-items:center;gap:10px}
+.rolebadge{font-size:10px;padding:5px 9px;border-radius:7px;background:#f0edff;color:#7158dc;font-weight:700}
+.userchip{font-size:11px;color:#596371}
+.linkbtn,button.secondary{border:1px solid var(--line);background:#fff;color:#505966;border-radius:10px;padding:9px 13px;font-size:11px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.linkbtn:hover,button.secondary:hover{border-color:#c9c0f6;color:#333}
+.content{max-width:1280px;margin:0 auto;padding:30px clamp(16px,4vw,38px) 60px;width:100%}
+h1{font:800 clamp(22px,2.6vw,28px)/1.2 Manrope,sans-serif;letter-spacing:-.04em;margin:0 0 8px}
+p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-width:640px}
+.searchbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.search{flex:1;min-width:240px;display:flex;align-items:center;gap:10px;padding:0 14px;background:#fff;border:1px solid var(--line);border-radius:13px;height:48px}
+.search input{flex:1;border:0;outline:0;background:transparent;font-size:12px;color:#343b45}
+.search svg,.icon{width:16px;height:16px;flex-shrink:0;color:#9398a8}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 11px;font-size:11px;color:#525a68;cursor:pointer}
+.chip:hover{border-color:#c9c0f6}
+.chip.active{background:#f0edff;border-color:#e0d7ff;color:#7158dc;font-weight:700}
+.chip .inn{color:#9298a8;font-size:9px}
+.advertiserbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fbfaff;border:1px solid #ece6fc;border-radius:14px;padding:14px 16px;margin-bottom:18px}
+.advertiserbar strong{font-size:13px}
+.advertiserbar span{display:block;font-size:11px;color:#8a8ea0;margin-top:3px}
+.resultinfo{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 14px;color:var(--muted);font-size:11px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+@media(max-width:1050px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.cards{grid-template-columns:1fr}}
+.creative{border:1px solid var(--line);background:#fff;border-radius:19px;overflow:hidden;display:flex;flex-direction:column;transition:transform .18s,box-shadow .18s,border-color .18s}
+.creative:hover{transform:translateY(-3px);box-shadow:0 14px 30px #2a284512;border-color:#e1dcfb}
+.preview{height:170px;background:#eef0f7;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.preview img{width:100%;height:100%;object-fit:cover}
+.preview .fallback{font:800 26px Manrope,sans-serif;color:#b9bdd0}
+.platformrow{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:5px}
+.tag{background:#ffffffe8;border:1px solid #e7e9f0;border-radius:7px;padding:5px 7px;font-size:9px;color:#596371}
+.cardbody{padding:16px 17px 15px;display:flex;flex-direction:column;flex:1}
+.cardtitle{font-size:13px;font-weight:700;margin:0 0 4px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.carddomain{font-size:11px;color:#8a8ea0;margin:0 0 11px}
+.metarow{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:11px;border-top:1px solid #f0f0f5}
+.metarow .tag.count{background:#eafaf0;border-color:#d8f0e0;color:#208e58;font-weight:700}
+.cardfoot{display:flex;justify-content:space-between;align-items:center;margin-top:11px;font-size:10px;color:#9298a8}
+.textbtn{border:0;background:none;color:#7158dc;font-weight:700;font-size:10px}
+.empty{grid-column:1/-1;padding:55px 20px;text-align:center;background:#fff;border:1px dashed #d8dfe5;border-radius:18px;color:#8a8ea0}
+.empty strong{display:block;margin:10px 0 6px;color:#30313f;font-size:14px}
+.loading{grid-column:1/-1;padding:40px;text-align:center;color:var(--muted)}
+.overlay{position:fixed;inset:0;background:#171d2680;z-index:20;display:none;justify-content:flex-end}
+.overlay.show{display:flex}
+.drawer{height:100%;width:min(480px,100%);overflow:auto;background:#fff;padding:26px}
+.drawerhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+.drawerhead h2{font:800 18px Manrope,sans-serif;margin:0 0 4px;letter-spacing:-.03em}
+.drawerhead p{margin:0;font-size:11px;color:var(--muted)}
+.closebtn{border:1px solid var(--line);background:#fff;border-radius:10px;width:34px;height:34px;flex-shrink:0}
+.detailpreview{border-radius:14px;overflow:hidden;background:#eef0f7;margin:0 0 18px;min-height:160px;display:flex;align-items:center;justify-content:center}
+.detailpreview img{width:100%;max-height:260px;object-fit:contain}
+.section{padding:15px 0;border-top:1px solid #f0f0f5}
+.section h3{font:800 11px Manrope,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#8a8ea0;margin:0 0 11px}
+.row{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.row span{font-size:10px;color:#9298a8}
+.row strong{font-size:12px;overflow-wrap:anywhere}
+.advrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5fa}
+.advrow:last-child{border-bottom:0}
+.advrow strong{font-size:12px}
+.advrow span{font-size:10px;color:#9298a8;display:block;margin-top:2px}
+.idchips{display:flex;flex-wrap:wrap;gap:6px}
+.idchip{background:#f4f3fa;border:1px solid #eeedf5;border-radius:7px;padding:5px 8px;font-size:10px;color:#596371;font-family:ui-monospace,Menlo,monospace}
+.occ{display:flex;flex-direction:column;gap:3px;padding:9px 0;border-bottom:1px solid #f5f5fa;font-size:11px}
+.occ:last-child{border-bottom:0}
+.occ b{font-size:11px}
+.occ span{color:#9298a8;font-size:10px}
+.hidden{display:none!important}
+.note{margin-top:18px;padding:12px 14px;background:#f4f3fa;border:1px solid #eeedf5;border-radius:12px;color:#6f7184;font-size:10px;line-height:1.7}
 </style>
-<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 <div class="shell">
-<aside class="sidebar">
- <div class="brand"><div class="brandmark">N</div><div class="brandname">NEON<small>MARKETING INTELLIGENCE OS</small></div></div>
- <div class="workspace"><label>Продуктовое пространство</label><select id="spaceSelect" aria-label="Продуктовое пространство"><option selected>Ad Intelligence</option><option>Ad Automation</option><option>SEO Intelligence</option><option>Website Builder</option></select></div>
- <div class="navgroup"><div class="navlabel">Рекламная разведка</div>
-  <button class="navitem active" data-view="library"><i data-lucide="layout-grid"></i> Библиотека рекламы <span class="count">06</span></button>
-  <button class="navitem" data-view="collections"><i data-lucide="folder-heart"></i> Подборки</button>
-  <button class="navitem" data-view="scans"><i data-lucide="radar"></i> Сканирования</button>
-  <button class="navitem" data-view="coverage"><i data-lucide="activity"></i> Источники и качество</button>
- </div>
- <div class="navgroup"><div class="navlabel">Рабочая среда</div>
-  <button class="navitem" data-view="settings"><i data-lucide="settings-2"></i> Настройки парсера</button>
-  <button class="navitem" data-view="integrations"><i data-lucide="plug"></i> Источники и интеграции</button>
- </div>
- <div class="sidebarbottom"><div class="avatar">DM</div><div class="usercopy"><strong>Рабочее пространство</strong><span>Демо-режим · владелец</span></div></div>
-</aside>
-<main class="main">
- <header class="topbar"><div style="display:flex;align-items:center;gap:12px"><button class="iconbtn mobilemenu" aria-label="Меню"><i data-lucide="menu"></i></button><div class="crumb">NEON <span style="margin:0 7px;color:#c5cad1">/</span><strong id="crumb">Ad Intelligence</strong></div></div><div class="top-actions"><button class="iconbtn hide-mobile" id="helpBtn" aria-label="Справка"><i data-lucide="circle-help"></i></button><button class="iconbtn" id="notifications" aria-label="Уведомления"><i data-lucide="bell"></i></button><div class="profiledot">D</div></div></header>
+ <header class="topbar">
+  <div class="brand"><div class="brandmark">P</div><div class="brandname">ParsYa Ads</div></div>
+  <div class="topright">
+   <span class="rolebadge hidden" id="roleBadge"></span>
+   <span class="userchip" id="userChip"></span>
+   <a class="linkbtn hidden" id="adminLink" href="#" target="_blank" rel="noopener">Админка SaaS ↗</a>
+   <button class="secondary" id="logoutBtn">Выйти</button>
+  </div>
+ </header>
  <div class="content">
-  <section class="headline"><div><div class="eyebrow">AD INTELLIGENCE / CREATIVE RESEARCH</div><h1 class="h1" id="pageTitle">Найдите рекламу раньше конкурентов</h1><div class="subtitle" id="pageSubtitle">Исследуйте креативы, отслеживайте рекламные подходы и сохраняйте находки в одном рабочем пространстве.</div></div><button class="primary" id="topAction"><i data-lucide="radar"></i><span>Новое сканирование</span><span class="spark">↗</span></button></section>
-  <section class="summary">
-   <article class="stat"><div class="stathead">Креативы в демо-библиотеке <span class="staticon"><i data-lucide="layers"></i></span></div><div class="statvalue">06</div><div class="statfoot">Примеры карточек для проверки UI</div></article>
-   <article class="stat"><div class="stathead">Источники в макете <span class="staticon violet"><i data-lucide="radar"></i></span></div><div class="statvalue">04</div><div class="statfoot">Не означает реальное подключение</div></article>
-   <article class="stat"><div class="stathead">Сохранено креативов <span class="staticon gray"><i data-lucide="bookmark-check"></i></span></div><div class="statvalue" id="savedStat">00</div><div class="statfoot">В рамках открытой демо-сессии</div></article>
-   <article class="stat"><div class="stathead">Задачи сканирования <span class="staticon amber"><i data-lucide="scan-search"></i></span></div><div class="statvalue" id="jobsStat">03</div><div class="statfoot">Тестовые статусы интерфейса</div></article>
-  </section>
-  <div class="tabs" role="tablist"><button class="tab active" data-tab="library"><i data-lucide="layout-grid"></i> Библиотека</button><button class="tab" data-tab="collections"><i data-lucide="folder-heart"></i> Подборки</button><button class="tab" data-tab="scans"><i data-lucide="radar"></i> Сканирования</button><button class="tab" data-tab="coverage"><i data-lucide="activity"></i> Источники и качество</button></div>
-  <section class="panel" data-panel="library">
-   <div class="librarycontrols">
-    <div class="toolbar"><label class="search"><i data-lucide="search"></i><input id="query" placeholder="Поиск по рекламодателю, тексту, домену или площадке…" autocomplete="off"><kbd> / </kbd></label><button class="secondary filtertoggle" id="advancedToggle" aria-expanded="false"><i data-lucide="sliders-horizontal"></i> Фильтры <span class="filtercounter" id="filterCounter" hidden>0</span></button><select class="filter" id="sort"><option value="recent">Сначала новые</option><option value="oldest">Сначала старые</option><option value="brand">По рекламодателю А–Я</option></select><button class="secondary" id="reset"><i data-lucide="rotate-ccw"></i> Сбросить</button></div>
-    <div class="advancedfilters" id="advancedFilters" hidden>
-     <label class="filterfield"><span>Рекламная площадка</span><select class="filter" id="platform"><option value="all">Все площадки</option><option>Яндекс / РСЯ</option><option>VK Ads</option><option>Telegram Ads</option><option>Web display</option></select></label>
-     <label class="filterfield"><span>Формат объявления</span><select class="filter" id="format"><option value="all">Все форматы</option><option>Изображение</option><option>Нативное</option><option>Видео</option></select></label>
-     <label class="filterfield"><span>Сохранение</span><select class="filter" id="savedFilter"><option value="all">Все креативы</option><option value="saved">Только сохранённые</option><option value="unsaved">Не сохранённые</option></select></label>
-    </div>
-    <div class="quickfilters" aria-label="Быстрые фильтры"><button class="quickfilter active" data-quick="all">Все креативы</button><button class="quickfilter" data-quick="saved"><i data-lucide="bookmark"></i> Сохранённые</button><button class="quickfilter" data-quick="yandex">Яндекс / РСЯ</button><button class="quickfilter" data-quick="social">Соцсети</button></div>
-    <div class="activefilters" id="activeFilters" hidden><span class="activefilterlabel">Активные фильтры</span><div id="filterChips" class="filterchips"></div><button class="clearfilters" id="clearFilters">Очистить всё</button></div>
-   </div>
-   <div class="resulthead"><div><h2>Библиотека рекламных креативов</h2><p id="resultCount" aria-live="polite">6 демонстрационных объявлений</p></div><div class="resultactions"><button class="secondary" id="savedOnly"><i data-lucide="bookmark"></i> Сохранённые</button><button class="secondary" id="export"><i data-lucide="download"></i> Экспорт JSON</button></div></div>
-   <div class="empty-filter" id="emptyFilter" hidden><div class="empty-filter-icon"><i data-lucide="search-x"></i></div><h3>Ничего не найдено</h3><p>По текущему запросу и фильтрам нет совпадений. Попробуйте изменить запрос или снять часть фильтров.</p><button class="secondary" id="emptyReset">Очистить поиск и фильтры</button></div>
-   <div class="cards" id="cards">
-    <article class="creative" data-platform="Яндекс / РСЯ" data-format="Изображение" data-brand="Право Плюс" data-copy="Помогаем разобраться в сложных юридических вопросах. Запишитесь на консультацию." data-domain="pravo-plus.example" data-date="12 окт 2026"><div class="preview"><span class="platform"><i data-lucide="network"></i> Яндекс · РСЯ</span><button class="save" aria-label="Сохранить креатив"><i data-lucide="bookmark"></i></button><div class="adart"><span class="kicker">Правовая помощь</span><strong>Сложный вопрос?<br>Начните с решения.</strong><p>Консультация по вашей ситуации.</p><span class="cta">Узнать больше ↗</span></div></div><div class="cardbody"><div class="cardtop"><span class="brand">Право Плюс</span><span class="format">Изображение</span></div><p class="copy">Помогаем разобраться в сложных юридических вопросах. Запишитесь на консультацию.</p><div class="metadata"><div><span>Впервые замечено</span><strong>12 окт 2026 · демо</strong></div><div><span>Источник</span><strong>Пример страницы</strong></div></div><div class="cardfoot"><span class="source">Демо-данные</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div></article>
-    <article class="creative" data-platform="VK Ads" data-format="Видео" data-brand="FinStart" data-copy="Финансовые инструменты для новых целей. Посмотрите, как это работает." data-domain="finstart.example" data-date="11 окт 2026"><div class="preview"><span class="platform"><i data-lucide="share-2"></i> VK Ads</span><button class="save" aria-label="Сохранить креатив"><i data-lucide="bookmark"></i></button><div class="adart violet"><span class="kicker">FinStart · новый взгляд</span><strong>Ваш следующий<br>финансовый шаг.</strong><p>Инструменты, которые работают на ваши цели.</p><span class="cta">Смотреть обзор ▶</span></div></div><div class="cardbody"><div class="cardtop"><span class="brand">FinStart</span><span class="format">Видео</span></div><p class="copy">Финансовые инструменты для новых целей. Посмотрите, как это работает.</p><div class="metadata"><div><span>Впервые замечено</span><strong>11 окт 2026 · демо</strong></div><div><span>Источник</span><strong>Пример страницы</strong></div></div><div class="cardfoot"><span class="source">Демо-данные</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div></article>
-    <article class="creative" data-platform="Telegram Ads" data-format="Нативное" data-brand="Growth Notes" data-copy="Практические идеи по маркетингу и росту продукта — коротко и по делу." data-domain="growth-notes.example" data-date="10 окт 2026"><div class="preview"><span class="platform"><i data-lucide="send"></i> Telegram Ads</span><button class="save" aria-label="Сохранить креатив"><i data-lucide="bookmark"></i></button><div class="adart dark"><span class="kicker">Growth Notes / канал</span><strong>Меньше догадок.<br>Больше роста.</strong><p>Маркетинговые наблюдения, кейсы и идеи в одном месте.</p><span class="cta">Открыть канал ↗</span></div></div><div class="cardbody"><div class="cardtop"><span class="brand">Growth Notes</span><span class="format">Нативное</span></div><p class="copy">Практические идеи по маркетингу и росту продукта — коротко и по делу.</p><div class="metadata"><div><span>Впервые замечено</span><strong>10 окт 2026 · демо</strong></div><div><span>Источник</span><strong>Пример страницы</strong></div></div><div class="cardfoot"><span class="source">Демо-данные</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div></article>
-    <article class="creative" data-platform="Web display" data-format="Изображение" data-brand="NorthPeak" data-copy="Откройте новые маршруты и планируйте путешествия в своём темпе." data-domain="northpeak.example" data-date="9 окт 2026"><div class="preview"><span class="platform"><i data-lucide="globe"></i> Web display</span><button class="save" aria-label="Сохранить креатив"><i data-lucide="bookmark"></i></button><div class="adart orange"><span class="kicker">NorthPeak travel</span><strong>Ближе к новым<br>горизонтам.</strong><p>Маршруты для тех, кто любит открывать новое.</p><span class="cta">Выбрать маршрут ↗</span></div></div><div class="cardbody"><div class="cardtop"><span class="brand">NorthPeak</span><span class="format">Изображение</span></div><p class="copy">Откройте новые маршруты и планируйте путешествия в своём темпе.</p><div class="metadata"><div><span>Впервые замечено</span><strong>9 окт 2026 · демо</strong></div><div><span>Источник</span><strong>Пример страницы</strong></div></div><div class="cardfoot"><span class="source">Демо-данные</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div></article>
-    <article class="creative" data-platform="Яндекс / РСЯ" data-format="Видео" data-brand="SkillUp" data-copy="Освойте новые цифровые навыки и применяйте их в реальных проектах." data-domain="skillup.example" data-date="8 окт 2026"><div class="preview"><span class="platform"><i data-lucide="network"></i> Яндекс · РСЯ</span><button class="save" aria-label="Сохранить креатив"><i data-lucide="bookmark"></i></button><div class="adart violet"><span class="kicker">SkillUp academy</span><strong>Навыки для<br>следующего уровня.</strong><p>Учитесь на практике и собирайте портфолио.</p><span class="cta">Выбрать программу ↗</span></div></div><div class="cardbody"><div class="cardtop"><span class="brand">SkillUp</span><span class="format">Видео</span></div><p class="copy">Освойте новые цифровые навыки и применяйте их в реальных проектах.</p><div class="metadata"><div><span>Впервые замечено</span><strong>8 окт 2026 · демо</strong></div><div><span>Источник</span><strong>Пример страницы</strong></div></div><div class="cardfoot"><span class="source">Демо-данные</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div></article>
-    <article class="creative" data-platform="VK Ads" data-format="Изображение" data-brand="EcoHome" data-copy="Уютные решения для дома с вниманием к деталям и материалам." data-domain="ecohome.example" data-date="7 окт 2026"><div class="preview"><span class="platform"><i data-lucide="share-2"></i> VK Ads</span><button class="save" aria-label="Сохранить креатив"><i data-lucide="bookmark"></i></button><div class="adart"><span class="kicker">EcoHome living</span><strong>Дом, в котором<br>хорошо быть.</strong><p>Продуманные детали для повседневного комфорта.</p><span class="cta">Посмотреть коллекцию ↗</span></div></div><div class="cardbody"><div class="cardtop"><span class="brand">EcoHome</span><span class="format">Изображение</span></div><p class="copy">Уютные решения для дома с вниманием к деталям и материалам.</p><div class="metadata"><div><span>Впервые замечено</span><strong>7 окт 2026 · демо</strong></div><div><span>Источник</span><strong>Пример страницы</strong></div></div><div class="cardfoot"><span class="source">Демо-данные</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div></article>
-   </div>
-   <div class="note"><strong>Демонстрационный режим.</strong> Карточки, бренды и даты придуманы для проверки интерфейса. Это не результаты реального сканирования и не подтверждение покрытия рекламных сетей.</div>
-  </section>
-  <section class="panel" data-panel="collections" hidden><div class="resulthead"><div><h2>Подборки креативов</h2><p>Собирайте идеи, наблюдайте за конкурентами и готовьте гипотезы для тестов.</p></div><button class="primary" id="newCollection"><i data-lucide="folder-plus"></i> Новая подборка</button></div><div class="collectiongrid"><article class="collection"><div class="collectionicon"><i data-lucide="target"></i></div><h3>Конкуренты</h3><p>Креативы для наблюдения за сообщениями, форматами и предложениями в нише.</p><div class="collectionfoot"><span>Системная подборка</span><strong id="competitorCount">0 креативов</strong></div></article><article class="collection"><div class="collectionicon" style="background:#f1edff;color:#8064d9"><i data-lucide="flask-conical"></i></div><h3>Идеи для тестов</h3><p>Объявления, к которым команда хочет вернуться при подготовке новых кампаний.</p><div class="collectionfoot"><span>Системная подборка</span><strong id="testCount">0 креативов</strong></div></article><article class="collection"><div class="collectionicon" style="background:#fff4e4;color:#a97724"><i data-lucide="bookmark-check"></i></div><h3>Все сохранённые</h3><p>Все отмеченные креативы из демонстрационной библиотеки.</p><div class="collectionfoot"><span>Обновляется автоматически</span><strong id="allSavedCount">0 креативов</strong></div></article></div><div class="usercollections" id="userCollections" hidden><div class="resulthead"><div><h2>Мои подборки</h2><p>Пользовательские группы креативов в текущей демо-сессии.</p></div></div><div class="collectiongrid" id="userCollectionGrid"></div></div><div class="collectionview" id="collectionView" hidden></div><div class="resulthead"><div><h2>Сохранённые креативы</h2><p>Избранное — отдельное от пользовательских подборок. Данные демо-сессии не сохраняются на сервере.</p></div></div><div class="cards" id="collectionCards"></div><div class="empty" id="collectionEmpty"><i data-lucide="bookmark"></i><strong>Пока нет сохранённых креативов</strong>Нажмите на закладку в библиотеке, чтобы добавить первый.</div></section>
-  <section class="panel" data-panel="scans" hidden><div class="resulthead"><div><h2>Задачи сканирования</h2><p>Контролируйте запуски, результаты распознавания и ошибки источников.</p></div><button class="primary" id="newScan"><i data-lucide="plus"></i> Новое сканирование</button></div><div class="summary"><article class="stat"><div class="stathead">Всего задач</div><div class="statvalue" id="jobTotal">03</div><div class="statfoot">Демонстрационные записи</div></article><article class="stat"><div class="stathead">Завершено</div><div class="statvalue">01</div><div class="statfoot">Не реальные результаты</div></article><article class="stat"><div class="stathead">Нужна проверка</div><div class="statvalue">01</div><div class="statfoot">Пример частичного результата</div></article><article class="stat"><div class="stathead">Ошибки источников</div><div class="statvalue">01</div><div class="statfoot">Пример статуса</div></article></div><div class="joblist" id="jobList"><article class="job"><div class="jobname"><div class="jobicon"><i data-lucide="network"></i></div><div><strong>Тест источника · Яндекс / РСЯ</strong><span>Демо-задача · 12 окт 2026, 10:42</span></div></div><div class="jobmeta"><strong>18 элементов</strong><span>Вымышленные данные</span></div><div class="jobmeta"><strong>72%</strong><span>Условное распознавание</span></div><span class="status partial">Частичный результат</span></article><article class="job"><div class="jobname"><div class="jobicon" style="background:#eaf8ef;color:#16884b"><i data-lucide="share-2"></i></div><div><strong>Тест источника · VK Ads</strong><span>Демо-задача · 12 окт 2026, 09:15</span></div></div><div class="jobmeta"><strong>24 элемента</strong><span>Вымышленные данные</span></div><div class="jobmeta"><strong>100%</strong><span>Условное распознавание</span></div><span class="status">Завершено</span></article><article class="job"><div class="jobname"><div class="jobicon" style="background:#fff0f0;color:#b84a4a"><i data-lucide="globe"></i></div><div><strong>Тест источника · Web display</strong><span>Демо-задача · 11 окт 2026, 18:20</span></div></div><div class="jobmeta"><strong>—</strong><span>Элементов в примере</span></div><div class="jobmeta"><strong>—</strong><span>Распознавание</span></div><span class="status failed">Ошибка источника</span></article></div><div class="note"><strong>Демонстрационные задачи.</strong> Статусы, объёмы и проценты не получены из реального парсера и нужны только для проверки UI.</div></section>
-  <section class="panel" data-panel="coverage" hidden><div class="resulthead"><div><h2>Источники и качество парсинга</h2><p>Разделяйте найденные рекламные элементы и полностью распознанные креативы.</p></div></div><div class="coveragegrid"><article class="coverage"><div class="coveragetop"><strong>Яндекс / РСЯ</strong><span class="status partial">Тестовый</span></div><div class="coveragevalue">72%</div><p>Условная доля распознанных элементов в макете</p><div class="progress"><span style="width:72%"></span></div><p>Реальные данные появятся после интеграции адаптера.</p></article><article class="coverage"><div class="coveragetop"><strong>VK Ads</strong><span class="status">Тестовый</span></div><div class="coveragevalue">100%</div><p>Условная доля распознанных элементов в макете</p><div class="progress"><span style="width:100%"></span></div><p>Это не подтверждение реального покрытия.</p></article><article class="coverage"><div class="coveragetop"><strong>Web display</strong><span class="status failed">Требует проверки</span></div><div class="coveragevalue">—</div><p>Нет подтверждённых данных о качестве источника</p><div class="progress"><span style="width:4%;background:#d7dce2"></span></div><p>При интеграции будут доступны ошибки и версия парсера.</p></article></div><div class="note"><strong>Принцип достоверности.</strong> Все проценты на этом экране условные. В рабочей версии появятся время последнего успешного запуска, версия адаптера, найденные элементы, распознанные креативы и примеры неизвестной разметки.</div></section>
-  <section class="panel" data-panel="settings" hidden>
-   <div class="resulthead"><div><h2>Настройки парсера</h2><p>Управляйте сбором данных, сохранением артефактов и качеством распознавания.</p></div><button class="primary" id="saveParserSettings"><i data-lucide="save"></i> Сохранить настройки</button></div>
-   <div class="settingslayout">
-    <div class="settingsmain">
-     <article class="settingscard"><div class="settingscardhead"><div class="collectionicon"><i data-lucide="scan-search"></i></div><div><h3>Сбор и распознавание</h3><p>Какие данные сохранять при обнаружении рекламного блока.</p></div></div>
-      <label class="settingrow"><span><strong>Сохранять неизвестные HTML-фрагменты</strong><small>Для разработки новых правил распознавания.</small></span><input type="checkbox" class="switch" id="saveUnknown" checked></label>
-      <label class="settingrow"><span><strong>Сохранять скриншот креатива</strong><small>Визуальный снимок вместе с метаданными.</small></span><input type="checkbox" class="switch" id="saveScreenshot" checked></label>
-      <label class="settingrow"><span><strong>Фиксировать историю изменений</strong><small>Отмечать новые версии текста и визуала объявления.</small></span><input type="checkbox" class="switch" id="trackChanges" checked></label>
-     </article>
-     <article class="settingscard"><div class="settingscardhead"><div class="collectionicon" style="background:#f0edff;color:#8066e8"><i data-lucide="database"></i></div><div><h3>Хранение данных</h3><p>Демо-параметры политики хранения для будущего backend.</p></div></div>
-      <div class="settingformgrid"><div class="field"><label for="retention">Хранить артефакты</label><select id="retention"><option value="7">7 дней</option><option value="30" selected>30 дней</option><option value="90">90 дней</option><option value="365">1 год</option></select></div><div class="field"><label for="maxSize">Максимальный HTML-фрагмент</label><select id="maxSize"><option value="256">256 КБ</option><option value="512" selected>512 КБ</option><option value="1024">1 МБ</option><option value="2048">2 МБ</option></select></div></div>
-      <div class="securityhint"><i data-lucide="shield-check"></i><span><strong>Безопасный просмотр</strong><small>Сохранённый HTML должен отображаться как недоверенный текст или в изолированном sandbox без выполнения скриптов.</small></span></div>
-     </article>
-    </div>
-    <aside class="settingsaside"><div class="settingsasideicon"><i data-lucide="sliders-horizontal"></i></div><h3>Конфигурация пространства</h3><p>Настройки сохраняются только в интерфейсе текущего демо-сеанса. Серверное хранение подключим на этапе backend.</p><div class="settingstat"><span>Версия интерфейса</span><strong>Ad Intelligence · UI v0.2</strong></div><div class="settingstat"><span>Адаптеры источников</span><strong>Не подключены</strong></div><div class="settingstat"><span>Политика выполнения HTML</span><strong>Без исполнения</strong></div><button class="secondary" id="resetParserSettings" style="width:100%;margin-top:17px"><i data-lucide="rotate-ccw"></i> Сбросить параметры</button></aside>
-   </div>
-  </section>
-  <section class="panel" data-panel="integrations" hidden>
-   <div class="resulthead"><div><h2>Источники и интеграции</h2><p>Единый центр состояния коннекторов и адаптеров распознавания.</p></div><button class="secondary" id="refreshIntegrations"><i data-lucide="refresh-cw"></i> Обновить статусы</button></div>
-   <div class="integrationbanner"><div class="integrationbannericon"><i data-lucide="radio-tower"></i></div><div><strong>Подключения ещё не настроены</strong><p>Это макет интерфейса. Проверка ниже меняет только демонстрационный статус и не обращается к рекламным платформам.</p></div><span class="status partial">Демо-режим</span></div>
-   <div class="integrationlist">
-    <article class="integrationrow"><div class="integrationlogo yandex">Я</div><div class="integrationcopy"><strong>Яндекс / РСЯ</strong><span>Рекламные блоки, креативы и неизвестные DOM-структуры</span><small>Адаптер: не подключён · API/сбор: не настроен</small></div><span class="status partial integrationstatus">Не подключено</span><button class="secondary integrationtest" data-source="Яндекс / РСЯ"><i data-lucide="plug"></i> Проверить</button></article>
-    <article class="integrationrow"><div class="integrationlogo vk">VK</div><div class="integrationcopy"><strong>VK Ads</strong><span>Промопосты, изображения и видеоформаты</span><small>Адаптер: не подключён · API/сбор: не настроен</small></div><span class="status partial integrationstatus">Не подключено</span><button class="secondary integrationtest" data-source="VK Ads"><i data-lucide="plug"></i> Проверить</button></article>
-    <article class="integrationrow"><div class="integrationlogo tg"><i data-lucide="send"></i></div><div class="integrationcopy"><strong>Telegram Ads</strong><span>Нативные рекламные сообщения и публичные промоматериалы</span><small>Адаптер: не подключён · API/сбор: не настроен</small></div><span class="status partial integrationstatus">Не подключено</span><button class="secondary integrationtest" data-source="Telegram Ads"><i data-lucide="plug"></i> Проверить</button></article>
-    <article class="integrationrow"><div class="integrationlogo web"><i data-lucide="globe"></i></div><div class="integrationcopy"><strong>Web display</strong><span>Публичные рекламные блоки на сайтах и сетевые креативы</span><small>Адаптер: не подключён · API/сбор: не настроен</small></div><span class="status partial integrationstatus">Не подключено</span><button class="secondary integrationtest" data-source="Web display"><i data-lucide="plug"></i> Проверить</button></article>
-   </div>
-   <div class="note"><strong>Подключение в следующих этапах:</strong> отдельный адаптер на источник, контракт извлечённых полей, тестовые HTML-фикстуры, метрики распознавания и безопасное сохранение необработанных фрагментов.</div>
-  </section>
+  <h1>Библиотека рекламных креативов</h1>
+  <p class="lead">Найдите рекламу по ИНН рекламодателя, названию компании, домену или тексту объявления. Один и тот же креатив, показанный под разными campaign ID или на разных площадках, собран в одну карточку.</p>
+  <div class="searchbar">
+   <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input id="query" placeholder="ИНН, название рекламодателя, домен или текст объявления…" autocomplete="off"></label>
+   <button class="secondary" id="resetBtn">Сбросить</button>
+  </div>
+  <div class="chips hidden" id="advertiserChips"></div>
+  <div class="advertiserbar hidden" id="advertiserBar">
+   <div><strong id="advertiserName"></strong><span id="advertiserMeta"></span></div>
+   <button class="secondary" id="clearAdvertiser">✕ Показать все результаты</button>
+  </div>
+  <div class="resultinfo"><span id="resultCount"></span></div>
+  <div class="cards" id="cards"><div class="loading">Введите запрос, чтобы начать поиск.</div></div>
  </div>
-</main>
 </div>
-<div class="overlay" id="detailOverlay"><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><div class="drawerhead"><div><div class="eyebrow">AD INTELLIGENCE / CREATIVE</div><h2 id="detailTitle">Карточка креатива</h2></div><button class="iconbtn" id="closeDetail" aria-label="Закрыть"><i data-lucide="x"></i></button></div><div id="detailContent"></div><button class="primary" id="detailSave"><i data-lucide="bookmark"></i> Сохранить креатив</button></aside></div>
-<div class="modalwrap" id="modalWrap"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h2 id="modalTitle">Новое сканирование</h2><p id="modalDesc">Создайте демонстрационную задачу.</p><form id="taskForm"><div class="field"><label for="taskName" id="taskNameLabel">Название задачи</label><input id="taskName" required placeholder="Например, конкуренты в нише" maxlength="80"></div><div class="field" id="collectionDescriptionField" hidden><label for="collectionDescription">Описание подборки (необязательно)</label><textarea id="collectionDescription" class="collectiondesc" maxlength="240" placeholder="Например, сильные офферы и визуальные подходы конкурентов"></textarea></div><div class="field"><label for="taskSource">Источник</label><select id="taskSource"><option>Яндекс / РСЯ</option><option>VK Ads</option><option>Telegram Ads</option><option>Web display</option></select></div><div class="field"><label for="taskTarget">Стартовый URL или примечание (необязательно)</label><input id="taskTarget" placeholder="https://example.com"></div><div class="note">Макет добавит задачу в демонстрационный список. Он не запускает сетевые запросы и не выполняет настоящий парсинг.</div><div class="modalactions"><button type="button" class="secondary" id="cancelModal">Отмена</button><button type="submit" class="primary">Создать задачу</button></div></form></div></div>
-<div class="toast" id="toast"><strong id="toastTitle">Готово</strong><span id="toastText"></span></div>
+<div class="overlay" id="detailOverlay"><aside class="drawer" role="dialog" aria-modal="true"><div class="drawerhead"><div><h2 id="detailTitle">Креатив</h2><p id="detailSubtitle"></p></div><button class="closebtn" id="closeDetail">✕</button></div><div id="detailContent"></div></aside></div>
 <script>
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-if(window.lucide)lucide.createIcons();
-let savedOnly=false,currentCard=null,toastTimer=null;
-document.querySelectorAll('#cards .creative').forEach((card,index)=>{if(!card.dataset.id)card.dataset.id='creative-'+(index+1)});
-function notify(title,message){$('#toastTitle').textContent=title;$('#toastText').textContent=message;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),3000)}
-function savedCards(){return $$('.creative').filter(c=>c.dataset.saved==='1')}
-function applyFilters(){
- const q=$('#query').value.trim().toLowerCase(),p=$('#platform').value,f=$('#format').value,sf=$('#savedFilter').value,sort=$('#sort').value;
- const quick=document.querySelector('.quickfilter.active')?.dataset.quick||'all';
- const cards=$('#cards .creative');let visible=[];
- cards.forEach(c=>{
-  const text=(c.dataset.brand+' '+c.dataset.copy+' '+c.dataset.domain+' '+c.dataset.platform+' '+(c.querySelector('.adart .kicker')?.innerText||'')).toLowerCase();
-  const saved=c.dataset.saved==='1';
-  const ok=(!q||text.includes(q))&&(p==='all'||c.dataset.platform===p)&&(f==='all'||c.dataset.format===f)&&(sf==='all'||(sf==='saved'?saved:!saved))&&(!savedOnly||saved)&&(quick==='all'||(quick==='saved'?saved:quick==='yandex'?c.dataset.platform==='Яндекс / РСЯ':quick==='social'?['VK Ads','Telegram Ads'].includes(c.dataset.platform):true));
-  c.hidden=!ok;if(ok)visible.push(c);
- });
- visible.sort((a,b)=>sort==='brand'?a.dataset.brand.localeCompare(b.dataset.brand,'ru'):sort==='oldest'?dateKey(a)-dateKey(b):dateKey(b)-dateKey(a));
- const host=$('#cards');visible.forEach(c=>host.appendChild(c));
- const n=visible.length;$('#resultCount').textContent=n+' '+(n===1?'креатив':n>1&&n<5?'креатива':'креативов')+' · '+(n?'демонстрационные данные':'нет результатов');
- $('#emptyFilter').hidden=n!==0;host.hidden=n===0;
- const chips=[];
- if(q)chips.push(['q','Поиск: '+q]);if(p!=='all')chips.push(['platform',p]);if(f!=='all')chips.push(['format',f]);if(sf!=='all')chips.push(['savedFilter',sf==='saved'?'Сохранённые':'Не сохранённые']);if(quick!=='all')chips.push(['quick',({saved:'Сохранённые',yandex:'Яндекс / РСЯ',social:'Соцсети'})[quick]||quick]);
- $('#activeFilters').hidden=chips.length===0;
- $('#filterChips').innerHTML=chips.map(([k,v])=>'<button class="filterchip" data-clear="'+k+'">'+escapeHTML(v)+' <span aria-hidden="true">×</span></button>').join('');
- const activeCount=chips.length;$('#filterCounter').hidden=!activeCount;$('#filterCounter').textContent=activeCount;
- $('.quickfilter').forEach(b=>b.classList.toggle('active',b.dataset.quick===quick));
- updateSaved();if(window.lucide)lucide.createIcons();
+const DEFAULT_API_BASE = "https://xn--80ak2afbe.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai";
+const session = JSON.parse(localStorage.getItem("parsya_session") || "null");
+if (!session || !session.token) {
+  location.replace("index.html");
 }
-function dateKey(c){const raw=c.dataset.date||'';const m=raw.match(/(\d{1,2})\s+(янв|фев|мар|апр|май|июн|июл|авг|сен|окт|ноя|дек)[а-я]*\s+(\d{4})/i);if(!m)return 0;const months={янв:0,фев:1,мар:2,апр:3,май:4,июн:5,июл:6,авг:7,сен:8,окт:9,ноя:10,дек:11};return new Date(+m[3],months[m[2].toLowerCase()],+m[1]).getTime()}
-function updateSaved(){const n=savedCards().length;$('#savedStat').textContent=String(n).padStart(2,'0');$('#allSavedCount').textContent=n+' креативов';$('#competitorCount').textContent=n+' креативов';$('#testCount').textContent=n+' креативов';$('#collectionEmpty').hidden=n>0;$('#collectionCards').innerHTML='';savedCards().forEach(c=>{const clone=c.cloneNode(true);clone.classList.add('collectionitem');clone.querySelector('.save')?.remove();clone.querySelector('.detail')?.remove();$('#collectionCards').append(clone)});renderUserCollections();if(activeCollectionId)renderCollectionView(activeCollectionId);if(window.lucide)lucide.createIcons()}
-function renderUserCollections(){const wrap=$('#userCollections'),grid=$('#userCollectionGrid');wrap.hidden=userCollections.length===0;grid.innerHTML='';userCollections.forEach(col=>{const item=document.createElement('article');item.className='collection usercollection';const icon=document.createElement('div');icon.className='collectionicon';icon.innerHTML='<i data-lucide="folder-heart"></i>';const title=document.createElement('h3');title.textContent=col.name;const desc=document.createElement('p');desc.textContent=col.description||'Подборка креативов без описания.';const foot=document.createElement('div');foot.className='collectionfoot';const label=document.createElement('span');label.textContent='Моя подборка';const count=document.createElement('strong');count.textContent=col.ids.length+' креативов';foot.append(label,count);const actions=document.createElement('div');actions.className='collectionactions';const open=document.createElement('button');open.className='collectionopen';open.type='button';open.dataset.collectionOpen=col.id;open.textContent='Открыть подборку';const rename=document.createElement('button');rename.type='button';rename.dataset.collectionRename=col.id;rename.textContent='Переименовать';const del=document.createElement('button');del.type='button';del.className='collectiondelete';del.dataset.collectionDelete=col.id;del.textContent='Удалить';actions.append(open,rename,del);item.append(icon,title,desc,foot,actions);grid.append(item)});if(window.lucide)lucide.createIcons()}
-function renderCollectionView(id){const col=userCollections.find(x=>x.id===id),view=$('#collectionView');if(!col){view.hidden=true;activeCollectionId=null;return}activeCollectionId=id;view.hidden=false;view.innerHTML='';const head=document.createElement('div');head.className='collectionviewhead';const info=document.createElement('div');const title=document.createElement('h3');title.textContent=col.name;const desc=document.createElement('p');desc.textContent=col.description||'Пользовательская подборка';info.append(title,desc);const back=document.createElement('button');back.className='secondary';back.type='button';back.dataset.collectionBack='1';back.innerHTML='<i data-lucide="x"></i> Закрыть';head.append(info,back);view.append(head);const cards=document.createElement('div');cards.className='cards';const members=col.ids.map(id=>$('#cards .creative[data-id="'+id+'"]')).filter(Boolean);if(!members.length){const empty=document.createElement('div');empty.className='collectionempty';const strong=document.createElement('strong');strong.textContent='В подборке пока нет креативов';empty.append(strong,document.createTextNode('Откройте креатив в библиотеке и добавьте его сюда.'));view.append(empty)}else members.forEach(source=>{const clone=source.cloneNode(true);clone.classList.add('collectionitem');clone.querySelector('.save')?.remove();clone.querySelector('.detail')?.remove();const remove=document.createElement('button');remove.className='collectionitemremove';remove.type='button';remove.dataset.collectionRemove=id;remove.dataset.creativeId=source.dataset.id;remove.setAttribute('aria-label','Убрать из подборки');remove.innerHTML='<i data-lucide="x"></i>';clone.append(remove);cards.append(clone)});if(members.length)view.append(cards);if(window.lucide)lucide.createIcons()}
-function removeFromCollection(collectionId,creativeId){const col=userCollections.find(x=>x.id===collectionId);if(!col)return;col.ids=col.ids.filter(id=>id!==creativeId);renderUserCollections();renderCollectionView(collectionId);notify('Креатив удалён из подборки',col.name)}
-function setTab(tab){$$('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));$$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===tab));$$('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==tab);const titles={library:['Найдите рекламу раньше конкурентов','Исследуйте креативы, отслеживайте рекламные подходы и сохраняйте находки в одном рабочем пространстве.','Новое сканирование'],collections:['Ваши подборки креативов','Собирайте идеи, наблюдайте за конкурентами и готовьте гипотезы для тестов.','Новая подборка'],scans:['Контроль задач парсинга','Следите за прогрессом, распознаванием и ошибками по каждому источнику.','Новое сканирование'],coverage:['Качество данных под контролем','Понимайте, что найдено, что распознано и где парсеру нужна доработка.','Источники и качество'],settings:['Настройки парсера','Хранение артефактов, версии адаптеров и безопасная обработка неизвестной разметки.','Настройки'],integrations:['Источники и интеграции','Подключения к реальным источникам появятся после интеграции адаптеров.','Интеграции']};const t=titles[tab]||titles.library;$('#pageTitle').textContent=t[0];$('#pageSubtitle').textContent=t[1];$('#topAction span:not(.spark)').textContent=t[2];$('#crumb').textContent='Ad Intelligence / '+({library:'Библиотека',collections:'Подборки',scans:'Сканирования',coverage:'Качество',settings:'Настройки',integrations:'Интеграции'}[tab]||'Библиотека');$('#topAction').style.display=['library','scans'].includes(tab)?'inline-flex':'none';if(tab==='collections')updateSaved();if(window.lucide)lucide.createIcons()}
-$$('[data-tab]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));$$('[data-view]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.view)));
-$('#query').addEventListener('input',applyFilters);['platform','format','savedFilter','sort'].forEach(id=>$('#'+id).addEventListener('change',applyFilters));
-$('#advancedToggle').addEventListener('click',()=>{const open=$('#advancedFilters').hidden;$('#advancedFilters').hidden=!open;$('#advancedToggle').setAttribute('aria-expanded',String(open));$('#advancedToggle').classList.toggle('primary',open)});
-$('.quickfilter').forEach(b=>b.addEventListener('click',()=>{$('.quickfilter').forEach(x=>x.classList.toggle('active',x===b));savedOnly=false;applyFilters()}));
-function resetFilters(){ $('#query').value='';$('#platform').value='all';$('#format').value='all';$('#savedFilter').value='all';$('#sort').value='recent';savedOnly=false;$('.quickfilter').forEach(b=>b.classList.toggle('active',b.dataset.quick==='all'));$('#savedOnly').style.background='#fff';$('#savedOnly').style.color='#505966';applyFilters() }
-$('#reset').addEventListener('click',resetFilters);$('#clearFilters').addEventListener('click',resetFilters);$('#emptyReset').addEventListener('click',resetFilters);
-$('#filterChips').addEventListener('click',e=>{const b=e.target.closest('[data-clear]');if(!b)return;const k=b.dataset.clear;if(k==='q')$('#query').value='';else if(k==='quick'){$('.quickfilter').forEach(x=>x.classList.toggle('active',x.dataset.quick==='all'));savedOnly=false}else $('#'+k).value=k==='platform'||k==='format'?'all':'all';applyFilters()});
-$('#savedOnly').addEventListener('click',()=>{savedOnly=!savedOnly;$('#savedOnly').style.background=savedOnly?'#e7f8ed':'#fff';$('#savedOnly').style.color=savedOnly?'#16884b':'#505966';$('.quickfilter').forEach(x=>x.classList.toggle('active',x.dataset.quick===(savedOnly?'saved':'all')));applyFilters()});
-$$('.save').forEach(b=>b.addEventListener('click',()=>{const c=b.closest('.creative');c.dataset.saved=c.dataset.saved==='1'?'0':'1';b.classList.toggle('saved',c.dataset.saved==='1');b.innerHTML=c.dataset.saved==='1'?'<i data-lucide="bookmark-check"></i>':'<i data-lucide="bookmark"></i>';if(window.lucide)lucide.createIcons();applyFilters();notify(c.dataset.saved==='1'?'Креатив сохранён':'Сохранение отменено',c.dataset.brand+' · демо-подборка')}));
-function openDetail(c){
- currentCard=c;
- const art=c.querySelector('.adart');
- const headline=art?.querySelector('strong')?.innerText.replace(/\n/g,' ')||'Креатив без заголовка';
- const cta=art?.querySelector('.cta')?.innerText||'Не указан';
- const firstSeen=c.dataset.date||'Дата не указана';
- const advertiser=c.dataset.brand||'Не указан';
- const domain=c.dataset.domain||'Не указан';
- const copy=c.dataset.copy||'Текст не указан';
- const platform=c.dataset.platform||'Источник не указан';
- const format=c.dataset.format||'Формат не указан';
- $('#detailTitle').textContent=advertiser;
- $('#detailContent').innerHTML=
-  '<div class="detailpreview">'+art.outerHTML+'</div>'+
-  '<div class="detailactions"><button class="secondary" type="button" data-copy-value="'+escapeHTML(headline)+'" data-copy-label="Заголовок объявления"><i data-lucide="copy"></i> Заголовок</button><button class="secondary" type="button" data-copy-value="'+escapeHTML(copy)+'" data-copy-label="Текст объявления"><i data-lucide="copy"></i> Текст объявления</button><button class="secondary" type="button" data-copy-value="'+escapeHTML(domain)+'" data-copy-label="Домен"><i data-lucide="link"></i> Домен</button></div>'+
-  '<div class="detailcollection"><label for="addToCollection">Добавить в мою подборку</label><select id="addToCollection" '+(userCollections.length?'':'disabled')+'><option value="">'+(userCollections.length?'Выберите подборку':'Сначала создайте подборку')+'</option>'+userCollections.map(col=>'<option value="'+escapeHTML(col.id)+'">'+escapeHTML(col.name)+'</option>').join('')+'</select><button type="button" id="addCreativeToCollection" '+(userCollections.length?'':'disabled')+'><i data-lucide="folder-plus"></i> Добавить</button></div>'+
-  '<div class="detailbadges"><span class="detailbadge"><i data-lucide="radio-tower"></i>'+platform+'</span><span class="detailbadge"><i data-lucide="image"></i>'+format+'</span><span class="detailbadge demo"><i data-lucide="flask-conical"></i>Демо-пример</span></div>'+
-  '<section class="detailsection"><div class="detailsectiontitle">Содержание объявления</div>'+
-  '<div class="detailfield"><span>Заголовок</span><strong>'+escapeHTML(headline)+'</strong></div>'+
-  '<div class="detailfield"><span>Текст объявления</span><p>'+escapeHTML(copy)+'</p></div>'+
-  '<div class="detailfield"><span>Призыв к действию (CTA)</span><strong>'+escapeHTML(cta)+'</strong></div></section>'+
-  '<section class="detailsection"><div class="detailsectiontitle">Рекламодатель и источник</div>'+
-  '<div class="detailfield"><span>Рекламодатель</span><strong>'+escapeHTML(advertiser)+'</strong></div>'+
-  '<div class="detailfield"><span>Домен</span><strong>'+escapeHTML(domain)+'</strong></div>'+
-  '<div class="detailfield"><span>Площадка</span><strong>'+escapeHTML(platform)+'</strong></div>'+
-  '<div class="detailfield"><span>Формат</span><strong>'+escapeHTML(format)+'</strong></div></section>'+
-  '<section class="detailsection"><div class="detailsectiontitle">История наблюдений</div>'+
-  '<div class="historysummary"><div class="historymetric"><span>Первое обнаружение</span><strong>'+escapeHTML(firstSeen)+'</strong></div><div class="historymetric"><span>Последнее подтверждённое</span><strong>'+escapeHTML(firstSeen)+'</strong></div></div>'+
-  '<div class="historytoolbar"><label for="historyPeriod">Период истории</label><select id="historyPeriod"><option value="all">За всё время</option><option value="7">Последние 7 дней</option><option value="30" selected>Последние 30 дней</option><option value="90">Последние 90 дней</option></select></div>'+
-  '<div id="historyEvents"><div class="historyevent"><span class="historyeventicon"><i data-lucide="scan-eye"></i></span><div class="historyeventcopy"><strong>Первое обнаружение креатива</strong><p>'+escapeHTML(firstSeen)+' · сохранено как начальная версия демонстрационного примера.</p><span class="historytag">Демо-событие · не подтверждено источником</span></div></div></div>'+
-  '<div class="historyempty" id="historyNoRepeat"><strong>Повторных наблюдений пока нет</strong>После подключения источников здесь появятся следующие проверки, изменения объявления и подтверждённые даты. Мы не подставляем вымышленные события в историю.</div></section>'+
-  '<section class="detailsection"><div class="detailsectiontitle">Версии креатива</div><div class="versionrow"><span class="versiondot"></span><div><strong>Версия 1 · исходное состояние</strong><p>'+escapeHTML(firstSeen)+' · текущий пример для макета. Сравнение версий станет доступно, когда появится как минимум две сохранённые версии.</p></div><button type="button" disabled>Сравнить</button></div><div class="historyempty"><strong>Пока доступна одна версия</strong>При изменении заголовка, текста, изображения или CTA система сможет сохранить новую версию и показать различия.</div></section>'+
-  '<div class="detaildisclaimer"><i data-lucide="info"></i><span>Демонстрационные данные. Реальный рекламодатель, домен и даты будут заполняться из подключённых источников.</span></div>';
- const isSaved=currentCard?.dataset.saved==='1';
- $('#detailSave').innerHTML=isSaved?'<i data-lucide="bookmark-check"></i> Убрать из сохранённых':'<i data-lucide="bookmark"></i> Сохранить креатив';
- $('#detailOverlay').classList.add('show');
- if(window.lucide)lucide.createIcons();
+const API_BASE = (localStorage.getItem("parsya_api_base") || DEFAULT_API_BASE).replace(/\/+$/, "");
+
+async function api(path, params) {
+  const url = new URL(API_BASE + path);
+  Object.entries(params || {}).forEach(([k, v]) => { if (v !== undefined && v !== "") url.searchParams.set(k, v); });
+  const response = await fetch(url, { headers: { Authorization: "Bearer " + session.token } });
+  if (response.status === 401) {
+    localStorage.removeItem("parsya_session");
+    location.replace("index.html");
+    throw new Error("session expired");
+  }
+  if (!response.ok) throw new Error("API error " + response.status);
+  return response.json();
 }
-function escapeHTML(value){return String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
-function parseDemoDate(value){const m=String(value||'').match(/^(\\d{1,2})\\s+([а-яё]+)\\s+(\\d{4})$/i);if(!m)return null;const months={янв:0,фев:1,мар:2,апр:3,май:4,июн:5,июл:6,авг:7,сен:8,окт:9,ноя:10,дек:11};const key=m[2].toLowerCase().slice(0,3);if(!(key in months))return null;return new Date(Number(m[3]),months[key],Number(m[1]))}
-$('#detailContent').addEventListener('change',e=>{if(e.target.id!=='historyPeriod')return;const events=$('#historyEvents'),empty=$('#historyNoRepeat'),days=e.target.value;const date=parseDemoDate(currentCard?.dataset.date);const now=new Date(2026,9,14);const within=days==='all'||!date||((now-date)/(86400000)<=Number(days));events.hidden=!within;empty.hidden=!within?false:true;if(!within){empty.innerHTML='<strong>За выбранный период событий нет</strong>Первое обнаружение креатива было за пределами выбранного окна. Попробуйте расширить период.';events.hidden=true}else{empty.innerHTML='<strong>Повторных наблюдений пока нет</strong>После подключения источников здесь появятся следующие проверки, изменения объявления и подтверждённые даты. Мы не подставляем вымышленные события в историю.';empty.hidden=false}});
 
-$('.detail').forEach(b=>b.addEventListener('click',()=>openDetail(b.closest('.creative'))));
-function closeDetail(){$('#detailOverlay').classList.remove('show')}
-$('#closeDetail').addEventListener('click',closeDetail);
-$('#detailOverlay').addEventListener('click',e=>{if(e.target===$('#detailOverlay'))closeDetail()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDetail();$('#modalWrap').classList.remove('show')}});
-$('#detailContent').addEventListener('click',async e=>{const b=e.target.closest('[data-copy-value]');if(!b)return;const value=b.dataset.copyValue||'';try{await navigator.clipboard.writeText(value);notify('Скопировано',b.dataset.copyLabel||'Текст скопирован')}catch(err){const area=document.createElement('textarea');area.value=value;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();const ok=document.execCommand('copy');area.remove();notify(ok?'Скопировано':'Не удалось скопировать',ok?(b.dataset.copyLabel||'Текст скопирован'):'Скопируйте текст вручную из карточки')}});$('#detailSave').addEventListener('click',()=>{if(currentCard){const saveButton=currentCard.querySelector('.save');const isSaved=currentCard.dataset.saved==='1';if(isSaved){currentCard.dataset.saved='0';saveButton.classList.remove('saved');saveButton.innerHTML='<i data-lucide="bookmark"></i>';notify('Убрано из сохранённых',currentCard.dataset.brand+' · демо-подборка')}else{currentCard.dataset.saved='1';saveButton.classList.add('saved');saveButton.innerHTML='<i data-lucide="bookmark-check"></i>';notify('Креатив сохранён',currentCard.dataset.brand+' · демо-подборка')}if(window.lucide)lucide.createIcons();applyFilters();$('#detailSave').innerHTML=currentCard.dataset.saved==='1'?'<i data-lucide="bookmark-check"></i> Убрать из сохранённых':'<i data-lucide="bookmark"></i> Сохранить креатив';if(window.lucide)lucide.createIcons()}});
-let modalMode='scan',userCollections=[],activeCollectionId=null;
-function openModal(mode){modalMode=mode;const isCollection=mode==='collection';$('#modalTitle').textContent=isCollection?'Новая подборка':'Новое сканирование';$('#modalDesc').textContent=isCollection?'Создайте отдельную группу креативов для исследования или тестов.':'Создайте задачу в демонстрационном списке. Настоящий парсер не запускается.';$('#taskNameLabel').textContent=isCollection?'Название подборки':'Название задачи';$('#taskName').placeholder=isCollection?'Например, Офферы конкурентов':'Например, конкуренты в нише';$('#collectionDescriptionField').hidden=!isCollection;$('#collectionDescription').value='';$('#taskSource').closest('.field').hidden=isCollection;$('#taskTarget').closest('.field').hidden=isCollection;$('#modalWrap').classList.add('show');$('#taskName').focus()}
-$('#topAction').addEventListener('click',()=>openModal('scan'));$('#newScan').addEventListener('click',()=>openModal('scan'));$('#newCollection').addEventListener('click',()=>openModal('collection'));$('#cancelModal').addEventListener('click',()=>$('#modalWrap').classList.remove('show'));$('#modalWrap').addEventListener('click',e=>{if(e.target===$('#modalWrap'))$('#modalWrap').classList.remove('show')});
-$('#taskForm').addEventListener('submit',e=>{e.preventDefault();const name=$('#taskName').value.trim(),source=$('#taskSource').value,target=$('#taskTarget').value.trim();if(modalMode==='collection'){if(!name){$('#taskName').focus();return}const duplicate=userCollections.some(x=>x.name.toLocaleLowerCase('ru')===name.toLocaleLowerCase('ru'));if(duplicate){notify('Такое название уже есть','Выберите уникальное название подборки.');$('#taskName').focus();return}const col={id:'collection-'+Date.now(),name,description:$('#collectionDescription').value.trim(),ids:[]};userCollections.push(col);renderUserCollections();notify('Подборка создана',name+' · пока пустая');setTab('collections')}else{const row=document.createElement('article');row.className='job';const safeName=document.createElement('strong');safeName.textContent=name;const safeSource=document.createElement('span');safeSource.textContent='Создано сейчас · демонстрационная задача';const wrap=document.createElement('div');wrap.className='jobname';const icon=document.createElement('div');icon.className='jobicon';icon.innerHTML='<i data-lucide="radar"></i>';const copy=document.createElement('div');copy.append(safeName,safeSource);wrap.append(icon,copy);const meta1=document.createElement('div');meta1.className='jobmeta';meta1.innerHTML='<strong>Ожидает запуска</strong><span>Нет реальных данных</span>';const meta2=document.createElement('div');meta2.className='jobmeta';meta2.innerHTML='<strong>—</strong><span>Распознавание</span>';const status=document.createElement('span');status.className='status partial';status.textContent='Демо · не запущено';row.append(wrap,meta1,meta2,status);$('#jobList').prepend(row);$('#jobsStat').textContent=String($$('#jobList .job').length).padStart(2,'0');$('#jobTotal').textContent=String($$('#jobList .job').length).padStart(2,'0');notify('Демо-задача создана',source+(target?' · '+target:''));if(window.lucide)lucide.createIcons();setTab('scans')}$('#modalWrap').classList.remove('show');$('#taskForm').reset()});
-$('#userCollectionGrid').addEventListener('click',e=>{const open=e.target.closest('[data-collection-open]'),rename=e.target.closest('[data-collection-rename]'),del=e.target.closest('[data-collection-delete]');if(open){renderCollectionView(open.dataset.collectionOpen);return}if(rename){const col=userCollections.find(x=>x.id===rename.dataset.collectionRename);if(!col)return;const next=window.prompt('Новое название подборки',col.name);if(next===null)return;const name=next.trim();if(!name){notify('Название не изменено','Название не может быть пустым.');return}if(userCollections.some(x=>x.id!==col.id&&x.name.toLocaleLowerCase('ru')===name.toLocaleLowerCase('ru'))){notify('Такое название уже есть','Выберите уникальное название.');return}col.name=name;renderUserCollections();if(activeCollectionId===col.id)renderCollectionView(col.id);notify('Название обновлено',name);return}if(del){const col=userCollections.find(x=>x.id===del.dataset.collectionDelete);if(!col)return;if(!window.confirm('Удалить подборку «'+col.name+'»? Сами креативы останутся в библиотеке.'))return;userCollections=userCollections.filter(x=>x.id!==col.id);if(activeCollectionId===col.id){activeCollectionId=null;$('#collectionView').hidden=true}renderUserCollections();notify('Подборка удалена',col.name)}});
-$('#collectionView').addEventListener('click',e=>{if(e.target.closest('[data-collection-back]')){$('#collectionView').hidden=true;activeCollectionId=null;return}const remove=e.target.closest('[data-collection-remove]');if(remove)removeFromCollection(remove.dataset.collectionRemove,remove.dataset.creativeId);const detail=e.target.closest('.detail');if(detail){const id=detail.closest('.creative')?.dataset.id;const original=$('#cards .creative[data-id="'+id+'"]');if(original)openDetail(original)}});
-$('#detailContent').addEventListener('click',e=>{const add=e.target.closest('#addCreativeToCollection');if(!add||!currentCard)return;const select=$('#addToCollection'),col=userCollections.find(x=>x.id===select.value);if(!col){notify('Выберите подборку','Сначала создайте подборку и выберите её в списке.');return}if(col.ids.includes(currentCard.dataset.id)){notify('Уже добавлен',col.name+' уже содержит этот креатив.');return}col.ids.push(currentCard.dataset.id);renderUserCollections();if(activeCollectionId)renderCollectionView(activeCollectionId);notify('Добавлено в подборку',col.name);select.value=''});
-$('#export').addEventListener('click',()=>{const data=$$('#cards .creative').filter(c=>!c.hidden).map(c=>({brand:c.dataset.brand,platform:c.dataset.platform,format:c.dataset.format,text:c.dataset.copy,domain:c.dataset.domain,exampleDate:c.dataset.date,demo:true}));const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='neon-ad-intelligence-demo.json';a.click();URL.revokeObjectURL(url);notify('Экспорт готов','Скачан JSON с видимыми демо-карточками.')});
+document.getElementById("userChip").textContent = session.email || "";
+if (session.role === "admin") {
+  const badge = document.getElementById("roleBadge");
+  badge.textContent = "admin";
+  badge.classList.remove("hidden");
+  const adminLink = document.getElementById("adminLink");
+  adminLink.href = API_BASE + "/admin/users";
+  adminLink.classList.remove("hidden");
+  adminLink.title = "Открывает отдельную консоль администратора ParsYa (нужен отдельный вход оператора)";
+}
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  try { await fetch(API_BASE + "/api/v1/auth/logout", { method: "POST", headers: { Authorization: "Bearer " + session.token } }); } catch (e) {}
+  localStorage.removeItem("parsya_session");
+  location.replace("index.html");
+});
 
-$('#saveParserSettings').addEventListener('click',()=>notify('Настройки обновлены','Параметры применены в демо-интерфейсе. Серверное сохранение ещё не подключено.'));
-$('#resetParserSettings').addEventListener('click',()=>{$('#saveUnknown').checked=true;$('#saveScreenshot').checked=true;$('#trackChanges').checked=true;$('#retention').value='30';$('#maxSize').value='512';notify('Параметры сброшены','Возвращены значения по умолчанию.')});
-$('#refreshIntegrations').addEventListener('click',()=>notify('Статусы обновлены','Показаны статусы демо-режима; запросы к платформам не выполнялись.'));
-$('.integrationtest').forEach(b=>b.addEventListener('click',()=>notify('Интеграция не подключена',b.dataset.source+': сначала требуется настроить и развернуть адаптер.')));
-$('.mobilemenu').addEventListener('click',()=>{const nav=$('.sidebar');const opened=nav.classList.toggle('mobile-open');if(opened){const close=document.createElement('button');close.className='mobile-nav-close';close.type='button';close.setAttribute('aria-label','Закрыть меню');close.innerHTML='<i data-lucide="x"></i>';nav.prepend(close);if(window.lucide)lucide.createIcons();close.addEventListener('click',()=>{nav.classList.remove('mobile-open');close.remove()})}else nav.querySelector('.mobile-nav-close')?.remove()});
-$('[data-view]').forEach(b=>b.addEventListener('click',()=>{if(window.matchMedia('(max-width: 760px)').matches){$('.sidebar').classList.remove('mobile-open');$('.mobile-nav-close')?.remove()}}));
-$('#spaceSelect').addEventListener('change',e=>{if(e.target.value!=='Ad Intelligence'){notify('Пространство ещё не собрано',e.target.value+' будет разработано отдельным этапом.');e.target.value='Ad Intelligence'}});
-$('#helpBtn').addEventListener('click',()=>notify('Ad Intelligence','В этом прототипе данные демонстрационные. Интеграции не подключены.'));$('#notifications').addEventListener('click',()=>notify('Уведомления','Пока нет реальных событий от парсера.'));
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#detailOverlay').classList.remove('show');$('#modalWrap').classList.remove('show')}});
-applyFilters();setTab('library');
+const cardsEl = document.getElementById("cards");
+const resultCountEl = document.getElementById("resultCount");
+const advertiserChipsEl = document.getElementById("advertiserChips");
+const advertiserBarEl = document.getElementById("advertiserBar");
+let activeAdvertiser = null; // {inn, name}
+let groupCache = {}; // group_key -> group object, for the drawer
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function renderLoading() { cardsEl.innerHTML = '<div class="loading">Загрузка…</div>'; }
+
+function renderEmpty(text) {
+  cardsEl.innerHTML = `<div class="empty"><strong>Ничего не найдено</strong>${esc(text)}</div>`;
+}
+
+function cardHtml(group) {
+  const rep = group.representative;
+  const preview = rep.image_url
+    ? `<img src="${esc(rep.image_url)}" alt="" loading="lazy">`
+    : `<span class="fallback">${esc((rep.domain || "?")[0].toUpperCase())}</span>`;
+  const platforms = (group.platforms || []).slice(0, 4).map((p) => `<span class="tag">${esc(p)}</span>`).join("");
+  const campaignCount = (group.campaign_ids || []).length;
+  const campaignTag = campaignCount > 1
+    ? `<span class="tag count">${campaignCount} campaign ID</span>`
+    : (campaignCount === 1 ? `<span class="tag count">1 campaign ID</span>` : "");
+  const platformCountTag = (group.platforms || []).length > 1 ? `<span class="tag count">${group.platforms.length} площадки</span>` : "";
+  return `<article class="creative" data-group="${esc(group.group_key)}">
+    <div class="preview">${preview}<div class="platformrow">${platforms}</div></div>
+    <div class="cardbody">
+     <p class="cardtitle">${esc(rep.title || rep.domain || "Без заголовка")}</p>
+     <p class="carddomain">${esc(rep.domain || "домен не определён")}</p>
+     <div class="metarow">${campaignTag}${platformCountTag}</div>
+     <div class="cardfoot"><span>${esc((group.last_seen_at || "").slice(0, 10))}</span><button class="textbtn" data-open="${esc(group.group_key)}">Подробнее →</button></div>
+    </div>
+   </article>`;
+}
+
+function renderGroups(groups, countLabel) {
+  groupCache = {};
+  groups.forEach((g) => { groupCache[g.group_key] = g; });
+  resultCountEl.textContent = countLabel;
+  if (!groups.length) { renderEmpty("Попробуйте другой ИНН, название, домен или часть текста объявления."); return; }
+  cardsEl.innerHTML = groups.map(cardHtml).join("");
+  cardsEl.querySelectorAll("[data-open]").forEach((btn) => {
+    btn.addEventListener("click", () => openDetail(groupCache[btn.dataset.open]));
+  });
+}
+
+function groupFlatCreatives(items) {
+  const groups = {};
+  const order = [];
+  for (const row of items) {
+    const key = row.content_fingerprint || ("hash:" + row.creative_hash);
+    if (!groups[key]) {
+      groups[key] = { group_key: key, representative: row, creative_ids: [], platforms: [], campaign_ids: [], banner_ids: [], client_ids: [], first_seen_at: row.captured_at, last_seen_at: row.captured_at };
+      order.push(key);
+    }
+    const g = groups[key];
+    g.creative_ids.push(row.id);
+    if (!g.platforms.includes(row.platform)) g.platforms.push(row.platform);
+    if (row.captured_at < g.first_seen_at) g.first_seen_at = row.captured_at;
+    if (row.captured_at > g.last_seen_at) g.last_seen_at = row.captured_at;
+  }
+  return order.map((k) => groups[k]);
+}
+
+async function openDetail(group) {
+  const overlay = document.getElementById("detailOverlay");
+  const repId = group.creative_ids[0];
+  document.getElementById("detailTitle").textContent = group.representative.title || group.representative.domain || "Креатив";
+  document.getElementById("detailSubtitle").textContent = group.representative.domain || "";
+  document.getElementById("detailContent").innerHTML = '<div class="loading">Загрузка…</div>';
+  overlay.classList.add("show");
+  try {
+    const detail = await api(`/api/v1/creatives/${repId}`);
+    renderDetail(group, detail);
+  } catch (e) {
+    document.getElementById("detailContent").innerHTML = '<div class="note">Не удалось загрузить детали креатива.</div>';
+  }
+}
+
+function renderDetail(group, detail) {
+  const c = detail.creative;
+  const preview = c.image_url ? `<img src="${esc(c.image_url)}" alt="">` : "";
+  const advertisers = detail.advertisers.length
+    ? detail.advertisers.map((a) => `<div class="advrow"><div><strong>${esc(a.canonical_name || "Без названия")}</strong><span>ИНН ${esc(a.inn || "—")} · ${esc(a.association_method)}</span></div></div>`).join("")
+    : '<div class="note">Рекламодатель не был однозначно раскрыт для этого креатива.</div>';
+  const byType = {};
+  detail.identifiers.forEach((i) => { (byType[i.identifier_type] = byType[i.identifier_type] || []).push(i.identifier_value); });
+  // In advertiser mode the card already aggregates IDs across every row sharing this
+  // content_fingerprint; merge those in so the drawer never shows fewer IDs than the card did.
+  const groupTypeMap = { campaign_ids: "campaign_id_candidate", banner_ids: "banner_id_candidate", client_ids: "client_id_candidate" };
+  Object.entries(groupTypeMap).forEach(([groupKey, idType]) => {
+    (group[groupKey] || []).forEach((value) => {
+      const bucket = byType[idType] = byType[idType] || [];
+      if (!bucket.includes(value)) bucket.push(value);
+    });
+  });
+  const idLabels = { campaign_id_candidate: "Campaign ID", banner_id_candidate: "Banner ID", client_id_candidate: "Client ID", creative_id_candidate: "Creative ID" };
+  const idsHtml = Object.keys(idLabels).map((type) => {
+    const values = byType[type];
+    if (!values || !values.length) return "";
+    return `<div class="row"><span>${idLabels[type]} (${values.length})</span><div class="idchips">${values.map((v) => `<span class="idchip">${esc(v)}</span>`).join("")}</div></div>`;
+  }).join("") || '<div class="note">Campaign/banner/client ID не были найдены в собранном HTML этого объявления.</div>';
+  const extraCount = group.creative_ids.length - 1;
+  const otherRows = extraCount > 0
+    ? `<div class="row"><span>Этот же креатив (тот же текст/картинка) обнаружен ещё в ${extraCount} ${extraCount === 1 ? "записи" : "записях"} — другая площадка или вариант разметки</span></div>` : "";
+  const occHtml = detail.occurrences.length
+    ? detail.occurrences.map((o) => `<div class="occ"><b>${esc(o.platform)}</b><span>${esc((o.observed_at || "").replace("T", " ").slice(0, 16))} · ${esc(o.source_page_url || "")}</span></div>`).join("")
+    : '<div class="note">История обнаружений пока пуста.</div>';
+  document.getElementById("detailContent").innerHTML = `
+   <div class="detailpreview">${preview}</div>
+   <div class="row"><span>Описание</span><strong>${esc(c.description || "—")}</strong></div>
+   <div class="row"><span>Площадки</span><strong>${esc((group.platforms || [c.platform]).join(", "))}</strong></div>
+   ${c.destination_url ? `<div class="row"><span>Ссылка на сайт рекламодателя</span><strong><a href="${esc(c.destination_url)}" target="_blank" rel="noopener">${esc(c.destination_url)}</a></strong></div>` : ""}
+   <div class="section"><h3>Рекламодатель</h3>${advertisers}</div>
+   <div class="section"><h3>Идентификаторы кампаний</h3>${idsHtml}${otherRows}</div>
+   <div class="section"><h3>История обнаружений</h3>${occHtml}</div>
+   <div class="note">Все значения получены при автоматическом сканировании открытых страниц. Привязка к ИНН надёжна там, где рекламодатель раскрыт явно самой площадкой.</div>`;
+}
+
+document.getElementById("closeDetail").addEventListener("click", () => document.getElementById("detailOverlay").classList.remove("show"));
+document.getElementById("detailOverlay").addEventListener("click", (e) => { if (e.target.id === "detailOverlay") e.currentTarget.classList.remove("show"); });
+
+async function loadAdvertiser(inn) {
+  renderLoading();
+  try {
+    const data = await api(`/api/v1/advertisers/${encodeURIComponent(inn)}/creatives`, { limit: 60 });
+    activeAdvertiser = { inn: data.advertiser.inn, name: data.advertiser.name };
+    document.getElementById("advertiserName").textContent = data.advertiser.name || "Без названия";
+    document.getElementById("advertiserMeta").textContent = `ИНН ${data.advertiser.inn} · ${data.total_variants} уникальных креативов из ${data.total_creative_rows} обнаружений`;
+    advertiserBarEl.classList.remove("hidden");
+    advertiserChipsEl.classList.add("hidden");
+    renderGroups(data.variants, `${data.total_variants} уникальных креативов`);
+  } catch (e) {
+    renderEmpty("Не удалось загрузить креативы этого рекламодателя.");
+  }
+}
+
+document.getElementById("clearAdvertiser").addEventListener("click", () => {
+  activeAdvertiser = null;
+  advertiserBarEl.classList.add("hidden");
+  runSearch();
+});
+
+let searchTimer = null;
+document.getElementById("query").addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(runSearch, 350);
+});
+document.getElementById("resetBtn").addEventListener("click", () => {
+  document.getElementById("query").value = "";
+  activeAdvertiser = null;
+  advertiserBarEl.classList.add("hidden");
+  advertiserChipsEl.classList.add("hidden");
+  cardsEl.innerHTML = '<div class="loading">Введите запрос, чтобы начать поиск.</div>';
+  resultCountEl.textContent = "";
+});
+
+async function runSearch() {
+  const query = document.getElementById("query").value.trim();
+  if (activeAdvertiser) return; // advertiser view has its own "show all" exit
+  if (!query) {
+    advertiserChipsEl.classList.add("hidden");
+    cardsEl.innerHTML = '<div class="loading">Введите запрос, чтобы начать поиск.</div>';
+    resultCountEl.textContent = "";
+    return;
+  }
+  renderLoading();
+  try {
+    const advertisers = await api("/api/v1/advertisers", { q: query, limit: 6 });
+    if (advertisers.items.length) {
+      advertiserChipsEl.innerHTML = advertisers.items.map((a) =>
+        `<button class="chip" data-inn="${esc(a.inn || "")}">${esc(a.name || "Без названия")} <span class="inn">ИНН ${esc(a.inn || "—")}</span></button>`
+      ).join("");
+      advertiserChipsEl.classList.remove("hidden");
+      advertiserChipsEl.querySelectorAll("[data-inn]").forEach((chip) => {
+        chip.addEventListener("click", () => loadAdvertiser(chip.dataset.inn));
+      });
+    } else {
+      advertiserChipsEl.classList.add("hidden");
+    }
+    const creatives = await api("/api/v1/creatives", { q: query, limit: 90 });
+    const groups = groupFlatCreatives(creatives.items);
+    renderGroups(groups, `${groups.length} уникальных креативов · ${creatives.total} записей`);
+  } catch (e) {
+    renderEmpty("Поиск не выполнен. Проверьте соединение с сервисом.");
+  }
+}
 </script>
 </body>
 </html>
