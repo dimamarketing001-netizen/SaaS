@@ -145,6 +145,8 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
   <div class="tabs">
    <button class="tab active" data-tab="library">Библиотека</button>
    <button class="tab" data-tab="scans">Сканирования</button>
+   <button class="tab" data-tab="collections">Подборки</button>
+   <button class="tab" data-tab="coverage">Источники и качество</button>
   </div>
 
   <section class="view" id="viewLibrary">
@@ -193,9 +195,47 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
    </div>
    <div class="runlist" id="runList"><div class="loading">Загрузка…</div></div>
   </section>
+
+  <section class="view" id="viewCollections" hidden>
+   <div class="runform">
+    <h3>Новая подборка</h3>
+    <p>Сохраняйте креативы конкурентов или интересные находки в отдельные списки — например «Конкуренты в недвижимости» или «Удачные офферы».</p>
+    <form id="collectionForm" class="runformgrid">
+     <div class="field"><label>Название</label><input id="collectionName" maxlength="120" required></div>
+     <div class="field"><label>Описание (необязательно)</label><input id="collectionDescription" maxlength="500"></div>
+     <button class="primary" type="submit">Создать</button>
+    </form>
+    <div id="collectionFormNote"></div>
+   </div>
+   <div class="contextbar" id="collectionOpenBar" hidden>
+    <div><strong id="collectionOpenTitle"></strong><span id="collectionOpenMeta"></span></div>
+    <button class="secondary" id="collectionBack">✕ Ко всем подборкам</button>
+   </div>
+   <div id="collectionsListWrap">
+    <div class="runlist" id="collectionsList"><div class="loading">Загрузка…</div></div>
+   </div>
+   <div class="cards hidden" id="collectionItemsCards"></div>
+  </section>
+
+  <section class="view" id="viewCoverage" hidden>
+   <p class="lead" style="margin-bottom:18px">Реальная статистика по собранным данным: сколько креативов распознано полностью, у скольких найден рекламодатель (ИНН), и когда площадка собиралась в последний раз.</p>
+   <div id="coverageTotals" class="runlist" style="margin-bottom:18px"></div>
+   <div id="coverageTable"><div class="loading">Загрузка…</div></div>
+  </section>
  </div>
 </div>
-<div class="overlay" id="detailOverlay"><aside class="drawer" role="dialog" aria-modal="true"><div class="drawerhead"><div><h2 id="detailTitle">Креатив</h2><p id="detailSubtitle"></p></div><button class="closebtn" id="closeDetail">✕</button></div><div id="detailContent"></div></aside></div>
+<div class="overlay center" id="saveOverlay">
+ <div class="modal" role="dialog" aria-modal="true">
+  <div class="drawerhead"><div><h2>Сохранить в подборку</h2><p>Выберите подборку или создайте новую</p></div><button class="closebtn" id="closeSave">✕</button></div>
+  <div id="saveCollectionsList"></div>
+  <form id="saveNewCollectionForm" style="margin-top:14px;display:flex;gap:8px">
+   <input id="saveNewCollectionName" placeholder="Название новой подборки" maxlength="120" style="flex:1;border:1px solid var(--line);border-radius:10px;padding:10px;outline:none">
+   <button class="primary" type="submit">Создать</button>
+  </form>
+  <div id="saveNote"></div>
+ </div>
+</div>
+<div class="overlay" id="detailOverlay"><aside class="drawer" role="dialog" aria-modal="true"><div class="drawerhead"><div><h2 id="detailTitle">Креатив</h2><p id="detailSubtitle"></p></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="secondary" id="detailSaveBtn">☆ Сохранить</button><button class="closebtn" id="closeDetail">✕</button></div></div><div id="detailContent"></div></aside></div>
 <div class="overlay center" id="settingsOverlay">
  <div class="modal" role="dialog" aria-modal="true">
   <div class="drawerhead"><div><h2>Настройки</h2><p>Смена пароля для входа в ParsYa Ads</p></div><button class="closebtn" id="closeSettings">✕</button></div>
@@ -254,11 +294,18 @@ document.getElementById("logoutBtn").addEventListener("click", async () => {
 
 /* ---------- Tabs ---------- */
 const tabs = document.querySelectorAll(".tab");
-const views = { library: document.getElementById("viewLibrary"), scans: document.getElementById("viewScans") };
+const views = {
+  library: document.getElementById("viewLibrary"),
+  scans: document.getElementById("viewScans"),
+  collections: document.getElementById("viewCollections"),
+  coverage: document.getElementById("viewCoverage"),
+};
 tabs.forEach((tab) => tab.addEventListener("click", () => {
   tabs.forEach((t) => t.classList.toggle("active", t === tab));
   Object.entries(views).forEach(([key, el]) => { el.hidden = key !== tab.dataset.tab; });
   if (tab.dataset.tab === "scans") loadRuns();
+  if (tab.dataset.tab === "collections") loadCollections();
+  if (tab.dataset.tab === "coverage") loadCoverage();
 }));
 
 /* ---------- Settings / change password ---------- */
@@ -357,7 +404,7 @@ function cardHtml(group) {
      <p class="cardtitle">${esc(rep.title || rep.domain || "Без заголовка")}</p>
      <p class="carddomain">${esc(rep.domain || "домен не определён")}</p>
      <div class="metarow">${campaignTag}${platformCountTag}</div>
-     <div class="cardfoot"><span>${esc((group.last_seen_at || "").slice(0, 10))}</span><button class="textbtn" data-open="${esc(group.group_key)}">Подробнее →</button></div>
+     <div class="cardfoot"><span>${esc((group.last_seen_at || "").slice(0, 10))}</span><span><button class="textbtn" data-save="${esc(group.group_key)}" title="Сохранить в подборку">☆ Сохранить</button> <button class="textbtn" data-open="${esc(group.group_key)}">Подробнее →</button></span></div>
     </div>
    </article>`;
 }
@@ -370,6 +417,9 @@ function renderGroups(groups, countLabel) {
   cardsEl.innerHTML = groups.map(cardHtml).join("");
   cardsEl.querySelectorAll("[data-open]").forEach((btn) => {
     btn.addEventListener("click", () => openDetail(groupCache[btn.dataset.open]));
+  });
+  cardsEl.querySelectorAll("[data-save]").forEach((btn) => {
+    btn.addEventListener("click", (e) => { e.stopPropagation(); openSaveOverlay(groupCache[btn.dataset.save]); });
   });
 }
 
@@ -407,6 +457,7 @@ async function openDetail(group) {
   document.getElementById("detailSubtitle").textContent = group.representative.domain || "";
   document.getElementById("detailContent").innerHTML = '<div class="loading">Загрузка…</div>';
   overlay.classList.add("show");
+  document.getElementById("detailSaveBtn").onclick = () => openSaveOverlay(group);
   try {
     const detail = await api(`/api/v1/creatives/${repId}`);
     renderDetail(group, detail);
@@ -605,6 +656,188 @@ async function loadRuns() {
   }
 }
 document.getElementById("refreshRuns").addEventListener("click", loadRuns);
+
+/* ---------- Save-to-collection overlay ---------- */
+const saveOverlay = document.getElementById("saveOverlay");
+let saveTargetGroup = null;
+document.getElementById("closeSave").addEventListener("click", () => saveOverlay.classList.remove("show"));
+saveOverlay.addEventListener("click", (e) => { if (e.target === saveOverlay) saveOverlay.classList.remove("show"); });
+
+async function openSaveOverlay(group) {
+  saveTargetGroup = group;
+  document.getElementById("saveNote").innerHTML = "";
+  document.getElementById("saveNewCollectionName").value = "";
+  const list = document.getElementById("saveCollectionsList");
+  list.innerHTML = '<div class="loading">Загрузка…</div>';
+  saveOverlay.classList.add("show");
+  try {
+    const data = await api("/api/v1/collections");
+    if (!data.items.length) {
+      list.innerHTML = '<div class="note">У вас пока нет подборок — создайте первую ниже.</div>';
+      return;
+    }
+    list.innerHTML = data.items.map((c) =>
+      `<div class="advrow"><div><strong>${esc(c.name)}</strong><span>${c.items_count} креативов</span></div><button class="secondary" data-add="${c.id}">+ В эту подборку</button></div>`
+    ).join("");
+    list.querySelectorAll("[data-add]").forEach((btn) => {
+      btn.addEventListener("click", () => addToCollection(Number(btn.dataset.add)));
+    });
+  } catch (e) {
+    list.innerHTML = `<div class="note error">${esc(e.message)}</div>`;
+  }
+}
+
+async function addToCollection(collectionId) {
+  const note = document.getElementById("saveNote");
+  try {
+    await api(`/api/v1/collections/${collectionId}/items`, {}, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ group_key: saveTargetGroup.group_key, creative_id: saveTargetGroup.creative_ids[0] }),
+    });
+    note.innerHTML = '<div class="note success">Сохранено.</div>';
+  } catch (e) {
+    note.innerHTML = `<div class="note error">${esc(e.message)}</div>`;
+  }
+}
+
+document.getElementById("saveNewCollectionForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = document.getElementById("saveNewCollectionName").value.trim();
+  if (!name) return;
+  const note = document.getElementById("saveNote");
+  try {
+    const created = await api("/api/v1/collections", {}, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, description: "" }) });
+    await addToCollection(created.id);
+    document.getElementById("saveNewCollectionName").value = "";
+    openSaveOverlay(saveTargetGroup);
+  } catch (e2) {
+    note.innerHTML = `<div class="note error">${esc(e2.message)}</div>`;
+  }
+});
+
+/* ---------- Collections tab ---------- */
+let activeCollectionId = null;
+document.getElementById("collectionForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const note = document.getElementById("collectionFormNote");
+  note.innerHTML = "";
+  const name = document.getElementById("collectionName").value.trim();
+  const description = document.getElementById("collectionDescription").value.trim();
+  try {
+    await api("/api/v1/collections", {}, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, description }) });
+    document.getElementById("collectionForm").reset();
+    loadCollections();
+  } catch (err) {
+    note.innerHTML = `<div class="note error">${esc(err.message)}</div>`;
+  }
+});
+
+function collectionRowHtml(c) {
+  return `<div class="runrow">
+    <div><strong>${esc(c.name)}</strong><div class="meta">${esc(c.description || "")} ${c.description ? "·" : ""} ${c.items_count} креативов</div></div>
+    <div style="display:flex;align-items:center;gap:10px">
+     <button class="secondary" data-open-collection="${c.id}" data-name="${esc(c.name)}">Открыть</button>
+     <button class="iconbtn" data-delete-collection="${c.id}" title="Удалить подборку">✕</button>
+    </div>
+   </div>`;
+}
+
+async function loadCollections() {
+  activeCollectionId = null;
+  document.getElementById("collectionOpenBar").hidden = true;
+  document.getElementById("collectionItemsCards").classList.add("hidden");
+  document.getElementById("collectionsListWrap").classList.remove("hidden");
+  const list = document.getElementById("collectionsList");
+  try {
+    const data = await api("/api/v1/collections");
+    if (!data.items.length) {
+      list.innerHTML = '<div class="empty">У вас пока нет подборок — создайте первую выше, либо нажмите «Сохранить» на любом креативе в библиотеке.</div>';
+      return;
+    }
+    list.innerHTML = data.items.map(collectionRowHtml).join("");
+    list.querySelectorAll("[data-open-collection]").forEach((btn) => {
+      btn.addEventListener("click", () => openCollection(Number(btn.dataset.openCollection), btn.dataset.name));
+    });
+    list.querySelectorAll("[data-delete-collection]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("Удалить подборку? Креативы в библиотеке не затронутся.")) return;
+        await api(`/api/v1/collections/${btn.dataset.deleteCollection}`, {}, { method: "DELETE" });
+        loadCollections();
+      });
+    });
+  } catch (e) {
+    list.innerHTML = `<div class="note error">${esc(e.message)}</div>`;
+  }
+}
+
+function collectionItemCardHtml(item) {
+  const preview = item.image_url ? `<img src="${esc(item.image_url)}" alt="" loading="lazy">` : `<span class="fallback">${esc((item.domain || "?")[0].toUpperCase())}</span>`;
+  return `<article class="creative">
+    <div class="preview">${preview}<div class="platformrow"><span class="tag">${esc(item.platform)}</span></div></div>
+    <div class="cardbody">
+     <p class="cardtitle">${esc(item.title || item.domain || "Без заголовка")}</p>
+     <p class="carddomain">${esc(item.domain || "домен не определён")}</p>
+     <div class="cardfoot"><span>добавлено ${esc((item.added_at || "").slice(0, 10))}</span><button class="textbtn" data-remove="${esc(item.group_key)}">Убрать</button></div>
+    </div>
+   </article>`;
+}
+
+async function openCollection(id, name) {
+  activeCollectionId = id;
+  document.getElementById("collectionOpenTitle").textContent = name;
+  document.getElementById("collectionsListWrap").classList.add("hidden");
+  const cardsWrap = document.getElementById("collectionItemsCards");
+  cardsWrap.classList.remove("hidden");
+  cardsWrap.innerHTML = '<div class="loading">Загрузка…</div>';
+  document.getElementById("collectionOpenBar").hidden = false;
+  try {
+    const data = await api(`/api/v1/collections/${id}/items`);
+    document.getElementById("collectionOpenMeta").textContent = `${data.items.length} креативов`;
+    if (!data.items.length) {
+      cardsWrap.innerHTML = '<div class="empty">В этой подборке пока пусто.</div>';
+      return;
+    }
+    cardsWrap.innerHTML = data.items.map(collectionItemCardHtml).join("");
+    cardsWrap.querySelectorAll("[data-remove]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        await api(`/api/v1/collections/${id}/items/${encodeURIComponent(btn.dataset.remove)}`, {}, { method: "DELETE" });
+        openCollection(id, name);
+      });
+    });
+  } catch (e) {
+    cardsWrap.innerHTML = `<div class="note error">${esc(e.message)}</div>`;
+  }
+}
+
+document.getElementById("collectionBack").addEventListener("click", loadCollections);
+
+/* ---------- Coverage tab ---------- */
+async function loadCoverage() {
+  const totalsEl = document.getElementById("coverageTotals");
+  const tableEl = document.getElementById("coverageTable");
+  totalsEl.innerHTML = "";
+  tableEl.innerHTML = '<div class="loading">Загрузка…</div>';
+  try {
+    const data = await api("/api/v1/coverage");
+    const t = data.totals;
+    const pct = t.creatives ? Math.round((t.creatives_with_advertiser / t.creatives) * 100) : 0;
+    totalsEl.innerHTML = `<div class="runrow"><div><strong>${t.creatives} креативов собрано всего</strong><div class="meta">${t.advertisers} рекламодателей распознано · у ${t.creatives_with_advertiser} креативов (${pct}%) найден ИНН</div></div></div>`;
+    if (!data.platforms.length) {
+      tableEl.innerHTML = '<div class="empty">Пока нет данных — запустите сканирование.</div>';
+      return;
+    }
+    tableEl.innerHTML = data.platforms.map((p) => {
+      const recPct = p.total ? Math.round((p.recognized / p.total) * 100) : 0;
+      const advPct = p.total ? Math.round((p.with_advertiser / p.total) * 100) : 0;
+      return `<div class="runrow">
+        <div><strong>${esc(p.platform)}</strong><div class="meta">${p.total} креативов · распознано ${recPct}% · частично ${p.partial} · последний сбор ${esc((p.last_captured_at || "—").replace("T", " ").slice(0, 16))}</div></div>
+        <div><span class="statusbadge ${advPct >= 50 ? "succeeded" : advPct > 0 ? "running" : "failed"}">ИНН у ${advPct}%</span></div>
+       </div>`;
+    }).join("");
+  } catch (e) {
+    tableEl.innerHTML = `<div class="note error">${esc(e.message)}</div>`;
+  }
+}
 </script>
 </body>
 </html>
