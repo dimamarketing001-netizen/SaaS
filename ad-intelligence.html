@@ -5,23 +5,23 @@
 <meta name="theme-color" content="#111318">
 <title>ParsYa Ads — библиотека креативов</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f4f6f9;--panel:#fff;--ink:#0e0d35;--muted:#626c7a;--muted-light:#a6abb2;--line:#e7e7f7;
---blue:#5755ff;--blue-dark:#302dff;--blue-mid:#ddddff;--blue-light:#f4f3ff;--blue-light2:#ecebff;
---green:#51cc56;--green-dark:#19c11e;--green-light:#e4ffe6;
+:root{--bg:#f5f7f8;--panel:#fff;--ink:#20262f;--muted:#7b8491;--muted-light:#929aa5;--line:#e6e9ed;
+--blue:#39c978;--blue-dark:#16884b;--blue-mid:#d7f0e1;--blue-light:#eaf8ef;--blue-light2:#e8f8ee;
+--green:#39c978;--green-dark:#16884b;--green-light:#e8f8ee;
 --orange:#feb63d;--orange-dark:#ff9f00;--orange-light:#fff5e3;
 --red:#ff8f6b;--red-dark:#ff612c;--red-light:#ffeeee;
 --violet:var(--blue);--green-dark-text:var(--green-dark);
 --radius:12px;--radius-sm:8px}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Play",sans-serif;font-size:13px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;font-size:13px}
 button,input,select{font:inherit}
 button{cursor:pointer}
 .shell{min-height:100vh;display:flex}
 .sidebar{width:252px;flex:0 0 252px;background:#fff;border-right:1px solid var(--line);padding:24px 16px 18px;display:flex;flex-direction:column;gap:26px;position:sticky;top:0;height:100vh;overflow:auto}
 .sidebar .brand{display:flex;align-items:center;gap:11px;padding:0 6px}
-.brandmark{width:38px;height:38px;border-radius:var(--radius);background:var(--blue);color:#fff;display:grid;place-items:center;font:800 18px Manrope,sans-serif;flex-shrink:0;box-shadow:0 6px 14px #5755ff33}
+.brandmark{width:38px;height:38px;border-radius:var(--radius);background:var(--blue-light2);color:var(--blue-dark);display:grid;place-items:center;font:800 18px Manrope,sans-serif;flex-shrink:0}
 .brandname{font:800 13px Manrope,sans-serif;letter-spacing:.02em;color:var(--ink)}
 .brandname small{display:block;color:var(--muted-light);font-size:9px;letter-spacing:.14em;margin-top:3px;font-weight:700}
 .main{flex:1;min-width:0}
@@ -84,7 +84,7 @@ button.primary:disabled{opacity:.5;cursor:default}
 @media(max-width:1050px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.cards{grid-template-columns:1fr}}
 .creative{position:relative;border:1px solid var(--line);background:#fff;border-radius:19px;overflow:hidden;display:flex;flex-direction:column;transition:transform .18s,box-shadow .18s,border-color .18s}
-.creative:hover{transform:translateY(-3px);box-shadow:0 14px 30px #5755ff14;border-color:var(--blue-mid)}
+.creative:hover{transform:translateY(-3px);box-shadow:0 14px 30px #39c97814;border-color:var(--blue-mid)}
 .preview{height:170px;background:#eef0f7;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .preview img{width:100%;height:100%;object-fit:cover}
 .preview .fallback{font:800 26px Manrope,sans-serif;color:#b9bdd0}
@@ -212,6 +212,7 @@ table.comparetable .colremove{align-self:flex-end;border:0;background:none;color
 <body>
 <div class="shell">
  <aside class="sidebar">
+  <a href="overview.html" class="linkbtn" style="margin-bottom:14px;justify-content:flex-start">← Кабинет</a>
   <div class="brand"><div class="brandmark">P</div><div class="brandname">ParsYa Ads<small>AD INTELLIGENCE</small></div></div>
   <nav class="tabs">
    <button class="tab active" data-tab="library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Библиотека</button>

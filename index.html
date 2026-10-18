@@ -5,24 +5,24 @@
 <meta name="theme-color" content="#111318">
 <title>ParsYa Ads — вход</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f7f7fb;--ink:#20212a;--muted:#9294a3;--line:#ececf3;--green:#39ff88;--green-dark:#20a66a;--violet:#8c72f6}
+:root{--bg:#f5f7f8;--ink:#20262f;--muted:#7b8491;--line:#e6e9ed;--green:#39c978;--green-dark:#16884b;--green-tint:#ddf9e8}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--ink);font-family:"DM Sans",sans-serif;font-size:14px;padding:24px}
-.card{width:min(420px,100%);background:#fff;border:1px solid var(--line);border-radius:22px;padding:34px;box-shadow:0 20px 60px #28274208}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--ink);font-family:"Manrope",sans-serif;font-size:14px;padding:24px}
+.card{width:min(420px,100%);background:#fff;border:1px solid var(--line);border-radius:22px;padding:34px;box-shadow:0 2px 8px #202b3505}
 .brand{display:flex;align-items:center;gap:12px;margin-bottom:26px}
-.brandmark{width:42px;height:42px;border-radius:14px;background:#24242f;color:var(--green);display:grid;place-items:center;font:800 20px Manrope,sans-serif;flex-shrink:0}
+.brandmark{width:42px;height:42px;border-radius:14px;background:var(--green-tint);color:var(--green-dark);display:grid;place-items:center;font:800 20px Manrope,sans-serif;flex-shrink:0}
 .brandname{font:800 16px Manrope,sans-serif;letter-spacing:.04em}
-.brandname small{display:block;font:500 10px "DM Sans",sans-serif;color:var(--muted);letter-spacing:.1em;margin-top:2px}
+.brandname small{display:block;font:600 10px Manrope,sans-serif;color:var(--muted);letter-spacing:.1em;margin-top:2px}
 h1{font:800 21px Manrope,sans-serif;letter-spacing:-.03em;margin:0 0 6px}
 p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 24px}
 .field{margin-bottom:16px}
 .field label{display:block;font-size:11px;font-weight:700;color:#596371;margin-bottom:7px}
-.field input{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 13px;font:inherit;outline:none;background:#fbfbfe}
-.field input:focus{border-color:var(--violet)}
-button.primary{width:100%;border:0;border-radius:12px;background:#24242f;color:#fff;padding:13px;font:700 13px "DM Sans",sans-serif;cursor:pointer;transition:background .15s}
-button.primary:hover{background:#3a384b}
+.field input{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 13px;font:inherit;outline:none;background:#fafbfc}
+.field input:focus{border-color:var(--green)}
+button.primary{width:100%;border:0;border-radius:12px;background:var(--green);color:#fff;padding:13px;font:700 13px Manrope,sans-serif;cursor:pointer;transition:background .15s}
+button.primary:hover{background:#2db968}
 button.primary:disabled{opacity:.6;cursor:default}
 .error{background:#fff0f0;border:1px solid #f6d6d6;color:#b84a4a;border-radius:10px;padding:11px 13px;font-size:12px;margin-bottom:16px;display:none}
 .error.show{display:block}
@@ -58,7 +58,7 @@ apiBaseInput.value = localStorage.getItem("parsya_api_base") || DEFAULT_API_BASE
 function apiBase(){ return (apiBaseInput.value || DEFAULT_API_BASE).replace(/\/+$/, ""); }
 
 if (localStorage.getItem("parsya_session")) {
-  location.replace("ad-intelligence.html");
+  location.replace("overview.html");
 }
 
 const form = document.getElementById("loginForm");
@@ -86,7 +86,7 @@ form.addEventListener("submit", async (event) => {
     const data = await response.json();
     localStorage.setItem("parsya_api_base", base);
     localStorage.setItem("parsya_session", JSON.stringify(data));
-    location.replace("ad-intelligence.html");
+    location.replace("overview.html");
   } catch (err) {
     errorBox.textContent = err.message || "Не удалось войти.";
     errorBox.classList.add("show");
