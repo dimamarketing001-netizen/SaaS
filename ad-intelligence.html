@@ -5,37 +5,62 @@
 <meta name="theme-color" content="#111318">
 <title>ParsYa Ads — библиотека креативов</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f7f7fb;--panel:#fff;--ink:#20212a;--muted:#9294a3;--line:#ececf3;--green:#39ff88;--green-dark:#20a66a;--violet:#8c72f6;--red:#c0455a}
+:root{--bg:#f4f6f9;--panel:#fff;--ink:#0e0d35;--muted:#626c7a;--muted-light:#a6abb2;--line:#e7e7f7;
+--blue:#5755ff;--blue-dark:#302dff;--blue-mid:#ddddff;--blue-light:#f4f3ff;--blue-light2:#ecebff;
+--green:#51cc56;--green-dark:#19c11e;--green-light:#e4ffe6;
+--orange:#feb63d;--orange-dark:#ff9f00;--orange-light:#fff5e3;
+--red:#ff8f6b;--red-dark:#ff612c;--red-light:#ffeeee;
+--violet:var(--blue);--green-dark-text:var(--green-dark);
+--radius:12px;--radius-sm:8px}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",sans-serif;font-size:13px;letter-spacing:-.01em}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Play",sans-serif;font-size:13px}
 button,input,select{font:inherit}
 button{cursor:pointer}
-.shell{min-height:100vh;display:flex;flex-direction:column}
-header.topbar{height:68px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,4vw,38px);gap:14px}
-.brand{display:flex;align-items:center;gap:11px}
-.brandmark{width:36px;height:36px;border-radius:12px;background:#24242f;color:var(--green);display:grid;place-items:center;font:800 17px Manrope,sans-serif;flex-shrink:0}
-.brandname{font:800 14px Manrope,sans-serif;letter-spacing:.03em}
-.topright{display:flex;align-items:center;gap:10px}
-.rolebadge{font-size:10px;padding:5px 9px;border-radius:7px;background:#f0edff;color:#7158dc;font-weight:700}
-.userchip{font-size:11px;color:#596371}
-.linkbtn,button.secondary,button.iconbtn{border:1px solid var(--line);background:#fff;color:#505966;border-radius:10px;padding:9px 13px;font-size:11px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
-.linkbtn:hover,button.secondary:hover,button.iconbtn:hover{border-color:#c9c0f6;color:#333}
-button.iconbtn{padding:9px;width:36px;height:36px;justify-content:center}
-button.primary{border:0;border-radius:10px;background:#24242f;color:#fff;padding:10px 15px;font-size:11px;font-weight:700}
-button.primary:hover{background:#3a384b}
-button.primary:disabled{opacity:.5;cursor:default}
-.content{max-width:1280px;margin:0 auto;padding:30px clamp(16px,4vw,38px) 60px;width:100%}
-h1{font:800 clamp(22px,2.6vw,28px)/1.2 Manrope,sans-serif;letter-spacing:-.04em;margin:0 0 8px}
+.shell{min-height:100vh;display:flex}
+.sidebar{width:252px;flex:0 0 252px;background:#fff;border-right:1px solid var(--line);padding:24px 16px 18px;display:flex;flex-direction:column;gap:26px;position:sticky;top:0;height:100vh;overflow:auto}
+.sidebar .brand{display:flex;align-items:center;gap:11px;padding:0 6px}
+.brandmark{width:38px;height:38px;border-radius:var(--radius);background:var(--blue);color:#fff;display:grid;place-items:center;font:800 18px Manrope,sans-serif;flex-shrink:0;box-shadow:0 6px 14px #5755ff33}
+.brandname{font:800 13px Manrope,sans-serif;letter-spacing:.02em;color:var(--ink)}
+.brandname small{display:block;color:var(--muted-light);font-size:9px;letter-spacing:.14em;margin-top:3px;font-weight:700}
+.main{flex:1;min-width:0}
+.content{max-width:1320px;margin:0 auto;padding:32px clamp(16px,3vw,40px) 60px;width:100%}
+.headline{margin-bottom:22px}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);display:flex;align-items:center;gap:7px}
+.eyebrow:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px var(--blue-light2)}
+h1{font:800 clamp(22px,2.6vw,28px)/1.2 Manrope,sans-serif;letter-spacing:-.02em;margin:10px 0 8px;color:var(--ink)}
 p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-width:680px}
-.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:22px}
-.tab{border:0;background:transparent;color:var(--muted);padding:11px 4px;margin-right:18px;font-size:12px;font-weight:700;border-bottom:2px solid transparent}
-.tab.active{color:#20212a;border-color:#24242f}
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:26px}
+@media(max-width:1050px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{padding:18px 19px;background:#fff;border:1px solid var(--line);border-radius:var(--radius)}
+.stathead{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--muted);font-size:11px}
+.staticon{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:var(--blue-light2);color:var(--blue);font-size:14px}
+.staticon.violet{background:var(--blue-light2);color:var(--blue)}
+.staticon.green{background:var(--green-light);color:var(--green-dark)}
+.staticon.amber{background:var(--orange-light);color:var(--orange-dark)}
+.statvalue{font:800 25px Manrope,sans-serif;letter-spacing:-.02em;margin:12px 0 5px;color:var(--ink)}
+.statfoot{font-size:10px;color:var(--muted-light)}
+.sidebarbottom{margin-top:auto;border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:10px}
+.sidebaractions{display:flex;align-items:center;gap:8px}
+.usercopy{font-size:11px;color:var(--muted)}
+.rolebadge{font-size:10px;padding:5px 9px;border-radius:var(--radius-sm);background:var(--blue-light2);color:var(--blue-dark);font-weight:700}
+.userchip{font-size:11px;color:var(--muted)}
+.linkbtn,button.secondary,button.iconbtn{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:var(--radius);padding:9px 13px;font-size:11px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.linkbtn:hover,button.secondary:hover,button.iconbtn:hover{border-color:var(--blue);color:var(--blue-dark)}
+button.iconbtn{padding:9px;width:36px;height:36px;justify-content:center}
+button.primary{border:0;border-radius:var(--radius);background:var(--blue);color:#fff;padding:10px 15px;font-size:11px;font-weight:700}
+button.primary:hover{background:var(--blue-dark)}
+button.primary:disabled{opacity:.5;cursor:default}
+.tabs{display:flex;flex-direction:column;gap:4px}
+.tab{border:0;background:transparent;color:var(--muted);padding:11px 12px;font-size:12px;font-weight:700;border-radius:var(--radius);display:flex;align-items:center;gap:11px;text-align:left;width:100%}
+.tab svg{width:17px;height:17px;flex-shrink:0}
+.tab:hover{background:var(--bg);color:var(--ink)}
+.tab.active{color:var(--blue-dark);background:var(--blue-light2)}
 .view[hidden]{display:none!important}
 .searchbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
 .search{flex:1;min-width:240px;display:flex;align-items:center;gap:10px;padding:0 14px;background:#fff;border:1px solid var(--line);border-radius:13px;height:48px}
-.search input{flex:1;border:0;outline:0;background:transparent;font-size:12px;color:#343b45}
+.search input{flex:1;border:0;outline:0;background:transparent;font-size:12px;color:var(--ink)}
 .search svg,.icon{width:16px;height:16px;flex-shrink:0;color:#9398a8}
 .filterbadge{display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;border-radius:5px;background:var(--violet);color:#fff;font-size:9px;font-weight:800;margin-left:6px}
 .filterspanel{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:14px;margin-bottom:14px}
@@ -43,12 +68,12 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
 .filterfield{display:flex;flex-direction:column;gap:5px;font-size:10px;color:var(--muted)}
 .filterfield select,.filterfield input{border:1px solid var(--line);border-radius:9px;padding:8px 9px;font-size:11px;background:#fbfbfe}
 .filterfield.checkrow{flex-direction:row;align-items:center;gap:7px;padding-top:16px}
-.filterfield.checkrow label{font-size:11px;color:#343b45}
+.filterfield.checkrow label{font-size:11px;color:var(--ink)}
 .filtersfoot{grid-column:1/-1;display:flex;justify-content:flex-end}
 @media(max-width:900px){.filterspanel{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
 .chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 11px;font-size:11px;color:#525a68;cursor:pointer}
-.chip:hover{border-color:#c9c0f6}
+.chip:hover{border-color:var(--blue)}
 .chip .inn{color:#9298a8;font-size:9px}
 .contextbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fbfaff;border:1px solid #ece6fc;border-radius:14px;padding:14px 16px;margin-bottom:18px}
 .contextbar[hidden]{display:none}
@@ -59,7 +84,7 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
 @media(max-width:1050px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.cards{grid-template-columns:1fr}}
 .creative{position:relative;border:1px solid var(--line);background:#fff;border-radius:19px;overflow:hidden;display:flex;flex-direction:column;transition:transform .18s,box-shadow .18s,border-color .18s}
-.creative:hover{transform:translateY(-3px);box-shadow:0 14px 30px #2a284512;border-color:#e1dcfb}
+.creative:hover{transform:translateY(-3px);box-shadow:0 14px 30px #5755ff14;border-color:var(--blue-mid)}
 .preview{height:170px;background:#eef0f7;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .preview img{width:100%;height:100%;object-fit:cover}
 .preview .fallback{font:800 26px Manrope,sans-serif;color:#b9bdd0}
@@ -77,9 +102,9 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
 .cardtitle{font-size:13px;font-weight:700;margin:0 0 4px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .carddomain{font-size:11px;color:#8a8ea0;margin:0 0 11px}
 .metarow{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:11px;border-top:1px solid #f0f0f5}
-.metarow .tag.count{background:#eafaf0;border-color:#d8f0e0;color:#208e58;font-weight:700}
+.metarow .tag.count{background:var(--green-light);border-color:#cdeecf;color:var(--green-dark);font-weight:700}
 .cardfoot{display:flex;justify-content:space-between;align-items:center;margin-top:11px;font-size:10px;color:#9298a8}
-.textbtn{border:0;background:none;color:#7158dc;font-weight:700;font-size:10px}
+.textbtn{border:0;background:none;color:var(--blue);font-weight:700;font-size:10px}
 .empty{grid-column:1/-1;padding:55px 20px;text-align:center;background:#fff;border:1px dashed #d8dfe5;border-radius:18px;color:#8a8ea0}
 .empty strong{display:block;margin:10px 0 6px;color:#30313f;font-size:14px}
 .loading{grid-column:1/-1;padding:40px;text-align:center;color:var(--muted)}
@@ -111,8 +136,8 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
 .occ span{color:#9298a8;font-size:10px}
 .hidden{display:none!important}
 .note{margin-top:18px;padding:12px 14px;background:#f4f3fa;border:1px solid #eeedf5;border-radius:12px;color:#6f7184;font-size:10px;line-height:1.7}
-.note.error{background:#fdf0f1;border-color:#f6d9dc;color:var(--red)}
-.note.success{background:#eafaf0;border-color:#d8f0e0;color:var(--green-dark)}
+.note.error{background:var(--red-light);border-color:#ffd9cc;color:var(--red-dark)}
+.note.success{background:var(--green-light);border-color:#cdeecf;color:var(--green-dark)}
 .runform{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:22px}
 .runform h3{margin:0 0 4px;font:800 14px Manrope,sans-serif}
 .runform p{margin:0 0 16px;color:var(--muted);font-size:11px}
@@ -126,10 +151,10 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
 .runrow strong{font-size:12px}
 .runrow .meta{font-size:10px;color:var(--muted);margin-top:3px}
 .statusbadge{font-size:9px;font-weight:800;padding:5px 8px;border-radius:7px;text-transform:uppercase;letter-spacing:.03em}
-.statusbadge.queued{background:#f0edff;color:#7158dc}
-.statusbadge.running{background:#fff4e0;color:#a97724}
-.statusbadge.succeeded{background:#eafaf0;color:var(--green-dark)}
-.statusbadge.failed{background:#fdf0f1;color:var(--red)}
+.statusbadge.queued{background:var(--blue-light2);color:var(--blue-dark)}
+.statusbadge.running{background:var(--orange-light);color:var(--orange-dark)}
+.statusbadge.succeeded{background:var(--green-light);color:var(--green-dark)}
+.statusbadge.failed{background:var(--red-light);color:var(--red-dark)}
 .field{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
 .field label{font-size:10px;color:#596371;font-weight:700}
 .field input{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;outline:none}
@@ -138,13 +163,13 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
 .savedsearchchip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fbfaff;border-radius:10px;padding:7px 8px 7px 12px;font-size:11px;color:#525a68}
 .savedsearchchip button{border:0;background:none;color:#9298a8;font-size:12px;padding:2px 4px;line-height:1}
 .savedsearchchip button:hover{color:var(--red)}
-.savedsearchchip .use{color:#20212a;font-weight:700;background:none;border:0;padding:0;font-size:11px}
-.bulkbar{display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#20212a;color:#fff;border-radius:13px;padding:11px 15px;margin-bottom:14px}
+.savedsearchchip .use{color:var(--ink);font-weight:700;background:none;border:0;padding:0;font-size:11px}
+.bulkbar{display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--blue-dark);color:#fff;border-radius:13px;padding:11px 15px;margin-bottom:14px}
 .bulkbar.show{display:flex}
 .bulkbar .count{font-weight:700;font-size:12px}
 .bulkbar .actions{display:flex;gap:8px;flex-wrap:wrap}
-.bulkbar button{border:0;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:700;cursor:pointer;background:#34343f;color:#fff}
-.bulkbar button:hover{background:#44444f}
+.bulkbar button{border:0;border-radius:var(--radius-sm);padding:8px 12px;font-size:11px;font-weight:700;cursor:pointer;background:#4844e0;color:#fff}
+.bulkbar button:hover{background:#6a68ff}
 .bulkbar button.danger{background:#432027;color:#ffb9c0}
 .bulk-select-control{position:absolute;top:10px;left:10px;z-index:2;width:20px;height:20px;accent-color:var(--violet)}
 .creative.is-bulk-mode .preview{padding-top:4px}
@@ -186,28 +211,40 @@ table.comparetable .colremove{align-self:flex-end;border:0;background:none;color
 </head>
 <body>
 <div class="shell">
- <header class="topbar">
-  <div class="brand"><div class="brandmark">P</div><div class="brandname">ParsYa Ads</div></div>
-  <div class="topright">
-   <span class="rolebadge hidden" id="roleBadge"></span>
-   <span class="userchip" id="userChip"></span>
-   <button class="iconbtn" id="settingsBtn" title="Настройки">⚙</button>
+ <aside class="sidebar">
+  <div class="brand"><div class="brandmark">P</div><div class="brandname">ParsYa Ads<small>AD INTELLIGENCE</small></div></div>
+  <nav class="tabs">
+   <button class="tab active" data-tab="library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Библиотека</button>
+   <button class="tab" data-tab="scans"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Сканирования</button>
+   <button class="tab" data-tab="collections"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>Подборки</button>
+   <button class="tab" data-tab="compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v18M16 3v18M4 8h4M16 8h4M4 16h4M16 16h4"/></svg>Сравнение</button>
+   <button class="tab" data-tab="coverage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h16M7 19V9M12 19V5M17 19v-7"/></svg>Источники и качество</button>
+  </nav>
+  <div class="sidebarbottom">
+   <div class="sidebaractions">
+    <span class="rolebadge hidden" id="roleBadge"></span>
+    <button class="iconbtn" id="settingsBtn" title="Настройки">⚙</button>
+    <button class="iconbtn" id="logoutBtn" title="Выйти">⏻</button>
+   </div>
    <a class="linkbtn hidden" id="adminLink" href="#" target="_blank" rel="noopener">Админка SaaS ↗</a>
-   <button class="secondary" id="logoutBtn">Выйти</button>
+   <div class="usercopy"><span class="userchip" id="userChip"></span></div>
   </div>
- </header>
- <div class="content">
-  <h1>ParsYa Ads</h1>
-  <p class="lead">Запускайте сканирование под свои параметры и находите рекламу по ИНН рекламодателя, названию компании, домену или тексту объявления. Один и тот же креатив, показанный под разными campaign ID или на разных площадках, собран в одну карточку.</p>
-  <div class="tabs">
-   <button class="tab active" data-tab="library">Библиотека</button>
-   <button class="tab" data-tab="scans">Сканирования</button>
-   <button class="tab" data-tab="collections">Подборки</button>
-   <button class="tab" data-tab="compare">Сравнение</button>
-   <button class="tab" data-tab="coverage">Источники и качество</button>
-  </div>
+ </aside>
+ <main class="main">
+  <div class="content">
+   <div class="headline">
+    <div><div class="eyebrow">Конкурентная аналитика</div><h1>ParsYa Ads</h1>
+     <p class="lead">Запускайте сканирование под свои параметры и находите рекламу по ИНН рекламодателя, названию компании, домену или тексту объявления. Один и тот же креатив, показанный под разными campaign ID или на разных площадках, собран в одну карточку.</p>
+    </div>
+   </div>
+   <div class="summary" id="summaryStats">
+    <div class="stat"><div class="stathead"><span>Креативов собрано</span><span class="staticon">◧</span></div><div class="statvalue" id="summaryCreatives">—</div><div class="statfoot">за всё время наблюдений</div></div>
+    <div class="stat"><div class="stathead"><span>Рекламодателей</span><span class="staticon violet">◈</span></div><div class="statvalue" id="summaryAdvertisers">—</div><div class="statfoot">с именем и ИНН</div></div>
+    <div class="stat"><div class="stathead"><span>С раскрытым ИНН</span><span class="staticon green">✓</span></div><div class="statvalue" id="summaryInnPct">—</div><div class="statfoot">от всех найденных креативов</div></div>
+    <div class="stat"><div class="stathead"><span>Площадок</span><span class="staticon amber">▦</span></div><div class="statvalue" id="summaryPlatforms">—</div><div class="statfoot">источников под наблюдением</div></div>
+   </div>
 
-  <section class="view" id="viewLibrary">
+   <section class="view" id="viewLibrary">
    <div class="searchbar">
     <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
      <input id="query" placeholder="ИНН, название рекламодателя, домен или текст объявления…" autocomplete="off"></label>
@@ -326,7 +363,8 @@ table.comparetable .colremove{align-self:flex-end;border:0;background:none;color
    </div>
    <div id="coverageTable"><div class="loading">Загрузка…</div></div>
   </section>
- </div>
+  </div>
+ </main>
 </div>
 <div class="overlay center" id="saveOverlay">
  <div class="modal" role="dialog" aria-modal="true">
@@ -484,6 +522,20 @@ document.getElementById("saveSearchBtn").addEventListener("click", () => {
   renderSavedSearches();
 });
 renderSavedSearches();
+
+/* ---------- Сводка в верхних карточках (шапка, видна на всех вкладках) ---------- */
+async function loadSummaryStats() {
+  try {
+    const data = await api("/api/v1/coverage");
+    const t = data.totals;
+    const pct = t.creatives ? Math.round((t.creatives_with_advertiser / t.creatives) * 100) : 0;
+    document.getElementById("summaryCreatives").textContent = t.creatives;
+    document.getElementById("summaryAdvertisers").textContent = t.advertisers;
+    document.getElementById("summaryInnPct").textContent = `${pct}%`;
+    document.getElementById("summaryPlatforms").textContent = data.platforms.length;
+  } catch (e) { /* сводка необязательна — молча оставляем прочерки */ }
+}
+loadSummaryStats();
 
 /* ---------- Bulk select (несколько карточек сразу) ---------- */
 let bulkMode = false;
