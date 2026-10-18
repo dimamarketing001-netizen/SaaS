@@ -58,7 +58,7 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
 .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 @media(max-width:1050px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.cards{grid-template-columns:1fr}}
-.creative{border:1px solid var(--line);background:#fff;border-radius:19px;overflow:hidden;display:flex;flex-direction:column;transition:transform .18s,box-shadow .18s,border-color .18s}
+.creative{position:relative;border:1px solid var(--line);background:#fff;border-radius:19px;overflow:hidden;display:flex;flex-direction:column;transition:transform .18s,box-shadow .18s,border-color .18s}
 .creative:hover{transform:translateY(-3px);box-shadow:0 14px 30px #2a284512;border-color:#e1dcfb}
 .preview{height:170px;background:#eef0f7;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .preview img{width:100%;height:100%;object-fit:cover}
@@ -133,6 +133,55 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
 .field{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
 .field label{font-size:10px;color:#596371;font-weight:700}
 .field input{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;outline:none}
+.savedsearches{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.savedsearches[hidden]{display:none}
+.savedsearchchip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fbfaff;border-radius:10px;padding:7px 8px 7px 12px;font-size:11px;color:#525a68}
+.savedsearchchip button{border:0;background:none;color:#9298a8;font-size:12px;padding:2px 4px;line-height:1}
+.savedsearchchip button:hover{color:var(--red)}
+.savedsearchchip .use{color:#20212a;font-weight:700;background:none;border:0;padding:0;font-size:11px}
+.bulkbar{display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#20212a;color:#fff;border-radius:13px;padding:11px 15px;margin-bottom:14px}
+.bulkbar.show{display:flex}
+.bulkbar .count{font-weight:700;font-size:12px}
+.bulkbar .actions{display:flex;gap:8px;flex-wrap:wrap}
+.bulkbar button{border:0;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:700;cursor:pointer;background:#34343f;color:#fff}
+.bulkbar button:hover{background:#44444f}
+.bulkbar button.danger{background:#432027;color:#ffb9c0}
+.bulk-select-control{position:absolute;top:10px;left:10px;z-index:2;width:20px;height:20px;accent-color:var(--violet)}
+.creative.is-bulk-mode .preview{padding-top:4px}
+.creative.is-bulk-selected{outline:2px solid var(--violet);outline-offset:-2px}
+.comparebar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.comparebar .actions{display:flex;gap:8px;flex-wrap:wrap}
+.comparetablewrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:16px}
+table.comparetable{border-collapse:collapse;width:100%;min-width:600px}
+table.comparetable th,table.comparetable td{border-bottom:1px solid #f0f0f5;padding:12px 14px;text-align:left;vertical-align:top;font-size:11px;max-width:260px}
+table.comparetable th.rowlabel,table.comparetable td.rowlabel{position:sticky;left:0;background:#fbfbfe;color:var(--muted);font-weight:700;white-space:nowrap;border-right:1px solid var(--line)}
+table.comparetable thead th{background:#fbfbfe;font-size:11px}
+table.comparetable .colhead{display:flex;flex-direction:column;gap:6px;min-width:180px}
+table.comparetable .colhead img{width:100%;height:90px;object-fit:cover;border-radius:8px;background:#eef0f7}
+table.comparetable .colremove{align-self:flex-end;border:0;background:none;color:#9298a8;font-size:14px;cursor:pointer}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px}
+.analyticsgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:18px}
+@media(max-width:900px){.analyticsgrid{grid-template-columns:1fr}}
+.netbar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:11px}
+.netbar-row .netname{width:120px;flex-shrink:0;color:#525a68;font-weight:600}
+.netbar-track{flex:1;height:8px;border-radius:5px;background:#f0f0f5;overflow:hidden}
+.netbar-fill{height:100%;border-radius:5px}
+.netbar-row .netcount{width:70px;text-align:right;color:var(--muted);flex-shrink:0}
+.freshlist{display:flex;flex-direction:column;gap:9px;max-height:260px;overflow:auto}
+.freshitem{display:flex;gap:10px;align-items:center;font-size:11px;padding:8px 0;border-bottom:1px solid #f5f5fa}
+.freshitem:last-child{border-bottom:0}
+.freshitem img{width:36px;height:36px;border-radius:7px;object-fit:cover;background:#eef0f7;flex-shrink:0}
+.freshitem .meta{flex:1;min-width:0}
+.freshitem .meta strong{display:block;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.freshitem .meta span{color:var(--muted);font-size:10px}
+.runcompare{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px}
+.runcomparegrid{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:14px}
+@media(max-width:700px){.runcomparegrid{grid-template-columns:1fr}}
+.diffcols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:900px){.diffcols{grid-template-columns:1fr}}
+.diffcol h4{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 9px}
+.diffcol ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto}
+.diffcol li{font-size:11px;background:#fbfbfe;border:1px solid var(--line);border-radius:8px;padding:7px 9px;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -154,6 +203,7 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
    <button class="tab active" data-tab="library">Библиотека</button>
    <button class="tab" data-tab="scans">Сканирования</button>
    <button class="tab" data-tab="collections">Подборки</button>
+   <button class="tab" data-tab="compare">Сравнение</button>
    <button class="tab" data-tab="coverage">Источники и качество</button>
   </div>
 
@@ -162,7 +212,19 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
     <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
      <input id="query" placeholder="ИНН, название рекламодателя, домен или текст объявления…" autocomplete="off"></label>
     <button class="secondary" id="filterToggle">Фильтры<span class="filterbadge hidden" id="filterBadge">0</span></button>
+    <button class="secondary" id="saveSearchBtn">★ Сохранить поиск</button>
+    <button class="secondary" id="bulkModeToggle">Выбрать несколько</button>
     <button class="secondary" id="resetBtn">Сбросить</button>
+   </div>
+   <div class="savedsearches" id="savedSearchesRow" hidden></div>
+   <div class="bulkbar" id="bulkBar">
+    <span class="count" id="bulkCount">Выбрано: 0</span>
+    <div class="actions">
+     <button id="bulkSave">+ В подборку</button>
+     <button id="bulkExport">Экспорт JSON</button>
+     <button id="bulkCompare">Сравнить</button>
+     <button class="danger" id="bulkCancel">Отмена</button>
+    </div>
    </div>
    <div class="filterspanel" id="filtersPanel" hidden>
     <div class="filterfield"><span>Площадка</span><select id="filterPlatform"><option value="">Все площадки</option></select></div>
@@ -202,6 +264,16 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
     <button class="secondary" id="refreshRuns">Обновить</button>
    </div>
    <div class="runlist" id="runList"><div class="loading">Загрузка…</div></div>
+   <div class="runcompare">
+    <h3 style="margin:0 0 4px;font:800 14px Manrope,sans-serif">Сравнить два запуска</h3>
+    <p style="margin:0 0 14px;color:var(--muted);font-size:11px">Что нового появилось во втором запуске и что пропало по сравнению с первым.</p>
+    <div class="runcomparegrid">
+     <div class="field"><label>Запуск A</label><select id="runCompareA"></select></div>
+     <div class="field"><label>Запуск B (более новый)</label><select id="runCompareB"></select></div>
+     <button class="primary" id="runCompareBtn" type="button">Сравнить</button>
+    </div>
+    <div id="runCompareResult"></div>
+   </div>
   </section>
 
   <section class="view" id="viewCollections" hidden>
@@ -225,9 +297,33 @@ p.lead{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 22px;max-wid
    <div class="cards hidden" id="collectionItemsCards"></div>
   </section>
 
+  <section class="view" id="viewCompare" hidden>
+   <p class="lead" style="margin-bottom:18px">Сопоставляйте креативы конкурентов рядом друг с другом по заголовку, рекламной сети, площадкам и срокам показа. Наберите группу через «Сравнить» в библиотеке или откройте сохранённую подборку как сравнение.</p>
+   <div class="comparebar">
+    <div class="field" style="margin:0;min-width:260px"><label>Загрузить подборку для сравнения</label><select id="compareLoadCollection"><option value="">— выберите подборку —</option></select></div>
+    <div class="actions">
+     <button class="secondary" id="compareClear">Очистить</button>
+     <button class="secondary" id="compareExport">Экспорт JSON</button>
+     <button class="primary" id="compareSave">Сохранить как подборку</button>
+    </div>
+   </div>
+   <div id="compareNote"></div>
+   <div id="compareTableWrap"><div class="empty">Сравнение пока пусто — добавьте креативы через «Сравнить» в библиотеке.</div></div>
+  </section>
+
   <section class="view" id="viewCoverage" hidden>
    <p class="lead" style="margin-bottom:18px">Реальная статистика по собранным данным: сколько креативов распознано полностью, у скольких найден рекламодатель (ИНН), и когда площадка собиралась в последний раз.</p>
    <div id="coverageTotals" class="runlist" style="margin-bottom:18px"></div>
+   <div class="analyticsgrid">
+    <div class="card" style="padding:18px">
+     <h3 style="margin:0 0 14px;font:800 13px Manrope,sans-serif">Рекламные сети</h3>
+     <div id="networkBreakdown"><div class="loading">Загрузка…</div></div>
+    </div>
+    <div class="card" style="padding:18px">
+     <h3 style="margin:0 0 14px;font:800 13px Manrope,sans-serif">Новое за 7 дней</h3>
+     <div id="freshFeed"><div class="loading">Загрузка…</div></div>
+    </div>
+   </div>
    <div id="coverageTable"><div class="loading">Загрузка…</div></div>
   </section>
  </div>
@@ -306,6 +402,7 @@ const views = {
   library: document.getElementById("viewLibrary"),
   scans: document.getElementById("viewScans"),
   collections: document.getElementById("viewCollections"),
+  compare: document.getElementById("viewCompare"),
   coverage: document.getElementById("viewCoverage"),
 };
 tabs.forEach((tab) => tab.addEventListener("click", () => {
@@ -313,8 +410,114 @@ tabs.forEach((tab) => tab.addEventListener("click", () => {
   Object.entries(views).forEach(([key, el]) => { el.hidden = key !== tab.dataset.tab; });
   if (tab.dataset.tab === "scans") loadRuns();
   if (tab.dataset.tab === "collections") loadCollections();
+  if (tab.dataset.tab === "compare") initCompareTab();
   if (tab.dataset.tab === "coverage") loadCoverage();
 }));
+
+function downloadJson(filename, data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  a.remove(); URL.revokeObjectURL(url);
+}
+function exportableGroup(g) {
+  const r = g.representative;
+  return {
+    domain: r.domain, title: r.title, description: r.description, image_url: r.image_url,
+    destination_url: r.destination_url, detection_method: r.detection_method,
+    platforms: g.platforms, first_seen_at: g.first_seen_at, last_seen_at: g.last_seen_at,
+    campaign_ids: g.campaign_ids, banner_ids: g.banner_ids,
+  };
+}
+function exportableFlatItem(item) {
+  return {
+    domain: item.domain, title: item.title, description: item.description, image_url: item.image_url,
+    destination_url: item.destination_url, platform: item.platform,
+    detection_method: item.detection_method, captured_at: item.captured_at,
+  };
+}
+
+/* ---------- Saved searches (хранятся локально в браузере) ---------- */
+const SAVED_SEARCHES_KEY = "parsya_saved_searches";
+function readSavedSearches() { try { return JSON.parse(localStorage.getItem(SAVED_SEARCHES_KEY) || "[]"); } catch { return []; } }
+function writeSavedSearches(list) { try { localStorage.setItem(SAVED_SEARCHES_KEY, JSON.stringify(list)); return true; } catch { return false; } }
+let savedSearches = readSavedSearches();
+function renderSavedSearches() {
+  const row = document.getElementById("savedSearchesRow");
+  row.hidden = savedSearches.length === 0;
+  row.innerHTML = savedSearches.map((s) =>
+    `<span class="savedsearchchip"><button type="button" class="use" data-use-search="${esc(s.id)}">${esc(s.name)}</button><button type="button" data-delete-search="${esc(s.id)}" title="Удалить">✕</button></span>`
+  ).join("");
+  row.querySelectorAll("[data-use-search]").forEach((btn) => {
+    btn.addEventListener("click", () => applySavedSearch(savedSearches.find((s) => s.id === btn.dataset.useSearch)));
+  });
+  row.querySelectorAll("[data-delete-search]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      savedSearches = savedSearches.filter((s) => s.id !== btn.dataset.deleteSearch);
+      writeSavedSearches(savedSearches);
+      renderSavedSearches();
+    });
+  });
+}
+function applySavedSearch(item) {
+  if (!item) return;
+  document.getElementById("query").value = item.query || "";
+  Object.assign(filters, item.filters || {});
+  document.getElementById("filterPlatform").value = filters.platform;
+  document.getElementById("filterStatus").value = filters.status;
+  document.getElementById("filterDateFrom").value = filters.dateFrom;
+  document.getElementById("filterDateTo").value = filters.dateTo;
+  document.getElementById("filterSort").value = filters.sort;
+  document.getElementById("filterHasInn").checked = filters.hasInn;
+  refreshFilterBadge();
+  runSearch();
+}
+document.getElementById("saveSearchBtn").addEventListener("click", () => {
+  const query = document.getElementById("query").value.trim();
+  if (!query && countActiveFilters() === 0) { alert("Сначала задайте запрос или фильтр — тогда появится что сохранять."); return; }
+  const name = (prompt("Название сохранённого поиска:", query || "Мой поиск") || "").trim();
+  if (!name) return;
+  savedSearches.unshift({ id: String(Date.now()), name, query, filters: { ...filters } });
+  savedSearches = savedSearches.slice(0, 20);
+  writeSavedSearches(savedSearches);
+  renderSavedSearches();
+});
+renderSavedSearches();
+
+/* ---------- Bulk select (несколько карточек сразу) ---------- */
+let bulkMode = false;
+let selectedGroups = new Map();
+let lastGroups = [];
+let lastCountLabel = "";
+function rerenderCurrentGroups() { renderGroups(lastGroups, lastCountLabel); }
+function updateBulkBar() {
+  const n = selectedGroups.size;
+  document.getElementById("bulkCount").textContent = `Выбрано: ${n}`;
+  document.getElementById("bulkBar").classList.toggle("show", bulkMode && n > 0);
+}
+document.getElementById("bulkModeToggle").addEventListener("click", () => {
+  bulkMode = !bulkMode;
+  document.getElementById("bulkModeToggle").textContent = bulkMode ? "Готово" : "Выбрать несколько";
+  if (!bulkMode) selectedGroups.clear();
+  updateBulkBar();
+  rerenderCurrentGroups();
+});
+document.getElementById("bulkCancel").addEventListener("click", () => {
+  bulkMode = false;
+  document.getElementById("bulkModeToggle").textContent = "Выбрать несколько";
+  selectedGroups.clear();
+  updateBulkBar();
+  rerenderCurrentGroups();
+});
+document.getElementById("bulkSave").addEventListener("click", () => openSaveOverlay(Array.from(selectedGroups.values())));
+document.getElementById("bulkExport").addEventListener("click", () => {
+  downloadJson(`parsya-export-${Date.now()}.json`, Array.from(selectedGroups.values()).map(exportableGroup));
+});
+document.getElementById("bulkCompare").addEventListener("click", () => {
+  selectedGroups.forEach((g, k) => comparisonItems.set(k, g));
+  document.querySelector('.tab[data-tab="compare"]').click();
+});
 
 /* ---------- Settings / change password ---------- */
 const settingsOverlay = document.getElementById("settingsOverlay");
@@ -423,7 +626,12 @@ function cardHtml(group) {
     ? `<span class="tag count">${campaignCount} campaign ID</span>`
     : (campaignCount === 1 ? `<span class="tag count">1 campaign ID</span>` : "");
   const platformCountTag = (group.platforms || []).length > 1 ? `<span class="tag count">${group.platforms.length} площадки</span>` : "";
-  return `<article class="creative" data-group="${esc(group.group_key)}">
+  const selected = selectedGroups.has(group.group_key);
+  const bulkCheckbox = bulkMode
+    ? `<input type="checkbox" class="bulk-select-control" data-bulk-select="${esc(group.group_key)}" ${selected ? "checked" : ""}>`
+    : "";
+  return `<article class="creative${bulkMode ? " is-bulk-mode" : ""}${selected ? " is-bulk-selected" : ""}" data-group="${esc(group.group_key)}">
+    ${bulkCheckbox}
     <div class="preview">${preview}<div class="platformrow"><span>${platforms}</span>${networkBadgeHtml(rep.detection_method)}</div></div>
     <div class="cardbody">
      <p class="cardtitle">${esc(rep.title || rep.domain || "Без заголовка")}</p>
@@ -437,6 +645,8 @@ function cardHtml(group) {
 function renderGroups(groups, countLabel) {
   groupCache = {};
   groups.forEach((g) => { groupCache[g.group_key] = g; });
+  lastGroups = groups;
+  lastCountLabel = countLabel;
   resultCountEl.textContent = countLabel;
   if (!groups.length) { renderEmpty("Попробуйте другой запрос или снимите часть фильтров."); return; }
   cardsEl.innerHTML = groups.map(cardHtml).join("");
@@ -445,6 +655,16 @@ function renderGroups(groups, countLabel) {
   });
   cardsEl.querySelectorAll("[data-save]").forEach((btn) => {
     btn.addEventListener("click", (e) => { e.stopPropagation(); openSaveOverlay(groupCache[btn.dataset.save]); });
+  });
+  cardsEl.querySelectorAll("[data-bulk-select]").forEach((input) => {
+    input.addEventListener("click", (e) => e.stopPropagation());
+    input.addEventListener("change", () => {
+      const key = input.dataset.bulkSelect;
+      if (input.checked) selectedGroups.set(key, groupCache[key]);
+      else selectedGroups.delete(key);
+      input.closest(".creative").classList.toggle("is-bulk-selected", input.checked);
+      updateBulkBar();
+    });
   });
 }
 
@@ -677,20 +897,59 @@ async function loadRuns() {
     const hasActive = data.items.some((r) => r.status === "queued" || r.status === "running");
     clearTimeout(runsPollTimer);
     if (hasActive) runsPollTimer = setTimeout(loadRuns, 5000);
+    populateRunCompareSelects(data.items);
   } catch (e) {
     list.innerHTML = `<div class="note error">${esc(e.message)}</div>`;
   }
 }
 document.getElementById("refreshRuns").addEventListener("click", loadRuns);
 
+/* ---------- Сравнение двух запусков ---------- */
+function populateRunCompareSelects(runs) {
+  const done = runs.filter((r) => r.total_creatives > 0);
+  const opts = done.map((r) => `<option value="${r.id}">#${r.id} — ${esc(r.key_text)} (${r.total_creatives})</option>`).join("");
+  document.getElementById("runCompareA").innerHTML = opts || '<option value="">нет завершённых запусков</option>';
+  document.getElementById("runCompareB").innerHTML = opts || '<option value="">нет завершённых запусков</option>';
+}
+document.getElementById("runCompareBtn").addEventListener("click", async () => {
+  const a = document.getElementById("runCompareA").value;
+  const b = document.getElementById("runCompareB").value;
+  const resultEl = document.getElementById("runCompareResult");
+  if (!a || !b) { resultEl.innerHTML = '<div class="note error">Нужны два завершённых запуска с креативами.</div>'; return; }
+  if (a === b) { resultEl.innerHTML = '<div class="note error">Выберите два разных запуска.</div>'; return; }
+  resultEl.innerHTML = '<div class="loading">Сравниваю…</div>';
+  try {
+    const [ra, rb] = await Promise.all([
+      api("/api/v1/creatives", { job_id: a, limit: 100 }),
+      api("/api/v1/creatives", { job_id: b, limit: 100 }),
+    ]);
+    const keyOf = (c) => c.content_fingerprint || `hash:${c.creative_hash}`;
+    const mapA = new Map(ra.items.map((c) => [keyOf(c), c]));
+    const mapB = new Map(rb.items.map((c) => [keyOf(c), c]));
+    const onlyA = [...mapA.keys()].filter((k) => !mapB.has(k)).map((k) => mapA.get(k));
+    const onlyB = [...mapB.keys()].filter((k) => !mapA.has(k)).map((k) => mapB.get(k));
+    const common = [...mapA.keys()].filter((k) => mapB.has(k)).map((k) => mapA.get(k));
+    const li = (c) => `<li><strong>${esc(c.domain || "—")}</strong><br>${esc((c.title || c.description || "без текста").slice(0, 90))}</li>`;
+    resultEl.innerHTML = `<div class="diffcols">
+      <div class="diffcol"><h4>Пропало (было в A) — ${onlyA.length}</h4><ul>${onlyA.map(li).join("") || "<li>нет</li>"}</ul></div>
+      <div class="diffcol"><h4>Осталось в обоих — ${common.length}</h4><ul>${common.map(li).join("") || "<li>нет</li>"}</ul></div>
+      <div class="diffcol"><h4>Новое (появилось в B) — ${onlyB.length}</h4><ul>${onlyB.map(li).join("") || "<li>нет</li>"}</ul></div>
+     </div>`;
+  } catch (e) {
+    resultEl.innerHTML = `<div class="note error">${esc(e.message)}</div>`;
+  }
+});
+
 /* ---------- Save-to-collection overlay ---------- */
 const saveOverlay = document.getElementById("saveOverlay");
 let saveTargetGroup = null;
+let saveTargetGroups = null;
 document.getElementById("closeSave").addEventListener("click", () => saveOverlay.classList.remove("show"));
 saveOverlay.addEventListener("click", (e) => { if (e.target === saveOverlay) saveOverlay.classList.remove("show"); });
 
-async function openSaveOverlay(group) {
-  saveTargetGroup = group;
+async function openSaveOverlay(groupOrGroups) {
+  if (Array.isArray(groupOrGroups)) { saveTargetGroups = groupOrGroups; saveTargetGroup = null; }
+  else { saveTargetGroup = groupOrGroups; saveTargetGroups = null; }
   document.getElementById("saveNote").innerHTML = "";
   document.getElementById("saveNewCollectionName").value = "";
   const list = document.getElementById("saveCollectionsList");
@@ -715,12 +974,15 @@ async function openSaveOverlay(group) {
 
 async function addToCollection(collectionId) {
   const note = document.getElementById("saveNote");
+  const groups = saveTargetGroups || (saveTargetGroup ? [saveTargetGroup] : []);
   try {
-    await api(`/api/v1/collections/${collectionId}/items`, {}, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ group_key: saveTargetGroup.group_key, creative_id: saveTargetGroup.creative_ids[0] }),
-    });
-    note.innerHTML = '<div class="note success">Сохранено.</div>';
+    for (const g of groups) {
+      await api(`/api/v1/collections/${collectionId}/items`, {}, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ group_key: g.group_key, creative_id: g.creative_ids[0] }),
+      });
+    }
+    note.innerHTML = `<div class="note success">Сохранено${groups.length > 1 ? ` (${groups.length})` : ""}.</div>`;
   } catch (e) {
     note.innerHTML = `<div class="note error">${esc(e.message)}</div>`;
   }
@@ -735,7 +997,7 @@ document.getElementById("saveNewCollectionForm").addEventListener("submit", asyn
     const created = await api("/api/v1/collections", {}, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, description: "" }) });
     await addToCollection(created.id);
     document.getElementById("saveNewCollectionName").value = "";
-    openSaveOverlay(saveTargetGroup);
+    openSaveOverlay(saveTargetGroups || saveTargetGroup);
   } catch (e2) {
     note.innerHTML = `<div class="note error">${esc(e2.message)}</div>`;
   }
@@ -763,9 +1025,39 @@ function collectionRowHtml(c) {
     <div><strong>${esc(c.name)}</strong><div class="meta">${esc(c.description || "")} ${c.description ? "·" : ""} ${c.items_count} креативов</div></div>
     <div style="display:flex;align-items:center;gap:10px">
      <button class="secondary" data-open-collection="${c.id}" data-name="${esc(c.name)}">Открыть</button>
+     <button class="secondary" data-duplicate-collection="${c.id}" data-dup-name="${esc(c.name)}">Дублировать</button>
+     <button class="secondary" data-export-collection="${c.id}" data-exp-name="${esc(c.name)}">Экспорт JSON</button>
      <button class="iconbtn" data-delete-collection="${c.id}" title="Удалить подборку">✕</button>
     </div>
    </div>`;
+}
+
+async function duplicateCollection(id, name) {
+  try {
+    const data = await api(`/api/v1/collections/${id}/items`);
+    const created = await api("/api/v1/collections", {}, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: `${name} (копия)`, description: "" }),
+    });
+    for (const item of data.items) {
+      await api(`/api/v1/collections/${created.id}/items`, {}, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ group_key: item.group_key, creative_id: item.id }),
+      });
+    }
+    loadCollections();
+  } catch (e) {
+    alert("Не удалось дублировать подборку: " + e.message);
+  }
+}
+
+async function exportCollection(id, name) {
+  try {
+    const data = await api(`/api/v1/collections/${id}/items`);
+    downloadJson(`${name.replace(/[^\p{L}\p{N}_-]+/gu, "_")}.json`, data.items.map(exportableFlatItem));
+  } catch (e) {
+    alert("Не удалось экспортировать подборку: " + e.message);
+  }
 }
 
 async function loadCollections() {
@@ -781,6 +1073,12 @@ async function loadCollections() {
       return;
     }
     list.innerHTML = data.items.map(collectionRowHtml).join("");
+    list.querySelectorAll("[data-duplicate-collection]").forEach((btn) => {
+      btn.addEventListener("click", () => duplicateCollection(Number(btn.dataset.duplicateCollection), btn.dataset.dupName));
+    });
+    list.querySelectorAll("[data-export-collection]").forEach((btn) => {
+      btn.addEventListener("click", () => exportCollection(Number(btn.dataset.exportCollection), btn.dataset.expName));
+    });
     list.querySelectorAll("[data-open-collection]").forEach((btn) => {
       btn.addEventListener("click", () => openCollection(Number(btn.dataset.openCollection), btn.dataset.name));
     });
@@ -837,12 +1135,150 @@ async function openCollection(id, name) {
 
 document.getElementById("collectionBack").addEventListener("click", loadCollections);
 
+/* ---------- Compare tab ---------- */
+let comparisonItems = new Map();
+function compareRowDefs() {
+  return [
+    ["Домен", (g) => esc(g.representative.domain || "—")],
+    ["Рекламная сеть", (g) => networkBadgeHtml(g.representative.detection_method)],
+    ["Заголовок / текст", (g) => esc(g.representative.title || g.representative.description || "—")],
+    ["Площадки", (g) => esc((g.platforms || []).join(", ") || "—")],
+    ["Первый показ", (g) => esc((g.first_seen_at || "").slice(0, 10) || "—")],
+    ["Последний показ", (g) => esc((g.last_seen_at || "").slice(0, 10) || "—")],
+    ["Campaign ID", (g) => (g.campaign_ids || []).length ? esc(g.campaign_ids.join(", ")) : "—"],
+    ["Ссылка на сайт", (g) => g.representative.destination_url
+      ? `<a href="${esc(g.representative.destination_url)}" target="_blank" rel="noopener">перейти ↗</a>` : "—"],
+  ];
+}
+function renderCompareTable() {
+  const wrap = document.getElementById("compareTableWrap");
+  const items = Array.from(comparisonItems.values());
+  if (!items.length) {
+    wrap.innerHTML = '<div class="empty">Сравнение пока пусто — добавьте креативы через «Сравнить» в библиотеке или загрузите подборку выше.</div>';
+    return;
+  }
+  const rows = compareRowDefs();
+  let html = '<div class="comparetablewrap"><table class="comparetable"><thead><tr><th class="rowlabel"></th>';
+  html += items.map((g) => {
+    const r = g.representative;
+    const img = r.image_url ? `<img src="${esc(r.image_url)}" alt="">` : "";
+    return `<th><div class="colhead"><button type="button" class="colremove" data-compare-remove="${esc(g.group_key)}" title="Убрать из сравнения">✕</button>${img}<strong>${esc(r.domain || "—")}</strong></div></th>`;
+  }).join("");
+  html += "</tr></thead><tbody>";
+  rows.forEach(([label, fn]) => {
+    html += `<tr><td class="rowlabel">${label}</td>${items.map((g) => `<td>${fn(g)}</td>`).join("")}</tr>`;
+  });
+  html += "</tbody></table></div>";
+  wrap.innerHTML = html;
+  wrap.querySelectorAll("[data-compare-remove]").forEach((btn) => {
+    btn.addEventListener("click", () => { comparisonItems.delete(btn.dataset.compareRemove); renderCompareTable(); });
+  });
+}
+async function initCompareTab() {
+  renderCompareTable();
+  const sel = document.getElementById("compareLoadCollection");
+  try {
+    const data = await api("/api/v1/collections");
+    sel.innerHTML = '<option value="">— выберите подборку —</option>' +
+      data.items.map((c) => `<option value="${c.id}">${esc(c.name)} (${c.items_count})</option>`).join("");
+  } catch (e) { /* подборки недоступны — выпадающий список останется пустым */ }
+}
+document.getElementById("compareLoadCollection").addEventListener("change", async (e) => {
+  const id = e.target.value;
+  if (!id) return;
+  const note = document.getElementById("compareNote");
+  note.innerHTML = "";
+  try {
+    const data = await api(`/api/v1/collections/${id}/items`);
+    data.items.forEach((item) => {
+      comparisonItems.set(item.group_key, {
+        group_key: item.group_key, representative: item, creative_ids: [item.id],
+        platforms: [item.platform], campaign_ids: [], banner_ids: [],
+        first_seen_at: item.captured_at, last_seen_at: item.captured_at,
+      });
+    });
+    renderCompareTable();
+  } catch (err) {
+    note.innerHTML = `<div class="note error">${esc(err.message)}</div>`;
+  }
+  e.target.value = "";
+});
+document.getElementById("compareClear").addEventListener("click", () => {
+  comparisonItems.clear();
+  document.getElementById("compareNote").innerHTML = "";
+  renderCompareTable();
+});
+document.getElementById("compareExport").addEventListener("click", () => {
+  downloadJson(`parsya-comparison-${Date.now()}.json`, Array.from(comparisonItems.values()).map(exportableGroup));
+});
+document.getElementById("compareSave").addEventListener("click", async () => {
+  const note = document.getElementById("compareNote");
+  const items = Array.from(comparisonItems.values());
+  if (!items.length) { note.innerHTML = '<div class="note error">Сначала добавьте креативы в сравнение.</div>'; return; }
+  const name = (prompt("Название подборки для этого сравнения:", `Сравнение ${new Date().toLocaleDateString("ru-RU")}`) || "").trim();
+  if (!name) return;
+  try {
+    const created = await api("/api/v1/collections", {}, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, description: "Сохранённое сравнение из вкладки «Сравнение»" }),
+    });
+    for (const g of items) {
+      await api(`/api/v1/collections/${created.id}/items`, {}, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ group_key: g.group_key, creative_id: g.creative_ids[0] }),
+      });
+    }
+    note.innerHTML = `<div class="note success">Сохранено как подборка «${esc(name)}».</div>`;
+  } catch (e) {
+    note.innerHTML = `<div class="note error">${esc(e.message)}</div>`;
+  }
+});
+
 /* ---------- Coverage tab ---------- */
+async function loadNetworkBreakdown() {
+  const el = document.getElementById("networkBreakdown");
+  try {
+    const data = await api("/api/v1/creatives", { sort: "recent", limit: 200 });
+    const counts = {};
+    data.items.forEach((c) => {
+      const net = networkLabel(c.detection_method);
+      counts[net.label] = counts[net.label] || { n: 0, cls: net.cls };
+      counts[net.label].n += 1;
+    });
+    const total = data.items.length || 1;
+    const rows = Object.entries(counts).sort((a, b) => b[1].n - a[1].n);
+    if (!rows.length) { el.innerHTML = '<div class="empty" style="padding:16px">Пока нет данных.</div>'; return; }
+    el.innerHTML = rows.map(([label, v]) => {
+      const pct = Math.round((v.n / total) * 100);
+      return `<div class="netbar-row"><span class="netname">${esc(label)}</span><div class="netbar-track"><div class="netbar-fill ${v.cls}" style="width:${pct}%"></div></div><span class="netcount">${v.n} · ${pct}%</span></div>`;
+    }).join("") + `<div class="muted" style="font-size:10px;margin-top:8px">по последним ${data.items.length} креативам</div>`;
+  } catch (e) {
+    el.innerHTML = `<div class="note error">${esc(e.message)}</div>`;
+  }
+}
+
+async function loadFreshFeed() {
+  const el = document.getElementById("freshFeed");
+  try {
+    const since = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+    const data = await api("/api/v1/creatives", { date_from: since, sort: "recent", limit: 10 });
+    if (!data.items.length) { el.innerHTML = '<div class="empty" style="padding:16px">За 7 дней новых креативов не найдено.</div>'; return; }
+    el.innerHTML = `<div class="freshlist">${data.items.map((c) => {
+      const img = c.image_url ? `<img src="${esc(c.image_url)}" alt="">` : `<span class="fallback" style="width:36px;height:36px;border-radius:7px;background:#eef0f7;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:#b9bdd0;flex-shrink:0">${esc((c.domain || "?")[0].toUpperCase())}</span>`;
+      return `<div class="freshitem">${img}<div class="meta"><strong>${esc(c.title || c.domain || "Без заголовка")}</strong><span>${esc(c.domain || "")} · ${esc(c.platform)} · ${esc((c.captured_at || "").slice(0, 10))}</span></div></div>`;
+    }).join("")}</div><div class="muted" style="font-size:10px;margin-top:8px">Всего за 7 дней: ${data.total}</div>`;
+  } catch (e) {
+    el.innerHTML = `<div class="note error">${esc(e.message)}</div>`;
+  }
+}
+
 async function loadCoverage() {
   const totalsEl = document.getElementById("coverageTotals");
   const tableEl = document.getElementById("coverageTable");
   totalsEl.innerHTML = "";
   tableEl.innerHTML = '<div class="loading">Загрузка…</div>';
+  loadNetworkBreakdown();
+  loadFreshFeed();
   try {
     const data = await api("/api/v1/coverage");
     const t = data.totals;
