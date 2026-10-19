@@ -403,6 +403,8 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
     <button class="tab" type="button" data-subtab="networks">Рекламные сети</button>
     <button class="tab" type="button" data-subtab="fresh">Новое за 7 дней</button>
     <button class="tab" type="button" data-subtab="crossplatform">Площадки</button>
+    <button class="tab" type="button" data-subtab="discounts">Скидки</button>
+    <button class="tab" type="button" data-subtab="apps">Приложения</button>
    </div>
    <div data-subpanel="coverage">
     <div class="resulthead"><div><p>Реальная статистика по собранным данным: сколько креативов распознано и у скольких найден рекламодатель.</p></div></div>
@@ -420,6 +422,14 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
    <div data-subpanel="crossplatform" hidden>
     <div class="resulthead"><div><p>Один и тот же креатив (по содержанию) замечен сразу на нескольких площадках — признак реальной, масштабной кампании, а не разового теста.</p></div></div>
     <div class="joblist" id="crossPlatform"><div class="empty"><strong>Загрузка…</strong></div></div>
+   </div>
+   <div data-subpanel="discounts" hidden>
+    <div class="resulthead"><div><p>Кто из конкурентов сейчас даёт скидки — реальный ценовой сигнал, не только метрика качества распознавания.</p></div></div>
+    <div class="joblist" id="discountsFeed"><div class="empty"><strong>Загрузка…</strong></div></div>
+   </div>
+   <div data-subpanel="apps" hidden>
+    <div class="resulthead"><div><p>Креативы, рекламирующие мобильные приложения (App Store / Google Play).</p></div></div>
+    <div class="joblist" id="appsFeed"><div class="empty"><strong>Загрузка…</strong></div></div>
    </div>
   </section>
   <section class="panel" data-panel="settings" hidden>
@@ -1451,7 +1461,7 @@ async function loadRealCoverage(){
  }catch(e){
   grid.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>';
  }
- loadNetworkBreakdown();loadFreshFeed();loadCrossPlatform();
+ loadNetworkBreakdown();loadFreshFeed();loadCrossPlatform();loadDiscountsFeed();loadAppsFeed();
 }
 async function loadCrossPlatform(){
  const el=$('#crossPlatform');if(!el)return;
@@ -1490,6 +1500,30 @@ async function loadFreshFeed(){
    const icon=c.image_url?('<img src="'+escapeHTML(c.image_url)+'" alt="" style="width:40px;height:40px;border-radius:12px;object-fit:cover">'):'<div class="jobicon"><i data-lucide="sparkles"></i></div>';
    return '<article class="job"><div class="jobname">'+icon+'<div><strong>'+escapeHTML(c.title||c.domain||'Без заголовка')+'</strong><span>'+escapeHTML(c.domain||'')+' · '+escapeHTML(c.platform)+'</span></div></div><div class="jobmeta"><strong>'+escapeHTML((c.captured_at||'').slice(0,10))+'</strong><span>обнаружен</span></div><span class="status">'+escapeHTML(realPlatformLabel(c.detection_method))+'</span></article>';
   }).join('')+'<div class="note">Всего за 7 дней: '+data.total+'</div>';
+  if(window.lucide)lucide.createIcons();
+ }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
+}
+async function loadDiscountsFeed(){
+ const el=$('#discountsFeed');if(!el)return;
+ try{
+  const data=await api('/api/v1/creatives',{has_discount:'true',sort:'discount',limit:30});
+  if(!data.items.length){el.innerHTML='<div class="empty"><strong>Скидки пока не найдены</strong>Появятся, когда парсер распознает % скидки в тексте объявления.</div>';return}
+  el.innerHTML=data.items.map(c=>{
+   const icon=c.image_url?('<img src="'+escapeHTML(c.image_url)+'" alt="" style="width:40px;height:40px;border-radius:12px;object-fit:cover">'):'<div class="jobicon"><i data-lucide="tag"></i></div>';
+   return '<article class="job"><div class="jobname">'+icon+'<div><strong>'+escapeHTML(c.title||c.domain||'Без заголовка')+'</strong><span>'+escapeHTML(c.domain||'')+' · '+escapeHTML(c.platform)+'</span></div></div><div class="jobmeta"><strong>-'+escapeHTML(String(c.discount_percent))+'%</strong><span>'+escapeHTML(c.price_text||'скидка')+'</span></div><span class="status">'+escapeHTML(realPlatformLabel(c.detection_method))+'</span></article>';
+  }).join('')+'<div class="note">Всего со скидкой: '+data.total+'</div>';
+  if(window.lucide)lucide.createIcons();
+ }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
+}
+async function loadAppsFeed(){
+ const el=$('#appsFeed');if(!el)return;
+ try{
+  const data=await api('/api/v1/creatives',{has_app:'true',sort:'recent',limit:30});
+  if(!data.items.length){el.innerHTML='<div class="empty"><strong>Рекламы приложений пока не найдено</strong></div>';return}
+  el.innerHTML=data.items.map(c=>{
+   const icon=c.image_url?('<img src="'+escapeHTML(c.image_url)+'" alt="" style="width:40px;height:40px;border-radius:12px;object-fit:cover">'):'<div class="jobicon"><i data-lucide="smartphone"></i></div>';
+   return '<article class="job"><div class="jobname">'+icon+'<div><strong>'+escapeHTML(c.title||c.domain||'Без заголовка')+'</strong><span>'+escapeHTML(c.domain||'')+' · '+escapeHTML(c.platform)+'</span></div></div><div class="jobmeta"><strong class="mono">'+escapeHTML(c.app_package_id||c.app_store_id||'')+'</strong><span>приложение</span></div><span class="status">'+escapeHTML(realPlatformLabel(c.detection_method))+'</span></article>';
+  }).join('')+'<div class="note">Всего рекламы приложений: '+data.total+'</div>';
   if(window.lucide)lucide.createIcons();
  }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
 }
