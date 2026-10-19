@@ -743,7 +743,7 @@ async function openDetail(c){
  currentCard=c;
  const art=c.querySelector('.adart');
  const headline=art?.querySelector('strong')?.innerText.replace(/\n/g,' ')||c.dataset.brand||'Креатив без заголовка';
- const cta=art?.querySelector('.cta')?.innerText||'Не указан';
+ const cta=c.dataset.cta||'Не указан';
  const domain=c.dataset.domain||'Не указан';
  const copy=c.dataset.copy||'Текст не указан';
  const platform=c.dataset.platform||'Источник не указан';
@@ -765,6 +765,7 @@ async function openDetail(c){
   '<div class="detailfield"><span>Домен</span><strong>'+escapeHTML(domain)+'</strong></div>'+
   '<div class="detailfield"><span>Площадка</span><strong>'+escapeHTML(platform)+'</strong></div>'+
   '<div id="detailAdvertiserInfo"><div class="detailfield"><span>Юрлицо / ИНН</span><strong>Загрузка…</strong></div></div></section>'+
+  '<section class="detailsection" id="detailExtraSection"><div class="detailsectiontitle">Дополнительные сигналы</div><div id="detailExtraSignals"><div class="detailfield"><span>Загрузка…</span></div></div></section>'+
   '<section class="detailsection" id="detailHistorySection"><div class="detailsectiontitle">История наблюдений и campaign ID</div><div class="historyempty">Загрузка…</div></section>';
  const isSaved=currentCard?.dataset.saved==='1';
  $('#detailSave').innerHTML=isSaved?'<i data-lucide="bookmark-check"></i> Убрать из сохранённых':'<i data-lucide="bookmark"></i> Сохранить креатив';
@@ -1378,18 +1379,24 @@ function groupRealCreatives(items){
 function buildRealCardHtml(group){
  const rep=group.representative;
  const platform=realPlatformLabel(rep.detection_method);
- const format=rep.image_url?'Изображение':'Нативное';
+ const isVideo=rep.creative_type==='video'&&rep.video_src;
+ const format=isVideo?'Видео':(rep.image_url?'Изображение':'Нативное');
  const brand=rep.domain||'Неизвестно';
  const copy=rep.description||rep.title||'Без текста объявления';
  const headline=rep.title||rep.domain||'Без заголовка';
+ const ctaText=rep.cta_text||'';
  const dateStr=formatRuDate(group.last_seen_at||rep.captured_at);
  const firstSeenStr=formatRuDate(group.first_seen_at)||dateStr;
- const artInner=rep.image_url
-  ?('<img src="'+escapeHTML(rep.image_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:13px">')
-  :('<span class="kicker">'+escapeHTML(brand)+'</span><strong>'+escapeHTML(headline)+'</strong><p>'+escapeHTML(copy).slice(0,160)+'</p><span class="cta">Открыть ↗</span>');
- return '<article class="creative" data-id="'+escapeHTML(String(rep.id))+'" data-group-key="'+escapeHTML(group.group_key)+'" data-platform="'+escapeHTML(platform)+'" data-format="'+escapeHTML(format)+'" data-brand="'+escapeHTML(brand)+'" data-copy="'+escapeHTML(copy)+'" data-domain="'+escapeHTML(brand)+'" data-date="'+escapeHTML(dateStr)+'" data-destination="'+escapeHTML(rep.destination_url||'')+'">'
-  +'<div class="preview"><span class="platform"><i data-lucide="network"></i> '+escapeHTML(platform)+'</span><button class="save" aria-label="Сохранить креатив"><i data-lucide="bookmark"></i></button><div class="adart"'+(rep.image_url?' style="padding:0;overflow:hidden"':'')+'>'+artInner+'</div></div>'
-  +'<div class="cardbody"><div class="cardtop"><span class="brand">'+escapeHTML(brand)+'</span><span class="format">'+escapeHTML(format)+'</span></div><p class="copy">'+escapeHTML(copy)+'</p><div class="metadata"><div><span>Впервые замечено</span><strong>'+escapeHTML(firstSeenStr)+'</strong></div><div><span>Площадки</span><strong>'+escapeHTML((group.platforms||[]).join(', ')||platform)+'</strong></div></div><div class="cardfoot"><span class="source">Реальные данные ParsYa</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div>'
+ const hasMedia=isVideo||rep.image_url;
+ const artInner=isVideo
+  ?('<video src="'+escapeHTML(rep.video_src)+'"'+(rep.video_poster?' poster="'+escapeHTML(rep.video_poster)+'"':'')+' controls muted loop playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;border-radius:13px"></video>')
+  :(rep.image_url
+   ?('<img src="'+escapeHTML(rep.image_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:13px">')
+   :('<span class="kicker">'+escapeHTML(brand)+'</span><strong>'+escapeHTML(headline)+'</strong><p>'+escapeHTML(copy).slice(0,160)+'</p><span class="cta">'+escapeHTML(ctaText||'Открыть ↗')+'</span>'));
+ const priceBadge=rep.price_text?'<span class="platform" style="left:auto;right:12px"><i data-lucide="tag"></i> '+escapeHTML(rep.price_text)+(rep.discount_percent?' · -'+escapeHTML(String(rep.discount_percent))+'%':'')+'</span>':'';
+ return '<article class="creative" data-id="'+escapeHTML(String(rep.id))+'" data-group-key="'+escapeHTML(group.group_key)+'" data-platform="'+escapeHTML(platform)+'" data-format="'+escapeHTML(format)+'" data-brand="'+escapeHTML(brand)+'" data-copy="'+escapeHTML(copy)+'" data-domain="'+escapeHTML(brand)+'" data-date="'+escapeHTML(dateStr)+'" data-destination="'+escapeHTML(rep.destination_url||'')+'" data-cta="'+escapeHTML(ctaText)+'">'
+  +'<div class="preview"><span class="platform"><i data-lucide="network"></i> '+escapeHTML(platform)+'</span>'+priceBadge+'<button class="save" aria-label="Сохранить креатив"><i data-lucide="bookmark"></i></button><div class="adart"'+(hasMedia?' style="padding:0;overflow:hidden"':'')+'>'+artInner+'</div></div>'
+  +'<div class="cardbody"><div class="cardtop"><span class="brand">'+escapeHTML(brand)+'</span><span class="format">'+escapeHTML(format)+'</span></div><p class="copy">'+escapeHTML(copy)+'</p>'+(ctaText?'<div class="metadata"><div><span>Кнопка (CTA)</span><strong>'+escapeHTML(ctaText)+'</strong></div></div>':'')+'<div class="metadata"><div><span>Впервые замечено</span><strong>'+escapeHTML(firstSeenStr)+'</strong></div><div><span>Площадки</span><strong>'+escapeHTML((group.platforms||[]).join(', ')||platform)+'</strong></div></div><div class="cardfoot"><span class="source">Реальные данные ParsYa</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div>'
   +'</article>';
 }
 function wireCardButtons(){
@@ -1489,6 +1496,22 @@ async function loadRealDetail(id){
  if(!id)return;
  try{
   const data=await api('/api/v1/creatives/'+id,{});
+  const extraSection=$('#detailExtraSignals');
+  if(extraSection){
+   const cr=data.creative||{};
+   const rows=[];
+   if(cr.creative_type==='video'){
+    rows.push('<div class="detailfield"><span>Формат</span><strong>Видео</strong></div>');
+    if(cr.video_duration)rows.push('<div class="detailfield"><span>Длительность видео</span><strong>'+escapeHTML(cr.video_duration)+' сек</strong></div>');
+    else rows.push('<div class="detailfield"><span>Длительность видео</span><strong>Не определена</strong></div>');
+    if(cr.video_src)rows.push('<div class="detailfield"><span>Файл видео</span><strong><a href="'+escapeHTML(cr.video_src)+'" target="_blank" rel="noopener">Открыть исходник ↗</a></strong></div>');
+   }
+   if(cr.price_text)rows.push('<div class="detailfield"><span>Цена</span><strong>'+escapeHTML(cr.price_text)+'</strong></div>');
+   if(cr.discount_percent)rows.push('<div class="detailfield"><span>Скидка</span><strong>'+escapeHTML(String(cr.discount_percent))+'%</strong></div>');
+   if(cr.erid)rows.push('<div class="detailfield"><span>Маркировка интернет-рекламы (ERID)</span><strong class="mono">'+escapeHTML(cr.erid)+'</strong></div>');
+   if(cr.app_package_id||cr.app_store_id)rows.push('<div class="detailfield"><span>Приложение</span><strong class="mono">'+escapeHTML(cr.app_package_id||cr.app_store_id)+'</strong></div>');
+   extraSection.innerHTML=rows.join('')||'<div class="detailfield"><span>Дополнительные сигналы</span><strong>Не найдены для этого креатива</strong></div>';
+  }
   const advSection=$('#detailAdvertiserInfo');
   if(advSection){
    if(data.advertisers&&data.advertisers.length){
@@ -1518,6 +1541,7 @@ async function loadRealDetail(id){
   if(window.lucide)lucide.createIcons();
  }catch(err){
   const advSection=$('#detailAdvertiserInfo');if(advSection)advSection.innerHTML='<div class="detailfield"><span>Юрлицо / ИНН</span><strong>Не удалось загрузить</strong></div>';
+  const extraSection=$('#detailExtraSignals');if(extraSection)extraSection.innerHTML='<div class="detailfield"><span>Дополнительные сигналы</span><strong>Не удалось загрузить</strong></div>';
  }
 }
 async function loadJobCreatives(jobId,jobName){
