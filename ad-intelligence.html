@@ -766,6 +766,7 @@ async function openDetail(c){
   '<div class="detailfield"><span>Площадка</span><strong>'+escapeHTML(platform)+'</strong></div>'+
   '<div id="detailAdvertiserInfo"><div class="detailfield"><span>Юрлицо / ИНН</span><strong>Загрузка…</strong></div></div></section>'+
   '<section class="detailsection" id="detailExtraSection"><div class="detailsectiontitle">Дополнительные сигналы</div><div id="detailExtraSignals"><div class="detailfield"><span>Загрузка…</span></div></div></section>'+
+  '<section class="detailsection" id="detailSecondaryLinksSection"><div class="detailsectiontitle">Другие ссылки объявления</div><div id="detailSecondaryLinks"><div class="detailfield"><span>Загрузка…</span></div></div></section>'+
   '<section class="detailsection" id="detailHistorySection"><div class="detailsectiontitle">История наблюдений и campaign ID</div><div class="historyempty">Загрузка…</div></section>';
  const isSaved=currentCard?.dataset.saved==='1';
  $('#detailSave').innerHTML=isSaved?'<i data-lucide="bookmark-check"></i> Убрать из сохранённых':'<i data-lucide="bookmark"></i> Сохранить креатив';
@@ -1512,6 +1513,24 @@ async function loadRealDetail(id){
    if(cr.app_package_id||cr.app_store_id)rows.push('<div class="detailfield"><span>Приложение</span><strong class="mono">'+escapeHTML(cr.app_package_id||cr.app_store_id)+'</strong></div>');
    extraSection.innerHTML=rows.join('')||'<div class="detailfield"><span>Дополнительные сигналы</span><strong>Не найдены для этого креатива</strong></div>';
   }
+  const linksSection=$('#detailSecondaryLinks');
+  if(linksSection){
+   const links=data.secondary_links||[];
+   if(links.length){
+    linksSection.innerHTML=links.map(l=>{
+     const campaignBits=[l.utm_source,l.utm_medium,l.utm_campaign].filter(Boolean).join(' / ');
+     const domain=l.final_url_domain||'';
+     const label=l.link_text||domain||'Ссылка';
+     const href=l.final_url||l.tracking_url||'';
+     return '<div class="detailfield"><span>'+escapeHTML(label)+'</span><strong>'+
+      (href?'<a href="'+escapeHTML(href)+'" target="_blank" rel="noopener">'+escapeHTML(domain||href)+' ↗</a>':'—')+
+      (campaignBits?'<br><span class="mono" style="font-weight:400;font-size:12px;opacity:.75">'+escapeHTML(campaignBits)+'</span>':'')+
+      '</strong></div>';
+    }).join('');
+   }else{
+    linksSection.innerHTML='<div class="detailfield"><span>Другие ссылки объявления</span><strong>Не найдены для этого креатива</strong></div>';
+   }
+  }
   const advSection=$('#detailAdvertiserInfo');
   if(advSection){
    if(data.advertisers&&data.advertisers.length){
@@ -1542,6 +1561,7 @@ async function loadRealDetail(id){
  }catch(err){
   const advSection=$('#detailAdvertiserInfo');if(advSection)advSection.innerHTML='<div class="detailfield"><span>Юрлицо / ИНН</span><strong>Не удалось загрузить</strong></div>';
   const extraSection=$('#detailExtraSignals');if(extraSection)extraSection.innerHTML='<div class="detailfield"><span>Дополнительные сигналы</span><strong>Не удалось загрузить</strong></div>';
+  const linksSection=$('#detailSecondaryLinks');if(linksSection)linksSection.innerHTML='<div class="detailfield"><span>Другие ссылки объявления</span><strong>Не удалось загрузить</strong></div>';
  }
 }
 async function loadJobCreatives(jobId,jobName){
