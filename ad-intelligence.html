@@ -401,6 +401,8 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
    <div id="networkBreakdown" class="coveragegrid"><div class="empty"><strong>Загрузка…</strong></div></div>
    <div class="resulthead" style="margin-top:28px"><div><h2>Новое за 7 дней</h2><p>Свежие креативы — сигнал, что у конкурента началась новая активность.</p></div></div>
    <div class="joblist" id="freshFeed"><div class="empty"><strong>Загрузка…</strong></div></div>
+   <div class="resulthead" style="margin-top:28px"><div><h2>Один креатив — несколько площадок</h2><p>Один и тот же креатив (по содержанию) замечен сразу на нескольких площадках — признак реальной, масштабной кампании, а не разового теста.</p></div></div>
+   <div class="joblist" id="crossPlatform"><div class="empty"><strong>Загрузка…</strong></div></div>
   </section>
   <section class="panel" data-panel="settings" hidden>
    <div class="resulthead"><div><h2>Настройки парсера</h2><p>Управляйте сбором данных, сохранением артефактов и качеством распознавания.</p></div><button class="primary" id="saveParserSettings"><i data-lucide="save"></i> Сохранить настройки</button></div>
@@ -1418,7 +1420,19 @@ async function loadRealCoverage(){
  }catch(e){
   grid.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>';
  }
- loadNetworkBreakdown();loadFreshFeed();
+ loadNetworkBreakdown();loadFreshFeed();loadCrossPlatform();
+}
+async function loadCrossPlatform(){
+ const el=$('#crossPlatform');if(!el)return;
+ try{
+  const data=await api('/api/v1/analytics/cross-platform',{});
+  if(!data.items.length){el.innerHTML='<div class="empty"><strong>Пока нет повторов</strong>Ни один креатив ещё не замечен сразу на нескольких площадках.</div>';return}
+  el.innerHTML=data.items.map(item=>{
+   const icon=item.image_url?('<img src="'+escapeHTML(item.image_url)+'" alt="" style="width:40px;height:40px;border-radius:12px;object-fit:cover">'):'<div class="jobicon"><i data-lucide="repeat"></i></div>';
+   return '<article class="job"><div class="jobname">'+icon+'<div><strong>'+escapeHTML(item.title||item.domain||'Без заголовка')+'</strong><span>'+escapeHTML(item.domain||'')+' · '+escapeHTML(item.platforms.join(', '))+'</span></div></div><div class="jobmeta"><strong>'+item.platform_count+'</strong><span>площадок</span></div><div class="jobmeta"><strong>'+escapeHTML((item.last_seen_at||'').slice(0,10))+'</strong><span>последний показ</span></div><span class="status">'+escapeHTML(realPlatformLabel(item.detection_method))+'</span></article>';
+  }).join('');
+  if(window.lucide)lucide.createIcons();
+ }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
 }
 async function loadNetworkBreakdown(){
  const el=$('#networkBreakdown');if(!el)return;
