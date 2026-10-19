@@ -396,7 +396,12 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
    </section>
   <section class="panel" data-panel="collections" hidden><div class="resulthead"><div><h2>Подборки креативов</h2><p>Собирайте идеи, наблюдайте за конкурентами и готовьте гипотезы для тестов.</p></div><button class="primary" id="newCollection"><i data-lucide="folder-plus"></i> Новая подборка</button></div><div class="collectiongrid"><article class="collection"><div class="collectionicon"><i data-lucide="target"></i></div><h3>Конкуренты</h3><p>Все креативы библиотеки для наблюдения за сообщениями, форматами и предложениями.</p><div class="collectionfoot"><span>Системная подборка</span><strong id="competitorCount">6 креативов</strong></div><button class="secondary systemcollectionopen" type="button" data-system-collection="competitors">Открыть библиотеку</button></article><article class="collection"><div class="collectionicon" style="background:#f1edff;color:#8064d9"><i data-lucide="flask-conical"></i></div><h3>Идеи для тестов</h3><p>Креативы, которые вы отдельно отметили для будущих рекламных экспериментов.</p><div class="collectionfoot"><span>Отмечено вами</span><strong id="testCount">0 креативов</strong></div><button class="secondary systemcollectionopen" type="button" data-system-collection="testIdeas">Открыть идеи</button></article><article class="collection"><div class="collectionicon" style="background:#fff4e4;color:#a97724"><i data-lucide="bookmark-check"></i></div><h3>Все сохранённые</h3><p>Все креативы, добавленные в избранное. Избранное и идеи для тестов ведутся отдельно.</p><div class="collectionfoot"><span>Обновляется автоматически</span><strong id="allSavedCount">0 креативов</strong></div><button class="secondary systemcollectionopen" type="button" data-system-collection="saved">Открыть избранное</button></article></div><div class="usercollections" id="userCollections" hidden><div class="resulthead"><div><h2>Мои подборки</h2><p>Подборки сохраняются в этом браузере; серверная синхронизация не подключена.</p></div></div><div class="collectiongrid" id="userCollectionGrid"></div></div><div class="collectionview" id="collectionView" hidden></div><div class="resulthead"><div><h2>Сохранённые креативы</h2><p>Избранное отдельно от пользовательских подборок. Оно хранится в этом браузере, но не синхронизируется с сервером.</p></div></div><div class="cards" id="collectionCards"></div><div class="empty" id="collectionEmpty"><i data-lucide="bookmark"></i><strong>Пока нет сохранённых креативов</strong>Нажмите на закладку в библиотеке, чтобы добавить первый.</div></section>
   <section class="panel" data-panel="scans" hidden><div class="resulthead"><div><h2>Задачи сканирования</h2><p>Контролируйте запуски, результаты распознавания и ошибки источников.</p></div><button class="primary" id="newScan"><i data-lucide="plus"></i> Новое сканирование</button></div><div class="summary"><article class="stat"><div class="stathead">Всего задач</div><div class="statvalue" id="jobTotal">03</div><div class="statfoot">Демонстрационные записи</div></article><article class="stat"><div class="stathead">Завершено</div><div class="statvalue">01</div><div class="statfoot">Не реальные результаты</div></article><article class="stat"><div class="stathead">Нужна проверка</div><div class="statvalue">01</div><div class="statfoot">Пример частичного результата</div></article><article class="stat"><div class="stathead">Ошибки источников</div><div class="statvalue">01</div><div class="statfoot">Пример статуса</div></article></div><div class="scan-controls"><label class="scan-search"><i data-lucide="search"></i><input id="jobSearch" type="search" placeholder="Поиск задач по названию или источнику" aria-label="Поиск задач сканирования"></label><label class="scan-status-filter"><span>Статус</span><select id="jobStatusFilter" aria-label="Фильтр задач по статусу"><option value="all">Все статусы</option><option value="queued">В очереди</option><option value="running">Выполняется</option><option value="completed">Завершено</option><option value="partial">Частичный результат</option><option value="failed">Ошибка</option><option value="stopped">Остановлено</option></select></label><button class="secondary" id="resetJobFilters" type="button">Сбросить</button></div><div class="scan-demo-note"><i data-lucide="flask-conical"></i><span><strong>Интерактивная симуляция.</strong> Кнопки меняют локальные демонстрационные статусы и не запускают сканирование источников.</span></div><div class="joblist" id="jobList"><article class="job"><div class="jobname"><div class="jobicon"><i data-lucide="network"></i></div><div><strong>Тест источника · Яндекс / РСЯ</strong><span>Демо-задача · 12 окт 2026, 10:42</span></div></div><div class="jobmeta"><strong>18 элементов</strong><span>Вымышленные данные</span></div><div class="jobmeta"><strong>72%</strong><span>Условное распознавание</span></div><span class="status partial">Частичный результат</span></article><article class="job"><div class="jobname"><div class="jobicon" style="background:#eaf8ef;color:#16884b"><i data-lucide="share-2"></i></div><div><strong>Тест источника · VK Ads</strong><span>Демо-задача · 12 окт 2026, 09:15</span></div></div><div class="jobmeta"><strong>24 элемента</strong><span>Вымышленные данные</span></div><div class="jobmeta"><strong>100%</strong><span>Условное распознавание</span></div><span class="status">Завершено</span></article><article class="job"><div class="jobname"><div class="jobicon" style="background:#fff0f0;color:#b84a4a"><i data-lucide="globe"></i></div><div><strong>Тест источника · Web display</strong><span>Демо-задача · 11 окт 2026, 18:20</span></div></div><div class="jobmeta"><strong>—</strong><span>Элементов в примере</span></div><div class="jobmeta"><strong>—</strong><span>Распознавание</span></div><span class="status failed">Ошибка источника</span></article></div><div class="note"><strong>Демонстрационные задачи.</strong> Статусы, объёмы и проценты не получены из реального парсера и нужны только для проверки UI.</div></section>
-  <section class="panel" data-panel="coverage" hidden><div class="resulthead"><div><h2>Источники и качество парсинга</h2><p>Реальная статистика по собранным данным: сколько креативов распознано и у скольких найден рекламодатель.</p></div></div><div class="coveragegrid" id="coverageGrid"><div class="empty"><strong>Загрузка…</strong></div></div><div class="note" id="coverageNote"><strong>Данные ParsYa.</strong> Процент — доля креативов на площадке с раскрытым рекламодателем (имя + ИНН).</div></section>
+  <section class="panel" data-panel="coverage" hidden><div class="resulthead"><div><h2>Источники и качество парсинга</h2><p>Реальная статистика по собранным данным: сколько креативов распознано и у скольких найден рекламодатель.</p></div></div><div class="coveragegrid" id="coverageGrid"><div class="empty"><strong>Загрузка…</strong></div></div><div class="note" id="coverageNote"><strong>Данные ParsYa.</strong> Процент — доля креативов на площадке с раскрытым рекламодателем (имя + ИНН).</div>
+   <div class="resulthead" style="margin-top:28px"><div><h2>Рекламные сети</h2><p>Через что реально крутится реклама конкурентов — по последним 200 креативам.</p></div></div>
+   <div id="networkBreakdown" class="coveragegrid"><div class="empty"><strong>Загрузка…</strong></div></div>
+   <div class="resulthead" style="margin-top:28px"><div><h2>Новое за 7 дней</h2><p>Свежие креативы — сигнал, что у конкурента началась новая активность.</p></div></div>
+   <div class="joblist" id="freshFeed"><div class="empty"><strong>Загрузка…</strong></div></div>
+  </section>
   <section class="panel" data-panel="settings" hidden>
    <div class="resulthead"><div><h2>Настройки парсера</h2><p>Управляйте сбором данных, сохранением артефактов и качеством распознавания.</p></div><button class="primary" id="saveParserSettings"><i data-lucide="save"></i> Сохранить настройки</button></div>
    <div class="settingslayout">
@@ -426,9 +431,9 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
    <div class="note"><strong>Подключение в следующих этапах:</strong> отдельный адаптер на источник, контракт извлечённых полей, тестовые HTML-фикстуры, метрики распознавания и безопасное сохранение необработанных фрагментов.</div>
   </section>
   <section class="panel" data-panel="advertisers" hidden>
-   <div class="resulthead"><div><h2>Рекламодатели в библиотеке</h2><p>Список формируется по карточкам текущего набора. Все записи помечены как демонстрационные.</p></div><button class="secondary" id="refreshAdvertisers"><i data-lucide="refresh-cw"></i> Обновить список</button></div>
+   <div class="resulthead"><div><h2>Рекламодатели с раскрытым ИНН</h2><p>Настоящие юрлица, у которых площадка явно показала название и ИНН — отсортированы по числу найденных креативов.</p></div><div style="display:flex;gap:8px"><input id="advertiserSearch" placeholder="Поиск по названию или ИНН" style="width:220px"><button class="secondary" id="refreshAdvertisers"><i data-lucide="refresh-cw"></i> Обновить список</button></div></div>
    <div class="joblist" id="advertiserList"></div>
-   <div class="note"><strong>Ограничение демо.</strong> Это группировка примеров из библиотеки, а не подтверждённый реестр реальных рекламодателей.</div>
+   <div class="note"><strong>Как это раскрывается.</strong> Рекламодатель попадает в этот список только если площадка сама показала его название и ИНН (например, кебаб-меню объявления в РСЯ). Если раскрытия нет — креатив виден в библиотеке, но здесь не появится.</div>
   </section>
   <section class="panel" data-panel="alerts" hidden>
    <div class="resulthead"><div><h2>Оповещения</h2><p>Выберите события, которые хотите отслеживать в будущем. Сейчас настройки хранятся в этом браузере и не отправляют уведомления.</p></div><button class="primary" id="saveAlertSettings"><i data-lucide="save"></i> Сохранить правила</button></div>
@@ -556,12 +561,23 @@ async function removeFromCollection(collectionId,groupKey){
 }
 const alertDefaults={newCreative:true,parserError:true,repeatSeen:false};
 function loadAlertSettings(){try{return {...alertDefaults,...JSON.parse(localStorage.getItem('neon-ad-intelligence-alerts')||'{}')}}catch{return {...alertDefaults}}}
-function renderAdvertisers(){
- const host=$('#advertiserList');if(!host)return;host.innerHTML='';
- const grouped=new Map();
- $$('#cards .creative').forEach(card=>{const name=card.dataset.brand||'Не определено';const item=grouped.get(name)||{name,count:0,last:card.dataset.date||''};item.count++;if(dateKey(card)>dateKey({dataset:{date:item.last}}))item.last=card.dataset.date||item.last;grouped.set(name,item)});
- [...grouped.values()].sort((a,b)=>a.name.localeCompare(b.name,'ru')).forEach(item=>{const row=document.createElement('article');row.className='job';const name=document.createElement('div');name.className='jobname';const icon=document.createElement('div');icon.className='jobicon';icon.innerHTML='<i data-lucide="building-2"></i>';const copy=document.createElement('div');const title=document.createElement('strong');title.textContent=item.name;const meta=document.createElement('span');meta.textContent='По домену — не подтверждённое юрлицо, если не раскрыто отдельно';copy.append(title,meta);name.append(icon,copy);const count=document.createElement('div');count.className='jobmeta';const countStrong=document.createElement('strong');countStrong.textContent=item.count+' '+(item.count===1?'креатив':item.count<5?'креатива':'креативов');const countMeta=document.createElement('span');countMeta.textContent='В библиотеке';count.append(countStrong,countMeta);const last=document.createElement('div');last.className='jobmeta';const lastStrong=document.createElement('strong');lastStrong.textContent=item.last||'Не определено';const lastMeta=document.createElement('span');lastMeta.textContent='Последний показ';last.append(lastStrong,lastMeta);const action=document.createElement('button');action.className='secondary';action.type='button';action.dataset.advertiserFilter=item.name;action.textContent='Показать креативы';row.append(name,count,last,action);host.append(row)});
- if(window.lucide)lucide.createIcons()
+async function renderAdvertisers(q){
+ const host=$('#advertiserList');if(!host)return;host.innerHTML='<div class="empty"><strong>Загрузка…</strong></div>';
+ try{
+  const data=await api('/api/v1/advertisers',{q:q||'',limit:50});
+  if(!data.items.length){host.innerHTML='<div class="empty"><strong>Рекламодатели не найдены</strong>Раскрытых юрлиц пока нет — они появляются по мере сканирования.</div>';return}
+  host.innerHTML='';
+  data.items.sort((a,b)=>b.creatives_count-a.creatives_count).forEach(item=>{
+   const row=document.createElement('article');row.className='job';
+   const name=document.createElement('div');name.className='jobname';const icon=document.createElement('div');icon.className='jobicon';icon.innerHTML='<i data-lucide="building-2"></i>';
+   const copy=document.createElement('div');const title=document.createElement('strong');title.textContent=item.name||'Без названия';const meta=document.createElement('span');meta.textContent='ИНН '+item.inn;copy.append(title,meta);name.append(icon,copy);
+   const count=document.createElement('div');count.className='jobmeta';const countStrong=document.createElement('strong');countStrong.textContent=item.creatives_count+' '+(item.creatives_count===1?'креатив':item.creatives_count<5?'креатива':'креативов');const countMeta=document.createElement('span');countMeta.textContent='Раскрытых связей';count.append(countStrong,countMeta);
+   const last=document.createElement('div');last.className='jobmeta';const lastStrong=document.createElement('strong');lastStrong.textContent=formatRuDate(item.last_seen_at)||'—';const lastMeta=document.createElement('span');lastMeta.textContent='Последний показ';last.append(lastStrong,lastMeta);
+   const action=document.createElement('button');action.className='secondary';action.type='button';action.dataset.advertiserInn=item.inn;action.dataset.advertiserName=item.name||item.inn;action.textContent='Показать креативы';
+   row.append(name,count,last,action);host.append(row);
+  });
+  if(window.lucide)lucide.createIcons();
+ }catch(err){host.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(err.message||'')+'</div>'}
 }
 function renderExportHistory(){
  const host=$('#exportHistoryList'),empty=$('#exportHistoryEmpty');if(!host||!empty)return;host.innerHTML='';
@@ -1020,8 +1036,13 @@ $('#jobList').addEventListener('click',e=>{
 });
 renderScanJobs();
 
-$('#refreshAdvertisers').addEventListener('click',()=>{renderAdvertisers();notify('Список обновлён','Группировка пересчитана по карточкам библиотеки.')});
-$('#advertiserList').addEventListener('click',e=>{const b=e.target.closest('[data-advertiser-filter]');if(!b)return;$('#query').value=b.dataset.advertiserFilter;setTab('library');applyFilters()});
+$('#refreshAdvertisers').addEventListener('click',()=>renderAdvertisers($('#advertiserSearch').value.trim()));
+let advertiserSearchTimer=null;
+$('#advertiserSearch').addEventListener('input',()=>{clearTimeout(advertiserSearchTimer);advertiserSearchTimer=setTimeout(()=>renderAdvertisers($('#advertiserSearch').value.trim()),350)});
+$('#advertiserList').addEventListener('click',e=>{
+ const b=e.target.closest('[data-advertiser-inn]');if(!b)return;
+ setTab('library');filterByAdvertiser(b.dataset.advertiserInn,b.dataset.advertiserName);
+});
 $('#saveAlertSettings').addEventListener('click',saveAlertSettings);
 $('#resetAlertSettings').addEventListener('click',()=>{localStorage.removeItem('neon-ad-intelligence-alerts');restoreAlertSettings();notify('Правила сброшены','Восстановлены значения по умолчанию.')});
 $('#clearExportHistory').addEventListener('click',()=>{if(!window.confirm('Очистить локальную историю экспорта?'))return;localStorage.removeItem('neon-ad-intelligence-exports');renderExportHistory();notify('История очищена','Локальные записи экспорта удалены.')});
@@ -1380,9 +1401,7 @@ async function loadRealLibrary(serverQuery){
  }
 }
 
-let coverageLoaded=false;
 async function loadRealCoverage(){
- if(coverageLoaded)return;
  const grid=$('#coverageGrid');if(!grid)return;
  try{
   const data=await api('/api/v1/coverage',{});
@@ -1394,10 +1413,38 @@ async function loadRealCoverage(){
    const statusLabel=advPct>=40?'Хорошо':advPct>0?'Частично':'Нет раскрытий';
    return '<article class="coverage"><div class="coveragetop"><strong>'+escapeHTML(p.platform)+'</strong><span class="status '+statusClass+'">'+statusLabel+'</span></div><div class="coveragevalue">'+advPct+'%</div><p>креативов с раскрытым рекламодателем</p><div class="progress"><span style="width:'+advPct+'%"></span></div><p>'+p.total+' креативов · распознано '+recPct+'% · последний сбор '+escapeHTML((p.last_captured_at||'—').replace('T',' ').slice(0,16))+'</p></article>';
   }).join('');
-  coverageLoaded=true;
  }catch(e){
   grid.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>';
  }
+ loadNetworkBreakdown();loadFreshFeed();
+}
+async function loadNetworkBreakdown(){
+ const el=$('#networkBreakdown');if(!el)return;
+ try{
+  const data=await api('/api/v1/creatives',{sort:'recent',limit:200});
+  const counts={};
+  data.items.forEach(c=>{const label=realPlatformLabel(c.detection_method);counts[label]=(counts[label]||0)+1});
+  const total=data.items.length||1;
+  const rows=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  if(!rows.length){el.innerHTML='<div class="empty"><strong>Пока нет данных</strong></div>';return}
+  el.innerHTML=rows.map(([label,n])=>{
+   const pct=Math.round((n/total)*100);
+   return '<article class="coverage"><div class="coveragetop"><strong>'+escapeHTML(label)+'</strong></div><div class="coveragevalue">'+pct+'%</div><p>'+n+' из последних '+data.items.length+' креативов</p><div class="progress"><span style="width:'+pct+'%"></span></div></article>';
+  }).join('');
+ }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
+}
+async function loadFreshFeed(){
+ const el=$('#freshFeed');if(!el)return;
+ try{
+  const since=new Date(Date.now()-7*86400000).toISOString().slice(0,10);
+  const data=await api('/api/v1/creatives',{date_from:since,sort:'recent',limit:12});
+  if(!data.items.length){el.innerHTML='<div class="empty"><strong>За 7 дней новых креативов не найдено</strong></div>';return}
+  el.innerHTML=data.items.map(c=>{
+   const icon=c.image_url?('<img src="'+escapeHTML(c.image_url)+'" alt="" style="width:40px;height:40px;border-radius:12px;object-fit:cover">'):'<div class="jobicon"><i data-lucide="sparkles"></i></div>';
+   return '<article class="job"><div class="jobname">'+icon+'<div><strong>'+escapeHTML(c.title||c.domain||'Без заголовка')+'</strong><span>'+escapeHTML(c.domain||'')+' · '+escapeHTML(c.platform)+'</span></div></div><div class="jobmeta"><strong>'+escapeHTML((c.captured_at||'').slice(0,10))+'</strong><span>обнаружен</span></div><span class="status">'+escapeHTML(realPlatformLabel(c.detection_method))+'</span></article>';
+  }).join('')+'<div class="note">Всего за 7 дней: '+data.total+'</div>';
+  if(window.lucide)lucide.createIcons();
+ }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
 }
 async function loadRealDetail(id){
  if(!id)return;
