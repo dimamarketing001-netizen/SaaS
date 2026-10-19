@@ -453,7 +453,7 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
 </div>
 <div class="scan-detail-overlay" id="scanDetailOverlay" aria-hidden="true"><aside class="scan-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="scanDetailTitle"><div class="scan-detail-head"><div><div class="eyebrow">AD INTELLIGENCE / SCAN REPORT</div><h2 id="scanDetailTitle">Детали задачи</h2><p id="scanDetailSubtitle">Демонстрационный отчёт. Источник не опрашивался.</p></div><button class="scan-detail-close" id="closeScanDetail" type="button" aria-label="Закрыть детали задачи"><i data-lucide="x"></i></button></div><div id="scanDetailContent"></div><div class="scan-detail-footer"><button id="copyUnknownHtml" type="button">Копировать HTML-фрагмент</button><button id="downloadScanReport" type="button">Скачать JSON-отчёт</button><button id="closeScanDetailFooter" type="button">Закрыть отчёт</button></div></aside></div>
 <div class="overlay" id="detailOverlay"><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><div class="drawerhead"><div><div class="eyebrow">AD INTELLIGENCE / CREATIVE</div><h2 id="detailTitle">Карточка креатива</h2></div><button class="iconbtn" id="closeDetail" aria-label="Закрыть"><i data-lucide="x"></i></button></div><div id="detailContent"></div><button class="primary" id="detailSave"><i data-lucide="bookmark"></i> Сохранить креатив</button></aside></div>
-<div class="modalwrap" id="modalWrap"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h2 id="modalTitle">Новое сканирование</h2><p id="modalDesc">Создайте демонстрационную задачу.</p><form id="taskForm"><div class="field"><label for="taskName" id="taskNameLabel">Название задачи</label><input id="taskName" required placeholder="Например, конкуренты в нише" maxlength="80"></div><div class="field" id="collectionDescriptionField" hidden><label for="collectionDescription">Описание подборки (необязательно)</label><textarea id="collectionDescription" class="collectiondesc" maxlength="240" placeholder="Например, сильные офферы и визуальные подходы конкурентов"></textarea></div><div class="field"><label for="taskSource">Источник</label><select id="taskSource"><option>Яндекс / РСЯ</option><option>VK Ads</option><option>Telegram Ads</option><option>Web display</option></select></div><div class="field"><label for="taskTarget">Стартовый URL или примечание (необязательно)</label><input id="taskTarget" placeholder="https://example.com"></div><div class="note">Макет добавит задачу в демонстрационный список. Он не запускает сетевые запросы и не выполняет настоящий парсинг.</div><div class="modalactions"><button type="button" class="secondary" id="cancelModal">Отмена</button><button type="submit" class="primary">Создать задачу</button></div></form></div></div>
+<div class="modalwrap" id="modalWrap"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h2 id="modalTitle">Новое сканирование</h2><p id="modalDesc">Создайте демонстрационную задачу.</p><form id="taskForm"><div class="field"><label for="taskName" id="taskNameLabel">Название задачи</label><input id="taskName" required placeholder="Например, конкуренты в нише" maxlength="80"></div><div class="field" id="collectionDescriptionField" hidden><label for="collectionDescription">Описание подборки (необязательно)</label><textarea id="collectionDescription" class="collectiondesc" maxlength="240" placeholder="Например, сильные офферы и визуальные подходы конкурентов"></textarea></div><div class="field" id="taskCityField"><label for="taskCity">Город</label><input id="taskCity" placeholder="Екатеринбург" value="Екатеринбург"></div><div class="field" id="taskSourceField"><label for="taskSource">Источник</label><select id="taskSource"><option>Яндекс / РСЯ</option><option>VK Ads</option><option>Telegram Ads</option><option>Web display</option></select></div><div class="field" id="taskTargetField"><label for="taskTarget">Стартовый URL или примечание (необязательно)</label><input id="taskTarget" placeholder="https://example.com"></div><div class="note" id="taskNote">Запуск поставит реальное сканирование в очередь — воркер подхватит его в течение нескольких секунд.</div><div class="modalactions"><button type="button" class="secondary" id="cancelModal">Отмена</button><button type="submit" class="primary">Создать задачу</button></div></form></div></div>
 <div class="toast" id="toast"><strong id="toastTitle">Готово</strong><span id="toastText"></span></div>
 <script>
 const session=JSON.parse(localStorage.getItem("parsya_session")||"null");
@@ -467,6 +467,18 @@ async function api(path,params){
  if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
  if(!res.ok)throw new Error("API error "+res.status);
  return res.json();
+}
+async function apiPost(path,body){
+ const res=await fetch(API_BASE+path,{method:"POST",headers:{Authorization:"Bearer "+session.token,"Content-Type":"application/json"},body:JSON.stringify(body||{})});
+ if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
+ if(!res.ok){let detail="API error "+res.status;try{detail=(await res.json()).detail||detail}catch{}throw new Error(detail)}
+ return res.json();
+}
+async function apiDelete(path){
+ const res=await fetch(API_BASE+path,{method:"DELETE",headers:{Authorization:"Bearer "+session.token}});
+ if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
+ if(!res.ok)throw new Error("API error "+res.status);
+ return res.status===204?null:res.json();
 }
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 if(window.lucide)lucide.createIcons();
@@ -507,7 +519,7 @@ function applyFilters(){
 }
 function dateKey(c){const raw=c.dataset.date||'';const m=raw.match(/(\d{1,2})\s+(янв|фев|мар|апр|май|июн|июл|авг|сен|окт|ноя|дек)[а-я]*\s+(\d{4})/i);if(!m)return 0;const months={янв:0,фев:1,мар:2,апр:3,май:4,июн:5,июл:6,авг:7,сен:8,окт:9,ноя:10,дек:11};return new Date(+m[3],months[m[2].toLowerCase()],+m[1]).getTime()}
 function updateSaved(){const n=savedCards().length;$('#savedStat').textContent=String(n).padStart(2,'0');$('#allSavedCount').textContent=n+' креативов';$('#competitorCount').textContent=n+' креативов';$('#testCount').textContent=testIdeaIds.length+' креативов';$('#collectionEmpty').hidden=n>0;$('#collectionCards').innerHTML='';savedCards().forEach(c=>{const clone=c.cloneNode(true);clone.classList.add('collectionitem');clone.querySelector('.bulk-select-control')?.remove();clone.querySelector('.save')?.remove();clone.querySelector('.detail')?.remove();$('#collectionCards').append(clone)});renderUserCollections();if(activeCollectionId)renderCollectionView(activeCollectionId);if(window.lucide)lucide.createIcons()}
-function renderUserCollections(){const wrap=$('#userCollections'),grid=$('#userCollectionGrid');wrap.hidden=userCollections.length===0;grid.innerHTML='';userCollections.forEach(col=>{const item=document.createElement('article');item.className='collection usercollection';const icon=document.createElement('div');icon.className='collectionicon';icon.innerHTML='<i data-lucide="folder-heart"></i>';const title=document.createElement('h3');title.textContent=col.name;const desc=document.createElement('p');desc.textContent=col.description||'Подборка креативов без описания.';const foot=document.createElement('div');foot.className='collectionfoot';const label=document.createElement('span');label.textContent='Моя подборка';const count=document.createElement('strong');count.textContent=col.ids.length+' креативов';foot.append(label,count);const actions=document.createElement('div');actions.className='collectionactions';const open=document.createElement('button');open.className='collectionopen';open.type='button';open.dataset.collectionOpen=col.id;open.textContent='Открыть подборку';const rename=document.createElement('button');rename.type='button';rename.dataset.collectionRename=col.id;rename.textContent='Переименовать';const duplicate=document.createElement('button');duplicate.type='button';duplicate.dataset.collectionDuplicate=col.id;duplicate.textContent='Дублировать';const exportButton=document.createElement('button');exportButton.type='button';exportButton.dataset.collectionExport=col.id;exportButton.textContent='Экспорт JSON';const del=document.createElement('button');del.type='button';del.className='collectiondelete';del.dataset.collectionDelete=col.id;del.textContent='Удалить';actions.append(open,rename,duplicate,exportButton,del);item.append(icon,title,desc,foot,actions);grid.append(item)});if(window.lucide)lucide.createIcons()}
+function renderUserCollections(){const wrap=$('#userCollections'),grid=$('#userCollectionGrid');wrap.hidden=userCollections.length===0;grid.innerHTML='';userCollections.forEach(col=>{const item=document.createElement('article');item.className='collection usercollection';const icon=document.createElement('div');icon.className='collectionicon';icon.innerHTML='<i data-lucide="folder-heart"></i>';const title=document.createElement('h3');title.textContent=col.name;const desc=document.createElement('p');desc.textContent=col.description||'Подборка креативов без описания.';const foot=document.createElement('div');foot.className='collectionfoot';const label=document.createElement('span');label.textContent='Моя подборка';const count=document.createElement('strong');count.textContent=col.items_count+' креативов';foot.append(label,count);const actions=document.createElement('div');actions.className='collectionactions';const open=document.createElement('button');open.className='collectionopen';open.type='button';open.dataset.collectionOpen=col.id;open.textContent='Открыть подборку';const duplicate=document.createElement('button');duplicate.type='button';duplicate.dataset.collectionDuplicate=col.id;duplicate.textContent='Дублировать';const exportButton=document.createElement('button');exportButton.type='button';exportButton.dataset.collectionExport=col.id;exportButton.textContent='Экспорт JSON';const del=document.createElement('button');del.type='button';del.className='collectiondelete';del.dataset.collectionDelete=col.id;del.textContent='Удалить';actions.append(open,duplicate,exportButton,del);item.append(icon,title,desc,foot,actions);grid.append(item)});if(window.lucide)lucide.createIcons()}
 function renderSystemCollection(key){
  const view=$('#collectionView');const labels={competitors:['Конкуренты','Все креативы библиотеки для конкурентного обзора.'],testIdeas:['Идеи для тестов','Креативы, отдельно отмеченные для будущих экспериментов.'],saved:['Все сохранённые','Креативы, добавленные в избранное.']};
  const info=labels[key];if(!info)return;activeCollectionId=null;activeSystemCollection=key;view.hidden=false;view.innerHTML='';
@@ -517,8 +529,30 @@ function renderSystemCollection(key){
  if(!members.length){const empty=document.createElement('div');empty.className='collectionempty';empty.textContent=key==='testIdeas'?'Пока нет идей для тестов. Отметьте нужные карточки флажком «Для тестов» в библиотеке.':'Пока нет креативов в этом разделе.';view.append(empty)}
  members.forEach(source=>{const clone=source.cloneNode(true);clone.classList.add('collectionitem');clone.querySelector('.bulk-select-control')?.remove();clone.querySelector('.test-idea-control')?.remove();clone.querySelector('.save')?.remove();cards.append(clone)});if(members.length)view.append(cards);if(window.lucide)lucide.createIcons()
 }
-function renderCollectionView(id){const col=userCollections.find(x=>x.id===id),view=$('#collectionView');if(!col){view.hidden=true;activeCollectionId=null;return}activeCollectionId=id;view.hidden=false;view.innerHTML='';const head=document.createElement('div');head.className='collectionviewhead';const info=document.createElement('div');const title=document.createElement('h3');title.textContent=col.name;const desc=document.createElement('p');desc.textContent=col.description||'Пользовательская подборка';info.append(title,desc);const back=document.createElement('button');back.className='secondary';back.type='button';back.dataset.collectionBack='1';back.innerHTML='<i data-lucide="x"></i> Закрыть';head.append(info,back);view.append(head);const cards=document.createElement('div');cards.className='cards';const members=col.ids.map(id=>$('#cards .creative[data-id="'+id+'"]')).filter(Boolean);if(!members.length){const empty=document.createElement('div');empty.className='collectionempty';const strong=document.createElement('strong');strong.textContent='В подборке пока нет креативов';empty.append(strong,document.createTextNode('Откройте креатив в библиотеке и добавьте его сюда.'));view.append(empty)}else members.forEach(source=>{const clone=source.cloneNode(true);clone.classList.add('collectionitem');clone.querySelector('.bulk-select-control')?.remove();clone.querySelector('.save')?.remove();clone.querySelector('.detail')?.remove();const remove=document.createElement('button');remove.className='collectionitemremove';remove.type='button';remove.dataset.collectionRemove=id;remove.dataset.creativeId=source.dataset.id;remove.setAttribute('aria-label','Убрать из подборки');remove.innerHTML='<i data-lucide="x"></i>';clone.append(remove);cards.append(clone)});if(members.length)view.append(cards);if(window.lucide)lucide.createIcons()}
-function removeFromCollection(collectionId,creativeId){const col=userCollections.find(x=>x.id===collectionId);if(!col)return;col.ids=col.ids.filter(id=>id!==creativeId);persistUserCollections();renderUserCollections();renderCollectionView(collectionId);notify('Креатив удалён из подборки',col.name)}
+async function renderCollectionView(id){
+ const col=userCollections.find(x=>x.id===id),view=$('#collectionView');if(!col){view.hidden=true;activeCollectionId=null;return}
+ activeCollectionId=id;view.hidden=false;view.innerHTML='<div class="empty"><strong>Загрузка…</strong></div>';
+ let items=[];
+ try{const data=await api('/api/v1/collections/'+id+'/items',{});items=data.items}
+ catch(err){view.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(err.message||'')+'</div>';return}
+ view.innerHTML='';
+ const head=document.createElement('div');head.className='collectionviewhead';const info=document.createElement('div');const title=document.createElement('h3');title.textContent=col.name;const desc=document.createElement('p');desc.textContent=col.description||'Пользовательская подборка';info.append(title,desc);const back=document.createElement('button');back.className='secondary';back.type='button';back.dataset.collectionBack='1';back.innerHTML='<i data-lucide="x"></i> Закрыть';head.append(info,back);view.append(head);
+ const cards=document.createElement('div');cards.className='cards';
+ if(!items.length){const empty=document.createElement('div');empty.className='collectionempty';const strong=document.createElement('strong');strong.textContent='В подборке пока нет креативов';empty.append(strong,document.createTextNode('Откройте креатив в библиотеке и добавьте его сюда.'));view.append(empty)}
+ else items.forEach(item=>{
+  const group={group_key:item.group_key,representative:item,platforms:[item.platform],first_seen_at:item.captured_at,last_seen_at:item.captured_at};
+  const wrapper=document.createElement('div');wrapper.innerHTML=buildRealCardHtml(group);const clone=wrapper.firstElementChild;
+  clone.classList.add('collectionitem');clone.querySelector('.save')?.remove();
+  const remove=document.createElement('button');remove.className='collectionitemremove';remove.type='button';remove.dataset.collectionRemove=item.group_key;remove.setAttribute('aria-label','Убрать из подборки');remove.innerHTML='<i data-lucide="x"></i>';clone.append(remove);
+  cards.append(clone);
+ });
+ if(items.length)view.append(cards);
+ if(window.lucide)lucide.createIcons();
+}
+async function removeFromCollection(collectionId,groupKey){
+ try{await apiDelete('/api/v1/collections/'+collectionId+'/items/'+encodeURIComponent(groupKey));await loadRealCollections();await renderCollectionView(collectionId);notify('Креатив удалён из подборки','')}
+ catch(err){notify('Не удалось убрать креатив',err.message||'')}
+}
 const alertDefaults={newCreative:true,parserError:true,repeatSeen:false};
 function loadAlertSettings(){try{return {...alertDefaults,...JSON.parse(localStorage.getItem('neon-ad-intelligence-alerts')||'{}')}}catch{return {...alertDefaults}}}
 function renderAdvertisers(){
@@ -537,7 +571,7 @@ function renderExportHistory(){
 }
 function saveAlertSettings(){const value={newCreative:$('#alertNewCreative').checked,parserError:$('#alertParserError').checked,repeatSeen:$('#alertRepeatSeen').checked};try{localStorage.setItem('neon-ad-intelligence-alerts',JSON.stringify(value));notify('Правила сохранены','Настройки сохранены в этом браузере. Уведомления не отправляются.')}catch{notify('Не удалось сохранить','Хранилище браузера недоступно.')}}
 function restoreAlertSettings(){const value=loadAlertSettings();$('#alertNewCreative').checked=!!value.newCreative;$('#alertParserError').checked=!!value.parserError;$('#alertRepeatSeen').checked=!!value.repeatSeen}
-function setTab(tab){$$('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));$$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===tab));$$('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==tab);const titles={compare:['Сравнение креативов','Сопоставляйте сообщения, форматы и рекламодателей на одних условиях.','Сравнение'],advertisers:['Рекламодатели','Обзор брендов, обнаруженных в демонстрационной библиотеке.','Рекламодатели'],alerts:['Оповещения','Настройте локальные правила для будущего мониторинга.','Оповещения'],exports:['История экспорта','Проверяйте подготовленные выгрузки из демонстрационной библиотеки.','Экспорт'],library:['Найдите рекламу раньше конкурентов','Исследуйте креативы, отслеживайте рекламные подходы и сохраняйте находки в одном рабочем пространстве.','Новое сканирование'],collections:['Ваши подборки креативов','Собирайте идеи, наблюдайте за конкурентами и готовьте гипотезы для тестов.','Новая подборка'],scans:['Контроль задач парсинга','Следите за прогрессом, распознаванием и ошибками по каждому источнику.','Новое сканирование'],coverage:['Качество данных под контролем','Понимайте, что найдено, что распознано и где парсеру нужна доработка.','Источники и качество'],settings:['Настройки парсера','Хранение артефактов, версии адаптеров и безопасная обработка неизвестной разметки.','Настройки'],integrations:['Источники и интеграции','Подключения к реальным источникам появятся после интеграции адаптеров.','Интеграции']};const t=titles[tab]||titles.library;$('#pageTitle').textContent=t[0];$('#pageSubtitle').textContent=t[1];$('#topAction span:not(.spark)').textContent=t[2];$('#crumb').textContent='Ad Intelligence / '+({library:'Библиотека',compare:'Сравнение',collections:'Подборки',scans:'Сканирования',coverage:'Качество',advertisers:'Рекламодатели',alerts:'Оповещения',exports:'История экспорта',settings:'Настройки',integrations:'Интеграции'}[tab]||'Библиотека');$('#topAction').style.display=['library','scans'].includes(tab)?'inline-flex':'none';if(tab==='collections')updateSaved();if(tab==='advertisers')renderAdvertisers();if(tab==='exports')renderExportHistory();if(tab==='coverage')loadRealCoverage();if(window.lucide)lucide.createIcons()}
+function setTab(tab){$$('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));$$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===tab));$$('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==tab);const titles={compare:['Сравнение креативов','Сопоставляйте сообщения, форматы и рекламодателей на одних условиях.','Сравнение'],advertisers:['Рекламодатели','Обзор брендов, обнаруженных в демонстрационной библиотеке.','Рекламодатели'],alerts:['Оповещения','Настройте локальные правила для будущего мониторинга.','Оповещения'],exports:['История экспорта','Проверяйте подготовленные выгрузки из демонстрационной библиотеки.','Экспорт'],library:['Найдите рекламу раньше конкурентов','Исследуйте креативы, отслеживайте рекламные подходы и сохраняйте находки в одном рабочем пространстве.','Новое сканирование'],collections:['Ваши подборки креативов','Собирайте идеи, наблюдайте за конкурентами и готовьте гипотезы для тестов.','Новая подборка'],scans:['Контроль задач парсинга','Следите за прогрессом, распознаванием и ошибками по каждому источнику.','Новое сканирование'],coverage:['Качество данных под контролем','Понимайте, что найдено, что распознано и где парсеру нужна доработка.','Источники и качество'],settings:['Настройки парсера','Хранение артефактов, версии адаптеров и безопасная обработка неизвестной разметки.','Настройки'],integrations:['Источники и интеграции','Подключения к реальным источникам появятся после интеграции адаптеров.','Интеграции']};const t=titles[tab]||titles.library;$('#pageTitle').textContent=t[0];$('#pageSubtitle').textContent=t[1];$('#topAction span:not(.spark)').textContent=t[2];$('#crumb').textContent='Ad Intelligence / '+({library:'Библиотека',compare:'Сравнение',collections:'Подборки',scans:'Сканирования',coverage:'Качество',advertisers:'Рекламодатели',alerts:'Оповещения',exports:'История экспорта',settings:'Настройки',integrations:'Интеграции'}[tab]||'Библиотека');$('#topAction').style.display=['library','scans'].includes(tab)?'inline-flex':'none';if(tab==='collections'){updateSaved();loadRealCollections()}if(tab==='advertisers')renderAdvertisers();if(tab==='exports')renderExportHistory();if(tab==='coverage')loadRealCoverage();if(tab==='scans')loadRealScans();if(window.lucide)lucide.createIcons()}
 $$('[data-tab]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));$$('[data-view]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.view)));
 $('#query').addEventListener('input',applyFilters);['platform','format','savedFilter','sort'].forEach(id=>$('#'+id).addEventListener('change',applyFilters));
 $('#advancedToggle').addEventListener('click',()=>{const open=$('#advancedFilters').hidden;$('#advancedFilters').hidden=!open;$('#advancedToggle').setAttribute('aria-expanded',String(open));$('#advancedToggle').classList.toggle('primary',open)});
@@ -683,34 +717,41 @@ $('#closeDetail').addEventListener('click',closeDetail);
 $('#detailOverlay').addEventListener('click',e=>{if(e.target===$('#detailOverlay'))closeDetail()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDetail();closeScanJobDetails();$('#modalWrap').classList.remove('show')}});
 $('#detailContent').addEventListener('click',async e=>{const b=e.target.closest('[data-copy-value]');if(!b)return;const value=b.dataset.copyValue||'';try{await navigator.clipboard.writeText(value);notify('Скопировано',b.dataset.copyLabel||'Текст скопирован')}catch(err){const area=document.createElement('textarea');area.value=value;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();const ok=document.execCommand('copy');area.remove();notify(ok?'Скопировано':'Не удалось скопировать',ok?(b.dataset.copyLabel||'Текст скопирован'):'Скопируйте текст вручную из карточки')}});$('#detailSave').addEventListener('click',()=>{if(currentCard){const saveButton=currentCard.querySelector('.save');const isSaved=currentCard.dataset.saved==='1';if(isSaved){currentCard.dataset.saved='0';saveButton.classList.remove('saved');saveButton.innerHTML='<i data-lucide="bookmark"></i>';notify('Убрано из сохранённых',currentCard.dataset.brand+' · демо-подборка')}else{currentCard.dataset.saved='1';saveButton.classList.add('saved');saveButton.innerHTML='<i data-lucide="bookmark-check"></i>';notify('Креатив сохранён',currentCard.dataset.brand+' · демо-подборка')}if(window.lucide)lucide.createIcons();persistSavedCreativeIds();applyFilters();$('#detailSave').innerHTML=currentCard.dataset.saved==='1'?'<i data-lucide="bookmark-check"></i> Убрать из сохранённых':'<i data-lucide="bookmark"></i> Сохранить креатив';if(window.lucide)lucide.createIcons()}});
-function loadUserCollections(){try{const value=JSON.parse(localStorage.getItem('neon-ad-intelligence-collections')||'[]');return Array.isArray(value)?value.filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&Array.isArray(x.ids)):[]}catch{return[]}}
-function persistUserCollections(){try{localStorage.setItem('neon-ad-intelligence-collections',JSON.stringify(userCollections))}catch{notify('Не удалось сохранить подборки','Хранилище браузера недоступно или заполнено.')}}
-let modalMode='scan',userCollections=loadUserCollections(),activeCollectionId=null;
-function openModal(mode){modalMode=mode;const isCollection=mode==='collection';$('#modalTitle').textContent=isCollection?'Новая подборка':'Новое сканирование';$('#modalDesc').textContent=isCollection?'Создайте отдельную группу креативов для исследования или тестов.':'Создайте задачу в демонстрационном списке. Настоящий парсер не запускается.';$('#taskNameLabel').textContent=isCollection?'Название подборки':'Название задачи';$('#taskName').placeholder=isCollection?'Например, Офферы конкурентов':'Например, конкуренты в нише';$('#collectionDescriptionField').hidden=!isCollection;$('#collectionDescription').value='';$('#taskSource').closest('.field').hidden=isCollection;$('#taskTarget').closest('.field').hidden=isCollection;$('#modalWrap').classList.add('show');$('#taskName').focus()}
+let collectionsLoaded=false;
+async function loadRealCollections(){
+ try{
+  const data=await api('/api/v1/collections',{});
+  userCollections=data.items.map(c=>({id:c.id,name:c.name,description:c.description,items_count:c.items_count}));
+  renderUserCollections();
+  collectionsLoaded=true;
+ }catch(err){notify('Не удалось загрузить подборки',err.message||'')}
+}
+let modalMode='scan',userCollections=[],activeCollectionId=null;
+function openModal(mode){modalMode=mode;const isCollection=mode==='collection';$('#modalTitle').textContent=isCollection?'Новая подборка':'Новое сканирование';$('#modalDesc').textContent=isCollection?'Создайте отдельную группу креативов для исследования или тестов.':'Воркер подберёт задание при следующем опросе и начнёт собирать креативы по вашему запросу.';$('#taskNameLabel').textContent=isCollection?'Название подборки':'Поисковый запрос';$('#taskName').placeholder=isCollection?'Например, Офферы конкурентов':'Например, кредиты наличными';$('#collectionDescriptionField').hidden=!isCollection;$('#collectionDescription').value='';$('#taskCityField').hidden=isCollection;$('#taskSourceField').hidden=true;$('#taskTargetField').hidden=true;$('#taskNote').hidden=isCollection;$('#modalWrap').classList.add('show');$('#taskName').focus()}
 const SCAN_STORAGE_KEY='neon-ad-intelligence-scan-jobs';
 const scanStatusMeta={
  queued:{label:'В очереди',className:'partial'},
  running:{label:'Выполняется',className:'running'},
  completed:{label:'Завершено · демо',className:''},
  partial:{label:'Частичный результат',className:'partial'},
- failed:{label:'Ошибка · демо',className:'failed'},
+ failed:{label:'Ошибка',className:'failed'},
  stopped:{label:'Остановлено',className:'stopped'}
 };
-function readScanJobs(){
+let scanJobs=[];
+let scanPollTimer=null;
+async function loadRealScans(){
  try{
-  const value=JSON.parse(localStorage.getItem(SCAN_STORAGE_KEY)||'null');
-  if(Array.isArray(value))return value.filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&scanStatusMeta[x.status]);
- }catch{}
- return [
-  {id:'demo-rsya',name:'Тест источника · Яндекс / РСЯ',source:'Яндекс / РСЯ',target:'',createdAt:'12 окт 2026, 10:42',status:'partial',items:'18 элементов',recognition:'72%',note:'Демонстрационный частичный результат.'},
-  {id:'demo-vk',name:'Тест источника · VK Ads',source:'VK Ads',target:'',createdAt:'12 окт 2026, 09:15',status:'completed',items:'24 элемента',recognition:'100%',note:'Демонстрационный завершённый пример.'},
-  {id:'demo-web',name:'Тест источника · Web display',source:'Web display',target:'',createdAt:'11 окт 2026, 18:20',status:'failed',items:'—',recognition:'—',note:'Демонстрационный пример ошибки источника.'}
- ];
-}
-let scanJobs=readScanJobs();
-function persistScanJobs(){
- try{localStorage.setItem(SCAN_STORAGE_KEY,JSON.stringify(scanJobs))}
- catch{notify('Не удалось сохранить задачи','Хранилище браузера недоступно или заполнено.')}
+  const data=await api('/api/v1/runs',{limit:50});
+  scanJobs=data.items.map(r=>({
+   id:String(r.id),jobId:r.id,name:r.key_text,source:r.city,
+   createdAt:formatRuDate(r.started_at)||'',
+   status:({queued:'queued',running:'running',succeeded:'completed',failed:'failed'})[r.status]||'queued',
+   items:(r.total_creatives||0)+' креативов',recognition:'—'
+  }));
+  renderScanJobs();
+  clearTimeout(scanPollTimer);
+  if(data.items.some(r=>r.status==='queued'||r.status==='running'))scanPollTimer=setTimeout(loadRealScans,5000);
+ }catch(e){notify('Не удалось загрузить задачи',e.message||'');}
 }
 function scanActionButton(action,label,disabled=false,kind=''){
  return '<button type="button" data-scan-action="'+action+'" class="'+kind+'"'+(disabled?' disabled':'')+'>'+label+'</button>';
@@ -726,16 +767,12 @@ function renderScanJobs(){
   row.dataset.jobStatus=job.status;
   row.dataset.jobSource=job.source;
   const iconName=job.status==='failed'?'alert-triangle':job.status==='completed'?'check-circle':job.status==='running'?'loader-circle':'radar';
-  row.innerHTML='<div class="jobname"><div class="jobicon"><i data-lucide="'+iconName+'"></i></div><div><strong>'+escapeHTML(job.name)+'</strong><span>'+escapeHTML(job.createdAt)+' · демо-запись</span></div></div>'+
-   '<div class="jobmeta"><strong>'+escapeHTML(job.items)+'</strong><span>Демонстрационный объём</span></div>'+
-   '<div class="jobmeta"><strong>'+escapeHTML(job.recognition)+'</strong><span>Демо-распознавание</span></div>'+
+  row.innerHTML='<div class="jobname"><div class="jobicon"><i data-lucide="'+iconName+'"></i></div><div><strong>'+escapeHTML(job.name)+'</strong><span>'+escapeHTML(job.source)+' · '+escapeHTML(job.createdAt)+'</span></div></div>'+
+   '<div class="jobmeta"><strong>'+escapeHTML(job.items)+'</strong><span>найдено креативов</span></div>'+
+   '<div class="jobmeta"><strong>#'+escapeHTML(job.id)+'</strong><span>номер запуска</span></div>'+
    '<span class="status '+meta.className+'">'+escapeHTML(meta.label)+'</span>'+
    '<div class="job-actions">'+
-   scanActionButton('details','Подробнее',false)+
-   (job.status==='queued'?scanActionButton('start','Начать симуляцию',false,'primary-action'):'')+
-   (job.status==='running'?scanActionButton('finish','Завершить демо',false,'primary-action'):'')+
-   (['failed','partial','stopped'].includes(job.status)?scanActionButton('retry','Повторить',false,'primary-action'):'')+
-   (['queued','running','partial'].includes(job.status)?scanActionButton('stop','Остановить',false,'danger-action'):'')+
+   (job.status==='completed'?'<button type="button" data-show-job="'+escapeHTML(job.id)+'" data-job-name="'+escapeHTML(job.name)+'">Показать в библиотеке</button>':'')+
    '</div>';
   list.appendChild(row);
  }
@@ -964,40 +1001,83 @@ $('#clearExportHistory').addEventListener('click',()=>{if(!window.confirm('Оч�
 $('#exportNow').addEventListener('click',()=>{$('#export').click();setTab('exports')});
 restoreAlertSettings();
 $('#topAction').addEventListener('click',()=>openModal('scan'));$('#newScan').addEventListener('click',()=>openModal('scan'));$('#newCollection').addEventListener('click',()=>openModal('collection'));$('#cancelModal').addEventListener('click',()=>$('#modalWrap').classList.remove('show'));$('#modalWrap').addEventListener('click',e=>{if(e.target===$('#modalWrap'))$('#modalWrap').classList.remove('show')});
-$('#taskForm').addEventListener('submit',e=>{e.preventDefault();const name=$('#taskName').value.trim(),source=$('#taskSource').value,target=$('#taskTarget').value.trim();if(modalMode==='collection'){if(!name){$('#taskName').focus();return}const duplicate=userCollections.some(x=>x.name.toLocaleLowerCase('ru')===name.toLocaleLowerCase('ru'));if(duplicate){notify('Такое название уже есть','Выберите уникальное название подборки.');$('#taskName').focus();return}const col={id:'collection-'+Date.now(),name,description:$('#collectionDescription').value.trim(),ids:[]};userCollections.push(col);persistUserCollections();renderUserCollections();notify('Подборка создана',name+' · пока пустая');setTab('collections')}else{if(!name){$('#taskName').focus();return}const job=createDemoScanJob(name,source,target);notify('Демо-задача создана',job.name+' · поставлена в очередь без запуска парсера');setTab('scans')}$('#modalWrap').classList.remove('show');$('#taskForm').reset()});
-function duplicateUserCollection(collectionId){
+$('#taskForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const name=$('#taskName').value.trim();
+ if(!name){$('#taskName').focus();return}
+ if(modalMode==='collection'){
+  try{
+   const created=await apiPost('/api/v1/collections',{name,description:$('#collectionDescription').value.trim()});
+   notify('Подборка создана',name);
+   $('#modalWrap').classList.remove('show');$('#taskForm').reset();
+   await loadRealCollections();
+   setTab('collections');
+  }catch(err){notify('Не удалось создать подборку',err.message||'');}
+ }else{
+  const city=$('#taskCity').value.trim()||'Екатеринбург';
+  try{
+   await apiPost('/api/v1/runs',{city,key_text:name});
+   notify('Сканирование запущено',name+' · воркер подхватит в течение нескольких секунд');
+   $('#modalWrap').classList.remove('show');$('#taskForm').reset();
+   setTab('scans');
+   loadRealScans();
+  }catch(err){notify('Не удалось запустить сканирование',err.message||'');}
+ }
+});
+async function duplicateUserCollection(collectionId){
  const source=userCollections.find(item=>item.id===collectionId);if(!source)return;
  const defaultName=source.name+' — копия';
  const response=window.prompt('Название дубликата подборки',defaultName);if(response===null)return;
  const name=response.trim();if(!name){notify('Дубликат не создан','Название не может быть пустым.');return}
- if(userCollections.some(item=>item.name.toLocaleLowerCase('ru')===name.toLocaleLowerCase('ru'))){notify('Такое название уже есть','Выберите уникальное название.');return}
- const duplicate={id:'collection-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),name,description:source.description||'Копия пользовательской подборки.',ids:[...source.ids],duplicatedFrom:source.id};
- userCollections.unshift(duplicate);
- persistUserCollections();renderUserCollections();renderBulkCollectionOptions();
- notify('Подборка скопирована',name+' · '+duplicate.ids.length+' креативов');
+ try{
+  const items=(await api('/api/v1/collections/'+collectionId+'/items',{})).items;
+  const created=await apiPost('/api/v1/collections',{name,description:source.description||'Копия подборки «'+source.name+'».'});
+  for(const item of items){await apiPost('/api/v1/collections/'+created.id+'/items',{group_key:item.group_key,creative_id:item.id})}
+  await loadRealCollections();
+  notify('Подборка скопирована',name+' · '+items.length+' креативов');
+ }catch(err){notify('Не удалось дублировать подборку',err.message||'')}
 }
-function exportUserCollection(collectionId){
+async function exportUserCollection(collectionId){
  const col=userCollections.find(item=>item.id===collectionId);if(!col)return;
- const cardsById=new Map($$('#cards .creative').map(card=>[card.dataset.id,card]));
- const creatives=col.ids.map(id=>cardsById.get(id)).filter(Boolean).map(card=>({id:card.dataset.id,brand:card.dataset.brand,platform:card.dataset.platform,format:card.dataset.format,text:card.dataset.copy,domain:card.dataset.domain,exampleDate:card.dataset.date,demo:true}));
- const filename='neon-ad-intelligence-collection-'+col.id+'.json';
- const report={exportType:'collection',demo:true,exportedAt:new Date().toISOString(),collection:{id:col.id,name:col.name,description:col.description||'',creativeIds:[...col.ids],creativeCount:creatives.length},creatives,notice:'Демонстрационная пользовательская подборка; сведения не получены из реального парсера.'};
- const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json;charset=utf-8'});
- const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
- try{const history=JSON.parse(localStorage.getItem('neon-ad-intelligence-exports')||'[]');history.unshift({filename,count:creatives.length,date:new Date().toLocaleString('ru-RU'),demo:true,kind:'collection',collectionName:col.name});localStorage.setItem('neon-ad-intelligence-exports',JSON.stringify(history.slice(0,50)))}catch{}
- renderExportHistory();notify('Подборка экспортирована',col.name+' · '+creatives.length+' креативов');
+ try{
+  const items=(await api('/api/v1/collections/'+collectionId+'/items',{})).items;
+  const creatives=items.map(item=>({id:item.id,domain:item.domain,title:item.title,description:item.description,platform:item.platform,detectionMethod:item.detection_method,imageUrl:item.image_url,destinationUrl:item.destination_url,capturedAt:item.captured_at}));
+  const filename='parsya-collection-'+col.id+'.json';
+  const report={exportType:'collection',exportedAt:new Date().toISOString(),collection:{id:col.id,name:col.name,description:col.description||'',creativeCount:creatives.length},creatives};
+  const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
+  try{const history=JSON.parse(localStorage.getItem('neon-ad-intelligence-exports')||'[]');history.unshift({filename,count:creatives.length,date:new Date().toLocaleString('ru-RU'),kind:'collection',collectionName:col.name});localStorage.setItem('neon-ad-intelligence-exports',JSON.stringify(history.slice(0,50)))}catch{}
+  renderExportHistory();notify('Подборка экспортирована',col.name+' · '+creatives.length+' креативов');
+ }catch(err){notify('Не удалось экспортировать подборку',err.message||'')}
 }
-$('#userCollectionGrid').addEventListener('click',e=>{const open=e.target.closest('[data-collection-open]'),rename=e.target.closest('[data-collection-rename]'),del=e.target.closest('[data-collection-delete]');if(open){renderCollectionView(open.dataset.collectionOpen);return}if(rename){const col=userCollections.find(x=>x.id===rename.dataset.collectionRename);if(!col)return;const next=window.prompt('Новое название подборки',col.name);if(next===null)return;const name=next.trim();if(!name){notify('Название не изменено','Название не может быть пустым.');return}if(userCollections.some(x=>x.id!==col.id&&x.name.toLocaleLowerCase('ru')===name.toLocaleLowerCase('ru'))){notify('Такое название уже есть','Выберите уникальное название.');return}col.name=name;persistUserCollections();renderUserCollections();if(activeCollectionId===col.id)renderCollectionView(col.id);notify('Название обновлено',name);return}if(del){const col=userCollections.find(x=>x.id===del.dataset.collectionDelete);if(!col)return;if(!window.confirm('Удалить подборку «'+col.name+'»? Сами креативы останутся в библиотеке.'))return;userCollections=userCollections.filter(x=>x.id!==col.id);persistUserCollections();if(activeCollectionId===col.id){activeCollectionId=null;$('#collectionView').hidden=true}renderUserCollections();notify('Подборка удалена',col.name)}});
-$('#userCollectionGrid').addEventListener('click',e=>{
+$('#userCollectionGrid').addEventListener('click',async e=>{
+ const open=e.target.closest('[data-collection-open]');
+ if(open){renderCollectionView(Number(open.dataset.collectionOpen));return}
+ const del=e.target.closest('[data-collection-delete]');
+ if(del){
+  const col=userCollections.find(x=>x.id===Number(del.dataset.collectionDelete));if(!col)return;
+  if(!window.confirm('Удалить подборку «'+col.name+'»? Сами креативы останутся в библиотеке.'))return;
+  try{await apiDelete('/api/v1/collections/'+col.id);if(activeCollectionId===col.id){activeCollectionId=null;$('#collectionView').hidden=true}await loadRealCollections();notify('Подборка удалена',col.name)}catch(err){notify('Не удалось удалить подборку',err.message||'')}
+  return;
+ }
  const duplicate=e.target.closest('[data-collection-duplicate]');
- if(duplicate){duplicateUserCollection(duplicate.dataset.collectionDuplicate);return}
+ if(duplicate){await duplicateUserCollection(Number(duplicate.dataset.collectionDuplicate));return}
  const exportButton=e.target.closest('[data-collection-export]');
- if(exportButton){exportUserCollection(exportButton.dataset.collectionExport);return}
+ if(exportButton){await exportUserCollection(Number(exportButton.dataset.collectionExport));return}
 });
 $('#cards').addEventListener('change',e=>{const input=e.target.closest('[data-test-idea]');if(!input)return;const id=input.dataset.testIdea;if(input.checked){if(!testIdeaIds.includes(id))testIdeaIds.push(id)}else testIdeaIds=testIdeaIds.filter(value=>value!==id);persistTestIdeaIds();$('#testCount').textContent=testIdeaIds.length+' креативов';notify(input.checked?'Добавлено в идеи для тестов':'Убрано из идей',input.closest('.creative')?.dataset.brand||'Демо-креатив')});
 $('#collectionView').addEventListener('click',e=>{if(e.target.closest('[data-collection-back]')){$('#collectionView').hidden=true;activeCollectionId=null;activeSystemCollection=null;return}const remove=e.target.closest('[data-collection-remove]');if(remove)removeFromCollection(remove.dataset.collectionRemove,remove.dataset.creativeId);const detail=e.target.closest('.detail');if(detail){const id=detail.closest('.creative')?.dataset.id;const original=$('#cards .creative[data-id="'+id+'"]');if(original)openDetail(original)}});
 $('#userCollectionGrid').parentElement.parentElement.querySelector('.collectiongrid').addEventListener('click',e=>{const button=e.target.closest('[data-system-collection]');if(button)renderSystemCollection(button.dataset.systemCollection)});
-$('#detailContent').addEventListener('click',e=>{const add=e.target.closest('#addCreativeToCollection');if(!add||!currentCard)return;const select=$('#addToCollection'),col=userCollections.find(x=>x.id===select.value);if(!col){notify('Выберите подборку','Сначала создайте подборку и выберите её в списке.');return}if(col.ids.includes(currentCard.dataset.id)){notify('Уже добавлен',col.name+' уже содержит этот креатив.');return}col.ids.push(currentCard.dataset.id);persistUserCollections();renderUserCollections();if(activeCollectionId)renderCollectionView(activeCollectionId);notify('Добавлено в подборку',col.name);select.value=''});
+$('#detailContent').addEventListener('click',async e=>{
+ const add=e.target.closest('#addCreativeToCollection');if(!add||!currentCard)return;
+ const select=$('#addToCollection'),col=userCollections.find(x=>x.id===Number(select.value));
+ if(!col){notify('Выберите подборку','Сначала создайте подборку и выберите её в списке.');return}
+ try{
+  await apiPost('/api/v1/collections/'+col.id+'/items',{group_key:currentCard.dataset.groupKey,creative_id:Number(currentCard.dataset.id)});
+  await loadRealCollections();if(activeCollectionId)await renderCollectionView(activeCollectionId);
+  notify('Добавлено в подборку',col.name);select.value='';
+ }catch(err){notify('Не удалось добавить',err.message||'')}
+});
 $('#export').addEventListener('click',()=>{const data=$$('#cards .creative').filter(c=>!c.hidden).map(c=>({brand:c.dataset.brand,platform:c.dataset.platform,format:c.dataset.format,text:c.dataset.copy,domain:c.dataset.domain,exampleDate:c.dataset.date,demo:true}));const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='neon-ad-intelligence-demo.json';a.click();URL.revokeObjectURL(url);try{const entries=JSON.parse(localStorage.getItem('neon-ad-intelligence-exports')||'[]');entries.unshift({filename:'neon-ad-intelligence-demo.json',count:data.length,date:new Date().toLocaleString('ru-RU'),demo:true});localStorage.setItem('neon-ad-intelligence-exports',JSON.stringify(entries.slice(0,50)))}catch{}renderExportHistory();notify('Экспорт подготовлен','JSON сформирован из '+data.length+' видимых демо-креативов.');});
 
 const PARSER_UI_SETTINGS_KEY='neon-ad-intelligence-parser-settings';
@@ -1077,18 +1157,25 @@ function applyBulkSavedState(save){
  cards.forEach(card=>{card.dataset.saved=save?'1':'0';const button=card.querySelector('.save');if(button){button.classList.toggle('saved',save);button.innerHTML=save?'<i data-lucide="bookmark-check"></i>':'<i data-lucide="bookmark"></i>'}});
  persistSavedCreativeIds();applyFilters();syncBulkCheckboxes();renderBulkActions();notify(save?'Креативы сохранены':'Сохранение отменено',cards.length+' выбранных креативов · локально');
 }
-function createBulkCollection(){
+async function createBulkCollection(){
  const cards=getSelectedCreativeCards();if(!cards.length)return;const response=window.prompt('Название новой подборки',cards.length===1?'Мой креатив':'Подборка из '+cards.length+' креативов');if(response===null)return;
  const name=response.trim();if(!name){notify('Подборка не создана','Название не может быть пустым.');return}
- if(userCollections.some(col=>col.name.toLocaleLowerCase('ru')===name.toLocaleLowerCase('ru'))){notify('Такое название уже есть','Выберите другое имя подборки.');return}
- const col={id:'collection-'+Date.now(),name,description:'Создана из выбранных креативов в библиотеке.',ids:cards.map(card=>card.dataset.id)};
- userCollections.unshift(col);persistUserCollections();renderUserCollections();renderBulkCollectionOptions();notify('Подборка создана',name+' · '+col.ids.length+' креативов');
+ try{
+  const created=await apiPost('/api/v1/collections',{name,description:'Создана из выбранных креативов в библиотеке.'});
+  for(const card of cards){await apiPost('/api/v1/collections/'+created.id+'/items',{group_key:card.dataset.groupKey,creative_id:Number(card.dataset.id)})}
+  await loadRealCollections();renderBulkCollectionOptions();
+  notify('Подборка создана',name+' · '+cards.length+' креативов');
+ }catch(err){notify('Не удалось создать подборку',err.message||'')}
 }
-function addSelectedToCollection(){
- const col=userCollections.find(item=>item.id===$('#bulkCollectionSelect').value),cards=getSelectedCreativeCards();
+async function addSelectedToCollection(){
+ const colId=Number($('#bulkCollectionSelect').value),col=userCollections.find(item=>item.id===colId),cards=getSelectedCreativeCards();
  if(!col){notify('Выберите подборку','Создайте или выберите пользовательскую подборку.');return}if(!cards.length)return;
- let added=0;cards.forEach(card=>{if(!col.ids.includes(card.dataset.id)){col.ids.push(card.dataset.id);added++}});
- persistUserCollections();renderUserCollections();if(activeCollectionId===col.id)renderCollectionView(col.id);renderBulkActions();notify(added?'Креативы добавлены':'Все креативы уже есть',added?added+' новых элементов · '+col.name:col.name+' не изменилась');
+ let added=0;
+ try{
+  for(const card of cards){await apiPost('/api/v1/collections/'+col.id+'/items',{group_key:card.dataset.groupKey,creative_id:Number(card.dataset.id)});added++}
+  await loadRealCollections();if(activeCollectionId===col.id)await renderCollectionView(col.id);renderBulkActions();
+  notify(added?'Креативы добавлены':'Нечего добавлять',added?added+' элементов · '+col.name:col.name);
+ }catch(err){notify('Не удалось добавить в подборку',err.message||'')}
 }
 function exportSelectedCreatives(){
  const cards=getSelectedCreativeCards();if(!cards.length)return;
@@ -1230,7 +1317,7 @@ function buildRealCardHtml(group){
  const artInner=rep.image_url
   ?('<img src="'+escapeHTML(rep.image_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:13px">')
   :('<span class="kicker">'+escapeHTML(brand)+'</span><strong>'+escapeHTML(headline)+'</strong><p>'+escapeHTML(copy).slice(0,160)+'</p><span class="cta">Открыть ↗</span>');
- return '<article class="creative" data-id="'+escapeHTML(String(rep.id))+'" data-platform="'+escapeHTML(platform)+'" data-format="'+escapeHTML(format)+'" data-brand="'+escapeHTML(brand)+'" data-copy="'+escapeHTML(copy)+'" data-domain="'+escapeHTML(brand)+'" data-date="'+escapeHTML(dateStr)+'" data-destination="'+escapeHTML(rep.destination_url||'')+'">'
+ return '<article class="creative" data-id="'+escapeHTML(String(rep.id))+'" data-group-key="'+escapeHTML(group.group_key)+'" data-platform="'+escapeHTML(platform)+'" data-format="'+escapeHTML(format)+'" data-brand="'+escapeHTML(brand)+'" data-copy="'+escapeHTML(copy)+'" data-domain="'+escapeHTML(brand)+'" data-date="'+escapeHTML(dateStr)+'" data-destination="'+escapeHTML(rep.destination_url||'')+'">'
   +'<div class="preview"><span class="platform"><i data-lucide="network"></i> '+escapeHTML(platform)+'</span><button class="save" aria-label="Сохранить креатив"><i data-lucide="bookmark"></i></button><div class="adart"'+(rep.image_url?' style="padding:0;overflow:hidden"':'')+'>'+artInner+'</div></div>'
   +'<div class="cardbody"><div class="cardtop"><span class="brand">'+escapeHTML(brand)+'</span><span class="format">'+escapeHTML(format)+'</span></div><p class="copy">'+escapeHTML(copy)+'</p><div class="metadata"><div><span>Впервые замечено</span><strong>'+escapeHTML(firstSeenStr)+'</strong></div><div><span>Площадки</span><strong>'+escapeHTML((group.platforms||[]).join(', ')||platform)+'</strong></div></div><div class="cardfoot"><span class="source">Реальные данные ParsYa</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div>'
   +'</article>';
@@ -1283,6 +1370,20 @@ async function loadRealCoverage(){
   grid.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>';
  }
 }
+async function loadJobCreatives(jobId,jobName){
+ try{
+  const data=await api('/api/v1/creatives',{job_id:jobId,limit:60,sort:'recent'});
+  const groups=groupRealCreatives(data.items);
+  $('#cards').innerHTML=groups.map(buildRealCardHtml).join('')||'';
+  wireCardButtons();applyFilters();if(window.lucide)lucide.createIcons();
+  setTab('library');
+  notify('Показаны результаты запуска',jobName+' · '+groups.length+' креативов');
+ }catch(err){notify('Не удалось загрузить результаты запуска',err.message||'')}
+}
+$('#jobList').addEventListener('click',e=>{
+ const btn=e.target.closest('[data-show-job]');if(!btn)return;
+ loadJobCreatives(Number(btn.dataset.showJob),btn.dataset.jobName||'');
+});
 
 renderSavedSearches();setTab('library');loadRealLibrary();
 </script>
