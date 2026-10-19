@@ -328,8 +328,8 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
  <div class="content">
   <section class="headline"><div><div class="eyebrow">AD INTELLIGENCE / CREATIVE RESEARCH</div><h1 class="h1" id="pageTitle">Найдите рекламу раньше конкурентов</h1><div class="subtitle" id="pageSubtitle">Исследуйте креативы, отслеживайте рекламные подходы и сохраняйте находки в одном рабочем пространстве.</div></div><button class="primary" id="topAction"><i data-lucide="radar"></i><span>Новое сканирование</span><span class="spark">↗</span></button></section>
   <section class="summary">
-   <article class="stat"><div class="stathead">Креативы в демо-библиотеке <span class="staticon"><i data-lucide="layers"></i></span></div><div class="statvalue">06</div><div class="statfoot">Примеры карточек для проверки UI</div></article>
-   <article class="stat"><div class="stathead">Источники в макете <span class="staticon violet"><i data-lucide="radar"></i></span></div><div class="statvalue">04</div><div class="statfoot">Не означает реальное подключение</div></article>
+   <article class="stat"><div class="stathead">Креативов найдено <span class="staticon"><i data-lucide="layers"></i></span></div><div class="statvalue" id="realCreativesStat">—</div><div class="statfoot">реальные данные ParsYa</div></article>
+   <article class="stat"><div class="stathead">Площадок <span class="staticon violet"><i data-lucide="radar"></i></span></div><div class="statvalue" id="realPlatformsStat">—</div><div class="statfoot">реальные источники под наблюдением</div></article>
    <article class="stat"><div class="stathead">Сохранено креативов <span class="staticon gray"><i data-lucide="bookmark-check"></i></span></div><div class="statvalue" id="savedStat">00</div><div class="statfoot">Сохраняется в этом браузере</div></article>
    <article class="stat"><div class="stathead">Задачи сканирования <span class="staticon amber"><i data-lucide="scan-search"></i></span></div><div class="statvalue" id="jobsStat">03</div><div class="statfoot">Тестовые статусы интерфейса</div></article>
   </section>
@@ -395,7 +395,7 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
    </section>
   <section class="panel" data-panel="collections" hidden><div class="resulthead"><div><h2>Подборки креативов</h2><p>Собирайте идеи, наблюдайте за конкурентами и готовьте гипотезы для тестов.</p></div><button class="primary" id="newCollection"><i data-lucide="folder-plus"></i> Новая подборка</button></div><div class="collectiongrid"><article class="collection"><div class="collectionicon"><i data-lucide="target"></i></div><h3>Конкуренты</h3><p>Все креативы библиотеки для наблюдения за сообщениями, форматами и предложениями.</p><div class="collectionfoot"><span>Системная подборка</span><strong id="competitorCount">6 креативов</strong></div><button class="secondary systemcollectionopen" type="button" data-system-collection="competitors">Открыть библиотеку</button></article><article class="collection"><div class="collectionicon" style="background:#f1edff;color:#8064d9"><i data-lucide="flask-conical"></i></div><h3>Идеи для тестов</h3><p>Креативы, которые вы отдельно отметили для будущих рекламных экспериментов.</p><div class="collectionfoot"><span>Отмечено вами</span><strong id="testCount">0 креативов</strong></div><button class="secondary systemcollectionopen" type="button" data-system-collection="testIdeas">Открыть идеи</button></article><article class="collection"><div class="collectionicon" style="background:#fff4e4;color:#a97724"><i data-lucide="bookmark-check"></i></div><h3>Все сохранённые</h3><p>Все креативы, добавленные в избранное. Избранное и идеи для тестов ведутся отдельно.</p><div class="collectionfoot"><span>Обновляется автоматически</span><strong id="allSavedCount">0 креативов</strong></div><button class="secondary systemcollectionopen" type="button" data-system-collection="saved">Открыть избранное</button></article></div><div class="usercollections" id="userCollections" hidden><div class="resulthead"><div><h2>Мои подборки</h2><p>Подборки сохраняются в этом браузере; серверная синхронизация не подключена.</p></div></div><div class="collectiongrid" id="userCollectionGrid"></div></div><div class="collectionview" id="collectionView" hidden></div><div class="resulthead"><div><h2>Сохранённые креативы</h2><p>Избранное отдельно от пользовательских подборок. Оно хранится в этом браузере, но не синхронизируется с сервером.</p></div></div><div class="cards" id="collectionCards"></div><div class="empty" id="collectionEmpty"><i data-lucide="bookmark"></i><strong>Пока нет сохранённых креативов</strong>Нажмите на закладку в библиотеке, чтобы добавить первый.</div></section>
   <section class="panel" data-panel="scans" hidden><div class="resulthead"><div><h2>Задачи сканирования</h2><p>Контролируйте запуски, результаты распознавания и ошибки источников.</p></div><button class="primary" id="newScan"><i data-lucide="plus"></i> Новое сканирование</button></div><div class="summary"><article class="stat"><div class="stathead">Всего задач</div><div class="statvalue" id="jobTotal">03</div><div class="statfoot">Демонстрационные записи</div></article><article class="stat"><div class="stathead">Завершено</div><div class="statvalue">01</div><div class="statfoot">Не реальные результаты</div></article><article class="stat"><div class="stathead">Нужна проверка</div><div class="statvalue">01</div><div class="statfoot">Пример частичного результата</div></article><article class="stat"><div class="stathead">Ошибки источников</div><div class="statvalue">01</div><div class="statfoot">Пример статуса</div></article></div><div class="scan-controls"><label class="scan-search"><i data-lucide="search"></i><input id="jobSearch" type="search" placeholder="Поиск задач по названию или источнику" aria-label="Поиск задач сканирования"></label><label class="scan-status-filter"><span>Статус</span><select id="jobStatusFilter" aria-label="Фильтр задач по статусу"><option value="all">Все статусы</option><option value="queued">В очереди</option><option value="running">Выполняется</option><option value="completed">Завершено</option><option value="partial">Частичный результат</option><option value="failed">Ошибка</option><option value="stopped">Остановлено</option></select></label><button class="secondary" id="resetJobFilters" type="button">Сбросить</button></div><div class="scan-demo-note"><i data-lucide="flask-conical"></i><span><strong>Интерактивная симуляция.</strong> Кнопки меняют локальные демонстрационные статусы и не запускают сканирование источников.</span></div><div class="joblist" id="jobList"><article class="job"><div class="jobname"><div class="jobicon"><i data-lucide="network"></i></div><div><strong>Тест источника · Яндекс / РСЯ</strong><span>Демо-задача · 12 окт 2026, 10:42</span></div></div><div class="jobmeta"><strong>18 элементов</strong><span>Вымышленные данные</span></div><div class="jobmeta"><strong>72%</strong><span>Условное распознавание</span></div><span class="status partial">Частичный результат</span></article><article class="job"><div class="jobname"><div class="jobicon" style="background:#eaf8ef;color:#16884b"><i data-lucide="share-2"></i></div><div><strong>Тест источника · VK Ads</strong><span>Демо-задача · 12 окт 2026, 09:15</span></div></div><div class="jobmeta"><strong>24 элемента</strong><span>Вымышленные данные</span></div><div class="jobmeta"><strong>100%</strong><span>Условное распознавание</span></div><span class="status">Завершено</span></article><article class="job"><div class="jobname"><div class="jobicon" style="background:#fff0f0;color:#b84a4a"><i data-lucide="globe"></i></div><div><strong>Тест источника · Web display</strong><span>Демо-задача · 11 окт 2026, 18:20</span></div></div><div class="jobmeta"><strong>—</strong><span>Элементов в примере</span></div><div class="jobmeta"><strong>—</strong><span>Распознавание</span></div><span class="status failed">Ошибка источника</span></article></div><div class="note"><strong>Демонстрационные задачи.</strong> Статусы, объёмы и проценты не получены из реального парсера и нужны только для проверки UI.</div></section>
-  <section class="panel" data-panel="coverage" hidden><div class="resulthead"><div><h2>Источники и качество парсинга</h2><p>Разделяйте найденные рекламные элементы и полностью распознанные креативы.</p></div></div><div class="coveragegrid"><article class="coverage"><div class="coveragetop"><strong>Яндекс / РСЯ</strong><span class="status partial">Тестовый</span></div><div class="coveragevalue">72%</div><p>Условная доля распознанных элементов в макете</p><div class="progress"><span style="width:72%"></span></div><p>Реальные данные появятся после интеграции адаптера.</p></article><article class="coverage"><div class="coveragetop"><strong>VK Ads</strong><span class="status">Тестовый</span></div><div class="coveragevalue">100%</div><p>Условная доля распознанных элементов в макете</p><div class="progress"><span style="width:100%"></span></div><p>Это не подтверждение реального покрытия.</p></article><article class="coverage"><div class="coveragetop"><strong>Web display</strong><span class="status failed">Требует проверки</span></div><div class="coveragevalue">—</div><p>Нет подтверждённых данных о качестве источника</p><div class="progress"><span style="width:4%;background:#d7dce2"></span></div><p>При интеграции будут доступны ошибки и версия парсера.</p></article></div><div class="note"><strong>Принцип достоверности.</strong> Все проценты на этом экране условные. В рабочей версии появятся время последнего успешного запуска, версия адаптера, найденные элементы, распознанные креативы и примеры неизвестной разметки.</div></section>
+  <section class="panel" data-panel="coverage" hidden><div class="resulthead"><div><h2>Источники и качество парсинга</h2><p>Реальная статистика по собранным данным: сколько креативов распознано и у скольких найден рекламодатель.</p></div></div><div class="coveragegrid" id="coverageGrid"><div class="empty"><strong>Загрузка…</strong></div></div><div class="note" id="coverageNote"><strong>Данные ParsYa.</strong> Процент — доля креативов на площадке с раскрытым рекламодателем (имя + ИНН).</div></section>
   <section class="panel" data-panel="settings" hidden>
    <div class="resulthead"><div><h2>Настройки парсера</h2><p>Управляйте сбором данных, сохранением артефактов и качеством распознавания.</p></div><button class="primary" id="saveParserSettings"><i data-lucide="save"></i> Сохранить настройки</button></div>
    <div class="settingslayout">
@@ -456,7 +456,18 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
 <div class="modalwrap" id="modalWrap"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h2 id="modalTitle">Новое сканирование</h2><p id="modalDesc">Создайте демонстрационную задачу.</p><form id="taskForm"><div class="field"><label for="taskName" id="taskNameLabel">Название задачи</label><input id="taskName" required placeholder="Например, конкуренты в нише" maxlength="80"></div><div class="field" id="collectionDescriptionField" hidden><label for="collectionDescription">Описание подборки (необязательно)</label><textarea id="collectionDescription" class="collectiondesc" maxlength="240" placeholder="Например, сильные офферы и визуальные подходы конкурентов"></textarea></div><div class="field"><label for="taskSource">Источник</label><select id="taskSource"><option>Яндекс / РСЯ</option><option>VK Ads</option><option>Telegram Ads</option><option>Web display</option></select></div><div class="field"><label for="taskTarget">Стартовый URL или примечание (необязательно)</label><input id="taskTarget" placeholder="https://example.com"></div><div class="note">Макет добавит задачу в демонстрационный список. Он не запускает сетевые запросы и не выполняет настоящий парсинг.</div><div class="modalactions"><button type="button" class="secondary" id="cancelModal">Отмена</button><button type="submit" class="primary">Создать задачу</button></div></form></div></div>
 <div class="toast" id="toast"><strong id="toastTitle">Готово</strong><span id="toastText"></span></div>
 <script>
-if (!JSON.parse(localStorage.getItem("parsya_session") || "null")) { location.replace("index.html"); }
+const session=JSON.parse(localStorage.getItem("parsya_session")||"null");
+if (!session) { location.replace("index.html"); }
+const DEFAULT_API_BASE="https://xn--80ak2afbe.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai";
+const API_BASE=(localStorage.getItem("parsya_api_base")||DEFAULT_API_BASE).replace(/\/+$/,"");
+async function api(path,params){
+ const url=new URL(API_BASE+path);
+ Object.entries(params||{}).forEach(([k,v])=>{if(v!==undefined&&v!=="")url.searchParams.set(k,v)});
+ const res=await fetch(url,{headers:{Authorization:"Bearer "+session.token}});
+ if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
+ if(!res.ok)throw new Error("API error "+res.status);
+ return res.json();
+}
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 if(window.lucide)lucide.createIcons();
 let savedOnly=false,currentCard=null,toastTimer=null;
@@ -514,7 +525,7 @@ function renderAdvertisers(){
  const host=$('#advertiserList');if(!host)return;host.innerHTML='';
  const grouped=new Map();
  $$('#cards .creative').forEach(card=>{const name=card.dataset.brand||'Не определено';const item=grouped.get(name)||{name,count:0,last:card.dataset.date||''};item.count++;if(dateKey(card)>dateKey({dataset:{date:item.last}}))item.last=card.dataset.date||item.last;grouped.set(name,item)});
- [...grouped.values()].sort((a,b)=>a.name.localeCompare(b.name,'ru')).forEach(item=>{const row=document.createElement('article');row.className='job';const name=document.createElement('div');name.className='jobname';const icon=document.createElement('div');icon.className='jobicon';icon.innerHTML='<i data-lucide="building-2"></i>';const copy=document.createElement('div');const title=document.createElement('strong');title.textContent=item.name;const meta=document.createElement('span');meta.textContent='Демо-рекламодатель · без подтверждённой идентификации';copy.append(title,meta);name.append(icon,copy);const count=document.createElement('div');count.className='jobmeta';const countStrong=document.createElement('strong');countStrong.textContent=item.count+' '+(item.count===1?'креатив':item.count<5?'креатива':'креативов');const countMeta=document.createElement('span');countMeta.textContent='В библиотеке';count.append(countStrong,countMeta);const last=document.createElement('div');last.className='jobmeta';const lastStrong=document.createElement('strong');lastStrong.textContent=item.last||'Не определено';const lastMeta=document.createElement('span');lastMeta.textContent='Дата в демо';last.append(lastStrong,lastMeta);const action=document.createElement('button');action.className='secondary';action.type='button';action.dataset.advertiserFilter=item.name;action.textContent='Показать креативы';row.append(name,count,last,action);host.append(row)});
+ [...grouped.values()].sort((a,b)=>a.name.localeCompare(b.name,'ru')).forEach(item=>{const row=document.createElement('article');row.className='job';const name=document.createElement('div');name.className='jobname';const icon=document.createElement('div');icon.className='jobicon';icon.innerHTML='<i data-lucide="building-2"></i>';const copy=document.createElement('div');const title=document.createElement('strong');title.textContent=item.name;const meta=document.createElement('span');meta.textContent='По домену — не подтверждённое юрлицо, если не раскрыто отдельно';copy.append(title,meta);name.append(icon,copy);const count=document.createElement('div');count.className='jobmeta';const countStrong=document.createElement('strong');countStrong.textContent=item.count+' '+(item.count===1?'креатив':item.count<5?'креатива':'креативов');const countMeta=document.createElement('span');countMeta.textContent='В библиотеке';count.append(countStrong,countMeta);const last=document.createElement('div');last.className='jobmeta';const lastStrong=document.createElement('strong');lastStrong.textContent=item.last||'Не определено';const lastMeta=document.createElement('span');lastMeta.textContent='Последний показ';last.append(lastStrong,lastMeta);const action=document.createElement('button');action.className='secondary';action.type='button';action.dataset.advertiserFilter=item.name;action.textContent='Показать креативы';row.append(name,count,last,action);host.append(row)});
  if(window.lucide)lucide.createIcons()
 }
 function renderExportHistory(){
@@ -526,7 +537,7 @@ function renderExportHistory(){
 }
 function saveAlertSettings(){const value={newCreative:$('#alertNewCreative').checked,parserError:$('#alertParserError').checked,repeatSeen:$('#alertRepeatSeen').checked};try{localStorage.setItem('neon-ad-intelligence-alerts',JSON.stringify(value));notify('Правила сохранены','Настройки сохранены в этом браузере. Уведомления не отправляются.')}catch{notify('Не удалось сохранить','Хранилище браузера недоступно.')}}
 function restoreAlertSettings(){const value=loadAlertSettings();$('#alertNewCreative').checked=!!value.newCreative;$('#alertParserError').checked=!!value.parserError;$('#alertRepeatSeen').checked=!!value.repeatSeen}
-function setTab(tab){$$('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));$$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===tab));$$('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==tab);const titles={compare:['Сравнение креативов','Сопоставляйте сообщения, форматы и рекламодателей на одних условиях.','Сравнение'],advertisers:['Рекламодатели','Обзор брендов, обнаруженных в демонстрационной библиотеке.','Рекламодатели'],alerts:['Оповещения','Настройте локальные правила для будущего мониторинга.','Оповещения'],exports:['История экспорта','Проверяйте подготовленные выгрузки из демонстрационной библиотеки.','Экспорт'],library:['Найдите рекламу раньше конкурентов','Исследуйте креативы, отслеживайте рекламные подходы и сохраняйте находки в одном рабочем пространстве.','Новое сканирование'],collections:['Ваши подборки креативов','Собирайте идеи, наблюдайте за конкурентами и готовьте гипотезы для тестов.','Новая подборка'],scans:['Контроль задач парсинга','Следите за прогрессом, распознаванием и ошибками по каждому источнику.','Новое сканирование'],coverage:['Качество данных под контролем','Понимайте, что найдено, что распознано и где парсеру нужна доработка.','Источники и качество'],settings:['Настройки парсера','Хранение артефактов, версии адаптеров и безопасная обработка неизвестной разметки.','Настройки'],integrations:['Источники и интеграции','Подключения к реальным источникам появятся после интеграции адаптеров.','Интеграции']};const t=titles[tab]||titles.library;$('#pageTitle').textContent=t[0];$('#pageSubtitle').textContent=t[1];$('#topAction span:not(.spark)').textContent=t[2];$('#crumb').textContent='Ad Intelligence / '+({library:'Библиотека',compare:'Сравнение',collections:'Подборки',scans:'Сканирования',coverage:'Качество',advertisers:'Рекламодатели',alerts:'Оповещения',exports:'История экспорта',settings:'Настройки',integrations:'Интеграции'}[tab]||'Библиотека');$('#topAction').style.display=['library','scans'].includes(tab)?'inline-flex':'none';if(tab==='collections')updateSaved();if(tab==='advertisers')renderAdvertisers();if(tab==='exports')renderExportHistory();if(window.lucide)lucide.createIcons()}
+function setTab(tab){$$('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));$$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===tab));$$('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==tab);const titles={compare:['Сравнение креативов','Сопоставляйте сообщения, форматы и рекламодателей на одних условиях.','Сравнение'],advertisers:['Рекламодатели','Обзор брендов, обнаруженных в демонстрационной библиотеке.','Рекламодатели'],alerts:['Оповещения','Настройте локальные правила для будущего мониторинга.','Оповещения'],exports:['История экспорта','Проверяйте подготовленные выгрузки из демонстрационной библиотеки.','Экспорт'],library:['Найдите рекламу раньше конкурентов','Исследуйте креативы, отслеживайте рекламные подходы и сохраняйте находки в одном рабочем пространстве.','Новое сканирование'],collections:['Ваши подборки креативов','Собирайте идеи, наблюдайте за конкурентами и готовьте гипотезы для тестов.','Новая подборка'],scans:['Контроль задач парсинга','Следите за прогрессом, распознаванием и ошибками по каждому источнику.','Новое сканирование'],coverage:['Качество данных под контролем','Понимайте, что найдено, что распознано и где парсеру нужна доработка.','Источники и качество'],settings:['Настройки парсера','Хранение артефактов, версии адаптеров и безопасная обработка неизвестной разметки.','Настройки'],integrations:['Источники и интеграции','Подключения к реальным источникам появятся после интеграции адаптеров.','Интеграции']};const t=titles[tab]||titles.library;$('#pageTitle').textContent=t[0];$('#pageSubtitle').textContent=t[1];$('#topAction span:not(.spark)').textContent=t[2];$('#crumb').textContent='Ad Intelligence / '+({library:'Библиотека',compare:'Сравнение',collections:'Подборки',scans:'Сканирования',coverage:'Качество',advertisers:'Рекламодатели',alerts:'Оповещения',exports:'История экспорта',settings:'Настройки',integrations:'Интеграции'}[tab]||'Библиотека');$('#topAction').style.display=['library','scans'].includes(tab)?'inline-flex':'none';if(tab==='collections')updateSaved();if(tab==='advertisers')renderAdvertisers();if(tab==='exports')renderExportHistory();if(tab==='coverage')loadRealCoverage();if(window.lucide)lucide.createIcons()}
 $$('[data-tab]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));$$('[data-view]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.view)));
 $('#query').addEventListener('input',applyFilters);['platform','format','savedFilter','sort'].forEach(id=>$('#'+id).addEventListener('change',applyFilters));
 $('#advancedToggle').addEventListener('click',()=>{const open=$('#advancedFilters').hidden;$('#advancedFilters').hidden=!open;$('#advancedToggle').setAttribute('aria-expanded',String(open));$('#advancedToggle').classList.toggle('primary',open)});
@@ -1178,7 +1189,102 @@ $('#saveCurrentComparison').addEventListener('click',saveCurrentComparison);$('#
 $('#savedComparisonsList').addEventListener('click',event=>{const apply=event.target.closest('[data-apply-comparison]');if(apply){const item=savedComparisons.find(value=>value.id===apply.dataset.applyComparison);if(item)applySavedComparison(item);return}const remove=event.target.closest('[data-delete-comparison]');if(!remove)return;const item=savedComparisons.find(value=>value.id===remove.dataset.deleteComparison);if(!item)return;if(!window.confirm('Удалить сравнение «'+item.name+'»?'))return;savedComparisons=savedComparisons.filter(value=>value.id!==item.id);if(!persistSavedComparisons()){savedComparisons.push(item);renderSavedComparisons();return}renderSavedComparisons();notify('Сравнение удалено',item.name)});
 renderComparisonCandidates();
 
-renderSavedSearches();applyFilters();setTab('library');
+/* ---------- Реальные данные ParsYa вместо демо-карточек ---------- */
+function formatRuDate(iso){
+ const months=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+ try{const d=new Date(String(iso||'').replace(' ','T'));if(isNaN(d.getTime()))return '';return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear()}catch{return ''}
+}
+function realPlatformLabel(detectionMethod){
+ const m=detectionMethod||'';
+ if(m.startsWith('vk-native'))return 'VK Ads';
+ if(m.startsWith('google-ads'))return 'Google Ads';
+ if(m.startsWith('taboola'))return 'Taboola';
+ if(m.startsWith('native-feed'))return 'Яндекс Дзен';
+ return 'Яндекс / РСЯ';
+}
+function ensurePlatformOption(value){
+ const select=$('#platform');if(!select)return;
+ if(![...select.options].some(o=>o.value===value)){const opt=document.createElement('option');opt.textContent=value;select.appendChild(opt)}
+}
+function groupRealCreatives(items){
+ const groups={},order=[];
+ for(const row of items){
+  const key=row.content_fingerprint||('hash:'+row.creative_hash);
+  if(!groups[key]){groups[key]={group_key:key,representative:row,platforms:[],first_seen_at:row.captured_at,last_seen_at:row.captured_at};order.push(key)}
+  const g=groups[key];
+  if(!g.platforms.includes(row.platform))g.platforms.push(row.platform);
+  if(row.captured_at<g.first_seen_at)g.first_seen_at=row.captured_at;
+  if(row.captured_at>=g.last_seen_at){g.last_seen_at=row.captured_at;g.representative=row}
+ }
+ return order.map(k=>groups[k]);
+}
+function buildRealCardHtml(group){
+ const rep=group.representative;
+ const platform=realPlatformLabel(rep.detection_method);
+ const format=rep.image_url?'Изображение':'Нативное';
+ const brand=rep.domain||'Неизвестно';
+ const copy=rep.description||rep.title||'Без текста объявления';
+ const headline=rep.title||rep.domain||'Без заголовка';
+ const dateStr=formatRuDate(group.last_seen_at||rep.captured_at);
+ const firstSeenStr=formatRuDate(group.first_seen_at)||dateStr;
+ const artInner=rep.image_url
+  ?('<img src="'+escapeHTML(rep.image_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:13px">')
+  :('<span class="kicker">'+escapeHTML(brand)+'</span><strong>'+escapeHTML(headline)+'</strong><p>'+escapeHTML(copy).slice(0,160)+'</p><span class="cta">Открыть ↗</span>');
+ return '<article class="creative" data-id="'+escapeHTML(String(rep.id))+'" data-platform="'+escapeHTML(platform)+'" data-format="'+escapeHTML(format)+'" data-brand="'+escapeHTML(brand)+'" data-copy="'+escapeHTML(copy)+'" data-domain="'+escapeHTML(brand)+'" data-date="'+escapeHTML(dateStr)+'" data-destination="'+escapeHTML(rep.destination_url||'')+'">'
+  +'<div class="preview"><span class="platform"><i data-lucide="network"></i> '+escapeHTML(platform)+'</span><button class="save" aria-label="Сохранить креатив"><i data-lucide="bookmark"></i></button><div class="adart"'+(rep.image_url?' style="padding:0;overflow:hidden"':'')+'>'+artInner+'</div></div>'
+  +'<div class="cardbody"><div class="cardtop"><span class="brand">'+escapeHTML(brand)+'</span><span class="format">'+escapeHTML(format)+'</span></div><p class="copy">'+escapeHTML(copy)+'</p><div class="metadata"><div><span>Впервые замечено</span><strong>'+escapeHTML(firstSeenStr)+'</strong></div><div><span>Площадки</span><strong>'+escapeHTML((group.platforms||[]).join(', ')||platform)+'</strong></div></div><div class="cardfoot"><span class="source">Реальные данные ParsYa</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div>'
+  +'</article>';
+}
+function wireCardButtons(){
+ $$('#cards .save').forEach(b=>b.addEventListener('click',()=>{
+  const c=b.closest('.creative');c.dataset.saved=c.dataset.saved==='1'?'0':'1';persistSavedCreativeIds();
+  b.classList.toggle('saved',c.dataset.saved==='1');b.innerHTML=c.dataset.saved==='1'?'<i data-lucide="bookmark-check"></i>':'<i data-lucide="bookmark"></i>';
+  if(window.lucide)lucide.createIcons();applyFilters();
+  notify(c.dataset.saved==='1'?'Креатив сохранён':'Сохранение отменено',c.dataset.brand);
+ }));
+ $$('#cards .detail').forEach(b=>b.addEventListener('click',()=>openDetail(b.closest('.creative'))));
+}
+async function loadRealLibrary(){
+ try{
+  const data=await api('/api/v1/creatives',{sort:'recent',limit:60});
+  const groups=groupRealCreatives(data.items);
+  groups.forEach(g=>ensurePlatformOption(realPlatformLabel(g.representative.detection_method)));
+  $('#cards').innerHTML=groups.map(buildRealCardHtml).join('');
+  $$('#cards .creative').forEach(card=>{
+   if(savedCreativeIds.includes(card.dataset.id)){card.dataset.saved='1';const btn=card.querySelector('.save');if(btn){btn.classList.add('saved');btn.innerHTML='<i data-lucide="bookmark-check"></i>'}}
+  });
+  const platforms=await api('/api/v1/platforms',{});
+  $('#realCreativesStat').textContent=data.total;
+  $('#realPlatformsStat').textContent=platforms.items.length;
+  wireCardButtons();
+  applyFilters();
+  if(window.lucide)lucide.createIcons();
+ }catch(e){
+  notify('Не удалось загрузить реальные данные',e.message||'Проверьте соединение с сервисом');
+ }
+}
+
+let coverageLoaded=false;
+async function loadRealCoverage(){
+ if(coverageLoaded)return;
+ const grid=$('#coverageGrid');if(!grid)return;
+ try{
+  const data=await api('/api/v1/coverage',{});
+  if(!data.platforms.length){grid.innerHTML='<div class="empty"><strong>Пока нет данных</strong>Запустите сканирование.</div>';return}
+  grid.innerHTML=data.platforms.map(p=>{
+   const advPct=p.total?Math.round((p.with_advertiser/p.total)*100):0;
+   const recPct=p.total?Math.round((p.recognized/p.total)*100):0;
+   const statusClass=advPct>=40?'':advPct>0?'partial':'failed';
+   const statusLabel=advPct>=40?'Хорошо':advPct>0?'Частично':'Нет раскрытий';
+   return '<article class="coverage"><div class="coveragetop"><strong>'+escapeHTML(p.platform)+'</strong><span class="status '+statusClass+'">'+statusLabel+'</span></div><div class="coveragevalue">'+advPct+'%</div><p>креативов с раскрытым рекламодателем</p><div class="progress"><span style="width:'+advPct+'%"></span></div><p>'+p.total+' креативов · распознано '+recPct+'% · последний сбор '+escapeHTML((p.last_captured_at||'—').replace('T',' ').slice(0,16))+'</p></article>';
+  }).join('');
+  coverageLoaded=true;
+ }catch(e){
+  grid.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>';
+ }
+}
+
+renderSavedSearches();setTab('library');loadRealLibrary();
 </script>
 </body>
 </html>
