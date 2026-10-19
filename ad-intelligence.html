@@ -405,6 +405,7 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
     <button class="tab" type="button" data-subtab="crossplatform">Площадки</button>
     <button class="tab" type="button" data-subtab="discounts">Скидки</button>
     <button class="tab" type="button" data-subtab="apps">Приложения</button>
+    <button class="tab" type="button" data-subtab="carousels">Карусели</button>
    </div>
    <div data-subpanel="coverage">
     <div class="resulthead"><div><p>Реальная статистика по собранным данным: сколько креативов распознано и у скольких найден рекламодатель.</p></div></div>
@@ -430,6 +431,10 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
    <div data-subpanel="apps" hidden>
     <div class="resulthead"><div><p>Креативы, рекламирующие мобильные приложения (App Store / Google Play).</p></div></div>
     <div class="joblist" id="appsFeed"><div class="empty"><strong>Загрузка…</strong></div></div>
+   </div>
+   <div data-subpanel="carousels" hidden>
+    <div class="resulthead"><div><p>Объявления, показанные в одной и той же рекламной карусели — конкурентный контекст: кто ещё крутится рядом с вашим объявлением.</p></div></div>
+    <div id="carouselsFeed"><div class="empty"><strong>Загрузка…</strong></div></div>
    </div>
   </section>
   <section class="panel" data-panel="settings" hidden>
@@ -1461,7 +1466,7 @@ async function loadRealCoverage(){
  }catch(e){
   grid.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>';
  }
- loadNetworkBreakdown();loadFreshFeed();loadCrossPlatform();loadDiscountsFeed();loadAppsFeed();
+ loadNetworkBreakdown();loadFreshFeed();loadCrossPlatform();loadDiscountsFeed();loadAppsFeed();loadCarouselsFeed();
 }
 async function loadCrossPlatform(){
  const el=$('#crossPlatform');if(!el)return;
@@ -1527,6 +1532,25 @@ async function loadAppsFeed(){
   if(window.lucide)lucide.createIcons();
  }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
 }
+async function loadCarouselsFeed(){
+ const el=$('#carouselsFeed');if(!el)return;
+ try{
+  const data=await api('/api/v1/analytics/carousels',{});
+  if(!data.items.length){el.innerHTML='<div class="empty"><strong>Карусели пока не найдены</strong>Появятся, когда объявление будет распознано как часть прокручиваемой карусели.</div>';return}
+  el.innerHTML=data.items.map(g=>{
+   const members=g.members.map(m=>{
+    const icon=m.image_url?('<img src="'+escapeHTML(m.image_url)+'" alt="" style="width:32px;height:32px;border-radius:9px;object-fit:cover">'):'<div class="jobicon" style="width:32px;height:32px"><i data-lucide="image"></i></div>';
+    const pos=(m.carousel_slide_index!==null&&m.carousel_slide_index!==undefined)?('#'+(m.carousel_slide_index+1)+' '):'';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0">'+icon+'<div><strong style="font-size:13px">'+escapeHTML(pos+(m.domain||'Без домена'))+'</strong><div style="font-size:12px;opacity:.7">'+escapeHTML((m.title||'').slice(0,70))+'</div></div></div>';
+   }).join('');
+   return '<article class="job" style="flex-direction:column;align-items:stretch;gap:4px">'+
+    '<div class="jobname"><div class="jobicon"><i data-lucide="gallery-horizontal"></i></div><div><strong>Карусель · '+escapeHTML(g.platform||'')+'</strong><span>'+g.member_count+' объявлений рядом · последний показ '+escapeHTML((g.last_seen_at||'').replace('T',' ').slice(0,16))+'</span></div></div>'+
+    '<div style="padding-left:52px">'+members+'</div>'+
+   '</article>';
+  }).join('');
+  if(window.lucide)lucide.createIcons();
+ }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
+}
 async function loadRealDetail(id){
  if(!id)return;
  try{
@@ -1545,6 +1569,7 @@ async function loadRealDetail(id){
    if(cr.discount_percent)rows.push('<div class="detailfield"><span>Скидка</span><strong>'+escapeHTML(String(cr.discount_percent))+'%</strong></div>');
    if(cr.erid)rows.push('<div class="detailfield"><span>Маркировка интернет-рекламы (ERID)</span><strong class="mono">'+escapeHTML(cr.erid)+'</strong></div>');
    if(cr.app_package_id||cr.app_store_id)rows.push('<div class="detailfield"><span>Приложение</span><strong class="mono">'+escapeHTML(cr.app_package_id||cr.app_store_id)+'</strong></div>');
+   if(cr.carousel_id)rows.push('<div class="detailfield"><span>Карусель</span><strong>Слайд '+(cr.carousel_slide_index!==null&&cr.carousel_slide_index!==undefined?('#'+(cr.carousel_slide_index+1)):'—')+' · смотрите вкладку «Карусели» в Аналитике, кто показывается рядом</strong></div>');
    extraSection.innerHTML=rows.join('')||'<div class="detailfield"><span>Дополнительные сигналы</span><strong>Не найдены для этого креатива</strong></div>';
   }
   const linksSection=$('#detailSecondaryLinks');
