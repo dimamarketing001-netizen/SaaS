@@ -185,6 +185,7 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
 .detailpreview .adart{max-width:100%;transform:none}
 .detailbadges{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
 .detailbadge{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;background:#f4f3fa;border:1px solid #eeedf5;border-radius:10px;color:#686a7e;font-size:10px}
+.mismatchwarn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:#fdecea;border:1px solid #f5c2bd;border-radius:8px;color:#c0392b;font-size:12px;font-weight:600}
 .detailbadge svg{width:13px;height:13px;color:#8066e8}
 .detailbadge.demo{background:#eafaf0;border-color:#d8f5e3;color:#208e58}
 .detailbadge.demo svg{color:#208e58}
@@ -409,6 +410,8 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
     <button class="tab" type="button" data-subtab="campaigns">Campaign ID</button>
     <button class="tab" type="button" data-subtab="keywords">Ключевые слова</button>
     <button class="tab" type="button" data-subtab="coveragereport">Покрытие</button>
+    <button class="tab" type="button" data-subtab="growing">Растущие рекламодатели</button>
+    <button class="tab" type="button" data-subtab="mismatch">Несовпадения домена</button>
    </div>
    <div data-subpanel="coverage">
     <div class="resulthead"><div><p>Реальная статистика по собранным данным: сколько креативов распознано и у скольких найден рекламодатель.</p></div></div>
@@ -450,6 +453,14 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
    <div data-subpanel="coveragereport" hidden>
     <div class="resulthead"><div><p>Доля креативов с раскрытым рекламодателем, в разбивке по площадке / методу распознавания / формату — показывает, где конвейеру раскрытия ещё есть куда расти.</p></div></div>
     <div class="coveragegrid" id="coverageReportGrid"><div class="empty"><strong>Загрузка…</strong></div></div>
+   </div>
+   <div data-subpanel="growing" hidden>
+    <div class="resulthead"><div><p>Рекламодатели, у которых число креативов за последние 7 дней выросло относительно предыдущей недели — кто реально увеличивает активность, а не просто «есть что-то новое».</p></div></div>
+    <div class="joblist" id="growingFeed"><div class="empty"><strong>Загрузка…</strong></div></div>
+   </div>
+   <div data-subpanel="mismatch" hidden>
+    <div class="resulthead"><div><p>Объявления, где посадочная страница ведёт на домен, отличный от собственного сайта рекламодателя — повод проверить вручную (не всегда ошибка: бывают поддомены/App Store).</p></div></div>
+    <div class="joblist" id="mismatchFeed"><div class="empty"><strong>Загрузка…</strong></div></div>
    </div>
   </section>
   <section class="panel" data-panel="settings" hidden>
@@ -795,6 +806,7 @@ async function openDetail(c){
   '<div class="detailfield"><span>Домен</span><strong>'+escapeHTML(domain)+'</strong></div>'+
   '<div class="detailfield"><span>Площадка</span><strong>'+escapeHTML(platform)+'</strong></div>'+
   '<div id="detailAdvertiserInfo"><div class="detailfield"><span>Юрлицо / ИНН</span><strong>Загрузка…</strong></div></div></section>'+
+  '<section class="detailsection" id="detailLandingSection"><div class="detailsectiontitle">Посадочная страница и UTM</div><div id="detailLandingInfo"><div class="detailfield"><span>Загрузка…</span></div></div></section>'+
   '<section class="detailsection" id="detailExtraSection"><div class="detailsectiontitle">Дополнительные сигналы</div><div id="detailExtraSignals"><div class="detailfield"><span>Загрузка…</span></div></div></section>'+
   '<section class="detailsection" id="detailSecondaryLinksSection"><div class="detailsectiontitle">Другие ссылки объявления</div><div id="detailSecondaryLinks"><div class="detailfield"><span>Загрузка…</span></div></div></section>'+
   '<section class="detailsection" id="detailHistorySection"><div class="detailsectiontitle">История наблюдений и campaign ID</div><div class="historyempty">Загрузка…</div></section>';
@@ -1481,7 +1493,7 @@ async function loadRealCoverage(){
  }catch(e){
   grid.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>';
  }
- loadNetworkBreakdown();loadFreshFeed();loadCrossPlatform();loadDiscountsFeed();loadAppsFeed();loadCarouselsFeed();loadCampaignsFeed();loadKeywordsFeed();loadCoverageReport();
+ loadNetworkBreakdown();loadFreshFeed();loadCrossPlatform();loadDiscountsFeed();loadAppsFeed();loadCarouselsFeed();loadCampaignsFeed();loadKeywordsFeed();loadCoverageReport();loadGrowingFeed();loadMismatchFeed();
 }
 async function loadCrossPlatform(){
  const el=$('#crossPlatform');if(!el)return;
@@ -1632,6 +1644,59 @@ async function loadCoverageReport(){
   }).join('');
  }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
 }
+async function loadGrowingFeed(){
+ const el=$('#growingFeed');if(!el)return;
+ try{
+  const data=await api('/api/v1/analytics/fastest-growing',{});
+  if(!data.items.length){el.innerHTML='<div class="empty"><strong>Пока нет растущих рекламодателей</strong>Нужна история минимум за 2 недели.</div>';return}
+  el.innerHTML=data.items.map(item=>{
+   const name=item.canonical_name||('ИНН '+(item.inn||'—'));
+   return '<article class="job" data-inn="'+escapeHTML(item.inn||'')+'" style="cursor:'+(item.inn?'pointer':'default')+'"><div class="jobname"><div class="jobicon"><i data-lucide="trending-up"></i></div><div><strong>'+escapeHTML(name)+'</strong><span>ИНН '+escapeHTML(item.inn||'—')+'</span></div></div><div class="jobmeta"><strong>'+item.this_week+'</strong><span>креативов на этой неделе</span></div><div class="jobmeta"><strong>+'+item.growth+'</strong><span>рост к прошлой неделе ('+item.prior_week+')</span></div></article>';
+  }).join('');
+  if(window.lucide)lucide.createIcons();
+ }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
+}
+$('#growingFeed')?.addEventListener('click',e=>{
+ const row=e.target.closest('[data-inn]');if(!row||!row.dataset.inn)return;
+ filterByAdvertiserInn(row.dataset.inn);
+});
+async function filterByAdvertiserInn(inn){
+ try{
+  const data=await api('/api/v1/creatives',{inn:inn,sort:'recent',limit:60});
+  setTab('library');
+  const groups=groupRealCreatives(data.items);
+  $('#cards').innerHTML=groups.map(buildRealCardHtml).join('')||'';
+  wireCardButtons();applyFilters();if(window.lucide)lucide.createIcons();
+  $('#resultCount').textContent=data.total+' креативов рекламодателя';
+  notify('Показаны креативы рекламодателя','ИНН '+inn);
+ }catch(err){notify('Не удалось загрузить рекламодателя',err.message||'')}
+}
+async function loadMismatchFeed(){
+ const el=$('#mismatchFeed');if(!el)return;
+ try{
+  const data=await api('/api/v1/analytics/landing-mismatch',{});
+  if(!data.items.length){el.innerHTML='<div class="empty"><strong>Несовпадений не найдено</strong></div>';return}
+  el.innerHTML=data.items.map(item=>{
+   return '<article class="job" data-domain="'+escapeHTML(item.final_url_domain||'')+'" style="cursor:pointer"><div class="jobname"><div class="jobicon"><i data-lucide="alert-triangle"></i></div><div><strong>'+escapeHTML(item.title||item.domain||'Без названия')+'</strong><span>'+escapeHTML(item.platform||'')+'</span></div></div><div class="jobmeta"><strong>'+escapeHTML(item.final_url_domain||'—')+'</strong><span>посадочная</span></div><div class="jobmeta"><strong>'+escapeHTML(item.advertised_site_domain||'—')+'</strong><span>сайт рекламодателя</span></div></article>';
+  }).join('');
+  if(window.lucide)lucide.createIcons();
+ }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
+}
+$('#mismatchFeed')?.addEventListener('click',e=>{
+ const row=e.target.closest('[data-domain]');if(!row||!row.dataset.domain)return;
+ filterBySearch(row.dataset.domain);
+});
+async function filterBySearch(query){
+ try{
+  const data=await api('/api/v1/creatives',{q:query,sort:'recent',limit:60});
+  setTab('library');
+  const groups=groupRealCreatives(data.items);
+  $('#cards').innerHTML=groups.map(buildRealCardHtml).join('')||'';
+  wireCardButtons();applyFilters();if(window.lucide)lucide.createIcons();
+  $('#resultCount').textContent=data.total+' креативов по «'+query+'»';
+  notify('Показаны результаты поиска',query);
+ }catch(err){notify('Не удалось выполнить поиск',err.message||'')}
+}
 async function loadRealDetail(id){
  if(!id)return;
  try{
@@ -1677,10 +1742,28 @@ async function loadRealDetail(id){
     advSection.innerHTML=data.advertisers.map(a=>
      '<div class="detailfield"><span>Юрлицо</span><strong>'+escapeHTML(a.canonical_name||'Без названия')+'</strong></div>'+
      '<div class="detailfield"><span>ИНН</span><strong class="mono">'+escapeHTML(a.inn||'—')+'</strong></div>'+
-     '<div class="detailfield"><span>Как раскрыто</span><strong>'+escapeHTML(a.association_method||'—')+(a.confidence?' · уверенность '+Math.round(a.confidence*100)+'%':'')+'</strong></div>'
+     '<div class="detailfield"><span>Как раскрыто</span><strong>'+escapeHTML(a.association_method||'—')+(a.confidence?' · уверенность '+Math.round(a.confidence*100)+'%':'')+'</strong></div>'+
+     (a.address?'<div class="detailfield"><span>Адрес</span><strong>'+escapeHTML(a.address)+'</strong></div>':'')+
+     (a.phone?'<div class="detailfield"><span>Телефон</span><strong>'+escapeHTML(a.phone)+'</strong></div>':'')+
+     (a.website_url?'<div class="detailfield"><span>Сайт рекламодателя</span><strong><a href="'+escapeHTML(a.website_url)+'" target="_blank" rel="noopener">'+escapeHTML(a.website_url)+' ↗</a></strong></div>':'')
     ).join('');
    }else{
     advSection.innerHTML='<div class="detailfield"><span>Юрлицо / ИНН</span><strong>Не раскрыто площадкой</strong></div>';
+   }
+  }
+  const landingSection=$('#detailLandingInfo');
+  if(landingSection){
+   const utm=data.utm;
+   if(utm&&(utm.final_url||utm.utm_source||utm.utm_medium||utm.utm_campaign||utm.utm_content||utm.utm_term)){
+    const utmBits=[['utm_source','Источник'],['utm_medium','Канал'],['utm_campaign','Кампания'],['utm_content','Контент'],['utm_term','Ключевое слово']]
+     .filter(([key])=>utm[key]).map(([key,label])=>'<div class="detailfield"><span>'+label+'</span><strong class="mono">'+escapeHTML(utm[key])+'</strong></div>').join('');
+    const urlField=utm.final_url?'<div class="detailfield"><span>Фактическая посадочная</span><strong><a href="'+escapeHTML(utm.final_url)+'" target="_blank" rel="noopener">'+escapeHTML(utm.final_url_domain||utm.final_url)+' ↗</a></strong></div>':'';
+    const mismatchField=utm.landing_domain_mismatch
+     ?'<div class="detailfield"><span>Проверка домена</span><span class="mismatchwarn"><i data-lucide="alert-triangle"></i> Посадочная ('+escapeHTML(utm.final_url_domain||'—')+') не совпадает с сайтом рекламодателя ('+escapeHTML(utm.advertised_site_domain||'—')+')</span></div>'
+     :(utm.advertised_site_domain?'<div class="detailfield"><span>Проверка домена</span><strong>Совпадает с сайтом рекламодателя</strong></div>':'');
+    landingSection.innerHTML=urlField+mismatchField+(utmBits||'<div class="detailfield"><span>UTM-метки</span><strong>Не найдены в ссылке</strong></div>');
+   }else{
+    landingSection.innerHTML='<div class="detailfield"><span>Посадочная страница</span><strong>Не определена</strong></div>';
    }
   }
   const histSection=$('#detailHistorySection');
@@ -1695,7 +1778,15 @@ async function loadRealDetail(id){
    const occHtml=(data.occurrences||[]).slice(0,20).map(o=>
     '<div class="historyevent"><span class="historyeventicon"><i data-lucide="scan-eye"></i></span><div class="historyeventcopy"><strong>'+escapeHTML(o.platform)+'</strong><p>'+escapeHTML((o.observed_at||'').replace('T',' ').slice(0,16))+' · '+escapeHTML(o.source_page_url||'')+'</p></div></div>'
    ).join('')||'<div class="historyempty"><strong>История обнаружений пока пуста</strong></div>';
-   histSection.innerHTML='<div class="detailsectiontitle">История наблюдений и campaign ID</div>'+idsHtml+'<div id="historyEvents">'+occHtml+'</div>';
+   const destHistory=data.destination_history||[];
+   const destHtml=destHistory.length?('<div class="detailsectiontitle">История изменений посадочной страницы ('+destHistory.length+')</div>'+
+    destHistory.map(d=>
+     '<div class="historyevent"><span class="historyeventicon"><i data-lucide="route"></i></span><div class="historyeventcopy"><strong>'+escapeHTML(d.final_url_domain||d.final_url||'—')+'</strong><p>'+
+     escapeHTML((d.first_seen_at||'').replace('T',' ').slice(0,16))+' — '+escapeHTML((d.last_seen_at||'').replace('T',' ').slice(0,16))+
+     ([d.utm_source,d.utm_medium,d.utm_campaign].filter(Boolean).length?' · '+escapeHTML([d.utm_source,d.utm_medium,d.utm_campaign].filter(Boolean).join(' / ')):'')+
+     '</p></div></div>'
+    ).join('')) : '';
+   histSection.innerHTML='<div class="detailsectiontitle">История наблюдений и campaign ID</div>'+idsHtml+'<div id="historyEvents">'+occHtml+'</div>'+destHtml;
   }
   if(window.lucide)lucide.createIcons();
  }catch(err){
