@@ -406,6 +406,9 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
     <button class="tab" type="button" data-subtab="discounts">Скидки</button>
     <button class="tab" type="button" data-subtab="apps">Приложения</button>
     <button class="tab" type="button" data-subtab="carousels">Карусели</button>
+    <button class="tab" type="button" data-subtab="campaigns">Campaign ID</button>
+    <button class="tab" type="button" data-subtab="keywords">Ключевые слова</button>
+    <button class="tab" type="button" data-subtab="coveragereport">Покрытие</button>
    </div>
    <div data-subpanel="coverage">
     <div class="resulthead"><div><p>Реальная статистика по собранным данным: сколько креативов распознано и у скольких найден рекламодатель.</p></div></div>
@@ -435,6 +438,18 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
    <div data-subpanel="carousels" hidden>
     <div class="resulthead"><div><p>Объявления, показанные в одной и той же рекламной карусели — конкурентный контекст: кто ещё крутится рядом с вашим объявлением.</p></div></div>
     <div id="carouselsFeed"><div class="empty"><strong>Загрузка…</strong></div></div>
+   </div>
+   <div data-subpanel="campaigns" hidden>
+    <div class="resulthead"><div><p>Рекламные кампании (campaign_id), извлечённые из разметки объявлений — сколько креативов идёт в рамках одной кампании.</p></div></div>
+    <div class="joblist" id="campaignsFeed"><div class="empty"><strong>Загрузка…</strong></div></div>
+   </div>
+   <div data-subpanel="keywords" hidden>
+    <div class="resulthead"><div><p>Поисковые ключевые слова (UTM), по которым таргетируется реклама — реальный сигнал о том, на какой спрос откликаются конкуренты.</p></div></div>
+    <div class="joblist" id="keywordsFeed"><div class="empty"><strong>Загрузка…</strong></div></div>
+   </div>
+   <div data-subpanel="coveragereport" hidden>
+    <div class="resulthead"><div><p>Доля креативов с раскрытым рекламодателем, в разбивке по площадке / методу распознавания / формату — показывает, где конвейеру раскрытия ещё есть куда расти.</p></div></div>
+    <div class="coveragegrid" id="coverageReportGrid"><div class="empty"><strong>Загрузка…</strong></div></div>
    </div>
   </section>
   <section class="panel" data-panel="settings" hidden>
@@ -1466,7 +1481,7 @@ async function loadRealCoverage(){
  }catch(e){
   grid.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>';
  }
- loadNetworkBreakdown();loadFreshFeed();loadCrossPlatform();loadDiscountsFeed();loadAppsFeed();loadCarouselsFeed();
+ loadNetworkBreakdown();loadFreshFeed();loadCrossPlatform();loadDiscountsFeed();loadAppsFeed();loadCarouselsFeed();loadCampaignsFeed();loadKeywordsFeed();loadCoverageReport();
 }
 async function loadCrossPlatform(){
  const el=$('#crossPlatform');if(!el)return;
@@ -1549,6 +1564,72 @@ async function loadCarouselsFeed(){
    '</article>';
   }).join('');
   if(window.lucide)lucide.createIcons();
+ }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
+}
+async function loadCampaignsFeed(){
+ const el=$('#campaignsFeed');if(!el)return;
+ try{
+  const data=await api('/api/v1/analytics/campaigns',{});
+  if(!data.items.length){el.innerHTML='<div class="empty"><strong>Кампании пока не найдены</strong>Появятся, когда в разметке объявления распознается campaign_id.</div>';return}
+  el.innerHTML=data.items.map(item=>{
+   return '<article class="job" data-campaign-id="'+escapeHTML(item.campaign_id)+'" style="cursor:pointer"><div class="jobname"><div class="jobicon"><i data-lucide="megaphone"></i></div><div><strong class="mono">'+escapeHTML(item.campaign_id)+'</strong><span>campaign_id</span></div></div><div class="jobmeta"><strong>'+item.n+'</strong><span>креативов</span></div><div class="jobmeta"><strong>'+escapeHTML((item.last_seen_at||'').slice(0,10))+'</strong><span>последний показ</span></div></article>';
+  }).join('');
+  if(window.lucide)lucide.createIcons();
+ }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
+}
+$('#campaignsFeed')?.addEventListener('click',e=>{
+ const row=e.target.closest('[data-campaign-id]');if(!row)return;
+ filterByCampaign(row.dataset.campaignId);
+});
+async function filterByCampaign(campaignId){
+ try{
+  const data=await api('/api/v1/creatives',{campaign_id:campaignId,sort:'recent',limit:60});
+  setTab('library');
+  const groups=groupRealCreatives(data.items);
+  $('#cards').innerHTML=groups.map(buildRealCardHtml).join('')||'';
+  wireCardButtons();applyFilters();if(window.lucide)lucide.createIcons();
+  $('#resultCount').textContent=data.total+' креативов кампании «'+campaignId+'»';
+  notify('Показаны креативы кампании',campaignId);
+ }catch(err){notify('Не удалось загрузить кампанию',err.message||'')}
+}
+async function loadKeywordsFeed(){
+ const el=$('#keywordsFeed');if(!el)return;
+ try{
+  const data=await api('/api/v1/analytics/keywords',{});
+  if(!data.items.length){el.innerHTML='<div class="empty"><strong>Ключевые слова пока не найдены</strong>Появятся, когда у объявления распознается UTM-метка utm_term.</div>';return}
+  el.innerHTML=data.items.map(item=>{
+   return '<article class="job" data-keyword="'+escapeHTML(item.keyword)+'" style="cursor:pointer"><div class="jobname"><div class="jobicon"><i data-lucide="search"></i></div><div><strong>'+escapeHTML(item.keyword)+'</strong><span>ключевое слово</span></div></div><div class="jobmeta"><strong>'+item.n+'</strong><span>креативов</span></div><div class="jobmeta"><strong>'+escapeHTML((item.last_seen_at||'').slice(0,10))+'</strong><span>последний показ</span></div></article>';
+  }).join('');
+  if(window.lucide)lucide.createIcons();
+ }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
+}
+$('#keywordsFeed')?.addEventListener('click',e=>{
+ const row=e.target.closest('[data-keyword]');if(!row)return;
+ filterByKeyword(row.dataset.keyword);
+});
+async function filterByKeyword(keyword){
+ try{
+  const data=await api('/api/v1/creatives',{keyword:keyword,sort:'recent',limit:60});
+  setTab('library');
+  const groups=groupRealCreatives(data.items);
+  $('#cards').innerHTML=groups.map(buildRealCardHtml).join('')||'';
+  wireCardButtons();applyFilters();if(window.lucide)lucide.createIcons();
+  $('#resultCount').textContent=data.total+' креативов по слову «'+keyword+'»';
+  notify('Показаны креативы по ключевому слову',keyword);
+ }catch(err){notify('Не удалось загрузить ключевое слово',err.message||'')}
+}
+async function loadCoverageReport(){
+ const el=$('#coverageReportGrid');if(!el)return;
+ try{
+  const data=await api('/api/v1/analytics/coverage',{});
+  if(!data.items.length){el.innerHTML='<div class="empty"><strong>Пока нет данных</strong></div>';return}
+  el.innerHTML=data.items.map(r=>{
+   const pct=Math.round(r.disclosed_pct||0);
+   const statusClass=pct>=40?'':pct>0?'partial':'failed';
+   const statusLabel=pct>=40?'Хорошо':pct>0?'Частично':'Нет раскрытий';
+   const label=[r.platform,r.detection_method,r.creative_type].filter(Boolean).join(' · ')||'Без метки';
+   return '<article class="coverage"><div class="coveragetop"><strong>'+escapeHTML(label)+'</strong><span class="status '+statusClass+'">'+statusLabel+'</span></div><div class="coveragevalue">'+pct+'%</div><p>'+r.disclosed_creatives+' из '+r.total_creatives+' креативов с рекламодателем</p><div class="progress"><span style="width:'+pct+'%"></span></div></article>';
+  }).join('');
  }catch(e){el.innerHTML='<div class="empty"><strong>Не удалось загрузить</strong>'+escapeHTML(e.message||'')+'</div>'}
 }
 async function loadRealDetail(id){
