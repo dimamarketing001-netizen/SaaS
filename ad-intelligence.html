@@ -258,6 +258,35 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
 .filterchip span{font-size:14px;line-height:10px}
 .clearfilters{border:0;background:none;color:#858799;font:600 10px "DM Sans",sans-serif;cursor:pointer}
 .clearfilters:hover{color:#7158dc}
+.intentbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 18px;padding:14px 18px;background:#f8f6ff;border:1px solid #e8e4fa;border-radius:16px}
+.intentbar-left{display:flex;align-items:center;gap:12px;min-width:0}
+.intentbar-left>i{color:#7059cf;flex-shrink:0}
+.intentbar-copy{min-width:0}
+.intentbar-copy strong{display:block;font-size:13px;color:#2f2b4a;overflow-wrap:anywhere}
+.intentbar-copy span{display:block;font-size:10px;color:#8178a8;margin-top:2px}
+.intentbar-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.intentbar-toggle{display:flex;align-items:center;gap:7px;font-size:11px;color:#625d80;cursor:pointer;user-select:none}
+.intentbar-toggle input{accent-color:#7059cf}
+.intentbar-actions .secondary{font-size:11px;padding:9px 13px}
+.intentpicker{position:relative;margin:-6px 0 18px;padding:16px 18px;background:#fff;border:1px solid #e8e4fa;border-radius:16px;box-shadow:0 10px 30px #2b294a0f}
+.intentpicker[hidden]{display:none!important}
+.intentpicker-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.intentpicker-head strong{font-size:12px;color:#303743}
+.intentpicker-close{border:0;background:none;color:#9a9baa;cursor:pointer;font-size:16px;line-height:1}
+.intentpicker-search{width:100%;padding:9px 12px;border:1px solid #e6e8ee;border-radius:10px;font-size:12px;margin-bottom:10px;box-sizing:border-box}
+.intentpicker-list{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.intentrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer}
+.intentrow:hover{background:#f8f6ff}
+.intentrow input{accent-color:#7059cf;flex-shrink:0}
+.intentrow-copy{min-width:0;flex:1;display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.intentrow-copy strong{font-size:12px;color:#2f2b4a;overflow-wrap:anywhere}
+.intentrow-copy span{font-size:10px;color:#9a9baa;flex-shrink:0;white-space:nowrap}
+.intentpicker-related{margin-top:10px;padding-top:10px;border-top:1px solid #f1eefc}
+.intentpicker-related-label{font-size:10px;color:#9a9baa;margin-bottom:7px}
+.intentrelatedchip{display:inline-flex;align-items:center;gap:6px;border:1px dashed #d9d2f7;background:#fbfaff;border-radius:8px;padding:6px 10px;color:#7059cf;font-size:10px;cursor:pointer;margin:0 6px 6px 0}
+.intentrelatedchip:hover{background:#f3effe}
+.intentpicker-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid #f1eefc}
+.intentbadge{display:inline-flex;align-items:center;gap:5px;border:1px solid #e8e4fa;background:#f8f6ff;color:#7059cf;border-radius:7px;padding:3px 8px;font-size:9px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .empty-filter{padding:55px 22px;text-align:center;border:1px dashed #dedbea;border-radius:22px;background:#fff}
 .empty-filter-icon{display:grid;place-items:center;width:52px;height:52px;margin:0 auto 15px;border-radius:17px;background:#f0edff;color:#8066e8}
 .empty-filter-icon svg{width:23px;height:23px}
@@ -334,6 +363,26 @@ aside.sidebar{background:#fff;color:#292a36;padding:27px 17px 20px;border-right:
    <article class="stat"><div class="stathead">Сохранено креативов <span class="staticon gray"><i data-lucide="bookmark-check"></i></span></div><div class="statvalue" id="savedStat">00</div><div class="statfoot">Сохраняется в этом браузере</div></article>
    <article class="stat"><div class="stathead">Задачи сканирования <span class="staticon amber"><i data-lucide="scan-search"></i></span></div><div class="statvalue" id="jobsStat">03</div><div class="statfoot">Тестовые статусы интерфейса</div></article>
   </section>
+  <section class="intentbar" id="intentBar">
+   <div class="intentbar-left"><i data-lucide="target"></i><div class="intentbar-copy"><strong id="intentBarLabel">Все запросы</strong><span id="intentBarMeta">Фильтр по интенту выключен — показаны креативы всех запросов</span></div></div>
+   <div class="intentbar-actions">
+    <button class="secondary" type="button" id="intentBarPicker"><i data-lucide="chevron-down"></i> Выбрать интент</button>
+    <label class="intentbar-toggle"><input type="checkbox" id="intentScopeToggle"> Показывать только текущий интент</label>
+   </div>
+  </section>
+  <div class="intentpicker" id="intentPicker" hidden>
+   <div class="intentpicker-head"><strong>Какой интент показывать?</strong><button class="intentpicker-close" type="button" id="intentPickerClose" aria-label="Закрыть">×</button></div>
+   <input class="intentpicker-search" id="intentPickerSearch" placeholder="Поиск по запросам…" autocomplete="off">
+   <div class="intentpicker-list" id="intentPickerList"><div class="empty"><strong>Загрузка…</strong></div></div>
+   <div class="intentpicker-related" id="intentPickerRelated" hidden>
+    <div class="intentpicker-related-label">Похожие по теме запросы — возможно, тоже относятся сюда (не добавляются автоматически):</div>
+    <div id="intentPickerRelatedChips"></div>
+   </div>
+   <div class="intentpicker-foot">
+    <button class="secondary" type="button" id="intentPickerClear">Снять выбор (показать все)</button>
+    <button class="primary" type="button" id="intentPickerApply">Применить</button>
+   </div>
+  </div>
   <div class="tabs" role="tablist"><button class="tab active" data-tab="library"><i data-lucide="layout-grid"></i> Библиотека</button><button class="tab" data-tab="compare"><i data-lucide="git-compare"></i> Сравнение</button><button class="tab" data-tab="collections"><i data-lucide="folder-heart"></i> Подборки</button><button class="tab" data-tab="scans"><i data-lucide="radar"></i> Сканирования</button><button class="tab" data-tab="coverage"><i data-lucide="activity"></i> Аналитика</button><button class="tab" data-tab="advertisers"><i data-lucide="users"></i> Рекламодатели</button><button class="tab" data-tab="alerts"><i data-lucide="bell-ring"></i> Оповещения</button><button class="tab" data-tab="exports"><i data-lucide="file-down"></i> История экспорта</button><button class="tab" data-tab="integrations"><i data-lucide="plug"></i> Интеграции</button><button class="tab" data-tab="settings"><i data-lucide="settings-2"></i> Настройки</button></div>
   <section class="panel" data-panel="library">
    <div class="librarycontrols">
@@ -527,9 +576,33 @@ const session=JSON.parse(localStorage.getItem("parsya_session")||"null");
 if (!session) { location.replace("index.html"); }
 const DEFAULT_API_BASE="https://xn--80ak2afbe.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai";
 const API_BASE=(localStorage.getItem("parsya_api_base")||DEFAULT_API_BASE).replace(/\/+$/,"");
+// Intent scoping (2026-10-22): by default the whole ЛК (library + every analytics
+// report) is scoped to the search query(ies) the viewer is currently interested in,
+// instead of mixing creatives from every search ever run. See INTENT_SCOPED_PATHS below
+// for exactly which endpoints this applies to, and loadIntentPicker()/applyIntentBar()
+// for the UI. State lives in localStorage (per-browser convenience, same pattern as
+// savedCreativeIds/userCollections elsewhere in this file) — never assumed by the
+// backend, always sent explicitly as the `intent` query param.
+const INTENT_SCOPED_PATHS=new Set(["/api/v1/creatives","/api/v1/advertisers","/api/v1/coverage",
+ "/api/v1/analytics/cross-platform","/api/v1/analytics/carousels","/api/v1/analytics/campaigns",
+ "/api/v1/analytics/keywords","/api/v1/analytics/fastest-growing","/api/v1/analytics/landing-mismatch"]);
+function getActiveIntents(){try{return JSON.parse(localStorage.getItem("parsya_active_intents")||"[]")}catch{return[]}}
+function setActiveIntents(list){try{localStorage.setItem("parsya_active_intents",JSON.stringify(list||[]))}catch{}}
+function isIntentScopingEnabled(){return localStorage.getItem("parsya_intent_scoping")!=="0"}
+function setIntentScopingEnabled(on){try{localStorage.setItem("parsya_intent_scoping",on?"1":"0")}catch{}}
+function activeIntentParam(){
+ if(!isIntentScopingEnabled())return"";
+ const list=getActiveIntents();
+ return list.length?list.join(","):"";
+}
 async function api(path,params){
  const url=new URL(API_BASE+path);
- Object.entries(params||{}).forEach(([k,v])=>{if(v!==undefined&&v!=="")url.searchParams.set(k,v)});
+ const finalParams={...(params||{})};
+ if(INTENT_SCOPED_PATHS.has(path)&&finalParams.intent===undefined){
+  const intent=activeIntentParam();
+  if(intent)finalParams.intent=intent;
+ }
+ Object.entries(finalParams).forEach(([k,v])=>{if(v!==undefined&&v!=="")url.searchParams.set(k,v)});
  const res=await fetch(url,{headers:{Authorization:"Bearer "+session.token}});
  if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
  if(!res.ok)throw new Error("API error "+res.status);
@@ -805,6 +878,7 @@ async function openDetail(c){
   '<section class="detailsection" id="detailAdvertiserSection"><div class="detailsectiontitle">Рекламодатель и источник</div>'+
   '<div class="detailfield"><span>Домен</span><strong>'+escapeHTML(domain)+'</strong></div>'+
   '<div class="detailfield"><span>Площадка</span><strong>'+escapeHTML(platform)+'</strong></div>'+
+  '<div id="detailIntentInfo"></div>'+
   '<div id="detailAdvertiserInfo"><div class="detailfield"><span>Юрлицо / ИНН</span><strong>Загрузка…</strong></div></div></section>'+
   '<section class="detailsection" id="detailLandingSection"><div class="detailsectiontitle">Посадочная страница и UTM</div><div id="detailLandingInfo"><div class="detailfield"><span>Загрузка…</span></div></div></section>'+
   '<section class="detailsection" id="detailExtraSection"><div class="detailsectiontitle">Дополнительные сигналы</div><div id="detailExtraSignals"><div class="detailfield"><span>Загрузка…</span></div></div></section>'+
@@ -1129,7 +1203,8 @@ $('#taskForm').addEventListener('submit',async e=>{
   const city=$('#taskCity').value.trim()||'Екатеринбург';
   try{
    await apiPost('/api/v1/runs',{city,key_text:name});
-   notify('Сканирование запущено',name+' · воркер подхватит в течение нескольких секунд');
+   setActiveIntents([name]);setIntentScopingEnabled(true);renderIntentBar();
+   notify('Сканирование запущено',name+' · воркер подхватит в течение нескольких секунд · интент переключён на этот запрос');
    $('#modalWrap').classList.remove('show');$('#taskForm').reset();
    setTab('scans');
    loadRealScans();
@@ -1437,9 +1512,11 @@ function buildRealCardHtml(group){
    ?('<img src="'+escapeHTML(rep.image_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:13px">')
    :('<span class="kicker">'+escapeHTML(brand)+'</span><strong>'+escapeHTML(headline)+'</strong><p>'+escapeHTML(copy).slice(0,160)+'</p><span class="cta">'+escapeHTML(ctaText||'Открыть ↗')+'</span>'));
  const priceBadge=rep.price_text?'<span class="platform" style="left:auto;right:12px"><i data-lucide="tag"></i> '+escapeHTML(rep.price_text)+(rep.discount_percent?' · -'+escapeHTML(String(rep.discount_percent))+'%':'')+'</span>':'';
+ const intentsList=rep.intents||[];
+ const intentBadgeHtml=intentsList.length?'<span class="intentbadge" title="'+escapeHTML(intentsList.join(', '))+'"><i data-lucide="target"></i> '+escapeHTML(intentsList[0])+(intentsList.length>1?' +'+(intentsList.length-1):'')+'</span>':'';
  return '<article class="creative" data-id="'+escapeHTML(String(rep.id))+'" data-group-key="'+escapeHTML(group.group_key)+'" data-platform="'+escapeHTML(platform)+'" data-format="'+escapeHTML(format)+'" data-brand="'+escapeHTML(brand)+'" data-copy="'+escapeHTML(copy)+'" data-domain="'+escapeHTML(brand)+'" data-date="'+escapeHTML(dateStr)+'" data-destination="'+escapeHTML(rep.destination_url||'')+'" data-cta="'+escapeHTML(ctaText)+'">'
   +'<div class="preview"><span class="platform"><i data-lucide="network"></i> '+escapeHTML(platform)+'</span>'+priceBadge+'<button class="save" aria-label="Сохранить креатив"><i data-lucide="bookmark"></i></button><div class="adart"'+(hasMedia?' style="padding:0;overflow:hidden"':'')+'>'+artInner+'</div></div>'
-  +'<div class="cardbody"><div class="cardtop"><span class="brand">'+escapeHTML(brand)+'</span><span class="format">'+escapeHTML(format)+'</span></div><p class="copy">'+escapeHTML(copy)+'</p>'+(ctaText?'<div class="metadata"><div><span>Кнопка (CTA)</span><strong>'+escapeHTML(ctaText)+'</strong></div></div>':'')+'<div class="metadata"><div><span>Впервые замечено</span><strong>'+escapeHTML(firstSeenStr)+'</strong></div><div><span>Площадки</span><strong>'+escapeHTML((group.platforms||[]).join(', ')||platform)+'</strong></div></div><div class="cardfoot"><span class="source">Реальные данные ParsYa</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div>'
+  +'<div class="cardbody"><div class="cardtop"><span class="brand">'+escapeHTML(brand)+'</span><span class="format">'+escapeHTML(format)+'</span></div>'+(intentBadgeHtml?'<div style="margin:0 0 8px">'+intentBadgeHtml+'</div>':'')+'<p class="copy">'+escapeHTML(copy)+'</p>'+(ctaText?'<div class="metadata"><div><span>Кнопка (CTA)</span><strong>'+escapeHTML(ctaText)+'</strong></div></div>':'')+'<div class="metadata"><div><span>Впервые замечено</span><strong>'+escapeHTML(firstSeenStr)+'</strong></div><div><span>Площадки</span><strong>'+escapeHTML((group.platforms||[]).join(', ')||platform)+'</strong></div></div><div class="cardfoot"><span class="source">Реальные данные ParsYa</span><button class="textbtn detail">Подробнее <i data-lucide="arrow-up-right"></i></button></div></div>'
   +'</article>';
 }
 function wireCardButtons(){
@@ -1736,6 +1813,13 @@ async function loadRealDetail(id){
     linksSection.innerHTML='<div class="detailfield"><span>Другие ссылки объявления</span><strong>Не найдены для этого креатива</strong></div>';
    }
   }
+  const intentInfoEl=$('#detailIntentInfo');
+  if(intentInfoEl){
+   const intents=(data.creative&&data.creative.intents)||[];
+   intentInfoEl.innerHTML=intents.length
+    ?'<div class="detailfield"><span>Интент (поисковый запрос)</span><strong>'+intents.map(escapeHTML).join('</strong><br><strong>')+'</strong></div>'
+    :'';
+  }
   const advSection=$('#detailAdvertiserInfo');
   if(advSection){
    if(data.advertisers&&data.advertisers.length){
@@ -1802,7 +1886,8 @@ async function loadJobCreatives(jobId,jobName){
   $('#cards').innerHTML=groups.map(buildRealCardHtml).join('')||'';
   wireCardButtons();applyFilters();if(window.lucide)lucide.createIcons();
   setTab('library');
-  notify('Показаны результаты запуска',jobName+' · '+groups.length+' креативов');
+  if(jobName){setActiveIntents([jobName]);setIntentScopingEnabled(true);renderIntentBar()}
+  notify('Показаны результаты запуска',jobName+' · '+groups.length+' креативов'+(jobName?' · интент переключён на этот запрос':''));
  }catch(err){notify('Не удалось загрузить результаты запуска',err.message||'')}
 }
 $('#jobList').addEventListener('click',e=>{
@@ -1810,7 +1895,116 @@ $('#jobList').addEventListener('click',e=>{
  loadJobCreatives(Number(btn.dataset.showJob),btn.dataset.jobName||'');
 });
 
-renderSavedSearches();setTab('library');loadRealLibrary();
+// ---- Intent bar / picker (2026-10-22) ----
+let allIntentsCache=[];
+function pluralCreatives(n){n=n||0;return n+' '+(n===1?'креатив':n>=2&&n<=4?'креатива':'креативов')}
+function renderIntentBar(){
+ const active=getActiveIntents();
+ const enabled=isIntentScopingEnabled();
+ $('#intentScopeToggle').checked=enabled;
+ const label=$('#intentBarLabel'),meta=$('#intentBarMeta');
+ if(!enabled){
+  label.textContent='Все запросы';
+  meta.textContent='Фильтр по интенту выключен — показаны креативы всех запросов';
+ }else if(!active.length){
+  label.textContent='Интент не выбран';
+  meta.textContent='Нажмите «Выбрать интент», чтобы сфокусироваться на одном запросе или нескольких похожих';
+ }else{
+  label.textContent=active.length===1?active[0]:active.length+' запроса: '+active.join(', ');
+  const infoRows=allIntentsCache.filter(i=>active.some(a=>a.toLowerCase()===i.intent.toLowerCase()));
+  const total=infoRows.reduce((sum,i)=>sum+(i.creatives_count||0),0);
+  meta.textContent=pluralCreatives(total)+' по выбранному интенту';
+ }
+}
+function renderIntentPickerList(filterText){
+ const list=$('#intentPickerList');
+ const staged=new Set((window._stagedIntents||getActiveIntents()).map(s=>s.toLowerCase()));
+ const q=(filterText||'').trim().toLowerCase();
+ const rows=allIntentsCache.filter(i=>!q||i.intent.toLowerCase().includes(q));
+ if(!rows.length){list.innerHTML='<div class="empty"><strong>Запросы не найдены</strong></div>';return}
+ list.innerHTML=rows.map(i=>{
+  const checked=staged.has(i.intent.toLowerCase())?'checked':'';
+  return '<label class="intentrow"><input type="checkbox" data-intent-value="'+escapeHTML(i.intent)+'" '+checked+'>'+
+   '<div class="intentrow-copy"><strong>'+escapeHTML(i.intent)+'</strong><span>'+pluralCreatives(i.creatives_count)+' · '+i.runs_count+' '+(i.runs_count===1?'запуск':'запусков')+'</span></div></label>';
+ }).join('');
+}
+function renderIntentPickerRelated(){
+ const staged=window._stagedIntents||getActiveIntents();
+ const relatedBlock=$('#intentPickerRelated'),chipsEl=$('#intentPickerRelatedChips');
+ if(!staged.length){relatedBlock.hidden=true;return}
+ const stagedLower=new Set(staged.map(s=>s.toLowerCase()));
+ const related=new Map();
+ staged.forEach(sel=>{
+  const info=allIntentsCache.find(i=>i.intent.toLowerCase()===sel.toLowerCase());
+  (info?.related||[]).forEach(r=>{if(!stagedLower.has(r.toLowerCase()))related.set(r.toLowerCase(),r)});
+ });
+ if(!related.size){relatedBlock.hidden=true;return}
+ relatedBlock.hidden=false;
+ chipsEl.innerHTML=[...related.values()].map(r=>'<button type="button" class="intentrelatedchip" data-add-related="'+escapeHTML(r)+'"><i data-lucide="plus"></i> '+escapeHTML(r)+'</button>').join('');
+ if(window.lucide)lucide.createIcons();
+}
+async function loadIntentPicker(){
+ try{
+  const data=await api('/api/v1/intents',{});
+  allIntentsCache=data.items||[];
+ }catch(err){allIntentsCache=[]}
+ renderIntentBar();
+ // First-ever visit: nothing chosen yet anywhere — default to the most recent search
+ // rather than an arbitrary empty state, per "по умолчанию показывать интент текущего запроса".
+ if(localStorage.getItem('parsya_intent_scoping')===null&&!getActiveIntents().length&&allIntentsCache.length){
+  setActiveIntents([allIntentsCache[0].intent]);
+  setIntentScopingEnabled(true);
+  renderIntentBar();
+ }
+}
+function openIntentPicker(){
+ window._stagedIntents=getActiveIntents().slice();
+ renderIntentPickerList($('#intentPickerSearch').value);
+ renderIntentPickerRelated();
+ $('#intentPicker').hidden=false;
+ if(window.lucide)lucide.createIcons();
+}
+function closeIntentPicker(){$('#intentPicker').hidden=true;window._stagedIntents=null}
+$('#intentBarPicker').addEventListener('click',openIntentPicker);
+$('#intentPickerClose').addEventListener('click',closeIntentPicker);
+$('#intentPickerSearch').addEventListener('input',e=>renderIntentPickerList(e.target.value));
+$('#intentPickerList').addEventListener('change',e=>{
+ const box=e.target.closest('[data-intent-value]');if(!box)return;
+ const value=box.dataset.intentValue;
+ const staged=window._stagedIntents||[];
+ window._stagedIntents=box.checked?[...staged,value]:staged.filter(v=>v.toLowerCase()!==value.toLowerCase());
+ renderIntentPickerRelated();
+});
+$('#intentPickerRelatedChips').addEventListener('click',e=>{
+ const chip=e.target.closest('[data-add-related]');if(!chip)return;
+ const value=chip.dataset.addRelated;
+ const staged=window._stagedIntents||[];
+ if(!staged.some(v=>v.toLowerCase()===value.toLowerCase()))window._stagedIntents=[...staged,value];
+ renderIntentPickerList($('#intentPickerSearch').value);
+ renderIntentPickerRelated();
+});
+$('#intentPickerApply').addEventListener('click',()=>{
+ const staged=window._stagedIntents||[];
+ setActiveIntents(staged);
+ setIntentScopingEnabled(true);
+ closeIntentPicker();
+ notify('Интент применён',staged.length?staged.join(', '):'Все запросы');
+ location.reload();
+});
+$('#intentPickerClear').addEventListener('click',()=>{
+ setActiveIntents([]);
+ setIntentScopingEnabled(false);
+ closeIntentPicker();
+ notify('Фильтр по интенту снят','Показаны креативы всех запросов');
+ location.reload();
+});
+$('#intentScopeToggle').addEventListener('change',e=>{
+ setIntentScopingEnabled(e.target.checked);
+ if(e.target.checked&&!getActiveIntents().length&&allIntentsCache.length)setActiveIntents([allIntentsCache[0].intent]);
+ location.reload();
+});
+
+renderSavedSearches();setTab('library');loadIntentPicker();loadRealLibrary();
 </script>
 </body>
 </html>
