@@ -1953,7 +1953,7 @@ NEON.start=render;
    /api/v1/advertisers, /api/v1/analytics/* и /api/v1/intents парсера. Бек не менялся —
    меняется только то, как это рисуется (дизайн-система NEON). */
 (function(){
-const {esc,ic,fmt,overlay,toast,confirm,formVals,artHtml,FORMAT}=NEONUI,N=NEON,S=N.state;
+const {esc,ic,fmt,overlay,toast,confirm,formVals,FORMAT}=NEONUI,N=NEON,S=N.state;
 
 const RUN_STATUS_MAP={queued:"queued",running:"running",succeeded:"done",failed:"failed"};
 
@@ -1971,7 +1971,6 @@ function formatOf(rep){
   if(rep.image_url)return"image";
   return"native";
 }
-function hueOf(id){const s=String(id);let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%360;return h}
 function groupRealCreatives(items){
   const groups={},order=[];
   for(const row of items||[]){
@@ -2169,7 +2168,7 @@ async function openCreative(id){
   const isVideo=cr.creative_type==="video"&&cr.video_src;
   const media=isVideo?`<video src="${esc(cr.video_src)}" ${cr.video_poster?`poster="${esc(cr.video_poster)}"`:""} controls muted loop playsinline style="width:100%;border-radius:12px;max-height:320px"></video>`
     :(cr.image_url?`<img src="${esc(cr.image_url)}" alt="" style="width:100%;border-radius:12px;object-fit:cover;max-height:320px">`
-    :`<div class="art big-art" style="--h:${hueOf(cr.id)};cursor:default">${artHtml({discount:cr.discount_percent,format:formatOf(cr),headline:cr.title||cr.domain,cta:cr.cta_text})}</div>`);
+    :`<div style="aspect-ratio:16/10;border-radius:12px;background:var(--surface-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--ink-3)">${ic("image-off",28)}<span style="font-size:12px">Без изображения</span></div>`);
   const saved=S.intel.savedIds.includes(String(cr.id));
   const adv=(data.advertisers||[])[0],utm=data.utm||{};
   const links=(data.secondary_links||[]).slice(0,5),occ=(data.occurrences||[]).slice(0,20),intents=cr.intents||[];
