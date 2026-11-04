@@ -2146,6 +2146,8 @@ function libBulk(){
 }
 
 /* ---------- Креатив: подробности ---------- */
+const ID_LABELS={campaign_id_candidate:"Campaign ID",banner_id_candidate:"Banner ID",client_id_candidate:"Client ID",creative_id_candidate:"Creative ID"};
+function copyBtn(value,label,text){return value?`<nv-button size="sm" variant="secondary" icon="copy" data-act="copyField" data-value="${esc(value)}" data-label="${esc(label)}">${esc(text)}</nv-button>`:""}
 async function openCreative(id){
   let data;
   try{data=await api("/api/v1/creatives/"+id,{})}
@@ -2157,25 +2159,57 @@ async function openCreative(id){
     :`<div class="art big-art" style="--h:${hueOf(cr.id)};cursor:default">${artHtml({discount:cr.discount_percent,format:formatOf(cr),headline:cr.title||cr.domain,cta:cr.cta_text})}</div>`);
   const saved=S.intel.savedIds.includes(String(cr.id));
   const adv=(data.advertisers||[])[0],utm=data.utm||{};
-  const links=(data.secondary_links||[]).slice(0,5),occ=(data.occurrences||[]).slice(0,5),intents=cr.intents||[];
+  const links=(data.secondary_links||[]).slice(0,5),occ=(data.occurrences||[]).slice(0,20),intents=cr.intents||[];
+  const destHist=(data.destination_history||[]).slice(0,10);
+  const byType={};(data.identifiers||[]).forEach(i=>{(byType[i.identifier_type]=byType[i.identifier_type]||[]).push(i.identifier_value)});
+  const idsHtml=Object.keys(ID_LABELS).map(t=>{const v=byType[t];return v&&v.length?`<dt>${esc(ID_LABELS[t])} (${v.length})</dt><dd class="mono">${v.map(esc).join(", ")}</dd>`:""}).join("");
+  const utmBits=[["utm_source","Источник"],["utm_medium","Канал"],["utm_campaign","Кампания"],["utm_content","Контент"],["utm_term","Ключевое слово"]].filter(([k])=>utm[k]).map(([k,l])=>`<dt>${esc(l)}</dt><dd class="mono">${esc(utm[k])}</dd>`).join("");
   overlay("drawer",{title:cr.domain||"Креатив",subtitle:plat,size:"md",
     body:`${media}
+    <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">${copyBtn(cr.title,"Заголовок объявления","Заголовок")}${copyBtn(cr.description,"Текст объявления","Текст")}${copyBtn(cr.domain,"Домен","Домен")}</div>
     ${cr.recognition_status==="partial"?'<nv-callout tone="warning" heading="Распознано не полностью">Часть полей не удалось прочитать.</nv-callout>':""}
     ${utm.landing_domain_mismatch?'<nv-callout tone="warning" heading="Домен не совпадает">Посадочная страница отличается от сайта рекламодателя.</nv-callout>':""}
-    <p>${esc(cr.description||"")}</p>
+    <div class="sect-t">Содержание объявления</div>
     <dl class="dl">
+      <dt>Заголовок</dt><dd>${esc(cr.title||"—")}</dd>
+      <dt>Текст объявления</dt><dd>${esc(cr.description||"—")}</dd>
+      <dt>Кнопка (CTA)</dt><dd>${esc(cr.cta_text||"не указан")}</dd>
       <dt>Формат</dt><dd>${esc(FORMAT[formatOf(cr)]||cr.creative_type||"—")}</dd>
-      ${intents.length?`<dt>Интент</dt><dd>${intents.map(esc).join(", ")}</dd>`:""}
       <dt>Впервые замечено</dt><dd>${cr.captured_at?esc(N.rel(cr.captured_at)):"—"}</dd>
+      <dt>Ссылка на сайт рекламодателя</dt><dd class="mono">${esc(cr.destination_url||"—")}</dd>
+    </dl>
+    <div class="sect-t">Рекламодатель и источник</div>
+    <dl class="dl">
+      <dt>Домен</dt><dd>${esc(cr.domain||"—")}</dd>
+      <dt>Площадка</dt><dd>${esc(plat)}</dd>
+      ${intents.length?`<dt>Интент</dt><dd>${intents.map(esc).join(", ")}</dd>`:""}
+      <dt>Юрлицо</dt><dd>${adv?esc(adv.canonical_name||"Без названия"):"не раскрыто"}</dd>
+      <dt>ИНН</dt><dd class="mono">${adv?esc(adv.inn||"—"):"—"}</dd>
+      ${adv?`<dt>Как раскрыто</dt><dd>${esc(adv.association_method||"—")}${adv.confidence?" · уверенность "+Math.round(adv.confidence*100)+"%":""}</dd>`:""}
+      ${adv&&adv.address?`<dt>Адрес</dt><dd>${esc(adv.address)}</dd>`:""}
+      ${adv&&adv.phone?`<dt>Телефон</dt><dd>${esc(adv.phone)}</dd>`:""}
+      ${adv&&adv.website_url?`<dt>Сайт рекламодателя</dt><dd class="mono">${esc(adv.website_url)}</dd>`:""}
+    </dl>
+    <div class="sect-t">Посадочная страница и UTM</div>
+    <dl class="dl">
+      ${utm.final_url?`<dt>Фактическая посадочная</dt><dd class="mono">${esc(utm.final_url_domain||utm.final_url)}</dd>`:`<dt>Посадочная страница</dt><dd>не определена</dd>`}
+      ${utm.advertised_site_domain?`<dt>Проверка домена</dt><dd>${utm.landing_domain_mismatch?"не совпадает с сайтом рекламодателя":"совпадает с сайтом рекламодателя"}</dd>`:""}
+      ${utmBits||"<dt>UTM-метки</dt><dd>не найдены в ссылке</dd>"}
+    </dl>
+    <div class="sect-t">Дополнительные сигналы</div>
+    <dl class="dl">
+      ${cr.creative_type==="video"?`<dt>Длительность видео</dt><dd>${cr.video_duration?esc(cr.video_duration)+" сек":"не определена"}</dd>`:""}
+      ${cr.video_src?`<dt>Файл видео</dt><dd class="mono">${esc(cr.video_src)}</dd>`:""}
       <dt>Цена</dt><dd>${esc(cr.price_text||(cr.price_rub?fmt(cr.price_rub)+" ₽":"не указана"))}</dd>
+      ${cr.discount_percent?`<dt>Скидка</dt><dd>${esc(cr.discount_percent)}%</dd>`:""}
       <dt>ERID</dt><dd class="mono">${esc(cr.erid||"нет")}</dd>
       ${(cr.app_package_id||cr.app_store_id)?`<dt>Приложение</dt><dd class="mono">${esc(cr.app_package_id||cr.app_store_id)}</dd>`:""}
-      <dt>Рекламодатель</dt><dd>${adv?esc(adv.canonical_name||"Без названия")+' · ИНН <span class="mono">'+esc(adv.inn||"—")+"</span>":"не раскрыт"}</dd>
-      <dt>Ссылка</dt><dd class="mono">${esc(cr.destination_url||"—")}</dd>
-      ${utm.final_url_domain?`<dt>Фактическая посадочная</dt><dd class="mono">${esc(utm.final_url_domain)}</dd>`:""}
+      ${cr.carousel_id?`<dt>Карусель</dt><dd>Слайд ${cr.carousel_slide_index!=null?"#"+(cr.carousel_slide_index+1):"—"} · смотрите вкладку «Повторы и карусели» в Аналитике</dd>`:""}
     </dl>
-    ${links.length?`<div class="sect-t">Другие ссылки</div><dl class="dl">${links.map(l=>`<dt>${esc(l.link_text||l.final_url_domain||"Ссылка")}</dt><dd class="mono">${esc(l.final_url_domain||l.final_url||"—")}</dd>`).join("")}</dl>`:""}
-    ${occ.length?`<div class="sect-t">Последние показы</div><nv-timeline items="${esc(JSON.stringify(occ.map(o=>({title:(o.platform||"")+" · "+(o.observed_at||"").replace("T"," ").slice(0,16)}))))}"></nv-timeline>`:""}`,
+    ${links.length?`<div class="sect-t">Другие ссылки объявления</div><dl class="dl">${links.map(l=>`<dt>${esc(l.link_text||l.final_url_domain||"Ссылка")}</dt><dd class="mono">${esc(l.final_url_domain||l.final_url||"—")}${[l.utm_source,l.utm_medium,l.utm_campaign].filter(Boolean).length?"<br>"+esc([l.utm_source,l.utm_medium,l.utm_campaign].filter(Boolean).join(" / ")):""}</dd>`).join("")}</dl>`:""}
+    ${idsHtml?`<div class="sect-t">Идентификаторы кампаний</div><dl class="dl">${idsHtml}</dl>`:""}
+    ${destHist.length?`<div class="sect-t">История изменений посадочной страницы</div><dl class="dl">${destHist.map(d=>`<dt>${esc(d.final_url_domain||d.final_url||"—")}</dt><dd>${esc((d.first_seen_at||"").slice(0,10))} — ${esc((d.last_seen_at||"").slice(0,10))}${[d.utm_source,d.utm_medium,d.utm_campaign].filter(Boolean).length?" · "+esc([d.utm_source,d.utm_medium,d.utm_campaign].filter(Boolean).join(" / ")):""}</dd>`).join("")}</dl>`:""}
+    ${occ.length?`<div class="sect-t">Последние показы</div><nv-timeline items="${esc(JSON.stringify(occ.map(o=>({title:(o.platform||"")+" · "+(o.observed_at||"").replace("T"," ").slice(0,16)+(o.source_page_url?" · "+o.source_page_url:"")}))))}"></nv-timeline>`:""}`,
     actions:[
       {label:saved?"Убрать из сохранённых":"Сохранить",icon:"bookmark",fn(){
         const id2=String(cr.id);let ids=S.intel.savedIds;
@@ -2460,6 +2494,7 @@ advertisers(){
 };
 
 Object.assign(N.acts,{
+  copyField(a,d){const v=d.value||"";const done=()=>toast("Скопировано",{tone:"success"});if(navigator.clipboard)navigator.clipboard.writeText(v).then(done).catch(()=>toast("Браузер запретил копирование. Скопируйте текст вручную",{tone:"warning"}));else toast("Скопируйте текст вручную",{tone:"warning"})},
   libReset(){Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:""});loadLibrary()},
   bulkSave(){const set=new Set(S.intel.savedIds);S.intel.sel.forEach(g=>set.add(String(g.representative.id)));S.intel.savedIds=[...set];persistSavedCreativeIds(S.intel.savedIds);const n=S.intel.sel.length;S.intel.sel=[];N.refresh();toast("В избранное добавлено: "+n,{tone:"success"})},
   bulkCollect(){collectDlg(S.intel.sel.map(g=>({group_key:g.group_key,creative_id:g.representative.id})))},
