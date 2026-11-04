@@ -1856,11 +1856,25 @@ const KEY="neon-ui-parsya-v1";
 const NEON=window.NEON={services:{},order:[],acts:{},chg:{},state:{},commands:[]};
 let saved={};try{saved=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
 const S=NEON.state;
-S.core=Object.assign({feed:[]},saved.core||{});
+/* Сохранённое в localStorage может быть старее текущего кода (новые поля ещё не
+   существовали на момент сохранения). Сливаем свежий seed() с сохранённым на два
+   уровня — так отсутствующие вложенные поля (например S.intel.f.page, добавленное
+   позже, чем S.intel.f целиком) всегда получают дефолт из seed(), а не undefined. */
+function mergeState(fresh,savedPart){
+  if(!savedPart||typeof savedPart!=="object")return fresh;
+  for(const k of Object.keys(fresh)){
+    if(savedPart[k]===undefined)continue;
+    const fv=fresh[k],sv=savedPart[k];
+    if(fv&&sv&&typeof fv==="object"&&typeof sv==="object"&&!Array.isArray(fv)&&!Array.isArray(sv))fresh[k]=Object.assign(fv,sv);
+    else fresh[k]=sv;
+  }
+  return fresh;
+}
+S.core=mergeState({feed:[]},saved.core);
 let saveT;
 NEON.save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},200)};
 
-NEON.register=svc=>{NEON.services[svc.id]=svc;NEON.order.push(svc.id);if(svc.seed)S[svc.id]=Object.assign(svc.seed(),saved[svc.id]||{});svc.commands&&NEON.commands.push(...svc.commands.map(c=>({...c,svc:svc.id})))};
+NEON.register=svc=>{NEON.services[svc.id]=svc;NEON.order.push(svc.id);if(svc.seed)S[svc.id]=mergeState(svc.seed(),saved[svc.id]);svc.commands&&NEON.commands.push(...svc.commands.map(c=>({...c,svc:svc.id})))};
 
 NEON.log=(text,svc,go)=>{S.core.feed.unshift({text,svc,go,at:Date.now()});S.core.feed=S.core.feed.slice(0,30);NEON.save();updBell()};
 
@@ -2153,10 +2167,12 @@ async function filterByAdvertiser(inn,name){
 function libRes(){
   const el=document.getElementById("lib-res");if(!el)return;
   const f=S.intel.f,full=filtered(),sel=S.intel.sel.map(g=>String(g.representative.id));
-  const pageSize=f.pageSize||25,totalPages=Math.max(1,Math.ceil(full.length/pageSize));
-  if(f.page>totalPages)f.page=totalPages;
-  if(f.page<1)f.page=1;
-  const start=(f.page-1)*pageSize,rr=full.slice(start,start+pageSize);
+  const pageSize=+f.pageSize||25,totalPages=Math.max(1,Math.ceil(full.length/pageSize));
+  let page=+f.page||1;
+  if(page>totalPages)page=totalPages;
+  if(page<1)page=1;
+  f.page=page;f.pageSize=pageSize;
+  const start=(page-1)*pageSize,rr=full.slice(start,start+pageSize);
   const h=document.getElementById("lib-count");
   if(h)h.innerHTML=(full.length?`Показано <b>${start+1}–${start+rr.length}</b> из ${full.length}`:`Показано <b>0</b>`)+(anyF()?' · <nv-button variant="link" size="sm" data-act="libReset">Сбросить фильтры</nv-button>':"");
   el.innerHTML=S.intel.lib.loading?'<nv-skeleton count="6"></nv-skeleton>':(rr.length?`<div class="grid g3">${rr.map(g=>cardHtml(g,sel.includes(String(g.representative.id)))).join("")}</div>`:`<nv-card><nv-empty icon="search-x" heading="По этим фильтрам рекламы нет" text="Уберите часть фильтров или запустите сканирование по новому запросу."><nv-button variant="secondary" data-act="libReset">Сбросить фильтры</nv-button><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>`);
@@ -2488,7 +2504,7 @@ library(){
   actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
   help:{title:"С чего начать",steps:["Запустите сканирование по своему запросу и городу.","Откройте креатив — там цена, ERID и ссылка.","Сохраняйте находки или собирайте их в подборки."]},
   body:`<div class="grid g4">${stat("Показано карточек",r.length)}${stat("Всего по интенту",I.lib.total||0,'hint="Общее число после группировки одинаковых объявлений"')}${stat("С кодом ERID",erid,'note="из загруженных"')}${stat("В избранном",savedN,'note="из загруженных"')}</div>
-  <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст, домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select><nv-select label="Сортировка" value="${f.sort}" options="recent:Сначала новые|oldest:Сначала старые|name:Домен А-Я" data-chg="libF" data-key="sort"></nv-select><nv-select label="На странице" value="${f.pageSize||25}" options="25:25|50:50|100:100|200:200" data-chg="libF" data-key="pageSize"></nv-select>${intentControlHtml()}</div>
+  <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст, домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select><nv-select label="Сортировка" value="${f.sort}" options="recent:Сначала новые|oldest:Сначала старые|name:Домен А-Я" data-chg="libF" data-key="sort"></nv-select><nv-select label="На странице" value="${+f.pageSize||25}" options="25:25|50:50|100:100|200:200" data-chg="libF" data-key="pageSize"></nv-select>${intentControlHtml()}</div>
   <nv-saved-views id="lib-views" views="${esc(JSON.stringify(I.savedViews.map(v=>({id:v.id,name:v.name}))))}" value="${esc(activeViewId())}" can-save></nv-saved-views>
   <div id="lib-count" class="muted" style="font-size:13px"></div></div><div id="lib-res">${I.lib.loading&&!I.lib.loaded?'<nv-skeleton count="6"></nv-skeleton>':""}</div><div id="lib-page" class="row" style="justify-content:center;margin-top:16px"></div><div class="bulk" id="lib-bulk" hidden></div>`,
   after(root){
