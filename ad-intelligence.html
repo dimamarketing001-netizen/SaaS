@@ -2077,7 +2077,7 @@ function intentControlHtml(){
 
 /* ---------- Библиотека ---------- */
 async function loadLibrary(extra){
-  const I=S.intel;I.lib.loading=true;N.refreshIf("intel-library");
+  const I=S.intel;I.lib.loading=true;N.refreshIf("intel-library","intel-compare");
   const params={sort:I.f.sort==="discount"?"discount":"recent",limit:120};
   if(I.f.q)params.q=I.f.q;
   const rg=NEONUI.rangeOf(I.f.period);
@@ -2090,7 +2090,7 @@ async function loadLibrary(extra){
     I.lib.loaded=true;
   }catch(err){I.lib.loaded=true;toast("Не удалось загрузить креативы: "+(err.message||""),{tone:"danger"})}
   I.lib.loading=false;
-  N.refreshIf("intel-library");
+  N.refreshIf("intel-library","intel-compare");
 }
 async function jumpToLibrary(params,label){
   try{
