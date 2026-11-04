@@ -340,8 +340,8 @@ nv-creative-card{display:block;min-width:0}
 .cr-t{font-weight:600;line-height:1.3;border:0;background:none;padding:0;text-align:left;cursor:pointer;display:block;color:var(--ink)}
 .cr-t:hover{text-decoration:underline}
 .cr-m{font-size:12.5px;color:var(--ink-3);overflow-wrap:anywhere}
-.cr-f{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:12px}
-.cr-copy{font-size:12px;line-height:1.4;color:var(--ink-3);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cr-f{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:auto}
+.cr-copy{font-size:12px;line-height:1.4;color:var(--ink-3);margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cr-intent{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--svc-ink);background:var(--svc-soft);border-radius:999px;padding:3px 9px;align-self:flex-start;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .cr-ck{position:absolute;top:9px;left:9px;z-index:2}
 .cr-ck .box{background:#fff;border-color:rgba(0,0,0,.35);color:transparent;width:22px;height:22px}
@@ -1974,6 +1974,12 @@ const {esc,ic,fmt,overlay,toast,confirm,formVals,FORMAT}=NEONUI,N=NEON,S=N.state
 
 const RUN_STATUS_MAP={queued:"queued",running:"running",succeeded:"done",failed:"failed"};
 
+function fmtDateTime(iso){
+  if(!iso)return"—";
+  const d=new Date(iso);
+  if(isNaN(d.getTime()))return"—";
+  return d.toLocaleDateString("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric"})+", "+d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
+}
 function realPlatformLabel(m){
   m=m||"";
   if(m.startsWith("vk-native"))return"VK Ads";
@@ -2075,7 +2081,7 @@ function cardHtml(g,selected){
   const otherPlatforms=[...new Set((g.platforms||[]).map(realPlatformLabel))].filter(l=>l!==primary);
   const fmt=formatOf(rep);
   const mediaAttrs=(fmt==="video"&&rep.video_src)?`video="${esc(rep.video_src)}" poster="${esc(rep.video_poster||"")}"`:`image="${esc(rep.image_url||"")}"`;
-  return `<nv-creative-card cid="${esc(rep.id)}" headline="${esc(rep.title||rep.domain||"Без заголовка")}" advertiser="${esc(rep.domain||"—")}" domain="${esc(rep.domain||"")}" platform="${esc(primary)}" format="${fmt}" date="${esc(N.rel(g.last_seen_at||rep.captured_at))}" discount="${rep.discount_percent||""}" cta="${esc(rep.cta_text||"")}" ${mediaAttrs} copy="${esc((rep.description||"").slice(0,180))}" platforms="${esc(otherPlatforms.join(","))}" ${saved?"saved":""} selectable ${selected?"selected":""}></nv-creative-card>`;
+  return `<nv-creative-card cid="${esc(rep.id)}" headline="${esc(rep.title||rep.domain||"Без заголовка")}" advertiser="${esc(rep.domain||"—")}" domain="${esc(rep.domain||"")}" platform="${esc(primary)}" format="${fmt}" date="${esc(fmtDateTime(g.last_seen_at||rep.captured_at))}" discount="${rep.discount_percent||""}" cta="${esc(rep.cta_text||"")}" ${mediaAttrs} copy="${esc((rep.description||"").slice(0,180))}" platforms="${esc(otherPlatforms.join(","))}" ${saved?"saved":""} selectable ${selected?"selected":""}></nv-creative-card>`;
 }
 function bindCards(root,target){
   target=target||"sel";
@@ -2216,7 +2222,7 @@ async function openCreative(id){
       <dt>Текст объявления</dt><dd>${esc(cr.description||"—")}</dd>
       <dt>Кнопка (CTA)</dt><dd>${esc(cr.cta_text||"не указан")}</dd>
       <dt>Формат</dt><dd>${esc(FORMAT[formatOf(cr)]||cr.creative_type||"—")}</dd>
-      <dt>Впервые замечено</dt><dd>${cr.captured_at?esc(N.rel(cr.captured_at)):"—"}</dd>
+      <dt>Впервые замечено</dt><dd>${esc(fmtDateTime(cr.captured_at))}</dd>
       <dt>Ссылка на сайт рекламодателя</dt><dd class="mono">${esc(cr.destination_url||"—")}</dd>
     </dl>
     <div class="sect-t">Рекламодатель и источник</div>
