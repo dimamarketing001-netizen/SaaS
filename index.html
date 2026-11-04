@@ -58,7 +58,7 @@ apiBaseInput.value = localStorage.getItem("parsya_api_base") || DEFAULT_API_BASE
 function apiBase(){ return (apiBaseInput.value || DEFAULT_API_BASE).replace(/\/+$/, ""); }
 
 if (localStorage.getItem("parsya_session")) {
-  location.replace("overview.html");
+  location.replace("ad-intelligence.html");
 }
 
 const form = document.getElementById("loginForm");
@@ -86,7 +86,7 @@ form.addEventListener("submit", async (event) => {
     const data = await response.json();
     localStorage.setItem("parsya_api_base", base);
     localStorage.setItem("parsya_session", JSON.stringify(data));
-    location.replace("overview.html");
+    location.replace("ad-intelligence.html");
   } catch (err) {
     errorBox.textContent = err.message || "Не удалось войти.";
     errorBox.classList.add("show");

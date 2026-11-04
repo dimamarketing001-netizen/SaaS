@@ -576,24 +576,6 @@ const session=JSON.parse(localStorage.getItem("parsya_session")||"null");
 if (!session) { location.replace("index.html"); }
 const DEFAULT_API_BASE="https://xn--80ak2afbe.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai";
 const API_BASE=(localStorage.getItem("parsya_api_base")||DEFAULT_API_BASE).replace(/\/+$/,"");
-if (session && session.role === "admin") {
-  // 2026-11-04 (Dima): это не отдельная "консоль" — просто ещё вкладки
-  // в ТОМ ЖЕ сайдбаре, для админских возможностей, которых нет у
-  // обычного клиента (запуск кампаний в Директе, конверсии в Метрику —
-  // обе фичи addAvto; плюс управление воркером/джобами парсера).
-  const sidebarBottom = document.querySelector(".sidebarbottom");
-  if (sidebarBottom) {
-    const group = document.createElement("div");
-    group.className = "navgroup";
-    group.innerHTML =
-      '<div class="navlabel">Администрирование</div>' +
-      '<a class="navitem" href="https://xn--80aanufhx.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai/"><i data-lucide="rocket"></i> Массовый запуск</a>' +
-      '<a class="navitem" href="https://xn--80aanufhx.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai/lk"><i data-lucide="line-chart"></i> Конверсии в Метрику</a>' +
-      '<a class="navitem" href="' + API_BASE + '/dashboard"><i data-lucide="server-cog"></i> Воркер и задания</a>';
-    sidebarBottom.parentNode.insertBefore(group, sidebarBottom);
-    if (window.lucide) lucide.createIcons();
-  }
-}
 // Intent scoping (2026-10-22): by default the whole ЛК (library + every analytics
 // report) is scoped to the search query(ies) the viewer is currently interested in,
 // instead of mixing creatives from every search ever run. See INTENT_SCOPED_PATHS below

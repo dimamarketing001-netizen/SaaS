@@ -488,43 +488,7 @@ tbody tr:hover{background:#fbfcfd}
 <div class="overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal"><div class="modal-head"><h2 id="modalTitle">Создать проект</h2><button class="icon-btn" id="closeModal" aria-label="Закрыть"><i data-lucide="x"></i></button></div><p id="modalDescription">Выберите направление и задайте название — проект появится в рабочем пространстве.</p><form id="projectForm"><div class="form-row"><label for="projectName">Название проекта</label><input id="projectName" required placeholder="Например, Лидогенерация Q4"></div><div class="form-row"><label for="projectType">Продуктовое пространство</label><select id="projectType"><option value="ads">Ad Intelligence — парсер рекламы</option><option value="automation">Ad Automation — запуск рекламы</option><option value="seo">SEO Intelligence — продвижение</option><option value="builder">Website Builder — сайты и виджеты</option></select></div><div class="modal-actions"><button type="button" class="btn" id="cancelModal">Отмена</button><button class="btn btn-primary" type="submit"><i data-lucide="plus"></i> Создать проект</button></div></form></div></div>
 <div class="toast" id="toast"><i data-lucide="check-circle-2"></i><div><strong id="toastTitle">Готово</strong><span id="toastText">Действие выполнено.</span></div></div>
 <script>
-const parsyaSession = JSON.parse(localStorage.getItem("parsya_session") || "null");
-if (!parsyaSession) { location.replace("index.html"); }
-if (parsyaSession && parsyaSession.role === "admin") {
-  // 2026-11-04 (Dima): "Ad Automation" в этом меню уже существовал как
-  // демо-заглушка под ровно то, что делает addAvto (запуск кампаний) —
-  // переключаем его на реальную внешнюю ссылку для админа вместо
-  // демо-тоста, а не добавляем отдельную "консоль". Плюс одна новая
-  // кнопка "Конверсии в Метрику" (у неё готового слота в этом меню не
-  // было). Снимаем data-page ДО общей обвязки кликов ниже (которая
-  // вешает демо-навигацию на всё с [data-page]), чтобы не добавлять
-  // второй обработчик поверх первого.
-  document.querySelectorAll('[data-page="automation"]').forEach(el => {
-    el.removeAttribute("data-page");
-    el.addEventListener("click", () => {
-      window.location.href = "https://xn--80aanufhx.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai/";
-    });
-  });
-  const automationBtn = document.querySelector('#mainNav button[data-accent="#42d9ff"]');
-  if (automationBtn) {
-    const conversionsBtn = document.createElement("button");
-    conversionsBtn.innerHTML = '<i data-lucide="line-chart"></i> Конверсии в Метрику';
-    conversionsBtn.addEventListener("click", () => {
-      window.location.href = "https://xn--80aanufhx.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai/lk";
-    });
-    automationBtn.parentNode.insertBefore(conversionsBtn, automationBtn.nextSibling);
-  }
-  const sideBottom = document.querySelector(".side-bottom");
-  if (sideBottom) {
-    const adminLink = document.createElement("a");
-    adminLink.href = (localStorage.getItem("parsya_api_base") || "https://xn--80ak2afbe.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai") + "/dashboard";
-    adminLink.className = "btn btn-quiet";
-    adminLink.style.cssText = "width:100%;justify-content:flex-start;margin-bottom:10px";
-    adminLink.innerHTML = '<i data-lucide="server-cog"></i> Воркер и задания';
-    sideBottom.insertBefore(adminLink, sideBottom.firstChild);
-    if (window.lucide) lucide.createIcons();
-  }
-}
+if (!JSON.parse(localStorage.getItem("parsya_session") || "null")) { location.replace("index.html"); }
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 
 const overviewIds=['stats','overviewChart','productSectionHead','productGrid','overviewLower'];
