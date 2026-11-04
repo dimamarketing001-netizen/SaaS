@@ -2386,9 +2386,9 @@ async function openScanDetail(job){
     <dl class="dl">
       <dt>Запрос</dt><dd>${esc(data.key_text||"—")}</dd>
       <dt>Город</dt><dd>${esc(data.city||"—")}</dd>
-      <dt>Создано</dt><dd>${data.created_at?N.rel(data.created_at):"—"}</dd>
-      <dt>Начато</dt><dd>${data.started_at?N.rel(data.started_at):"—"}</dd>
-      <dt>Завершено</dt><dd>${data.finished_at?N.rel(data.finished_at):"ещё не завершено"}</dd>
+      <dt>Создано</dt><dd>${esc(fmtDateTime(data.created_at))}</dd>
+      <dt>Начато</dt><dd>${esc(fmtDateTime(data.started_at))}</dd>
+      <dt>Завершено</dt><dd>${data.finished_at?esc(fmtDateTime(data.finished_at)):"ещё не завершено"}</dd>
       <dt>Найдено креативов</dt><dd>${esc(data.total_creatives||0)}</dd>
     </dl>
     <div class="sect-t">По площадкам</div>
@@ -2455,13 +2455,13 @@ function carouselsHtml(groups){
 function wireAnalyticsTables(r,I){
   const covRows=I.coverage.map((p,i)=>({id:i,platform:p.platform,total:p.total,last:p.last_captured_at,advPct:p.total?Math.round(p.with_advertiser/p.total*100):0,recPct:p.total?Math.round(p.recognized/p.total*100):0}));
   wireTable(r,"an-cov",covRows,
-    [{key:"platform",label:"Площадка"},{key:"status",label:"Статус",render:x=>coverageStatus(x.advPct)},{key:"advPct",label:"Раскрыто",align:"right",render:x=>x.advPct+"%"},{key:"recPct",label:"Распознано",align:"right",render:x=>x.recPct+"%"},{key:"total",label:"Всего",align:"right"},{key:"last",label:"Последний сбор",render:x=>x.last?N.rel(x.last):"—"}]);
+    [{key:"platform",label:"Площадка"},{key:"status",label:"Статус",render:x=>coverageStatus(x.advPct)},{key:"advPct",label:"Раскрыто",align:"right",render:x=>x.advPct+"%"},{key:"recPct",label:"Распознано",align:"right",render:x=>x.recPct+"%"},{key:"total",label:"Всего",align:"right"},{key:"last",label:"Последний сбор",render:x=>esc(fmtDateTime(x.last))}]);
   const covChart=r.querySelector("#an-cov-chart");if(covChart)covChart.data={labels:covRows.map(x=>x.platform),series:[{name:"Раскрыто, %",values:covRows.map(x=>x.advPct)}]};
   wireTable(r,"an-brk",I.breakdown.map((b,i)=>({id:i,...b})),
     [{key:"label",label:"Источник"},{key:"n",label:"Креативов",align:"right"},{key:"pct",label:"Доля",align:"right",render:x=>x.pct+"%"}]);
   const brkChart=r.querySelector("#an-brk-chart");if(brkChart)brkChart.data={labels:I.breakdown.map(x=>x.label),series:[{name:"Доля, %",values:I.breakdown.map(x=>x.pct)}]};
   wireTable(r,"an-fresh",I.fresh,
-    [{key:"title",label:"Объявление",render:c=>titleCell(c,(c.domain||"")+" · "+realPlatformLabel(c.detection_method))},{key:"captured_at",label:"Обнаружен",align:"right",render:c=>N.rel(c.captured_at)}],
+    [{key:"title",label:"Объявление",render:c=>titleCell(c,(c.domain||"")+" · "+realPlatformLabel(c.detection_method))},{key:"captured_at",label:"Обнаружен",align:"right",render:c=>esc(fmtDateTime(c.captured_at))}],
     c=>openCreative(c.id));
   const freshFoot=r.querySelector("#an-fresh-total");if(freshFoot)freshFoot.textContent="Всего за 7 дней: "+I.freshTotal;
   wireTable(r,"an-disc",I.discounts,
@@ -2590,7 +2590,7 @@ scans(){
   after(root){
     if(!S.intel.scansLoaded)loadScans();
     const t=root.querySelector("#sc-t");
-    t.columns=[{key:"id",label:"№",render:s=>`<span class="num">#${s.id}</span>`},{key:"key_text",label:"Запрос",render:s=>`<div class="cell-t">${esc(s.key_text)}</div><div class="cell-s">${esc(s.city||"")}</div>`},{key:"status",label:"Статус",render:s=>`<nv-status value="${RUN_STATUS_MAP[s.status]||s.status}"></nv-status>`},{key:"total",label:"Найдено",align:"right"},{key:"started_at",label:"Создано",render:s=>s.started_at?N.rel(s.started_at):"—"}];
+    t.columns=[{key:"id",label:"№",render:s=>`<span class="num">#${s.id}</span>`},{key:"key_text",label:"Запрос",render:s=>`<div class="cell-t">${esc(s.key_text)}</div><div class="cell-s">${esc(s.city||"")}</div>`},{key:"status",label:"Статус",render:s=>`<nv-status value="${RUN_STATUS_MAP[s.status]||s.status}"></nv-status>`},{key:"total",label:"Найдено",align:"right"},{key:"started_at",label:"Создано",render:s=>esc(fmtDateTime(s.started_at))}];
     t.rows=rows.map(s=>({...s}));
     t.addEventListener("nv-row-click",e=>{const s=L.find(x=>String(x.id)===e.detail.id);if(s)openScanDetail(s)});
   }}},
