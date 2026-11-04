@@ -576,6 +576,18 @@ const session=JSON.parse(localStorage.getItem("parsya_session")||"null");
 if (!session) { location.replace("index.html"); }
 const DEFAULT_API_BASE="https://xn--80ak2afbe.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai";
 const API_BASE=(localStorage.getItem("parsya_api_base")||DEFAULT_API_BASE).replace(/\/+$/,"");
+if (session && session.role === "admin") {
+  const sidebarBottom = document.querySelector(".sidebarbottom");
+  if (sidebarBottom) {
+    const adminLink = document.createElement("a");
+    adminLink.href = API_BASE + "/dashboard";
+    adminLink.className = "btn secondary";
+    adminLink.style.cssText = "width:100%;justify-content:flex-start;margin:0 0 10px";
+    adminLink.innerHTML = '<i data-lucide="shield"></i> Консоль администратора';
+    sidebarBottom.parentNode.insertBefore(adminLink, sidebarBottom);
+    if (window.lucide) lucide.createIcons();
+  }
+}
 // Intent scoping (2026-10-22): by default the whole ЛК (library + every analytics
 // report) is scoped to the search query(ies) the viewer is currently interested in,
 // instead of mixing creatives from every search ever run. See INTENT_SCOPED_PATHS below
