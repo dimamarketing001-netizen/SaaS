@@ -349,13 +349,14 @@ nv-creative-card{display:block;min-width:0}
 .cr-f{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:auto}
 .folder{display:flex;flex-direction:column;height:100%;filter:drop-shadow(0 1px 2px rgba(17,24,20,.09))}
 .folder-tab{width:46%;min-width:84px;max-width:150px;height:14px;background:var(--surface);border-radius:10px 10px 0 0;align-self:flex-start}
-.folder-body{flex:1;background:var(--surface);border-radius:0 16px 16px 16px;padding:16px;display:flex;flex-direction:column;gap:7px}
+.folder-body{flex:1;background:var(--surface);border-radius:0 16px 16px 16px;padding:16px;display:flex;flex-direction:column}
+.folder-top{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
 .folder-head{display:flex;align-items:center;justify-content:space-between;color:var(--svc-ink)}
 .folder-count{font-size:11px;font-weight:700;color:var(--ink-3);background:var(--surface-2);border-radius:999px;padding:2px 9px}
 .folder-name{margin:0;font:700 14.5px var(--font-display);color:var(--ink)}
 .folder-desc{margin:0;font-size:12.5px;line-height:1.4;color:var(--ink-3);flex:1}
-.folder-foot{margin-top:auto;padding-top:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.cr-copy{font-size:12px;line-height:1.4;color:var(--ink-3);margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.folder-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.cr-copy{font-size:12px;line-height:1.4;color:var(--ink-3);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cr-intent{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--svc-ink);background:var(--svc-soft);border-radius:999px;padding:3px 9px;align-self:flex-start;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .cr-ck{position:absolute;top:9px;left:9px;z-index:2}
 .cr-ck .box{background:#fff;border-color:rgba(0,0,0,.35);color:transparent;width:22px;height:22px}
@@ -751,7 +752,8 @@ nv-ring{display:inline-flex;flex:none;vertical-align:middle}
 .art .hl{font-weight:700;font-size:clamp(13px,1.05vw,15px)}
 .art .cta{border-radius:7px;font-size:11px;font-weight:500;padding:3px 9px}
 .art .disc{border-radius:6px;font-size:11.5px;font-weight:600}
-.cr-b{padding:8px 8px 7px;gap:4px}
+.cr-b{padding:8px 8px 7px;gap:0}
+.cr-top{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
 .cr-t{font-weight:500;font-size:12.5px}
 .cr-m{font:10.5px var(--font-mono)}
 .cr-ck{top:14px;left:14px}
@@ -1493,7 +1495,7 @@ define("nv-creative-card",class extends NvEl{
     if(disc)media=`<span class="disc">−${esc(disc)}%</span>`+media;
     return `<article class="cr${this.b("selected")?" sel":""}${sc?" has-ck":""}">${sc?`<label class="ck cr-ck"><input type="checkbox" ${this.b("selected")?"checked":""} aria-label="Выбрать креатив"><span class="box">${ic("check",14)}</span></label>`:""}<button type="button" class="cr-save${this.b("saved")?" on":""}" data-tip="${this.b("saved")?"Убрать из сохранённых":"Сохранить в избранное"}" aria-pressed="${this.b("saved")}" aria-label="Сохранить креатив">${ic("bookmark")}</button>
       <button type="button" class="art${img||vid?"":" empty"}" data-open aria-label="Открыть подробности">${media}</button>
-      <div class="cr-b"><button type="button" class="cr-t" data-open>${esc(headline||this.a("advertiser")||"Без заголовка")}</button><div class="cr-m">${this.a("domain")?`<img class="cr-fav" src="${esc(favUrl(this.a("domain")))}" alt="" width="14" height="14" loading="lazy" onerror="this.style.visibility='hidden'">`:""}${esc(this.a("domain"))}${this.a("date")?" · "+esc(this.a("date")):""}</div>${copy?`<p class="cr-copy">${esc(copy)}</p>`:""}<div class="cr-f"><nv-badge>${esc(this.a("platform"))}</nv-badge><nv-badge tone="accent">${esc(FORMAT[fm]||fm)}</nv-badge>${plats.map(p=>`<nv-badge tone="neutral">${esc(p)}</nv-badge>`).join("")}</div></div></article>`}
+      <div class="cr-b"><div class="cr-top"><button type="button" class="cr-t" data-open>${esc(headline||this.a("advertiser")||"Без заголовка")}</button><div class="cr-m">${this.a("domain")?`<img class="cr-fav" src="${esc(favUrl(this.a("domain")))}" alt="" width="14" height="14" loading="lazy" onerror="this.style.visibility='hidden'">`:""}${esc(this.a("domain"))}${this.a("date")?" · "+esc(this.a("date")):""}</div>${copy?`<p class="cr-copy">${esc(copy)}</p>`:""}</div><div class="cr-f"><nv-badge>${esc(this.a("platform"))}</nv-badge><nv-badge tone="accent">${esc(FORMAT[fm]||fm)}</nv-badge>${plats.map(p=>`<nv-badge tone="neutral">${esc(p)}</nv-badge>`).join("")}</div></div></article>`}
   mounted(){const q=s=>this.querySelector(s);this.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>this.emit("nv-open",{id:this.a("cid")}));
     q(".cr-save").onclick=()=>this.emit("nv-save",{id:this.a("cid"),saved:!this.b("saved")});
     const c=q(".cr-ck input");if(c)c.onchange=()=>this.emit("nv-select",{id:this.a("cid"),selected:c.checked})}
@@ -1506,7 +1508,7 @@ define("nv-integration-card",class extends NvEl{
   mounted(){this.querySelector("[data-int]").onclick=()=>this.emit("nv-connect",{id:this.a("iid")})}
 },"Предметные",{desc:"Интеграция в каталоге.",events:["nv-connect {id}"],previewW:300,attrs:{iid:{type:"string",default:"bitrix",desc:"ID"},name:{type:"string",default:"Telegram-бот",desc:"Название"},logo:{type:"string",default:"TG",desc:"Буквы логотипа"},category:{type:"string",default:"Уведомления",desc:"Категория"},description:{type:"string",default:"Присылает заявки и оповещения в чат команды.",desc:"Что произойдёт после подключения"},status:{type:"enum",values:["connected","disconnected","error"],default:"disconnected",desc:"Состояние"}}});
 define("nv-folder-card",class extends NvEl{
-  html(){return `<article class="folder"><div class="folder-tab"></div><div class="folder-body"><div class="folder-head">${ic(this.a("icon")||"folder",20)}${this.a("count")!==""?`<span class="folder-count">${esc(this.a("count"))}</span>`:""}</div><h3 class="folder-name">${esc(this.a("name"))}</h3>${this.a("desc")?`<p class="folder-desc">${esc(this.a("desc"))}</p>`:""}<div class="folder-foot" data-slot></div></div></article>`}
+  html(){return `<article class="folder"><div class="folder-tab"></div><div class="folder-body"><div class="folder-top"><div class="folder-head">${ic(this.a("icon")||"folder",20)}${this.a("count")!==""?`<span class="folder-count">${esc(this.a("count"))}</span>`:""}</div><h3 class="folder-name">${esc(this.a("name"))}</h3>${this.a("desc")?`<p class="folder-desc">${esc(this.a("desc"))}</p>`:""}</div><div class="folder-foot" data-slot></div></div></article>`}
 },"Предметные",{desc:"Карточка-папка для подборок и коллекций — действия (кнопки, меню) передаются внутрь как обычное содержимое.",slot:"Кнопки действий",demoHtml:'<nv-button size="sm" variant="secondary" icon-end="arrow-right">Открыть</nv-button>',previewW:260,attrs:{name:{type:"string",default:"Конкуренты",desc:"Название папки"},desc:{type:"string",default:"Главные игроки в нише",desc:"Описание"},count:{type:"string",default:"24",desc:"Счётчик содержимого"},icon:{type:"string",default:"folder",desc:"Иконка"}}});
 define("nv-kanban",class extends NvEl{
   set columns(v){this._c=v;this._init&&this.update()}
