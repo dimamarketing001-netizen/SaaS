@@ -1115,6 +1115,7 @@ nv-pagination{display:inline-block}
 .nm thead th:first-child{text-align:left}
 .pcmp thead th.hl{color:var(--svc-ink);font-weight:600}
 .pcmp td.hl{background:var(--svc-soft)}
+.pcmp td.diff{background:var(--warn-bg);color:var(--warn);font-weight:600}
 .pcmp tr.g th,.nm tr.g th{font-weight:500;padding-top:12px;text-align:left}
 .pcx{color:var(--ink-3)}.pcx.y{color:var(--ok);display:inline-flex}
 .nm small{display:block;font-size:11px;color:var(--ink-3)}
@@ -1622,8 +1623,9 @@ define("nv-pricing-card",class extends NvEl{
   mounted(){this.querySelector("[data-pick]").addEventListener("click",()=>{if(!this.b("current"))this.emit("nv-choose",{id:this.a("plan")})})}
 },"Тарифы",{desc:"Карточка тарифа: цена, кнопка выбора и что входит.",events:["nv-choose {id}"],previewW:300,attrs:{plan:{type:"string",default:"grow",desc:"ID тарифа"},name:{type:"string",default:"Рост",desc:"Название"},description:{type:"string",default:"Для команды, которая запускает рекламу каждую неделю",desc:"Кому подходит"},price:{type:"string",default:"7 900 ₽",desc:"Цена"},period:{type:"string",default:"в месяц",desc:"Период"},note:{type:"string",default:"",desc:"Пояснение под ценой"},features:{type:"string",default:"5 пользователей|500 сканирований|CRM и сайты",desc:"Что входит, через |"},cta:{type:"string",default:"Перейти на тариф",desc:"Текст кнопки"},popular:{type:"bool",desc:"Выделить"},current:{type:"bool",desc:"Подключён сейчас"}},demo:{popular:""}});
 define("nv-plan-compare",class extends NvEl{
-  html(){const P=this.a("plans").split("|"),R=parseJSON(this.a("rows"),[]),hl=this.a("highlight"),cell=v=>v===true?`<span class="pcx y" aria-label="Есть">${ic("check",15)}</span>`:v===false?'<span class="pcx" aria-label="Нет">–</span>':esc(v);return `<div class="tw"><table class="pcmp"><thead><tr><th><span class="sr">Возможность</span></th>${P.map(p=>`<th class="${p===hl?"hl":""}">${esc(p)}</th>`).join("")}</tr></thead><tbody>${R.map(r=>r.group?`<tr class="g"><th colspan="${P.length+1}">${esc(r.group)}</th></tr>`:`<tr><th>${esc(r.label)}</th>${r.values.map((v,i)=>`<td class="${P[i]===hl?"hl":""}">${cell(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`}
-},"Тарифы",{desc:"Сравнение тарифов по возможностям.",wide:1,attrs:{plans:{type:"string",default:"Старт|Рост|Масштаб",desc:"Тарифы через |"},highlight:{type:"string",default:"Рост",desc:"Какой выделить"},rows:{type:"string",default:'[{"group":"Лимиты"},{"label":"Пользователи","values":["1","5","Без ограничений"]},{"group":"Возможности"},{"label":"CRM","values":[false,true,true]}]',desc:"Строки JSON: group или label и values"}}});
+  html(){const P=this.a("plans").split("|"),R=parseJSON(this.a("rows"),[]),hl=this.a("highlight"),diff=this.b("diff"),cell=v=>v===true?`<span class="pcx y" aria-label="Есть">${ic("check",15)}</span>`:v===false?'<span class="pcx" aria-label="Нет">–</span>':esc(v);
+    return `<div class="tw"><table class="pcmp"><thead><tr><th><span class="sr">Возможность</span></th>${P.map(p=>`<th class="${p===hl?"hl":""}">${esc(p)}</th>`).join("")}</tr></thead><tbody>${R.map(r=>{if(r.group)return `<tr class="g"><th colspan="${P.length+1}">${esc(r.group)}</th></tr>`;const differs=diff&&new Set(r.values.map(v=>String(v))).size>1;return `<tr><th>${esc(r.label)}</th>${r.values.map((v,i)=>`<td class="${[P[i]===hl?"hl":"",differs?"diff":""].filter(Boolean).join(" ")}">${cell(v)}</td>`).join("")}</tr>`}).join("")}</tbody></table></div>`}
+},"Тарифы",{desc:"Сравнение тарифов (или любых других карточек) по строкам возможностей. С атрибутом diff подсвечивает строки, где значения у колонок разные — удобно для сравнения объявлений, а не только тарифов.",wide:1,attrs:{plans:{type:"string",default:"Старт|Рост|Масштаб",desc:"Колонки через |"},highlight:{type:"string",default:"Рост",desc:"Какую колонку выделить"},diff:{type:"bool",desc:"Подсвечивать строки, где значения колонок различаются"},rows:{type:"string",default:'[{"group":"Лимиты"},{"label":"Пользователи","values":["1","5","Без ограничений"]},{"group":"Возможности"},{"label":"CRM","values":[false,true,true]}]',desc:"Строки JSON: group или label и values"}}});
 define("nv-usage-meter",class extends NvEl{
   html(){const v=+this.a("value"),m=+this.a("max")||1,p=Math.min(100,v/m*100),t=p>=100?"bad":p>=80?"warn":"ok";return `<div class="um t-${t}"><div class="um-h"><span>${esc(this.a("label"))}</span><b>${fmt(v)} из ${fmt(m)}${this.a("unit")?" "+esc(this.a("unit")):""}</b></div><div class="um-b" role="progressbar" aria-valuenow="${Math.round(p)}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(this.a("label"))}"><i style="width:${p}%"></i></div>${t==="ok"?(this.a("hint")?`<small>${esc(this.a("hint"))}</small>`:""):`<small>${p>=100?"Лимит исчерпан. Новые действия недоступны до продления или смены тарифа":"Лимит почти исчерпан"}</small>`}</div>`}
 },"Тарифы",{desc:"Расход лимита тарифа. Сам предупреждает, когда лимит близко.",previewW:320,attrs:{label:{type:"string",default:"Сканирования",desc:"Что считаем"},value:{type:"number",default:412,desc:"Израсходовано"},max:{type:"number",default:500,desc:"Лимит"},unit:{type:"string",default:"",desc:"Единица"},hint:{type:"string",default:"Обновится 1 декабря",desc:"Пояснение"}}});
@@ -1975,7 +1977,7 @@ function groupRealCreatives(items){
 const seed=()=>({
   f:{q:"",platform:"",format:"",saved:"",sort:"recent",period:""},
   lib:{groups:[],total:0,loaded:false,loading:false},
-  sel:[],cmp:[],
+  sel:[],cmp:[],cmpF:{q:"",platform:"",format:"",period:"",adv:""},
   savedIds:loadSavedCreativeIds(),
   collections:[],collectionsLoaded:false,collectionItemsCache:{},openK:null,
   scans:[],scansLoaded:false,
@@ -2005,13 +2007,45 @@ function filtered(){
   else if(f.sort==="oldest")r=[...r].reverse();
   return r;
 }
+function cmpFiltered(){
+  const f=S.intel.cmpF,q=(f.q||"").toLowerCase(),rg=NEONUI.rangeOf(f.period);
+  return CR().filter(g=>{
+    const rep=g.representative;
+    if(f.adv&&rep.domain!==f.adv)return false;
+    if(f.platform&&realPlatformLabel(rep.detection_method)!==f.platform)return false;
+    if(f.format&&formatOf(rep)!==f.format)return false;
+    if(rg){const t=+new Date(g.last_seen_at||rep.captured_at);if(t<rg[0]||t>rg[1])return false}
+    if(q&&!((rep.title||"")+(rep.domain||"")+(rep.description||"")).toLowerCase().includes(q))return false;
+    return true;
+  });
+}
+function cmpMatrixHtml(){
+  const c=S.intel.cmp;
+  if(c.length<2)return `<nv-empty icon="columns-3" heading="Сравнивать пока нечего" text="Отметьте флажком от 2 до 4 объявлений в списке кандидатов ниже."></nv-empty>`;
+  const plans=c.map(g=>(g.representative.domain||"—")+" · "+(g.representative.title||g.representative.domain||"").slice(0,22));
+  const rows=[
+    {label:"Площадка",values:c.map(g=>realPlatformLabel(g.representative.detection_method))},
+    {label:"Формат",values:c.map(g=>FORMAT[formatOf(g.representative)]||g.representative.creative_type||"—")},
+    {label:"Заголовок",values:c.map(g=>g.representative.title||"—")},
+    {label:"Текст объявления",values:c.map(g=>g.representative.description||"—")},
+    {label:"Кнопка (CTA)",values:c.map(g=>g.representative.cta_text||"—")},
+    {label:"Цена",values:c.map(g=>g.representative.price_text||(g.representative.price_rub?fmt(g.representative.price_rub)+" ₽":"нет"))},
+    {label:"Скидка",values:c.map(g=>g.representative.discount_percent?g.representative.discount_percent+"%":"нет")},
+    {label:"ERID",values:c.map(g=>g.representative.erid||"нет")},
+    {label:"Интент",values:c.map(g=>(g.representative.intents||[]).join(", ")||"—")},
+    {label:"Замечено",values:c.map(g=>N.rel(g.last_seen_at||g.representative.captured_at))}
+  ];
+  return `<nv-plan-compare diff plans="${esc(plans.join("|"))}" rows="${esc(JSON.stringify(rows))}"></nv-plan-compare>
+  <div class="row" style="margin-top:12px;gap:6px;flex-wrap:wrap">${c.map(g=>`<nv-button size="sm" variant="ghost" icon="x" data-act="cmpAdd" data-id="${g.representative.id}">Убрать: ${esc(g.representative.domain||"—")}</nv-button>`).join("")}</div>`;
+}
 function cardHtml(g,selected){
   const rep=g.representative,saved=S.intel.savedIds.includes(String(rep.id));
   const primary=realPlatformLabel(rep.detection_method);
   const otherPlatforms=[...new Set((g.platforms||[]).map(realPlatformLabel))].filter(l=>l!==primary);
   return `<nv-creative-card cid="${esc(rep.id)}" headline="${esc(rep.title||rep.domain||"Без заголовка")}" advertiser="${esc(rep.domain||"—")}" domain="${esc(rep.domain||"")}" platform="${esc(primary)}" format="${formatOf(rep)}" date="${esc(N.rel(g.last_seen_at||rep.captured_at))}" discount="${rep.discount_percent||""}" cta="${esc(rep.cta_text||"")}" hue="${hueOf(rep.id)}" copy="${esc((rep.description||"").slice(0,180))}" intent="${esc((rep.intents||[]).join(","))}" platforms="${esc(otherPlatforms.join(","))}" ${saved?"saved":""} selectable ${selected?"selected":""}></nv-creative-card>`;
 }
-function bindCards(root){
+function bindCards(root,target){
+  target=target||"sel";
   if(!root||root._bound)return;
   root._bound=true;
   root.addEventListener("nv-open",e=>openCreative(e.detail.id));
@@ -2024,10 +2058,16 @@ function bindCards(root){
   });
   root.addEventListener("nv-select",e=>{
     const id=String(e.detail.id),g=findGroup(id);if(!g)return;
-    const sel=S.intel.sel,i=sel.findIndex(x=>String(x.representative.id)===id);
-    if(e.detail.selected){if(i<0)sel.push(g)}else if(i>=0)sel.splice(i,1);
-    e.target.toggleAttribute("selected",e.detail.selected);
-    libBulk();N.save();
+    const arr=S.intel[target],i=arr.findIndex(x=>String(x.representative.id)===id);
+    if(e.detail.selected){
+      if(i<0){
+        if(target==="cmp"&&arr.length>=4){toast("Сравнить можно до 4 креативов. Сначала уберите один",{tone:"warning"});return}
+        arr.push(g);
+      }
+    }else if(i>=0)arr.splice(i,1);
+    N.save();
+    if(target==="sel"){e.target.toggleAttribute("selected",e.detail.selected);libBulk()}
+    else N.refresh();
   });
 }
 function intentControlHtml(){
@@ -2352,10 +2392,18 @@ library(){
   <div id="lib-count" class="muted" style="font-size:13px"></div></div><div id="lib-res">${I.lib.loading&&!I.lib.loaded?'<nv-skeleton count="6"></nv-skeleton>':""}</div><div class="bulk" id="lib-bulk" hidden></div>`,
   after(root){if(!I.lib.loaded&&!I.lib.loading)loadLibrary();libRes();}}},
 compare(){
-  const c=S.intel.cmp,F=[["Домен",g=>g.representative.domain||"—"],["Площадка",g=>realPlatformLabel(g.representative.detection_method)],["Формат",g=>FORMAT[formatOf(g.representative)]],["Цена",g=>g.representative.price_text||(g.representative.price_rub?fmt(g.representative.price_rub)+" ₽":"нет")],["Скидка",g=>g.representative.discount_percent?g.representative.discount_percent+"%":"нет"],["Кнопка",g=>g.representative.cta_text||"—"],["ERID",g=>g.representative.erid||"нет"],["Замечено",g=>N.rel(g.last_seen_at)]];
-  return{title:"Сравнение креативов",sub:"Поставьте до 4 объявлений рядом, чтобы увидеть разницу в офферах и подаче.",
-  body:`${c.length?`<div class="cmp">${c.map(g=>`<nv-card><div class="stack"><div class="art" style="--h:${hueOf(g.representative.id)};cursor:default">${artHtml({discount:g.representative.discount_percent,format:formatOf(g.representative),headline:g.representative.title||g.representative.domain,cta:g.representative.cta_text})}</div><dl class="dl">${F.map(k=>`<dt>${k[0]}</dt><dd>${esc(k[1](g))}</dd>`).join("")}</dl><nv-button size="sm" variant="ghost" icon="x" data-act="cmpAdd" data-id="${g.representative.id}">Убрать</nv-button></div></nv-card>`).join("")}</div>`:`<nv-card><nv-empty icon="columns-3" heading="Сравнивать пока нечего" text="Отметьте креативы в библиотеке флажком и нажмите «Сравнить»."><nv-button data-go="intel-library" icon="layout-grid">Открыть библиотеку</nv-button></nv-empty></nv-card>`}
-  ${CR().length?`<nv-card heading="Добавить к сравнению" subtitle="Выбрано ${c.length} из 4"><div class="chips">${CR().slice(0,24).map(g=>`<nv-chip ${c.some(x=>String(x.representative.id)===String(g.representative.id))?"selected":""} data-act="cmpAdd" data-id="${g.representative.id}">${esc(g.representative.domain||"—")}: ${esc((g.representative.title||"").slice(0,28))}</nv-chip>`).join("")}</div></nv-card>`:""}`}},
+  const I=S.intel,f=I.cmpF,r=cmpFiltered();
+  const advs=[...new Set(CR().map(g=>g.representative.domain).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ru"));
+  const plats=[...new Set(CR().map(g=>realPlatformLabel(g.representative.detection_method)))];
+  return{title:"Сравнение креативов",sub:"Отметьте от 2 до 4 объявлений флажком — ниже появится построчное сравнение, различия подсвечены.",
+  help:{title:"Как сравнивать",steps:["Отфильтруйте список кандидатов внизу, если объявлений много.","Отметьте флажком от 2 до 4 карточек.","В таблице сверху жёлтым подсвечены строки, где значения отличаются."]},
+  body:`<nv-card heading="Результат сравнения" subtitle="${I.cmp.length} из 4 выбрано">${cmpMatrixHtml()}</nv-card>
+  <nv-card heading="Кандидаты на сравнение" subtitle="Список берётся из уже загруженной библиотеки">
+    <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст, домен" value="${esc(f.q)}" data-chg="cmpF" data-key="q"></nv-input><nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="cmpF" data-key="period"></nv-date-range><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="cmpF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="cmpF" data-key="format"></nv-filter-select><nv-filter-select label="Рекламодатель" value="${esc(f.adv)}" options="${advs.map(a=>esc(a)+":"+esc(a)).join("|")}" data-chg="cmpF" data-key="adv"></nv-filter-select></div>
+    <div class="muted" style="font-size:13px;margin:8px 0">Показано <b>${r.length}</b> из ${CR().length}</div>
+    <div id="cmp-candidates">${r.length?`<div class="grid g3">${r.map(g=>cardHtml(g,I.cmp.some(x=>String(x.representative.id)===String(g.representative.id)))).join("")}</div>`:`<nv-empty icon="search-x" heading="По этим фильтрам ничего нет" text="Измените фильтры или откройте библиотеку, чтобы сначала найти рекламу."><nv-button data-go="intel-library" icon="layout-grid">Открыть библиотеку</nv-button></nv-empty>`}</div>
+  </nv-card>`,
+  after(root){bindCards(root.querySelector("#cmp-candidates"),"cmp")}}},
 collections(){
   const I=S.intel,K=I.collections,open=K.find(k=>k.id===I.openK);
   if(open){
@@ -2433,6 +2481,7 @@ N.chg.libF=(v,d)=>{
   else libRes();
 };
 N.chg.advQ=v=>{S.intel.advQ=v;clearTimeout(S.intel._advT);S.intel._advT=setTimeout(()=>loadAdvertisers(v),350)};
+N.chg.cmpF=(v,d)=>{S.intel.cmpF[d.key]=v;N.refresh()};
 N.chg.intentSet=v=>{const list=v?v.split(","):[];S.intel.activeIntents=list;setActiveIntents(list);loadLibrary();if(S.intel.ana.loaded)loadAnalytics(true);N.refresh()};
 N.chg.anaTab=v=>{S.intel.ana.tab=v;N.refresh()};
 
