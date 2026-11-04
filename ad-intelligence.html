@@ -1841,11 +1841,11 @@ const KEY="neon-ui-parsya-v1";
 const NEON=window.NEON={services:{},order:[],acts:{},chg:{},state:{},commands:[]};
 let saved={};try{saved=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
 const S=NEON.state;
-S.core=saved.core||{feed:[]};
+S.core=Object.assign({feed:[]},saved.core||{});
 let saveT;
 NEON.save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},200)};
 
-NEON.register=svc=>{NEON.services[svc.id]=svc;NEON.order.push(svc.id);if(svc.seed)S[svc.id]=saved[svc.id]||svc.seed();svc.commands&&NEON.commands.push(...svc.commands.map(c=>({...c,svc:svc.id})))};
+NEON.register=svc=>{NEON.services[svc.id]=svc;NEON.order.push(svc.id);if(svc.seed)S[svc.id]=Object.assign(svc.seed(),saved[svc.id]||{});svc.commands&&NEON.commands.push(...svc.commands.map(c=>({...c,svc:svc.id})))};
 
 NEON.log=(text,svc,go)=>{S.core.feed.unshift({text,svc,go,at:Date.now()});S.core.feed=S.core.feed.slice(0,30);NEON.save();updBell()};
 
