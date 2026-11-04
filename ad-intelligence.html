@@ -171,7 +171,12 @@ nv-badge,nv-status,nv-chip{display:inline-flex;vertical-align:middle}
 .nv-chip .c{font-size:12px;opacity:.72;font-variant-numeric:tabular-nums}
 .chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 nv-avatar{display:inline-flex;flex:none}
-.nv-av{border-radius:50%;display:grid;place-items:center;font:700 12px var(--font-display);color:#10201a;background:hsl(var(--h,150) 62% 76%)}
+.nv-av{border-radius:50%;display:grid;place-items:center;font:700 12px var(--font-display);color:#10201a;background:hsl(var(--h,150) 62% 76%);overflow:hidden;flex-shrink:0}
+.nv-av-img{padding:0}
+.nv-av-img img{width:100%;height:100%;object-fit:cover;display:block}
+.nv-av-img .nv-av-fb{display:none;width:100%;height:100%;align-items:center;justify-content:center;color:#10201a}
+.nv-av-img.nv-av-fail img{display:none}
+.nv-av-img.nv-av-fail .nv-av-fb{display:flex}
 nv-term{display:inline}
 .nv-term{border:0;background:none;padding:0;cursor:help;border-bottom:1px dashed var(--ink-3);color:inherit;font:inherit}
 #nv-tip{position:fixed;z-index:120;max-width:280px;background:var(--ink);color:var(--surface);padding:7px 10px;border-radius:8px;font-size:12.5px;line-height:1.4;pointer-events:none;box-shadow:var(--shadow-2)}
@@ -339,8 +344,17 @@ nv-creative-card{display:block;min-width:0}
 .cr-b{padding:11px 13px 12px;display:flex;flex-direction:column;gap:7px;flex:1}
 .cr-t{font-weight:600;line-height:1.3;border:0;background:none;padding:0;text-align:left;cursor:pointer;display:block;color:var(--ink)}
 .cr-t:hover{text-decoration:underline}
-.cr-m{font-size:12.5px;color:var(--ink-3);overflow-wrap:anywhere}
+.cr-m{font-size:12.5px;color:var(--ink-3);overflow-wrap:anywhere;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.cr-fav{border-radius:3px;flex-shrink:0}
 .cr-f{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:auto}
+.folder{display:flex;flex-direction:column;height:100%;filter:drop-shadow(0 1px 2px rgba(17,24,20,.09))}
+.folder-tab{width:46%;min-width:84px;max-width:150px;height:14px;background:var(--surface);border-radius:10px 10px 0 0;align-self:flex-start}
+.folder-body{flex:1;background:var(--surface);border-radius:0 16px 16px 16px;padding:16px;display:flex;flex-direction:column;gap:7px}
+.folder-head{display:flex;align-items:center;justify-content:space-between;color:var(--svc-ink)}
+.folder-count{font-size:11px;font-weight:700;color:var(--ink-3);background:var(--surface-2);border-radius:999px;padding:2px 9px}
+.folder-name{margin:0;font:700 14.5px var(--font-display);color:var(--ink)}
+.folder-desc{margin:0;font-size:12.5px;line-height:1.4;color:var(--ink-3);flex:1}
+.folder-foot{margin-top:auto;padding-top:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .cr-copy{font-size:12px;line-height:1.4;color:var(--ink-3);margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cr-intent{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--svc-ink);background:var(--svc-soft);border-radius:999px;padding:3px 9px;align-self:flex-start;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .cr-ck{position:absolute;top:9px;left:9px;z-index:2}
@@ -1288,9 +1302,10 @@ define("nv-chip",class extends NvEl{
 },"Базовые",{desc:"Быстрый фильтр. Нажатие сразу меняет результат на экране.",slot:"Текст",demoText:"Только с ИНН",events:["nv-change {value}"],attrs:{selected:{type:"bool",desc:"Фильтр включён"},count:{type:"string",default:"",desc:"Счётчик результатов"},icon:{type:"string",default:"",desc:"Иконка"},removable:{type:"bool",desc:"Крестик для снятия"},toggle:{type:"bool",desc:"Переключается сам при нажатии"}},demo:{count:"12",toggle:""}});
 
 define("nv-avatar",class extends NvEl{
-  html(){const n=this.a("name"),sz=+this.a("size");const h=[...n].reduce((a,c)=>a+c.charCodeAt(0),0)*37%360;const init=n.split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
-    return `<span class="nv-av" style="width:${sz}px;height:${sz}px;--h:${h};font-size:${Math.round(sz*.38)}px" aria-label="${esc(n)}">${esc(init)}</span>`}
-},"Базовые",{desc:"Инициалы и постоянный цвет от имени.",attrs:{name:{type:"string",default:"Анна Волкова",desc:"Полное имя"},size:{type:"number",default:32,desc:"Диаметр в пикселях"}}});
+  html(){const n=this.a("name"),sz=+this.a("size"),src=this.a("src");const h=[...n].reduce((a,c)=>a+c.charCodeAt(0),0)*37%360;const init=n.split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
+    if(!src)return `<span class="nv-av" style="width:${sz}px;height:${sz}px;--h:${h};font-size:${Math.round(sz*.38)}px" aria-label="${esc(n)}">${esc(init)}</span>`;
+    return `<span class="nv-av nv-av-img" style="width:${sz}px;height:${sz}px;--h:${h}" aria-label="${esc(n)}"><img src="${esc(src)}" alt="" width="${sz}" height="${sz}" loading="lazy" onerror="this.parentElement.classList.add('nv-av-fail')"><span class="nv-av-fb" style="font-size:${Math.round(sz*.38)}px">${esc(init)}</span></span>`}
+},"Базовые",{desc:"Инициалы и постоянный цвет от имени. С атрибутом src показывает картинку (например, favicon сайта), с откатом на инициалы, если она не загрузилась.",attrs:{name:{type:"string",default:"Анна Волкова",desc:"Полное имя"},size:{type:"number",default:32,desc:"Диаметр в пикселях"},src:{type:"string",default:"",desc:"Адрес картинки, например favicon домена"}}});
 
 define("nv-term",class extends NvEl{
   html(){return `<button type="button" class="nv-term" data-tip="${esc(this.a("def"))}"><span data-slot></span></button>`}
@@ -1467,6 +1482,7 @@ define("nv-chart",class extends NvEl{
 /* ---------- Предметные компоненты ---------- */
 const artHtml=o=>`${o.discount?`<span class="disc">−${esc(o.discount)}%</span>`:""}${o.format==="video"?`<span class="play">${ic("play")}</span>`:""}${o.format==="carousel"?'<span class="dots"><i></i><i></i><i></i></span>':""}<span class="hl">${esc(o.headline)}</span>${o.cta?`<span class="cta">${esc(o.cta)}</span>`:""}`;
 const FORMAT={image:"Изображение",native:"Нативное",video:"Видео",carousel:"Карусель"};
+const favUrl=d=>d?`https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=64`:"";
 define("nv-creative-card",class extends NvEl{
   html(){const fm=this.a("format"),sc=this.b("selectable"),copy=this.a("copy"),plats=this.a("platforms").split(",").filter(Boolean),img=this.a("image"),vid=this.a("video"),poster=this.a("poster"),disc=this.a("discount"),headline=this.a("headline");
     let media;
@@ -1477,7 +1493,7 @@ define("nv-creative-card",class extends NvEl{
     if(disc)media=`<span class="disc">−${esc(disc)}%</span>`+media;
     return `<article class="cr${this.b("selected")?" sel":""}${sc?" has-ck":""}">${sc?`<label class="ck cr-ck"><input type="checkbox" ${this.b("selected")?"checked":""} aria-label="Выбрать креатив"><span class="box">${ic("check",14)}</span></label>`:""}<button type="button" class="cr-save${this.b("saved")?" on":""}" data-tip="${this.b("saved")?"Убрать из сохранённых":"Сохранить в избранное"}" aria-pressed="${this.b("saved")}" aria-label="Сохранить креатив">${ic("bookmark")}</button>
       <button type="button" class="art${img||vid?"":" empty"}" data-open aria-label="Открыть подробности">${media}</button>
-      <div class="cr-b"><button type="button" class="cr-t" data-open>${esc(headline||this.a("advertiser")||"Без заголовка")}</button><div class="cr-m">${esc(this.a("domain"))}${this.a("date")?" · "+esc(this.a("date")):""}</div>${copy?`<p class="cr-copy">${esc(copy)}</p>`:""}<div class="cr-f"><nv-badge>${esc(this.a("platform"))}</nv-badge><nv-badge tone="accent">${esc(FORMAT[fm]||fm)}</nv-badge>${plats.map(p=>`<nv-badge tone="neutral">${esc(p)}</nv-badge>`).join("")}</div></div></article>`}
+      <div class="cr-b"><button type="button" class="cr-t" data-open>${esc(headline||this.a("advertiser")||"Без заголовка")}</button><div class="cr-m">${this.a("domain")?`<img class="cr-fav" src="${esc(favUrl(this.a("domain")))}" alt="" width="14" height="14" loading="lazy" onerror="this.style.visibility='hidden'">`:""}${esc(this.a("domain"))}${this.a("date")?" · "+esc(this.a("date")):""}</div>${copy?`<p class="cr-copy">${esc(copy)}</p>`:""}<div class="cr-f"><nv-badge>${esc(this.a("platform"))}</nv-badge><nv-badge tone="accent">${esc(FORMAT[fm]||fm)}</nv-badge>${plats.map(p=>`<nv-badge tone="neutral">${esc(p)}</nv-badge>`).join("")}</div></div></article>`}
   mounted(){const q=s=>this.querySelector(s);this.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>this.emit("nv-open",{id:this.a("cid")}));
     q(".cr-save").onclick=()=>this.emit("nv-save",{id:this.a("cid"),saved:!this.b("saved")});
     const c=q(".cr-ck input");if(c)c.onchange=()=>this.emit("nv-select",{id:this.a("cid"),selected:c.checked})}
@@ -1489,6 +1505,9 @@ define("nv-integration-card",class extends NvEl{
   html(){const st=this.a("status"),con=st==="connected";return `<article class="int"><div class="h"><span class="lg" style="color:var(--svc-ink)">${esc(this.a("logo"))}</span><div><h4>${esc(this.a("name"))}</h4><div class="cat">${esc(this.a("category"))}</div></div></div><p>${esc(this.a("description"))}</p><div class="f"><nv-status value="${esc(st)}"></nv-status><nv-button size="sm" variant="${con?"ghost":"secondary"}" data-int>${con?"Настроить":st==="error"?"Переподключить":"Подключить"}</nv-button></div></article>`}
   mounted(){this.querySelector("[data-int]").onclick=()=>this.emit("nv-connect",{id:this.a("iid")})}
 },"Предметные",{desc:"Интеграция в каталоге.",events:["nv-connect {id}"],previewW:300,attrs:{iid:{type:"string",default:"bitrix",desc:"ID"},name:{type:"string",default:"Telegram-бот",desc:"Название"},logo:{type:"string",default:"TG",desc:"Буквы логотипа"},category:{type:"string",default:"Уведомления",desc:"Категория"},description:{type:"string",default:"Присылает заявки и оповещения в чат команды.",desc:"Что произойдёт после подключения"},status:{type:"enum",values:["connected","disconnected","error"],default:"disconnected",desc:"Состояние"}}});
+define("nv-folder-card",class extends NvEl{
+  html(){return `<article class="folder"><div class="folder-tab"></div><div class="folder-body"><div class="folder-head">${ic(this.a("icon")||"folder",20)}${this.a("count")!==""?`<span class="folder-count">${esc(this.a("count"))}</span>`:""}</div><h3 class="folder-name">${esc(this.a("name"))}</h3>${this.a("desc")?`<p class="folder-desc">${esc(this.a("desc"))}</p>`:""}<div class="folder-foot" data-slot></div></div></article>`}
+},"Предметные",{desc:"Карточка-папка для подборок и коллекций — действия (кнопки, меню) передаются внутрь как обычное содержимое.",slot:"Кнопки действий",demoHtml:'<nv-button size="sm" variant="secondary" icon-end="arrow-right">Открыть</nv-button>',previewW:260,attrs:{name:{type:"string",default:"Конкуренты",desc:"Название папки"},desc:{type:"string",default:"Главные игроки в нише",desc:"Описание"},count:{type:"string",default:"24",desc:"Счётчик содержимого"},icon:{type:"string",default:"folder",desc:"Иконка"}}});
 define("nv-kanban",class extends NvEl{
   set columns(v){this._c=v;this._init&&this.update()}
   html(){const cols=this._c||parseJSON(this.a("columns"),[]);const unit=this.a("currency")||"₽";
@@ -1801,7 +1820,7 @@ document.addEventListener("focusout",hideTip);document.addEventListener("click",
 
 function formVals(root){const o={};root.querySelectorAll("[name]").forEach(el=>{if(el.tagName.startsWith("NV-"))o[el.getAttribute("name")]=el.value});return o}
 
-window.NEONUI={esc,ic,fmt,uid,registry,overlay,toast,confirm:confirmDlg,formVals,artHtml,FORMAT,STATUS,parseOpts,rangeOf,iconSvg,ymd};
+window.NEONUI={esc,ic,fmt,uid,registry,overlay,toast,confirm:confirmDlg,formVals,artHtml,FORMAT,STATUS,parseOpts,rangeOf,iconSvg,ymd,favUrl};
 })();
 </script>
 <script>
@@ -1970,10 +1989,14 @@ NEON.start=render;
    /api/v1/advertisers, /api/v1/analytics/* и /api/v1/intents парсера. Бек не менялся —
    меняется только то, как это рисуется (дизайн-система NEON). */
 (function(){
-const {esc,ic,fmt,overlay,toast,confirm,formVals,FORMAT}=NEONUI,N=NEON,S=N.state;
+const {esc,ic,fmt,overlay,toast,confirm,formVals,FORMAT,favUrl}=NEONUI,N=NEON,S=N.state;
 
 const RUN_STATUS_MAP={queued:"queued",running:"running",succeeded:"done",failed:"failed"};
 
+function hostOf(u){
+  if(!u)return"";
+  try{return new URL(u.includes("://")?u:"https://"+u).hostname}catch(e){return u.replace(/^https?:\/\//,"").split("/")[0]}
+}
 function fmtDateTime(iso){
   if(!iso)return"—";
   const d=new Date(iso);
@@ -2227,7 +2250,7 @@ async function openCreative(id){
     </dl>
     <div class="sect-t">Рекламодатель и источник</div>
     <dl class="dl">
-      <dt>Домен</dt><dd>${esc(cr.domain||"—")}</dd>
+      <dt>Домен</dt><dd>${cr.domain?`<span class="row" style="gap:7px;align-items:center"><nv-avatar name="${esc(cr.domain)}" size="18" src="${esc(favUrl(cr.domain))}"></nv-avatar>${esc(cr.domain)}</span>`:"—"}</dd>
       <dt>Площадка</dt><dd>${esc(plat)}</dd>
       ${intents.length?`<dt>Интент</dt><dd>${intents.map(esc).join(", ")}</dd>`:""}
       <dt>Юрлицо</dt><dd>${adv?esc(adv.canonical_name||"Без названия"):"не раскрыто"}</dd>
@@ -2564,7 +2587,7 @@ collections(){
     after(root){bindCards(root.querySelector("#k-res"));if(!items)openCollection(open.id)}};
   }
   return{title:"Подборки",sub:"Папки с креативами для команды: конкуренты, идеи, примеры для клиента.",actions:`<nv-button icon="plus" data-act="kNew">Новая подборка</nv-button>`,
-  body:!I.collectionsLoaded?'<nv-skeleton count="3"></nv-skeleton>':`<div class="grid g3">${K.map(k=>`<nv-card heading="${esc(k.name)}" subtitle="${esc(k.description||"")}"><div class="row between"><span class="num">${k.items_count||0} креативов</span><div class="row" style="gap:6px"><nv-button size="sm" variant="secondary" icon-end="arrow-right" data-act="kOpen" data-id="${k.id}">Открыть</nv-button><nv-menu data-col="${esc(k.id)}" items="dup:Дублировать:copy|del:Удалить:trash-2:danger"></nv-menu></div></div></nv-card>`).join("")}${!K.length?'<nv-card><nv-empty icon="folder-heart" heading="Подборок пока нет" text="Создайте подборку, чтобы группировать находки для команды."><nv-button icon="plus" data-act="kNew">Новая подборка</nv-button></nv-empty></nv-card>':""}</div>`,
+  body:!I.collectionsLoaded?'<nv-skeleton count="3"></nv-skeleton>':`<div class="grid g3">${K.map(k=>`<nv-folder-card name="${esc(k.name)}" desc="${esc(k.description||"")}" count="${k.items_count||0}"><nv-button size="sm" variant="secondary" icon-end="arrow-right" data-act="kOpen" data-id="${k.id}">Открыть</nv-button><nv-menu data-col="${esc(k.id)}" items="dup:Дублировать:copy|del:Удалить:trash-2:danger"></nv-menu></nv-folder-card>`).join("")}${!K.length?'<nv-card><nv-empty icon="folder-heart" heading="Подборок пока нет" text="Создайте подборку, чтобы группировать находки для команды."><nv-button icon="plus" data-act="kNew">Новая подборка</nv-button></nv-empty></nv-card>':""}</div>`,
   after(root){
     if(!I.collectionsLoaded)loadCollections();
     root.querySelectorAll("nv-menu[data-col]").forEach(m=>m.addEventListener("nv-select",e=>{
@@ -2624,7 +2647,7 @@ advertisers(){
   after(root){
     if(!I.advertisersLoaded)loadAdvertisers(I.advQ);
     const t=root.querySelector("#ad-t");
-    t.columns=[{key:"name",label:"Рекламодатель",sort:true,render:a=>`<div class="cell-t">${esc(a.name||"Без названия")}</div><div class="cell-s mono">ИНН ${esc(a.inn)}</div>`},{key:"contacts",label:"Контакты",render:a=>{const bits=[];if(a.website_url)bits.push(`<div class="cell-t mono">${esc(a.website_url)}</div>`);if(a.phone)bits.push(`<div class="cell-s mono">${esc(a.phone)}</div>`);if(a.address)bits.push(`<div class="cell-s">${esc(a.address)}</div>`);return bits.join("")||'<span class="muted">не раскрыты</span>'}},{key:"creatives_count",label:"Креативов",align:"right",sort:true},{key:"first_seen_at",label:"Впервые",sort:true,render:a=>a.first_seen_at?N.rel(a.first_seen_at):"—"},{key:"last_seen_at",label:"Последний раз",sort:true,render:a=>a.last_seen_at?N.rel(a.last_seen_at):"—"}];
+    t.columns=[{key:"name",label:"Рекламодатель",sort:true,render:a=>`<div class="row" style="gap:9px;align-items:center"><nv-avatar name="${esc(a.name||a.inn||"?")}" size="28" src="${esc(favUrl(hostOf(a.website_url)))}"></nv-avatar><div><div class="cell-t">${esc(a.name||"Без названия")}</div><div class="cell-s mono">ИНН ${esc(a.inn)}</div></div></div>`},{key:"contacts",label:"Контакты",render:a=>{const bits=[];if(a.website_url)bits.push(`<div class="cell-t mono">${esc(a.website_url)}</div>`);if(a.phone)bits.push(`<div class="cell-s mono">${esc(a.phone)}</div>`);if(a.address)bits.push(`<div class="cell-s">${esc(a.address)}</div>`);return bits.join("")||'<span class="muted">не раскрыты</span>'}},{key:"creatives_count",label:"Креативов",align:"right",sort:true},{key:"first_seen_at",label:"Впервые",sort:true,render:a=>a.first_seen_at?N.rel(a.first_seen_at):"—"},{key:"last_seen_at",label:"Последний раз",sort:true,render:a=>a.last_seen_at?N.rel(a.last_seen_at):"—"}];
     t.rows=I.advertisers.map(a=>({...a,id:a.inn}));
     t.addEventListener("nv-row-click",e=>{const a=I.advertisers.find(x=>x.inn===e.detail.id);if(a)filterByAdvertiser(a.inn,a.name||a.inn)});
   }}}
