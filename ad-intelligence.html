@@ -244,7 +244,8 @@ nv-card{display:block;min-width:0}
 .card.flush .card-b{padding:0}
 .grid{display:grid;gap:14px}
 .g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
-.g3{grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr))}
+.g3{grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr))}
+.grid.g3{gap:22px}
 .g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr))}
 .split{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
 @media (max-width:1180px){.split{grid-template-columns:minmax(0,1fr)}}
@@ -333,7 +334,7 @@ nv-creative-card{display:block;min-width:0}
 .art img,.art video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;background:var(--surface-2)}
 .art.empty{background:var(--surface-2)}
 .art.empty::before{display:none}
-.cr-noart{position:relative;flex:1;align-self:stretch;margin:-13px -14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--ink-3)}
+.cr-noart{position:relative;flex:1;align-self:stretch;margin:-14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--ink-3)}
 .cr-noart span{font-size:11px}
 .cr-b{padding:11px 13px 12px;display:flex;flex-direction:column;gap:7px;flex:1}
 .cr-t{font-weight:600;line-height:1.3;border:0;background:none;padding:0;text-align:left;cursor:pointer;display:block;color:var(--ink)}
@@ -731,17 +732,17 @@ nv-ring{display:inline-flex;flex:none;vertical-align:middle}
 
 /* Креатив */
 .cr,.svc-c,.int{background:var(--l1);border:0;border-radius:18px;box-shadow:none}
-.cr{padding:5px}
-.art{border-radius:13px;padding:11px 12px}
+.cr{padding:8px}
+.art{border-radius:13px;padding:14px}
 .art .hl{font-weight:700;font-size:clamp(13px,1.05vw,15px)}
 .art .cta{border-radius:7px;font-size:11px;font-weight:500;padding:3px 9px}
 .art .disc{border-radius:6px;font-size:11.5px;font-weight:600}
-.cr-b{padding:8px 8px 7px;gap:4px}
-.cr-t{font-weight:500;font-size:12.5px}
+.cr-b{padding:16px 16px 15px;gap:10px}
+.cr-t{font-weight:600;font-size:13.5px}
 .cr-m{font:10.5px var(--font-mono)}
-.cr-ck{top:14px;left:14px}
+.cr-ck{top:17px;left:17px}
 .cr-ck .box{width:20px;height:20px}
-.cr-save{top:13px;right:13px;width:26px;height:26px;border-radius:50%;font-size:13px}
+.cr-save{top:16px;right:16px;width:26px;height:26px;border-radius:50%;font-size:13px}
 .cr.sel{box-shadow:0 0 0 2px var(--svc-ink)}
 .big-art .hl{font-size:clamp(18px,2vw,24px)}
 
@@ -1985,7 +1986,7 @@ function groupRealCreatives(items){
 }
 
 const seed=()=>({
-  f:{q:"",platform:"",format:"",saved:"",sort:"recent",period:""},
+  f:{q:"",platform:"",format:"",saved:"",sort:"recent",period:"",page:1,pageSize:25},
   lib:{groups:[],total:0,loaded:false,loading:false},
   sel:[],cmp:[],cmpF:{q:"",platform:"",format:"",period:"",adv:""},
   savedIds:loadSavedCreativeIds(),
@@ -2144,12 +2145,18 @@ async function filterByAdvertiser(inn,name){
 }
 function libRes(){
   const el=document.getElementById("lib-res");if(!el)return;
-  const rr=filtered(),sel=S.intel.sel.map(g=>String(g.representative.id));
+  const f=S.intel.f,full=filtered(),sel=S.intel.sel.map(g=>String(g.representative.id));
+  const pageSize=f.pageSize||25,totalPages=Math.max(1,Math.ceil(full.length/pageSize));
+  if(f.page>totalPages)f.page=totalPages;
+  if(f.page<1)f.page=1;
+  const start=(f.page-1)*pageSize,rr=full.slice(start,start+pageSize);
   const h=document.getElementById("lib-count");
-  if(h)h.innerHTML=`Показано <b>${rr.length}</b>`+(anyF()?' · <nv-button variant="link" size="sm" data-act="libReset">Сбросить фильтры</nv-button>':"");
+  if(h)h.innerHTML=(full.length?`Показано <b>${start+1}–${start+rr.length}</b> из ${full.length}`:`Показано <b>0</b>`)+(anyF()?' · <nv-button variant="link" size="sm" data-act="libReset">Сбросить фильтры</nv-button>':"");
   el.innerHTML=S.intel.lib.loading?'<nv-skeleton count="6"></nv-skeleton>':(rr.length?`<div class="grid g3">${rr.map(g=>cardHtml(g,sel.includes(String(g.representative.id)))).join("")}</div>`:`<nv-card><nv-empty icon="search-x" heading="По этим фильтрам рекламы нет" text="Уберите часть фильтров или запустите сканирование по новому запросу."><nv-button variant="secondary" data-act="libReset">Сбросить фильтры</nv-button><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>`);
   bindCards(el);
   libBulk();
+  const pg=document.getElementById("lib-page");
+  if(pg)pg.innerHTML=totalPages>1?`<nv-pagination page="${f.page}" pages="${totalPages}" data-chg="libPage"></nv-pagination>`:"";
 }
 function libBulk(){
   const sel=S.intel.sel,b=document.getElementById("lib-bulk");if(!b)return;
@@ -2473,8 +2480,8 @@ library(){
   actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
   help:{title:"С чего начать",steps:["Запустите сканирование по своему запросу и городу.","Откройте креатив — там цена, ERID и ссылка.","Сохраняйте находки или собирайте их в подборки."]},
   body:`<div class="grid g4">${stat("Показано карточек",r.length)}${stat("Всего по интенту",I.lib.total||0,'hint="Общее число после группировки одинаковых объявлений"')}${stat("С кодом ERID",erid,'note="из загруженных"')}${stat("В избранном",savedN,'note="из загруженных"')}</div>
-  <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст, домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select><nv-select label="Сортировка" value="${f.sort}" options="recent:Сначала новые|oldest:Сначала старые|name:Домен А-Я" data-chg="libF" data-key="sort"></nv-select>${intentControlHtml()}</div>
-  <div id="lib-count" class="muted" style="font-size:13px"></div></div><div id="lib-res">${I.lib.loading&&!I.lib.loaded?'<nv-skeleton count="6"></nv-skeleton>':""}</div><div class="bulk" id="lib-bulk" hidden></div>`,
+  <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст, домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select><nv-select label="Сортировка" value="${f.sort}" options="recent:Сначала новые|oldest:Сначала старые|name:Домен А-Я" data-chg="libF" data-key="sort"></nv-select><nv-select label="На странице" value="${f.pageSize||25}" options="25:25|50:50|100:100|200:200" data-chg="libF" data-key="pageSize"></nv-select>${intentControlHtml()}</div>
+  <div id="lib-count" class="muted" style="font-size:13px"></div></div><div id="lib-res">${I.lib.loading&&!I.lib.loaded?'<nv-skeleton count="6"></nv-skeleton>':""}</div><div id="lib-page" class="row" style="justify-content:center;margin-top:16px"></div><div class="bulk" id="lib-bulk" hidden></div>`,
   after(root){if(!I.lib.loaded&&!I.lib.loading)loadLibrary();libRes();}}},
 compare(){
   const I=S.intel,f=I.cmpF,r=cmpFiltered();
@@ -2575,11 +2582,13 @@ Object.assign(N.acts,{
   kDel(a,d){const k=S.intel.collections.find(x=>x.id===d.id);if(!k)return;confirm({title:"Удалить подборку «"+k.name+"»?",text:"Все элементы подборки удалятся без возможности восстановления.",confirm:"Удалить подборку",danger:true,fn(){(async()=>{try{await apiDelete("/api/v1/collections/"+k.id);S.intel.openK=null;await loadCollections();N.refresh();toast("Подборка удалена")}catch(err){toast("Не удалось удалить: "+(err.message||""),{tone:"danger"})}})()}})}
 });
 N.chg.libF=(v,d)=>{
-  S.intel.f[d.key]=v;
+  if(d.key==="pageSize"){S.intel.f.pageSize=+v||25;S.intel.f.page=1;libRes();return}
+  S.intel.f[d.key]=v;S.intel.f.page=1;
   if(d.key==="q"){clearTimeout(S.intel._qT);S.intel._qT=setTimeout(()=>loadLibrary(),400)}
   else if(d.key==="period")loadLibrary();
   else libRes();
 };
+N.chg.libPage=v=>{S.intel.f.page=+v;libRes();const sc=document.getElementById("scroll");if(sc)sc.scrollTop=0};
 N.chg.advQ=v=>{S.intel.advQ=v;clearTimeout(S.intel._advT);S.intel._advT=setTimeout(()=>loadAdvertisers(v),350)};
 N.chg.cmpF=(v,d)=>{S.intel.cmpF[d.key]=v;N.refresh()};
 N.chg.scanF=(v,d)=>{S.intel.scanF[d.key]=v;N.refresh()};
