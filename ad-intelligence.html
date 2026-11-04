@@ -117,6 +117,7 @@ nv-icon svg{width:1em;height:1em;stroke-width:2}
   .nav-open .scrim-nav{display:block;position:fixed;inset:0;background:var(--scrim);z-index:35}
   .top{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
   .top .burger{display:inline-flex}
+  .crumbs{display:none}
   .searchbtn{min-width:0;width:38px;padding:0 10px;flex:none}
   .searchbtn span,.searchbtn kbd{display:none}
   .view{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 72px}
@@ -320,7 +321,7 @@ nv-chart{display:block;min-width:0}
 
 /* ---------- Креатив ---------- */
 nv-creative-card{display:block;min-width:0}
-.cr{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden;display:flex;flex-direction:column;height:100%;position:relative;transition:border-color .12s,box-shadow .12s}
+.cr{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden;display:flex;flex-direction:column;height:100%;position:relative;transition:border-color .12s,box-shadow .12s;contain:layout paint}
 .cr:hover{border-color:var(--ink-3);box-shadow:var(--shadow-2)}
 .cr.sel{border-color:var(--svc-ink);box-shadow:0 0 0 1px var(--svc-ink)}
 .art{aspect-ratio:16/10;max-width:100%;background:oklch(.45 .13 var(--h,150));color:var(--art-ink);padding:13px 14px;display:flex;flex-direction:column;justify-content:flex-end;gap:5px;position:relative;overflow:hidden;width:100%;border:0;cursor:pointer;text-align:left}
@@ -733,7 +734,7 @@ nv-ring{display:inline-flex;flex:none;vertical-align:middle}
 /* Креатив */
 .cr,.svc-c,.int{background:var(--l1);border:0;border-radius:18px;box-shadow:none}
 .cr{padding:8px}
-.art{border-radius:13px;padding:14px}
+.art{border-radius:13px;padding:14px;contain:paint;transform:translateZ(0)}
 .art .hl{font-weight:700;font-size:clamp(13px,1.05vw,15px)}
 .art .cta{border-radius:7px;font-size:11px;font-weight:500;padding:3px 9px}
 .art .disc{border-radius:6px;font-size:11.5px;font-weight:600}
@@ -1842,6 +1843,8 @@ async function apiDelete(path){
 }
 function loadSavedCreativeIds(){try{const v=JSON.parse(localStorage.getItem("neon-ad-intelligence-saved")||"[]");return Array.isArray(v)?v.filter(x=>typeof x==="string"):[]}catch(e){return[]}}
 function persistSavedCreativeIds(ids){try{localStorage.setItem("neon-ad-intelligence-saved",JSON.stringify(ids))}catch(e){}}
+function loadSavedViews(){try{const v=JSON.parse(localStorage.getItem("neon-ad-intelligence-saved-views")||"[]");return Array.isArray(v)?v:[]}catch(e){return[]}}
+function persistSavedViews(list){try{localStorage.setItem("neon-ad-intelligence-saved-views",JSON.stringify(list))}catch(e){}}
 </script>
 <script>
 /* Ядро NEON: реестр сервисов, маршрутизация, состояние, оболочка, поиск.
@@ -1885,7 +1888,7 @@ function shell(){
   </aside>
   <div class="main"><header class="top">
     <nv-button class="burger" variant="ghost" icon="menu" icon-only data-act="navOpen">Открыть меню</nv-button>
-    <div class="crumbs" id="crumbs" hidden></div>
+    <div class="crumbs" id="crumbs"></div>
     <button type="button" class="searchbtn" data-act="palette" aria-label="Поиск и команды">${ic("search",15)}<span>Найти экран, рекламодателя, креатив</span><kbd>Ctrl K</kbd></button>
     <span class="top-sp"></span>
     <nv-button variant="ghost" icon="bell" icon-only data-act="feed" id="bell" hint="События">События</nv-button>
@@ -1899,7 +1902,7 @@ function renderView(keepScroll){
   const y=sc.scrollTop,d=svc.views[v]();
   NEON.curHelp=d.help||null;
   root.innerHTML=`<nv-page-header heading="${esc(d.title)}" subtitle="${esc(d.sub||"")}">${d.help?'<nv-button variant="ghost" icon="help-circle" data-act="helpOpen">Как это работает</nv-button>':""}${d.actions||""}</nv-page-header>${d.body||""}`;
-  document.getElementById("crumbs").innerHTML=`NEON / ${esc(svc.name)} / <b>${esc(d.title)}</b>`;
+  document.getElementById("crumbs").innerHTML=`<nv-breadcrumbs items="${esc(s+"-"+Object.keys(svc.views)[0]+":"+svc.name+"|cur:"+d.title)}"></nv-breadcrumbs>`;
   document.getElementById("side-nav").innerHTML=sideNav();
   d.after&&d.after(root);
   sc.scrollTop=keepScroll?y:0;
@@ -1987,6 +1990,7 @@ function groupRealCreatives(items){
 
 const seed=()=>({
   f:{q:"",platform:"",format:"",saved:"",sort:"recent",period:"",page:1,pageSize:25},
+  savedViews:loadSavedViews(),
   lib:{groups:[],total:0,loaded:false,loading:false},
   sel:[],cmp:[],cmpF:{q:"",platform:"",format:"",period:"",adv:""},
   savedIds:loadSavedCreativeIds(),
@@ -2004,6 +2008,9 @@ function findGroup(id){
   return null;
 }
 function anyF(){const f=S.intel.f;return f.q||f.platform||f.format||f.saved||(f.period&&f.period!=="all")}
+const VIEW_FIELDS=["q","platform","format","saved","sort","period"];
+const viewKey=f=>JSON.stringify(VIEW_FIELDS.map(k=>f[k]||""));
+function activeViewId(){const f=S.intel.f,key=viewKey(f),v=S.intel.savedViews.find(x=>viewKey(x.f)===key);return v?v.id:""}
 function filtered(){
   const I=S.intel,f=I.f,savedSet=new Set(I.savedIds);
   let r=CR().filter(g=>{
@@ -2221,10 +2228,11 @@ async function openCreative(id){
       ${cr.video_src?`<dt>Файл видео</dt><dd class="mono">${esc(cr.video_src)}</dd>`:""}
       <dt>Цена</dt><dd>${esc(cr.price_text||(cr.price_rub?fmt(cr.price_rub)+" ₽":"не указана"))}</dd>
       ${cr.discount_percent?`<dt>Скидка</dt><dd>${esc(cr.discount_percent)}%</dd>`:""}
-      <dt>ERID</dt><dd class="mono">${esc(cr.erid||"нет")}</dd>
+      ${!cr.erid?`<dt>ERID</dt><dd>нет</dd>`:""}
       ${(cr.app_package_id||cr.app_store_id)?`<dt>Приложение</dt><dd class="mono">${esc(cr.app_package_id||cr.app_store_id)}</dd>`:""}
       ${cr.carousel_id?`<dt>Карусель</dt><dd>Слайд ${cr.carousel_slide_index!=null?"#"+(cr.carousel_slide_index+1):"—"} · смотрите вкладку «Повторы и карусели» в Аналитике</dd>`:""}
     </dl>
+    ${cr.erid?`<nv-copy-field label="ERID" value="${esc(cr.erid)}" hint="Маркировка интернет-рекламы — пригодится для отчётов по 38-ФЗ"></nv-copy-field>`:""}
     ${links.length?`<div class="sect-t">Другие ссылки объявления</div><dl class="dl">${links.map(l=>`<dt>${esc(l.link_text||l.final_url_domain||"Ссылка")}</dt><dd class="mono">${esc(l.final_url_domain||l.final_url||"—")}${[l.utm_source,l.utm_medium,l.utm_campaign].filter(Boolean).length?"<br>"+esc([l.utm_source,l.utm_medium,l.utm_campaign].filter(Boolean).join(" / ")):""}</dd>`).join("")}</dl>`:""}
     ${idsHtml?`<div class="sect-t">Идентификаторы кампаний</div><dl class="dl">${idsHtml}</dl>`:""}
     ${destHist.length?`<div class="sect-t">История изменений посадочной страницы</div><dl class="dl">${destHist.map(d=>`<dt>${esc(d.final_url_domain||d.final_url||"—")}</dt><dd>${esc((d.first_seen_at||"").slice(0,10))} — ${esc((d.last_seen_at||"").slice(0,10))}${[d.utm_source,d.utm_medium,d.utm_campaign].filter(Boolean).length?" · "+esc([d.utm_source,d.utm_medium,d.utm_campaign].filter(Boolean).join(" / ")):""}</dd>`).join("")}</dl>`:""}
@@ -2481,8 +2489,37 @@ library(){
   help:{title:"С чего начать",steps:["Запустите сканирование по своему запросу и городу.","Откройте креатив — там цена, ERID и ссылка.","Сохраняйте находки или собирайте их в подборки."]},
   body:`<div class="grid g4">${stat("Показано карточек",r.length)}${stat("Всего по интенту",I.lib.total||0,'hint="Общее число после группировки одинаковых объявлений"')}${stat("С кодом ERID",erid,'note="из загруженных"')}${stat("В избранном",savedN,'note="из загруженных"')}</div>
   <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст, домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select><nv-select label="Сортировка" value="${f.sort}" options="recent:Сначала новые|oldest:Сначала старые|name:Домен А-Я" data-chg="libF" data-key="sort"></nv-select><nv-select label="На странице" value="${f.pageSize||25}" options="25:25|50:50|100:100|200:200" data-chg="libF" data-key="pageSize"></nv-select>${intentControlHtml()}</div>
+  <nv-saved-views id="lib-views" views="${esc(JSON.stringify(I.savedViews.map(v=>({id:v.id,name:v.name}))))}" value="${esc(activeViewId())}" can-save></nv-saved-views>
   <div id="lib-count" class="muted" style="font-size:13px"></div></div><div id="lib-res">${I.lib.loading&&!I.lib.loaded?'<nv-skeleton count="6"></nv-skeleton>':""}</div><div id="lib-page" class="row" style="justify-content:center;margin-top:16px"></div><div class="bulk" id="lib-bulk" hidden></div>`,
-  after(root){if(!I.lib.loaded&&!I.lib.loading)loadLibrary();libRes();}}},
+  after(root){
+    if(!I.lib.loaded&&!I.lib.loading)loadLibrary();
+    libRes();
+    const sv=root.querySelector("#lib-views");
+    if(!sv)return;
+    sv.addEventListener("nv-view",e=>{
+      const v=S.intel.savedViews.find(x=>x.id===e.detail.id);if(!v)return;
+      VIEW_FIELDS.forEach(k=>S.intel.f[k]="");Object.assign(S.intel.f,v.f);S.intel.f.page=1;
+      loadLibrary();
+    });
+    sv.addEventListener("nv-view-remove",e=>{
+      const list=S.intel.savedViews,i=list.findIndex(x=>x.id===e.detail.id);if(i<0)return;
+      const removed=list[i];list.splice(i,1);persistSavedViews(list);N.refresh();
+      toast("Вид «"+removed.name+"» удалён",{action:{label:"Вернуть",fn(){list.splice(i,0,removed);persistSavedViews(list);N.refresh()}}});
+    });
+    sv.addEventListener("nv-view-save",()=>{
+      if(!anyF()){toast("Сначала выберите фильтры, которые нужно сохранить",{tone:"warning"});return}
+      overlay("modal",{title:"Сохранить вид",subtitle:"Текущие фильтры можно будет вернуть одним нажатием",body:'<nv-input name="n" label="Название" placeholder="Например, Скидки в Яндексе" required></nv-input>',
+        actions:[{label:"Отмена"},{label:"Сохранить вид",variant:"primary",fn(r){
+          const n=formVals(r).n.trim();
+          if(!n){r.querySelector("nv-input").setAttribute("error","Введите название");return false}
+          const pick={};VIEW_FIELDS.forEach(k=>{if(S.intel.f[k])pick[k]=S.intel.f[k]});
+          S.intel.savedViews.push({id:"v"+Date.now(),name:n,f:pick});
+          persistSavedViews(S.intel.savedViews);
+          N.refresh();
+          toast("Вид сохранён",{tone:"success"});
+        }}]});
+    });
+  }}},
 compare(){
   const I=S.intel,f=I.cmpF,r=cmpFiltered();
   const advs=[...new Set(CR().map(g=>g.representative.domain).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ru"));
@@ -2506,8 +2543,15 @@ collections(){
     after(root){bindCards(root.querySelector("#k-res"));if(!items)openCollection(open.id)}};
   }
   return{title:"Подборки",sub:"Папки с креативами для команды: конкуренты, идеи, примеры для клиента.",actions:`<nv-button icon="plus" data-act="kNew">Новая подборка</nv-button>`,
-  body:!I.collectionsLoaded?'<nv-skeleton count="3"></nv-skeleton>':`<div class="grid g3">${K.map(k=>`<nv-card heading="${esc(k.name)}" subtitle="${esc(k.description||"")}"><div class="row between"><span class="num">${k.items_count||0} креативов</span><div class="row" style="gap:6px"><nv-button size="sm" variant="ghost" icon="copy" data-act="kDuplicate" data-id="${k.id}">Дублировать</nv-button><nv-button size="sm" variant="secondary" icon-end="arrow-right" data-act="kOpen" data-id="${k.id}">Открыть</nv-button></div></div></nv-card>`).join("")}${!K.length?'<nv-card><nv-empty icon="folder-heart" heading="Подборок пока нет" text="Создайте подборку, чтобы группировать находки для команды."><nv-button icon="plus" data-act="kNew">Новая подборка</nv-button></nv-empty></nv-card>':""}</div>`,
-  after(){if(!I.collectionsLoaded)loadCollections()}}},
+  body:!I.collectionsLoaded?'<nv-skeleton count="3"></nv-skeleton>':`<div class="grid g3">${K.map(k=>`<nv-card heading="${esc(k.name)}" subtitle="${esc(k.description||"")}"><div class="row between"><span class="num">${k.items_count||0} креативов</span><div class="row" style="gap:6px"><nv-button size="sm" variant="secondary" icon-end="arrow-right" data-act="kOpen" data-id="${k.id}">Открыть</nv-button><nv-menu data-col="${esc(k.id)}" items="dup:Дублировать:copy|del:Удалить:trash-2:danger"></nv-menu></div></div></nv-card>`).join("")}${!K.length?'<nv-card><nv-empty icon="folder-heart" heading="Подборок пока нет" text="Создайте подборку, чтобы группировать находки для команды."><nv-button icon="plus" data-act="kNew">Новая подборка</nv-button></nv-empty></nv-card>':""}</div>`,
+  after(root){
+    if(!I.collectionsLoaded)loadCollections();
+    root.querySelectorAll("nv-menu[data-col]").forEach(m=>m.addEventListener("nv-select",e=>{
+      const id=m.dataset.col;
+      if(e.detail.id==="dup")duplicateCollection(id);
+      else if(e.detail.id==="del")N.acts.kDel(null,{id});
+    }));
+  }}},
 scans(){
   const L=S.intel.scans,sf=S.intel.scanF;
   const total=L.length,active=L.filter(s=>s.status==="queued"||s.status==="running").length,done=L.filter(s=>s.status==="succeeded").length,failed=L.filter(s=>s.status==="failed").length;
@@ -2545,7 +2589,8 @@ analytics(){
       <nv-card heading="Карусели" subtitle="Объявления, распознанные как часть карусели"><div id="an-carousel"><nv-skeleton count="2"></nv-skeleton></div></nv-card>`,
     campaigns:`<nv-card heading="Самые частые кампании и слова" subtitle="Топ-10 по числу креативов"><nv-chart id="an-camp-chart" type="hbar" label="Кампании и ключевые слова"></nv-chart></nv-card>
       <div class="grid g2"><nv-card flush heading="Кампании" subtitle="По campaign_id из разметки"><nv-table id="an-camp" clickable empty-text="Кампании пока не найдены"></nv-table></nv-card><nv-card flush heading="Ключевые слова" subtitle="По utm_term из ссылки"><nv-table id="an-kw" clickable empty-text="Ключевые слова пока не найдены"></nv-table></nv-card></div>`,
-    growth:`<nv-card heading="Кто растёт быстрее всех" subtitle="Рост числа креативов за неделю к предыдущей"><nv-chart id="an-grow-chart" type="hbar" label="Рост рекламодателей"></nv-chart></nv-card>
+    growth:`${I.growing.length?`<div class="grid g3">${I.growing.slice(0,3).map(x=>`<nv-compare-stat label="${esc(x.canonical_name||("ИНН "+(x.inn||"—")))}" a-label="Эта неделя" a-value="${x.this_week}" b-label="Прошлая неделя" b-value="${x.prior_week}" unit="креат."></nv-compare-stat>`).join("")}</div>`:""}
+      <nv-card heading="Кто растёт быстрее всех" subtitle="Рост числа креативов за неделю к предыдущей"><nv-chart id="an-grow-chart" type="hbar" label="Рост рекламодателей"></nv-chart></nv-card>
       <div class="grid g2"><nv-card flush heading="Быстрорастущие рекламодатели — таблица" subtitle="Подробные цифры"><nv-table id="an-grow" clickable empty-text="Пока нет истории минимум за 2 недели"></nv-table></nv-card><nv-card flush heading="Несовпадение посадочной" subtitle="Реклама ведёт не на сайт рекламодателя"><nv-table id="an-mis" clickable empty-text="Несовпадений не найдено"></nv-table></nv-card></div>`
   };
   return{title:"Аналитика рекламы",sub:"Что находит парсер: площадки, повторы, кампании, ключевые слова и аномалии.",actions:intentControlHtml(),
