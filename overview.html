@@ -491,13 +491,36 @@ tbody tr:hover{background:#fbfcfd}
 const parsyaSession = JSON.parse(localStorage.getItem("parsya_session") || "null");
 if (!parsyaSession) { location.replace("index.html"); }
 if (parsyaSession && parsyaSession.role === "admin") {
+  // 2026-11-04 (Dima): "Ad Automation" в этом меню уже существовал как
+  // демо-заглушка под ровно то, что делает addAvto (запуск кампаний) —
+  // переключаем его на реальную внешнюю ссылку для админа вместо
+  // демо-тоста, а не добавляем отдельную "консоль". Плюс одна новая
+  // кнопка "Конверсии в Метрику" (у неё готового слота в этом меню не
+  // было). Снимаем data-page ДО общей обвязки кликов ниже (которая
+  // вешает демо-навигацию на всё с [data-page]), чтобы не добавлять
+  // второй обработчик поверх первого.
+  document.querySelectorAll('[data-page="automation"]').forEach(el => {
+    el.removeAttribute("data-page");
+    el.addEventListener("click", () => {
+      window.location.href = "https://xn--80aanufhx.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai/";
+    });
+  });
+  const automationBtn = document.querySelector('#mainNav button[data-accent="#42d9ff"]');
+  if (automationBtn) {
+    const conversionsBtn = document.createElement("button");
+    conversionsBtn.innerHTML = '<i data-lucide="line-chart"></i> Конверсии в Метрику';
+    conversionsBtn.addEventListener("click", () => {
+      window.location.href = "https://xn--80aanufhx.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai/lk";
+    });
+    automationBtn.parentNode.insertBefore(conversionsBtn, automationBtn.nextSibling);
+  }
   const sideBottom = document.querySelector(".side-bottom");
   if (sideBottom) {
     const adminLink = document.createElement("a");
     adminLink.href = (localStorage.getItem("parsya_api_base") || "https://xn--80ak2afbe.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai") + "/dashboard";
     adminLink.className = "btn btn-quiet";
     adminLink.style.cssText = "width:100%;justify-content:flex-start;margin-bottom:10px";
-    adminLink.innerHTML = '<i data-lucide="shield"></i> Консоль администратора';
+    adminLink.innerHTML = '<i data-lucide="server-cog"></i> Воркер и задания';
     sideBottom.insertBefore(adminLink, sideBottom.firstChild);
     if (window.lucide) lucide.createIcons();
   }
