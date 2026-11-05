@@ -1865,22 +1865,29 @@ async function api(path,params){
  if(!res.ok)throw new Error("API error "+res.status);
  return res.json();
 }
+function errDetail(json,fallback){
+ const d=json&&json.detail;
+ if(!d)return fallback;
+ if(typeof d==="string")return d;
+ if(Array.isArray(d))return d.map(x=>(x&&x.msg)?(Array.isArray(x.loc)?x.loc.filter(p=>p!=="body").join(".")+": ":"")+x.msg:JSON.stringify(x)).join("; ");
+ return fallback;
+}
 async function apiPost(path,body){
  const res=await fetch(API_BASE+path,{method:"POST",headers:{Authorization:"Bearer "+session.token,"Content-Type":"application/json"},body:JSON.stringify(body||{})});
  if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
- if(!res.ok){let detail="API error "+res.status;try{detail=(await res.json()).detail||detail}catch(e){}throw new Error(detail)}
+ if(!res.ok){let detail="API error "+res.status;try{detail=errDetail(await res.json(),detail)}catch(e){}throw new Error(detail)}
  return res.json();
 }
 async function apiDelete(path){
  const res=await fetch(API_BASE+path,{method:"DELETE",headers:{Authorization:"Bearer "+session.token}});
  if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
- if(!res.ok)throw new Error("API error "+res.status);
+ if(!res.ok){let detail="API error "+res.status;try{detail=errDetail(await res.json(),detail)}catch(e){}throw new Error(detail)}
  return res.status===204?null:res.json();
 }
 async function apiPut(path,body){
  const res=await fetch(API_BASE+path,{method:"PUT",headers:{Authorization:"Bearer "+session.token,"Content-Type":"application/json"},body:JSON.stringify(body||{})});
  if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
- if(!res.ok){let detail="API error "+res.status;try{detail=(await res.json()).detail||detail}catch(e){}throw new Error(detail)}
+ if(!res.ok){let detail="API error "+res.status;try{detail=errDetail(await res.json(),detail)}catch(e){}throw new Error(detail)}
  return res.json();
 }
 function loadSavedCreativeIds(){try{const v=JSON.parse(localStorage.getItem("neon-ad-intelligence-saved")||"[]");return Array.isArray(v)?v.filter(x=>typeof x==="string"):[]}catch(e){return[]}}
@@ -2783,6 +2790,7 @@ loadIntentsList();
 const adsSeed=()=>({
   projects:[],projectsLoaded:false,
   clickru:[],clickruLoaded:false,
+  payers:[],payersLoaded:false,
   pool:{configured:false,items:[]},poolLoaded:false,
   conn:{configured:false,connected:false,message:"",accounts:[],integrations:[]},connLoaded:false,accQuery:"",
   rep:{dateFrom:"",dateTo:"",loaded:false,loading:false,items:[],totals:{}}
@@ -2797,7 +2805,13 @@ async function loadClickru(){
   const A=S.ads;
   try{const data=await api("/api/v1/ads/clickru-connections",{});A.clickru=data.items||[]}
   catch(err){toast("Не удалось загрузить подключения Click.ru: "+(err.message||""),{tone:"danger"})}
-  A.clickruLoaded=true;N.refreshIf("ads-clickru");
+  A.clickruLoaded=true;N.refreshIf("ads-clickru","ads-projects");
+}
+async function loadPayers(){
+  const A=S.ads;
+  try{const data=await api("/api/v1/ads/payers",{});A.payers=data.items||[]}
+  catch(err){toast("Не удалось загрузить юрлица Click.ru: "+(err.message||""),{tone:"danger"})}
+  A.payersLoaded=true;N.refreshIf("ads-projects");
 }
 async function loadPool(){
   const A=S.ads;
@@ -2859,10 +2873,62 @@ function clickruDlg(){
       })();
     }}]});
 }
+function launchDlg(project){
+  const A=S.ads;
+  const connOpts=A.clickru.map(c=>c.id+":"+esc(c.label)).join("|")||"_:Нет подключений Click.ru";
+  const payerOpts=A.payers.map(p=>p.id+":"+esc(p.name||p.fullName||("Юрлицо "+p.id))).join("|")||"_:Без юрлица";
+  overlay("modal",{title:"Запустить «"+project.name+"»",subtitle:"Создаст черновики кампаний в Яндекс.Директе на новых аккаунтах из пула ParsYa — показы НЕ включаются автоматически.",size:"md",
+    body:`<nv-input name="count" label="Сколько аккаунтов запустить (1–20)" type="number" value="1"></nv-input>
+    <nv-select name="connection_id" label="Подключение Click.ru" options="${connOpts}"></nv-select>
+    <nv-select name="payer_id" label="Юрлицо (для маркировки рекламы ОРД)" options="${payerOpts}"></nv-select>
+    <nv-select name="creative_mode" label="Креативы" value="shuffle" options="shuffle:Случайно из пула проекта|duplicate_single:Один и тот же для всех"></nv-select>`,
+    actions:[{label:"Отмена"},{label:"Запустить",variant:"primary",icon:"rocket",fn(r,close){
+      const v=formVals(r),count=Math.max(1,Math.min(20,+v.count||1));
+      if(!v.connection_id||v.connection_id==="_"){toast("Сначала подключите Click.ru (вкладка «Клик.ру»)",{tone:"warning"});return false}
+      const payload={count,connection_id:+v.connection_id,creative_mode:v.creative_mode||"shuffle"};
+      if(v.payer_id&&v.payer_id!=="_")payload.payer_id=+v.payer_id;
+      (async()=>{
+        try{
+          const job=await apiPost("/api/v1/ads/projects/"+project.id+"/campaigns/bulk-create",payload);
+          close();
+          toast("Запуск начат — отслеживаем прогресс",{tone:"success"});
+          openJobDrawer(project,job.job_id);
+        }catch(err){toast("Не удалось запустить: "+(err.message||""),{tone:"danger"})}
+      })();
+    }}]});
+}
+const BULK_JOB_STATUS={running:"Выполняется",done:"Готово",failed:"Ошибка"};
+function jobStatusHtml(job){
+  return `<div class="grid g3">${stat("Статус",BULK_JOB_STATUS[job.status]||job.status)}${stat("Запрошено",job.requested)}${stat("Создано",job.created)}</div>
+  ${job.error?`<nv-callout tone="danger" heading="Ошибка">${esc(job.error)}</nv-callout>`:""}
+  ${job.items&&job.items.length?`<nv-table id="job-items-t" style="margin-top:12px"></nv-table>`:""}`;
+}
+function openJobDrawer(project,jobId){
+  overlay("drawer",{title:"Запуск: "+project.name,subtitle:"Задание #"+jobId,size:"md",
+    body:`<div id="job-res"><nv-skeleton count="3"></nv-skeleton></div>`,
+    mount(root){
+      const poll=async()=>{
+        if(!root.isConnected)return;
+        let job;
+        try{job=await api("/api/v1/ads/projects/"+project.id+"/campaigns/bulk-jobs/"+jobId,{})}
+        catch(err){const host=root.querySelector("#job-res");if(host)host.innerHTML=`<nv-empty icon="alert-triangle" heading="Не удалось получить статус" text="${esc(err.message||"")}"></nv-empty>`;return}
+        if(!root.isConnected)return;
+        const host=root.querySelector("#job-res");
+        if(!host)return;
+        host.innerHTML=jobStatusHtml(job);
+        if(job.items&&job.items.length)wireTable(root,"job-items-t",job.items.map((it,i)=>({id:i,...it})),
+          [{key:"pool_login",label:"Аккаунт"},{key:"campaign_id",label:"Campaign ID"},
+           {key:"status",label:"Статус",render:x=>x.status==="created"?'<nv-badge tone="success">Создано</nv-badge>':`<nv-badge tone="danger">${esc(x.error||"Ошибка")}</nv-badge>`}]);
+        if(job.status==="running")setTimeout(poll,4000);
+        else loadProjects();
+      };
+      poll();
+    }});
+}
 function openProjectCampaigns(p){
   overlay("drawer",{title:p.name,subtitle:p.domain,size:"md",
     body:`<div id="proj-camps"><nv-skeleton count="3"></nv-skeleton></div>`,
-    after(root){
+    mount(root){
       (async()=>{
         try{
           const data=await api("/api/v1/ads/projects/"+p.id+"/campaigns",{});
@@ -2883,6 +2949,8 @@ projects(){
   actions:`<nv-button icon="plus" data-act="adsNewProject">Новый проект</nv-button>`,
   body:`<div id="ads-proj-res">${!A.projectsLoaded?'<nv-skeleton count="4"></nv-skeleton>':""}</div>`,
   after(root){
+    if(!A.clickruLoaded)loadClickru();
+    if(!A.payersLoaded)loadPayers();
     if(!A.projectsLoaded){loadProjects();return}
     const el=root.querySelector("#ads-proj-res");
     el.innerHTML=A.projects.length?`<nv-table id="ads-proj-t"></nv-table>`:
@@ -2891,7 +2959,8 @@ projects(){
       [{key:"name",label:"Проект"},{key:"domain",label:"Сайт"},
        {key:"campaign_mode",label:"Режим",render:p=>p.campaign_mode==="single_epk"?"Одна ЕПК":"Отдельные"},
        {key:"target_drr",label:"ДРР",align:"right",render:p=>p.target_drr+"%"},
-       {key:"has_launched",label:"Запущен",render:p=>p.has_launched?'<nv-badge tone="success">Да</nv-badge>':'<nv-badge>Нет</nv-badge>'}],
+       {key:"has_launched",label:"Запущен",render:p=>p.has_launched?'<nv-badge tone="success">Да</nv-badge>':'<nv-badge>Нет</nv-badge>'},
+       {key:"_launch",label:"",align:"right",render:p=>p.has_launched?"":`<nv-button size="sm" variant="primary" icon="rocket" data-act="adsLaunch" data-id="${p.id}">Запустить</nv-button>`}],
       p=>openProjectCampaigns(p));
   }}
 },
@@ -2973,6 +3042,7 @@ report(){
 }};
 N.acts.adsNewProject=()=>projectDlg();
 N.acts.adsNewClickru=()=>clickruDlg();
+N.acts.adsLaunch=(a,d)=>{const p=S.ads.projects.find(x=>String(x.id)===String(d.id));if(p)launchDlg(p)};
 N.acts.adsDelClickru=(a,d)=>{
   confirm({title:"Удалить подключение?",text:"Кампании, уже созданные через него, не удаляются.",confirm:"Удалить",danger:true,fn(){
     (async()=>{try{await apiDelete("/api/v1/ads/clickru-connections/"+d.id);await loadClickru();toast("Подключение удалено")}catch(err){toast("Не удалось удалить: "+(err.message||""),{tone:"danger"})}})();
@@ -3001,7 +3071,7 @@ N.register({id:"ads",name:"Реклама",short:"Реклама",tag:"Ad Automa
    (ровно та же природа бага, что и со savedViews: mergeState берёт сохранённое
    значение флага как есть). Сбрасываем на каждой полной загрузке страницы, чтобы
    данные Рекламы/Конверсий всегда были свежими, а не залипшими с прошлой сессии. */
-Object.assign(S.ads,{projectsLoaded:false,clickruLoaded:false,poolLoaded:false,connLoaded:false});
+Object.assign(S.ads,{projectsLoaded:false,clickruLoaded:false,payersLoaded:false,poolLoaded:false,connLoaded:false});
 S.ads.rep.loaded=false;
 
 /* ---------- Конверсия в Метрику (addAvto /lk, тот же прокси) ---------- */
