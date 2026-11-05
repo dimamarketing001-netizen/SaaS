@@ -2876,9 +2876,14 @@ function projectWizard(existingProject){
     step:1,
     regionsRaw:existingProject&&existingProject.region_ids&&existingProject.region_ids.length?existingProject.region_ids.join(", "):"",
     geoRegions:null,
-    connectionId:null,payers:null,payerId:null,
-    count:1,creativeMode:"shuffle",headlines:existingProject&&existingProject.headlines?existingProject.headlines.join(", "):"",
-    adTexts:existingProject&&existingProject.ad_texts?existingProject.ad_texts.join(", "):""
+    connectionId:null,payers:null,payerId:null,payerType:"BUSINESS",
+    count:1,creativeMode:"shuffle",adsPerGroup:1,
+    headlines:existingProject&&existingProject.headlines?existingProject.headlines.join("\n"):"",
+    adTexts:existingProject&&existingProject.ad_texts?existingProject.ad_texts.join("\n"):"",
+    imageUrls:existingProject&&existingProject.image_urls?existingProject.image_urls.join("\n"):"",
+    calloutsPool:existingProject&&existingProject.callouts_pool?existingProject.callouts_pool.join("\n"):"",
+    sitelinksPool:existingProject&&existingProject.sitelinks_pool&&existingProject.sitelinks_pool.length?existingProject.sitelinks_pool.map(s=>[s.title,s.href,s.description].join("|")).join("\n"):"",
+    manualSets:[]
   };
   (async()=>{try{const data=await api("/api/v1/ads/geo-regions",{});wiz.geoRegions=data.items||[]}catch(e){wiz.geoRegions=[]}})();
   const STEP_ITEMS="1. Проект|2. Аккаунт Click.ru|3. Юрлицо|4. Количество|5. Креативы";
@@ -2964,23 +2969,70 @@ function projectWizard(existingProject){
       };
     })();
   }
+  function payerTypeFieldsHtml(type,set){
+    set=set||{};
+    const f=(n,l,extra)=>`<nv-input name="${n}" label="${l}" value="${esc(set[n]||"")}" ${extra||""}></nv-input>`;
+    if(type==="PERSON")return f("inn","ИНН")+f("phone","Телефон (необязательно)")+f("last_name","Фамилия")+f("first_name","Имя")+f("middle_name","Отчество");
+    const common=f("inn","ИНН")+f("phone","Телефон (необязательно)")+
+      f("name",type==="BUSINESS"?"Краткое название (например, ООО «Ромашка»)":"Полное название ИП")+
+      `<nv-select name="tax_form" label="Форма налогообложения" value="${esc(set.tax_form||"OSN")}" options="OSN:ОСН|USN:УСН"></nv-select>`+
+      f("business_address","Юридический адрес")+f("business_postal","Индекс (юр. адрес)")+
+      f("actual_address","Фактический адрес")+f("actual_postal","Индекс (факт. адрес)")+
+      f("bank_name","Банк")+f("bank_rcbic","БИК банка")+f("bank_account","Расчётный счёт")+f("bank_corr","Корреспондентский счёт");
+    return common+(type==="BUSINESS"?f("full_name","Полное название")+f("kpp","КПП")+f("ogrn","ОГРН"):f("ogrnip","ОГРНИП"));
+  }
+  function buildPayerPayload(type,v){
+    const p={type,inn:(v.inn||"").trim(),phone:(v.phone||"").trim()||null};
+    if(type==="PERSON"){p.last_name=(v.last_name||"").trim();p.first_name=(v.first_name||"").trim();p.middle_name=(v.middle_name||"").trim();return p}
+    p.name=(v.name||"").trim();p.tax_form=v.tax_form||"OSN";
+    p.business_address={address:(v.business_address||"").trim(),postal_code:(v.business_postal||"").trim()};
+    p.actual_address={address:(v.actual_address||"").trim(),postal_code:(v.actual_postal||"").trim()};
+    p.bank={name:(v.bank_name||"").trim(),rcbic:(v.bank_rcbic||"").trim(),account:(v.bank_account||"").trim(),correspondent_account:(v.bank_corr||"").trim()};
+    if(type==="BUSINESS"){p.full_name=(v.full_name||"").trim();p.kpp=(v.kpp||"").trim();p.ogrn=+v.ogrn||null}
+    else p.ogrnip=+v.ogrnip||null;
+    return p;
+  }
   function drawStep3(body){
     body.innerHTML=`<p class="muted">Загружаю юрлица…</p>`;
     (async()=>{
       let items=[];
       try{const data=await api("/api/v1/ads/payers",{connection_id:wiz.connectionId});items=data.items||[]}catch(err){}
       wiz.payers=items;
-      body.innerHTML=`<nv-callout tone="info" heading="Для маркировки рекламы">Юрлицо нужно по закону (ОРД/ERID) перед включением показов — для черновика можно пропустить.</nv-callout>`+
-        (items.length?`<div class="stack" style="margin-top:10px">${items.map(p=>`<label class="row" style="gap:9px;padding:10px;border:1px solid var(--line);border-radius:10px;cursor:pointer"><input type="radio" name="wizPayer" value="${p.id}" ${wiz.payerId===p.id?"checked":""}><span><b>${esc(p.name||p.fullName||("Юрлицо "+p.id))}</b></span></label>`).join("")}</div>`:
-          `<nv-empty icon="building-2" heading="Юрлиц пока нет" text="Добавьте в личном кабинете Click.ru, либо пропустите этот шаг для черновика."></nv-empty>`)+
-        `${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="arrow-right" data-wiz-next>Далее</nv-button>')}
-        <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
-      body.querySelectorAll('input[name="wizPayer"]').forEach(inp=>inp.onchange=()=>{wiz.payerId=+inp.value});
-      body.querySelector("[data-wiz-back]").onclick=()=>setStep(2);
-      body.querySelector("[data-wiz-next]").onclick=()=>{
-        if(items.length&&!wiz.payerId){body.querySelector("#wiz-msg").textContent="Выберите юрлицо — без него нельзя запустить показы";body.querySelector("#wiz-msg").style.color="var(--bad)";return}
-        setStep(4);
-      };
+      renderStep3Body();
+      function renderStep3Body(){
+        body.innerHTML=`<nv-callout tone="info" heading="Для маркировки рекламы">Юрлицо нужно по закону (ОРД/ERID) перед включением показов — для черновика можно пропустить.</nv-callout>`+
+          (items.length?`<div class="stack" style="margin-top:10px">${items.map(p=>`<label class="row" style="gap:9px;padding:10px;border:1px solid var(--line);border-radius:10px;cursor:pointer"><input type="radio" name="wizPayer" value="${p.id}" ${wiz.payerId===p.id?"checked":""}><span><b>${esc(p.name||p.fullName||("Юрлицо "+p.id))}</b></span></label>`).join("")}</div>`:
+            `<nv-empty icon="building-2" heading="Юрлиц пока нет" text="Добавьте первое ниже, либо пропустите этот шаг для черновика."></nv-empty>`)+
+          `<nv-button variant="ghost" size="sm" icon="plus" data-wiz-addpayer style="margin-top:10px">Добавить юрлицо</nv-button>
+          <div id="wiz-payer-form" hidden style="margin-top:10px">
+            <nv-select name="payer_type" label="Тип плательщика" value="${esc(wiz.payerType)}" options="BUSINESS:ООО|INDIVIDUAL:ИП|PERSON:Физлицо"></nv-select>
+            <div id="wiz-payer-fields">${payerTypeFieldsHtml(wiz.payerType)}</div>
+            <nv-button size="sm" variant="primary" data-wiz-addpayer-save style="margin-top:6px">Добавить юрлицо</nv-button>
+          </div>
+          ${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="arrow-right" data-wiz-next>Далее</nv-button>')}
+          <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
+        body.querySelectorAll('input[name="wizPayer"]').forEach(inp=>inp.onchange=()=>{wiz.payerId=+inp.value});
+        body.querySelector("[data-wiz-addpayer]").onclick=()=>{body.querySelector("#wiz-payer-form").hidden=false};
+        body.querySelector('nv-select[name="payer_type"]').addEventListener("nv-change",e=>{wiz.payerType=e.detail.value;body.querySelector("#wiz-payer-fields").innerHTML=payerTypeFieldsHtml(wiz.payerType)});
+        body.querySelector("[data-wiz-addpayer-save]").onclick=()=>{
+          const v=formVals(body),msg=body.querySelector("#wiz-msg"),payload=buildPayerPayload(wiz.payerType,v);
+          if(!payload.inn){msg.textContent="Укажите ИНН";msg.style.color="var(--bad)";return}
+          msg.style.color="";msg.textContent="Создаю юрлицо в Click.ru…";
+          (async()=>{
+            try{
+              const created=await apiPost("/api/v1/ads/payers?connection_id="+wiz.connectionId,payload);
+              wiz.payerId=created.payer_id;
+              const data=await api("/api/v1/ads/payers",{connection_id:wiz.connectionId});items=data.items||[];wiz.payers=items;
+              renderStep3Body();toast("Юрлицо добавлено",{tone:"success"});
+            }catch(err){msg.textContent=err.message||"Не удалось добавить";msg.style.color="var(--bad)"}
+          })();
+        };
+        body.querySelector("[data-wiz-back]").onclick=()=>setStep(2);
+        body.querySelector("[data-wiz-next]").onclick=()=>{
+          if(items.length&&!wiz.payerId){body.querySelector("#wiz-msg").textContent="Выберите юрлицо — без него нельзя запустить показы";body.querySelector("#wiz-msg").style.color="var(--bad)";return}
+          setStep(4);
+        };
+      }
     })();
   }
   function drawStep4(body){
@@ -2997,29 +3049,77 @@ function projectWizard(existingProject){
       body.querySelector("[data-wiz-next]").onclick=()=>{
         const v=formVals(body),count=+v.count;
         if(!Number.isInteger(count)||count<1||count>20){body.querySelector("#wiz-msg").textContent="Укажите число от 1 до 20";body.querySelector("#wiz-msg").style.color="var(--bad)";return}
-        wiz.count=count;setStep(5);
+        wiz.count=count;
+        wiz.manualSets=Array.from({length:count},(_,i)=>wiz.manualSets[i]||{headline:"",ad_text:"",image_url:""});
+        setStep(5);
       };
     })();
   }
+  function accountsWord(n){const m=n%10,h=n%100;if(h>=11&&h<=14)return"аккаунтов";if(m===1)return"аккаунт";if(m>=2&&m<=4)return"аккаунта";return"аккаунтов"}
+  function parseSitelinksPool(raw){
+    return (raw||"").split("\n").map(x=>x.trim()).filter(Boolean).map(line=>{
+      const[title,href,description]=line.split("|").map(p=>(p||"").trim());
+      return{title:title||"",href:href||"",description:description||""};
+    });
+  }
   function drawStep5(body){
-    body.innerHTML=`<nv-select name="creative_mode" label="Креативы" value="${wiz.creativeMode}" options="shuffle:Случайный набор на каждый аккаунт|duplicate_single:Один и тот же для всех"></nv-select>
-    <nv-tag-input name="headlines" label="Заголовки (до 56 символов)" value="${esc(wiz.headlines)}" placeholder="Enter после каждого" required></nv-tag-input>
-    <nv-tag-input name="ad_texts" label="Тексты объявлений (до 81 символа)" value="${esc(wiz.adTexts)}" placeholder="Enter после каждого" required></nv-tag-input>
-    ${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="rocket" data-wiz-launch>Запустить</nv-button>')}
+    const n=wiz.count,manual=wiz.creativeMode==="manual_per_account";
+    const structureHtml=`<fieldset class="field field-wide mode-picker"><legend>Сколько объявлений в группе каждого аккаунта</legend>
+      <label class="row" style="gap:8px"><input type="radio" name="wizStructure" value="single" ${wiz.adsPerGroup<=1?"checked":""}><span><b>Одно объявление</b></span></label>
+      <label class="row" style="gap:8px"><input type="radio" name="wizStructure" value="multi" ${wiz.adsPerGroup>1?"checked":""} ${manual?"disabled":""}><span><b>Несколько (A/B, до 50)</b></span></label></fieldset>
+      ${wiz.adsPerGroup>1?`<nv-input name="ads_per_group" label="Сколько вариантов в группе (2–50)" type="number" value="${wiz.adsPerGroup}"></nv-input>`:""}`;
+    const modeHtml=`<nv-select name="creative_mode" label="Откуда брать креативы для ${n} ${accountsWord(n)}" value="${wiz.creativeMode}" options="shuffle:Скрипт перемешает сам|duplicate_single:Один набор на все аккаунты|manual_per_account:Свой набор на каждый аккаунт"></nv-select>`;
+    const poolHtml=`<nv-textarea name="headlines" label="Заголовки — по одному на строку (до 56 символов)" rows="3" value="${esc(wiz.headlines)}"></nv-textarea>
+      <nv-textarea name="ad_texts" label="Тексты объявлений — по одному на строку (до 81 символа)" rows="3" value="${esc(wiz.adTexts)}"></nv-textarea>
+      <nv-textarea name="image_urls" label="Изображения — ссылки, по одной на строку (необязательно)" rows="2" value="${esc(wiz.imageUrls)}"></nv-textarea>
+      <nv-textarea name="callouts_pool" label="Уточнения — по одному на строку, до 25 символов, до 5 шт. (необязательно)" rows="2" value="${esc(wiz.calloutsPool)}"></nv-textarea>
+      <nv-textarea name="sitelinks_pool" label="Быстрые ссылки — «Заголовок|Ссылка|Описание» по одной на строку, до 4 шт. (необязательно)" rows="3" placeholder="Доставка|https://example.ru/delivery|Условия доставки" value="${esc(wiz.sitelinksPool)}"></nv-textarea>`;
+    const manualHtml=wiz.manualSets.map((set,i)=>`<nv-card heading="Аккаунт ${i+1}" style="margin-top:8px">
+      <nv-input data-manual-headline="${i}" label="Заголовок" value="${esc(set.headline)}"></nv-input>
+      <nv-input data-manual-adtext="${i}" label="Текст объявления" value="${esc(set.ad_text)}"></nv-input>
+      <nv-input data-manual-image="${i}" label="Ссылка на изображение (необязательно)" value="${esc(set.image_url)}"></nv-input>
+      </nv-card>`).join("");
+    body.innerHTML=structureHtml+modeHtml+`<div id="wiz-creatives">${manual?manualHtml:poolHtml}</div>
+    ${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="rocket" data-wiz-launch>Запустить массовый запуск</nv-button>')}
     <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
+    body.querySelectorAll('input[name="wizStructure"]').forEach(inp=>inp.onchange=()=>{wiz.adsPerGroup=inp.value==="multi"?(wiz.adsPerGroup>1?wiz.adsPerGroup:5):1;drawStep5(body)});
+    body.querySelector('nv-select[name="creative_mode"]').addEventListener("nv-change",e=>{wiz.creativeMode=e.detail.value;if(wiz.creativeMode!=="shuffle")wiz.adsPerGroup=1;drawStep5(body)});
+    if(!manual){
+      ["headlines","ad_texts","image_urls","callouts_pool","sitelinks_pool"].forEach(n2=>{
+        const el=body.querySelector(`nv-textarea[name="${n2}"]`);
+        if(el)el.addEventListener("nv-change",e=>{wiz[n2==="ad_texts"?"adTexts":n2==="image_urls"?"imageUrls":n2==="callouts_pool"?"calloutsPool":n2==="sitelinks_pool"?"sitelinksPool":"headlines"]=e.detail.value});
+      });
+    }else{
+      body.querySelectorAll("[data-manual-headline]").forEach(el=>el.addEventListener("nv-change",e=>{wiz.manualSets[+el.dataset.manualHeadline].headline=e.detail.value}));
+      body.querySelectorAll("[data-manual-adtext]").forEach(el=>el.addEventListener("nv-change",e=>{wiz.manualSets[+el.dataset.manualAdtext].ad_text=e.detail.value}));
+      body.querySelectorAll("[data-manual-image]").forEach(el=>el.addEventListener("nv-change",e=>{wiz.manualSets[+el.dataset.manualImage].image_url=e.detail.value}));
+    }
     body.querySelector("[data-wiz-back]").onclick=()=>setStep(4);
     body.querySelector("[data-wiz-launch]").onclick=()=>{
       const v=formVals(body),msg=body.querySelector("#wiz-msg");
-      const headlines=(v.headlines||"").split(",").map(x=>x.trim()).filter(Boolean);
-      const adTexts=(v.ad_texts||"").split(",").map(x=>x.trim()).filter(Boolean);
-      if(!headlines.length||!adTexts.length){msg.textContent="Нужен хотя бы один заголовок и один текст объявления";msg.style.color="var(--bad)";return}
-      wiz.creativeMode=v.creative_mode||"shuffle";wiz.headlines=v.headlines;wiz.adTexts=v.ad_texts;
-      const payload={count:wiz.count,connection_id:wiz.connectionId,creative_mode:wiz.creativeMode};
+      if(v.ads_per_group)wiz.adsPerGroup=Math.max(2,Math.min(50,+v.ads_per_group));
+      const payload={count:wiz.count,connection_id:wiz.connectionId,creative_mode:wiz.creativeMode,ads_per_group:wiz.adsPerGroup,creative_sets:[]};
       if(wiz.payerId)payload.payer_id=wiz.payerId;
+      let headlines=[],adTexts=[];
+      if(manual){
+        const sets=wiz.manualSets.map((s,i)=>{
+          const h=body.querySelector(`[data-manual-headline="${i}"]`),a=body.querySelector(`[data-manual-adtext="${i}"]`),im=body.querySelector(`[data-manual-image="${i}"]`);
+          return{headline:(h?h.value:s.headline).trim(),ad_text:(a?a.value:s.ad_text).trim(),image_url:((im?im.value:s.image_url)||"").trim()||null,sitelinks:[],callouts:[]};
+        });
+        if(sets.some(s=>!s.headline||!s.ad_text)){msg.textContent="Заполните заголовок и текст для каждого аккаунта";msg.style.color="var(--bad)";return}
+        payload.creative_sets=sets;
+      }else{
+        headlines=(v.headlines||"").split("\n").map(x=>x.trim()).filter(Boolean);
+        adTexts=(v.ad_texts||"").split("\n").map(x=>x.trim()).filter(Boolean);
+        if(!headlines.length||!adTexts.length){msg.textContent="Нужен хотя бы один заголовок и один текст объявления";msg.style.color="var(--bad)";return}
+      }
       msg.style.color="";msg.textContent="Запускаю…";
+      const imageUrls=(v.image_urls||"").split("\n").map(x=>x.trim()).filter(Boolean);
+      const calloutsPool=(v.callouts_pool||"").split("\n").map(x=>x.trim()).filter(Boolean);
+      const sitelinksPool=parseSitelinksPool(v.sitelinks_pool);
       (async()=>{
         try{
-          await apiPut("/api/v1/ads/projects/"+wiz.project.id,{...wiz.project,headlines,ad_texts:adTexts});
+          await apiPut("/api/v1/ads/projects/"+wiz.project.id,{...wiz.project,headlines,ad_texts:adTexts,image_urls:imageUrls,callouts_pool:calloutsPool,sitelinks_pool:sitelinksPool});
           const job=await apiPost("/api/v1/ads/projects/"+wiz.project.id+"/campaigns/bulk-create",payload);
           close();toast("Запуск начат — отслеживаем прогресс",{tone:"success"});openJobDrawer(wiz.project,job.job_id);
         }catch(err){msg.textContent=err.message||"Не удалось запустить";msg.style.color="var(--bad)"}
