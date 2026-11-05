@@ -2995,6 +2995,14 @@ N.register({id:"ads",name:"Реклама",short:"Реклама",tag:"Ad Automa
     {id:"report",label:"Отчётность",icon:"bar-chart-3"}
   ]}],
   views:views_ads,seed:adsSeed});
+/* S.ads живёт внутри общего блока localStorage (NEON.save()) наравне с S.intel —
+   те же "Loaded"-флаги, что уберегают от повторных запросов внутри одной сессии,
+   иначе переживают перезагрузку страницы и намертво блокируют повторную загрузку
+   (ровно та же природа бага, что и со savedViews: mergeState берёт сохранённое
+   значение флага как есть). Сбрасываем на каждой полной загрузке страницы, чтобы
+   данные Рекламы/Конверсий всегда были свежими, а не залипшими с прошлой сессии. */
+Object.assign(S.ads,{projectsLoaded:false,clickruLoaded:false,poolLoaded:false,connLoaded:false});
+S.ads.rep.loaded=false;
 
 /* ---------- Конверсия в Метрику (addAvto /lk, тот же прокси) ---------- */
 const ADDAVTO_PUBLIC_URL="https://реклама.союзюристовроссии.рф";
@@ -3236,6 +3244,8 @@ N.register({id:"conv",name:"Конверсия в Метрику",short:"Кон�
     {id:"users",label:"Пользователи",icon:"users"}
   ]}],
   views:views_conv,seed:convSeed});
+Object.assign(S.conv,{idsLoaded:false,sourcesLoaded:false,mappingsLoaded:false,unmappedLoaded:false,usersLoaded:false});
+S.conv.log.loaded=false;
 
 NEON.start();
 })();
