@@ -2784,6 +2784,7 @@ const adsSeed=()=>({
   projects:[],projectsLoaded:false,
   clickru:[],clickruLoaded:false,
   pool:{configured:false,items:[]},poolLoaded:false,
+  conn:{configured:false,connected:false,message:"",accounts:[],integrations:[]},connLoaded:false,accQuery:"",
   rep:{dateFrom:"",dateTo:"",loaded:false,loading:false,items:[],totals:{}}
 });
 async function loadProjects(){
@@ -2803,6 +2804,12 @@ async function loadPool(){
   try{A.pool=await api("/api/v1/ads/parsya-pool/accounts",{})}
   catch(err){A.pool={configured:false,items:[]};toast("Не удалось загрузить пул аккаунтов: "+(err.message||""),{tone:"danger"})}
   A.poolLoaded=true;N.refreshIf("ads-accounts");
+}
+async function loadConnection(){
+  const A=S.ads;
+  try{A.conn=await api("/api/v1/ads/connection",{})}
+  catch(err){A.conn={configured:false,connected:false,message:err.message||"",accounts:[],integrations:[]};toast("Не удалось загрузить аккаунты Click.ru: "+(err.message||""),{tone:"danger"})}
+  A.connLoaded=true;N.refreshIf("ads-accounts");
 }
 async function loadReport(){
   const A=S.ads,r=A.rep;r.loading=true;N.refreshIf("ads-report");
@@ -2906,19 +2913,40 @@ clickru(){
   }}
 },
 accounts(){
-  const A=S.ads;
-  return{title:"Аккаунты",sub:"Пул аккаунтов Яндекс.Директа ParsYa, из которого запускаются кампании.",
-  body:`<div id="ads-acc-res">${!A.poolLoaded?'<nv-skeleton count="4"></nv-skeleton>':""}</div>`,
+  const A=S.ads,q=(A.accQuery||"").toLowerCase();
+  return{title:"Аккаунты",sub:"Рекламные аккаунты, подключённые через Click.ru, и пул ParsYa для автозапуска.",
+  body:`<div class="stack">
+  <nv-card heading="Рекламные аккаунты Click.ru" subtitle="Подключённые интеграции (Яндекс.Директ, Google Ads и другие)">
+    <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Название, логин" value="${esc(A.accQuery||"")}" data-chg="adsAccQuery"></nv-input></div>
+    <div id="ads-conn-res" style="margin-top:10px">${!A.connLoaded?'<nv-skeleton count="4"></nv-skeleton>':""}</div>
+  </nv-card>
+  <nv-card heading="Пул ParsYa" subtitle="Запасные Яндекс-аккаунты для автоматического провижининга новых кампаний">
+    <div id="ads-pool-res">${!A.poolLoaded?'<nv-skeleton count="3"></nv-skeleton>':""}</div>
+  </nv-card></div>`,
   after(root){
-    if(!A.poolLoaded){loadPool();return}
-    const el=root.querySelector("#ads-acc-res");
-    if(!A.pool.configured){el.innerHTML=`<nv-callout tone="warning" heading="Пул не настроен">Интеграция addAvto с пулом ParsYa ещё не сконфигурирована на сервере.</nv-callout>`;return}
-    el.innerHTML=A.pool.items.length?`<nv-table id="ads-acc-t"></nv-table>`:`<nv-empty icon="users" heading="В пуле пока нет аккаунтов" text=""></nv-empty>`;
-    if(A.pool.items.length)wireTable(root,"ads-acc-t",A.pool.items.map((a,i)=>({id:a.login||("a"+i),...a})),
-      [{key:"login",label:"Логин"},
-       {key:"is_free",label:"Статус",render:a=>a.is_free?'<nv-badge tone="success">Свободен</nv-badge>':'<nv-badge>Занят</nv-badge>'},
-       {key:"has_metrika_token",label:"Метрика",render:a=>a.has_metrika_token?'<nv-badge tone="success">Подключена</nv-badge>':'<nv-badge tone="warning">Нет токена</nv-badge>'},
-       {key:"metrika_connected_at",label:"Метрика подключена",render:a=>a.metrika_connected_at?fmtDateTime(a.metrika_connected_at):"—"}]);
+    if(!A.connLoaded)loadConnection();
+    if(!A.poolLoaded)loadPool();
+    if(A.connLoaded){
+      const connEl=root.querySelector("#ads-conn-res");
+      if(!A.conn.configured){connEl.innerHTML=`<nv-callout tone="warning" heading="Click.ru не настроен">${esc(A.conn.message||"Интеграция addAvto с Click.ru ещё не сконфигурирована на сервере.")}</nv-callout>`}
+      else{
+        const rows=A.conn.accounts.filter(a=>!q||(a.name||"").toLowerCase().includes(q)||(a.serviceLogin||"").toLowerCase().includes(q));
+        connEl.innerHTML=`<div class="muted" style="font-size:12.5px;margin-bottom:8px">Показано ${rows.length} из ${A.conn.accounts.length}</div>${rows.length?`<nv-table id="ads-conn-t" page-size="25"></nv-table>`:`<nv-empty icon="link" heading="Аккаунтов не найдено" text=""></nv-empty>`}`;
+        if(rows.length)wireTable(root,"ads-conn-t",rows.map((a,i)=>({id:a.id!=null?a.id:"c"+i,...a})),
+          [{key:"name",label:"Название"},{key:"service",label:"Сервис"},
+           {key:"status",label:"Статус",render:a=>a.status==="ACTIVE"?'<nv-badge tone="success">Активен</nv-badge>':`<nv-badge tone="danger">${esc(a.status||"—")}</nv-badge>`},
+           {key:"serviceLogin",label:"Логин"},{key:"currency",label:"Валюта"}]);
+      }
+    }
+    if(A.poolLoaded){
+      const poolEl=root.querySelector("#ads-pool-res");
+      poolEl.innerHTML=A.pool.configured?(A.pool.items.length?`<nv-table id="ads-pool-t"></nv-table>`:`<nv-empty icon="users" heading="В пуле пока нет аккаунтов" text=""></nv-empty>`):`<nv-callout tone="warning" heading="Пул не настроен">Интеграция addAvto с пулом ParsYa ещё не сконфигурирована на сервере.</nv-callout>`;
+      if(A.pool.configured&&A.pool.items.length)wireTable(root,"ads-pool-t",A.pool.items.map((a,i)=>({id:a.login||("a"+i),...a})),
+        [{key:"login",label:"Логин"},
+         {key:"is_free",label:"Статус",render:a=>a.is_free?'<nv-badge tone="success">Свободен</nv-badge>':'<nv-badge>Занят</nv-badge>'},
+         {key:"has_metrika_token",label:"Метрика",render:a=>a.has_metrika_token?'<nv-badge tone="success">Подключена</nv-badge>':'<nv-badge tone="warning">Нет токена</nv-badge>'},
+         {key:"metrika_connected_at",label:"Метрика подключена",render:a=>a.metrika_connected_at?fmtDateTime(a.metrika_connected_at):"—"}]);
+    }
   }}
 },
 report(){
@@ -2950,6 +2978,7 @@ N.acts.adsDelClickru=(a,d)=>{
     (async()=>{try{await apiDelete("/api/v1/ads/clickru-connections/"+d.id);await loadClickru();toast("Подключение удалено")}catch(err){toast("Не удалось удалить: "+(err.message||""),{tone:"danger"})}})();
   }});
 };
+N.chg.adsAccQuery=v=>{S.ads.accQuery=v;N.refresh()};
 N.chg.adsRepPeriod=v=>{
   const rg=NEONUI.rangeOf(v)||NEONUI.rangeOf("30");
   S.ads.rep.dateFrom=new Date(rg[0]).toISOString().slice(0,10);S.ads.rep.dateTo=new Date(rg[1]).toISOString().slice(0,10);
@@ -3019,7 +3048,7 @@ function sourceDlg(){
     body:`<nv-input name="name" label="Название" required></nv-input>
     <nv-input name="webhook" label="Вебхук Б24" placeholder="https://portal.bitrix24.ru/rest/1/xxxx/" required></nv-input>
     <nv-input name="lookback_hours" label="Смотреть лидов за, часов" type="number" value="24"></nv-input>
-    <nv-select name="mode" label="Режим" value="simple" options="simple:Простой|score_field:Со скорингом"></nv-select>
+    <nv-select name="mode" label="Режим" value="simple" options="simple:Простой|score_field:Со скорингом (своё поле)|native:Нативный скоринг Б24"></nv-select>
     <nv-input name="score_field" label="Поле скоринга (для режима «со скорингом»)" placeholder="UF_CRM_..."></nv-input>
     <nv-input name="scored_flag_field" label="Поле признака «прошёл скоринг»" placeholder="UF_CRM_..."></nv-input>`,
     actions:[{label:"Отмена"},{label:"Добавить источник",variant:"primary",icon:"plus",fn(r,close){
@@ -3097,7 +3126,7 @@ sources(){
       `<nv-card><nv-empty icon="webhook" heading="Источников пока нет" text="Добавьте вебхук Битрикс24."><nv-button icon="plus" data-act="convNewSource">Новый источник</nv-button></nv-empty></nv-card>`;
     if(C.sources.length)wireTable(root,"conv-src-t",C.sources,
       [{key:"name",label:"Название"},
-       {key:"mode",label:"Режим",render:s=>s.mode==="score_field"?"Со скорингом":"Простой"},
+       {key:"mode",label:"Режим",render:s=>({simple:"Простой",score_field:"Со скорингом",native:"Нативный скоринг Б24"})[s.mode]||esc(s.mode)},
        {key:"dry_run",label:"Отправка",render:s=>s.dry_run?'<nv-badge tone="warning">Пробно</nv-badge>':'<nv-badge tone="success">Боевая</nv-badge>'},
        {key:"last_status",label:"Последний запуск",render:s=>esc(s.last_status||"—")},
        {key:"_run",label:"",align:"right",render:s=>`<nv-button size="sm" variant="secondary" icon="play" data-act="convRunSource" data-id="${s.id}">Запустить</nv-button>`},
