@@ -1574,13 +1574,13 @@ define("nv-filter-select",class extends NvEl{
   mounted(){this.firstChild.onclick=()=>this._on?closePop():this.pop()}
   pop(){const o=parseOpts(this.a("options")),search=o.length>5;this._on=true;this.firstChild.setAttribute("aria-expanded","true");
     const rows=q=>{const s=this.sel(),L=o.filter(x=>!q||x.label.toLowerCase().includes(q));return L.map(x=>`<label class="pop-o"><input type="checkbox" value="${esc(x.value)}" ${s.includes(x.value)?"checked":""}><span class="box">${ic("check",12)}</span><span class="t">${esc(x.label)}</span></label>`).join("")||'<p class="pop-e">Ничего не нашлось</p>'};
-    openPop(this,`${search?`<div class="pop-s">${ic("search",14)}<input type="search" placeholder="Найти" aria-label="Найти вариант"></div>`:""}<div class="pop-l" role="listbox" aria-multiselectable="true">${rows("")}</div><div class="pop-f"><button type="button" class="pop-x">Сбросить</button><span class="muted">Выбрано: <b class="pop-n num">${this.sel().length}</b></span></div>`,{width:Math.max(220,this.offsetWidth),onClose:()=>{this._on=false;const b=this.firstChild;b&&b.setAttribute("aria-expanded","false")},mount:(p,close,place)=>{
+    openPop(this,`${search?`<div class="pop-s">${ic("search",14)}<input type="search" placeholder="Найти" aria-label="Найти вариант"></div>`:""}<div class="pop-l" role="listbox" aria-multiselectable="true">${rows("")}</div><div class="pop-f"><button type="button" class="pop-x">Сбросить</button><span class="muted">Выбрано: <b class="pop-n num">${this.sel().length}</b></span></div>`,{width:Math.max(+this.a("min-width")||220,this.offsetWidth),onClose:()=>{this._on=false;const b=this.firstChild;b&&b.setAttribute("aria-expanded","false")},mount:(p,close,place)=>{
       const set=v=>{this.setAttribute("value",v.join(","));this.firstChild.setAttribute("aria-expanded","true");p.querySelector(".pop-n").textContent=v.length;this.emit("nv-change",{value:v.join(","),name:this.name})};
       const list=p.querySelector(".pop-l"),inp=p.querySelector(".pop-s input");
       list.onchange=e=>{const c=e.target,s=this.sel();c.checked?s.push(c.value):s.splice(s.indexOf(c.value),1);set(s)};
       p.querySelector(".pop-x").onclick=()=>{set([]);list.innerHTML=rows(inp?inp.value.trim().toLowerCase():"")};
       if(inp){inp.oninput=()=>{list.innerHTML=rows(inp.value.trim().toLowerCase());place()};inp.focus()}else{const c=list.querySelector("input");c&&c.focus()}}})}
-},"Формы",{desc:"Фильтр с выбором нескольких значений. При большом списке появляется поиск. Значения передаются через запятую.",events:["nv-change {value,name}"],attrs:{label:{type:"string",default:"Площадка",desc:"Подпись внутри поля"},options:{type:"string",default:"yandex:Яндекс / РСЯ|vk:VK Ads|tg:Telegram Ads|web:Web display",desc:"значение:подпись, через |"},value:{type:"string",default:"yandex",desc:"Выбранные значения через запятую"},placeholder:{type:"string",default:"Все",desc:"Текст, когда ничего не выбрано"},name:{type:"string",default:"",desc:"Ключ значения"}}});
+},"Формы",{desc:"Фильтр с выбором нескольких значений. При большом списке появляется поиск. Значения передаются через запятую.",events:["nv-change {value,name}"],attrs:{label:{type:"string",default:"Площадка",desc:"Подпись внутри поля"},options:{type:"string",default:"yandex:Яндекс / РСЯ|vk:VK Ads|tg:Telegram Ads|web:Web display",desc:"значение:подпись, через |"},value:{type:"string",default:"yandex",desc:"Выбранные значения через запятую"},placeholder:{type:"string",default:"Все",desc:"Текст, когда ничего не выбрано"},name:{type:"string",default:"",desc:"Ключ значения"},"min-width":{type:"number",default:220,desc:"Минимальная ширина выпадающего списка, px — увеличьте для длинных подписей"}}});
 
 define("nv-date-range",class extends NvEl{
   get value(){return this.a("value")}get name(){return this.getAttribute("name")}
@@ -2201,7 +2201,7 @@ function bindCards(root,target){
 }
 function intentControlHtml(){
   const I=S.intel,opts=I.intents.map(i=>esc(i.intent)+":"+esc(i.intent)+" ("+(i.creatives_count||0)+")").join("|");
-  return `<nv-filter-select label="Интент" value="${esc(I.activeIntents.join(","))}" options="${opts||"_:Пока нет запросов"}" placeholder="Все запросы" data-chg="intentSet"></nv-filter-select>`;
+  return `<nv-filter-select label="Интент" value="${esc(I.activeIntents.join(","))}" options="${opts||"_:Пока нет запросов"}" placeholder="Все запросы" min-width="360" data-chg="intentSet"></nv-filter-select>`;
 }
 
 /* ---------- Библиотека ---------- */
