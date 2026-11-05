@@ -72,8 +72,8 @@ nv-icon svg{width:1em;height:1em;stroke-width:2}
 
 /* ---------- Оболочка ---------- */
 #app{height:100%}
-.shell{display:grid;grid-template-columns:78px 228px minmax(0,1fr);height:100%}
-.shell.has-sub{grid-template-columns:78px 228px 210px minmax(0,1fr)}
+.shell{display:grid;grid-template-columns:78px 228px minmax(0,1fr);height:100%;transition:grid-template-columns .15s ease}
+.shell.side-collapsed{grid-template-columns:78px 64px minmax(0,1fr)}
 .rail{background:var(--rail);color:var(--rail-ink);display:flex;flex-direction:column;gap:2px;padding:12px 8px;overflow-y:auto;scrollbar-width:none}
 .rail-logo{width:40px;height:40px;margin:0 auto 12px;border-radius:12px;background:#39ff88;color:#0d1211;display:grid;place-items:center;font:800 19px var(--font-display);flex:none;border:0;cursor:pointer}
 .rail-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px 7px;border:0;background:none;border-radius:10px;color:var(--rail-ink-2);font-size:11px;line-height:1.15;cursor:pointer;text-align:center;flex:none;width:100%;position:relative}
@@ -98,9 +98,12 @@ nv-icon svg{width:1em;height:1em;stroke-width:2}
 .side-item.on nv-icon{color:var(--svc-ink)}
 .side-item.has-kids nv-icon:last-child{margin-left:auto;font-size:14px;color:var(--ink-3)}
 .side-count{font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
-.side2{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;overflow-y:auto;padding:14px 10px}
-.side2:empty{display:none}
-.side2-list{display:flex;flex-direction:column;gap:2px}
+.side-item-row{display:flex;align-items:center;gap:2px}
+.side-item-row .side-item.grow{flex:1;min-width:0}
+.side-item-tog{flex:none;display:flex;align-items:center;justify-content:center;width:26px;height:26px;border:0;background:none;border-radius:999px;color:var(--ink-3);cursor:pointer}
+.side-item-tog:hover{background:var(--surface-2);color:var(--ink)}
+.side-ws{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.side-collapse-btn{flex:none}
 .side-foot{margin-top:auto;padding:12px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;font-size:12.5px}
 .side-foot strong{display:block;font-weight:600}
 .side-foot span{color:var(--ink-3)}
@@ -543,14 +546,23 @@ html,body{overflow:hidden}
 .side-label{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:none;cursor:pointer;padding:7px 10px;font:400 12.5px var(--font-body);letter-spacing:0;text-transform:none;color:var(--ink);border-radius:999px}
 .side-label:hover{background:color-mix(in srgb,var(--l2) 50%,transparent)}
 .side-label nv-icon{color:var(--ink-2)}
-.tree{margin-left:17px}
-.tree .side-item{position:relative;margin-left:14px;width:calc(100% - 14px)}
-.tree .side-item>nv-icon{display:none}
-.tree .side-item.has-kids>nv-icon:last-child{display:inline-flex}
-.tree .side-item::before{content:"";position:absolute;left:-14px;top:-16px;bottom:50%;width:11px;border-left:1px solid color-mix(in srgb,var(--ink-3) 50%,transparent);border-bottom:1px solid color-mix(in srgb,var(--ink-3) 50%,transparent);border-bottom-left-radius:8px;pointer-events:none}
-.tree .side-item:first-child::before{top:-3px}
-.side2{background:none;border-right:0;padding:14px 10px}
+.tree{margin-left:2px}
+.tree .side-item{padding-left:22px}
+.tree.sub .side-item{padding-left:40px;font-size:12.5px}
+.side-item-tog{border-radius:999px;width:24px;height:24px}
 .side-foot{border-top:0;padding:12px 16px;justify-content:space-between}
+/* Свёрнутое меню: только иконки по центру, подпись — через data-tip по наведению */
+.side-collapsed .side-head,.side-collapsed .side-label,.side-collapsed .side-item span.t,
+.side-collapsed .side-count,.side-collapsed .side-item.has-kids>nv-icon:last-child,
+.side-collapsed .side-item-tog,.side-collapsed .tree.sub,.side-collapsed .side-ws>span{display:none}
+.side-collapsed .side{align-items:center}
+.side-collapsed .side-group{padding:2px 6px}
+.side-collapsed .side-label{justify-content:center;padding:7px 2px}
+.side-collapsed .side-item,.side-collapsed .side-item-row .side-item.grow{justify-content:center;padding:9px 2px;gap:0}
+.side-collapsed .tree{margin-left:0}
+.side-collapsed .tree .side-item{padding-left:9px}
+.side-collapsed .side-item-row{justify-content:center}
+.side-collapsed .side-ws{justify-content:center}
 .side-foot .mono{font-size:10.5px;color:var(--ink-2)}
 .tt{display:inline-flex;gap:2px;padding:3px;border-radius:999px;background:color-mix(in srgb,var(--ink) 7%,transparent)}
 .tt button{width:28px;height:24px;border:0;border-radius:999px;background:none;cursor:pointer;display:grid;place-items:center;color:var(--ink-2)}
@@ -1929,7 +1941,7 @@ function mergeState(fresh,savedPart){
   }
   return fresh;
 }
-S.core=mergeState({feed:[]},saved.core);
+S.core=mergeState({feed:[],sideCollapsed:false},saved.core);
 let saveT;
 NEON.save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},200)};
 
@@ -1950,17 +1962,16 @@ function railBtn(id){const x=NEON.services[id],on=route().s===id;return `<button
 function shell(){
   const{s,v,svc}=route();
   const mainIds=NEON.order.filter(i=>NEON.services[i].rail==="main");
-  const hasSub=!!activeSubItem();
-  return `<div class="shell${hasSub?" has-sub":""}" id="shell"><div class="scrim-nav" data-act="navClose"></div>
+  const collapsed=!!S.core.sideCollapsed;
+  return `<div class="shell${collapsed?" side-collapsed":""}" id="shell"><div class="scrim-nav" data-act="navClose"></div>
   <nav class="rail" aria-label="Сервисы NEON">
     <button type="button" class="rail-logo" data-go="${mainIds[0]}-${Object.keys(NEON.services[mainIds[0]].views)[0]}" aria-label="NEON, на главную">N</button>
     ${mainIds.map(railBtn).join("")}
   </nav>
   <aside class="side" aria-label="Разделы сервиса"><div class="side-head"><h2>${esc(svc.name)}</h2><p>${esc(svc.tag||"")}</p></div>
     <div id="side-nav">${sideNav()}</div>
-    <div class="side-ws"><span class="muted" style="font-size:12px;padding:0 4px">${esc(session.email||"")}</span></div>
+    <div class="side-ws"><span class="muted" style="font-size:12px;padding:0 4px">${esc(session.email||"")}</span><nv-button class="side-collapse-btn" variant="ghost" size="sm" icon="${collapsed?"panel-left-open":"panel-left-close"}" icon-only data-act="sideCollapse" hint="${collapsed?"Развернуть меню":"Свернуть меню"}">${collapsed?"Развернуть меню":"Свернуть меню"}</nv-button></div>
   </aside>
-  <aside class="side2" id="side2" aria-label="Подразделы раздела">${subNav()}</aside>
   <div class="main"><header class="top">
     <nv-button class="burger" variant="ghost" icon="menu" icon-only data-act="navOpen">Открыть меню</nv-button>
     <div class="crumbs" id="crumbs"></div>
@@ -1972,20 +1983,15 @@ function shell(){
 }
 function sideNav(){
   const{s,v,svc}=route(),shut=S.core.sideShut||{};
-  return (svc.nav||[]).map(g=>{const k=s+"/"+g.group,closed=g.group&&shut[k];return `<div class="side-group">${g.group?`<button type="button" class="side-label" data-act="sideTog" data-k="${esc(k)}" aria-expanded="${!closed}"><span>${esc(g.group)}</span>${ic(closed?"chevron-down":"chevron-up",14)}</button>`:""}${closed?"":`<div class="${g.group?"tree":""}">${g.items.map(i=>{const c=typeof i.count==="function"?i.count():i.count,on=i.id===v,kids=i.items&&i.items.length;return `<button type="button" class="side-item${on?" on":""}${kids?" has-kids":""}" data-go="${s}-${i.id}" ${on?'aria-current="page"':""}>${ic(i.icon)}<span class="t">${esc(i.label)}</span>${c!=null&&c!==""?`<span class="side-count">${esc(c)}</span>`:""}${kids?ic("chevron-right",13):""}</button>`}).join("")}</div>`}</div>`}).join("");
-}
-function activeSubItem(){
-  const{v,svc}=route();
-  for(const g of(svc.nav||[])){const hit=(g.items||[]).find(i=>i.id===v&&i.items&&i.items.length);if(hit)return hit}
-  return null;
-}
-function subNav(){
-  const item=activeSubItem();
-  if(!item)return"";
   const anaTab=(S.intel.ana&&S.intel.ana.tab)||"overview";
-  return `<div class="side2-list">${item.items.map(ci=>`<button type="button" class="side-item${anaTab===ci.id?" on":""}" data-act="anaGoTab" data-tab="${esc(ci.id)}">${ic(ci.icon||"circle",15)}<span class="t">${esc(ci.label)}</span></button>`).join("")}</div>`;
+  const itemHtml=(i,k)=>{
+    const c=typeof i.count==="function"?i.count():i.count,on=i.id===v,kids=i.items&&i.items.length;
+    if(!kids)return `<button type="button" class="side-item${on?" on":""}" data-go="${s}-${i.id}" data-tip="${esc(i.label)}" ${on?'aria-current="page"':""}>${ic(i.icon)}<span class="t">${esc(i.label)}</span>${c!=null&&c!==""?`<span class="side-count">${esc(c)}</span>`:""}</button>`;
+    const ik=k+"/"+i.id,iclosed=shut[ik];
+    return `<div class="side-item-row"><button type="button" class="side-item grow${on?" on":""}" data-go="${s}-${i.id}" data-tip="${esc(i.label)}" ${on?'aria-current="page"':""}>${ic(i.icon)}<span class="t">${esc(i.label)}</span></button><button type="button" class="side-item-tog" data-act="sideTog" data-k="${esc(ik)}" aria-expanded="${!iclosed}" aria-label="${esc(i.label)}: подразделы">${ic(iclosed?"chevron-down":"chevron-up",13)}</button></div>${iclosed?"":`<div class="tree sub">${i.items.map(ci=>`<button type="button" class="side-item${on&&anaTab===ci.id?" on":""}" data-act="anaGoTab" data-tab="${esc(ci.id)}" data-tip="${esc(ci.label)}">${ic(ci.icon||"circle",13)}<span class="t">${esc(ci.label)}</span></button>`).join("")}</div>`}`;
+  };
+  return (svc.nav||[]).map(g=>{const k=s+"/"+g.group,closed=g.group&&shut[k];return `<div class="side-group">${g.group?`<button type="button" class="side-label" data-act="sideTog" data-k="${esc(k)}" aria-expanded="${!closed}"><span>${esc(g.group)}</span>${ic(closed?"chevron-down":"chevron-up",14)}</button>`:""}${closed?"":`<div class="${g.group?"tree":""}">${g.items.map(i=>itemHtml(i,k)).join("")}</div>`}</div>`}).join("");
 }
-
 function renderView(keepScroll){
   const{s,v,svc}=route(),old=document.getElementById("view"),sc=document.getElementById("scroll");if(!old)return;const root=old.cloneNode(false);old.replaceWith(root);
   const y=sc.scrollTop,d=svc.views[v]();
@@ -1993,18 +1999,8 @@ function renderView(keepScroll){
   root.innerHTML=`<nv-page-header heading="${esc(d.title)}" subtitle="${esc(d.sub||"")}"${d.back?` back="${esc(d.back)}" back-label="${esc(d.backLabel||"")}"`:""}>${d.help?'<nv-button variant="ghost" icon="help-circle" data-act="helpOpen">Как это работает</nv-button>':""}${d.actions||""}</nv-page-header>${d.body||""}`;
   document.getElementById("crumbs").innerHTML=`<nv-breadcrumbs items="${esc(s+"-"+Object.keys(svc.views)[0]+":"+svc.name+"|cur:"+d.title)}"></nv-breadcrumbs>`;
   document.getElementById("side-nav").innerHTML=sideNav();
-  const side2=document.getElementById("side2");
-  if(side2){side2.innerHTML=subNav();document.getElementById("shell").classList.toggle("has-sub",!!activeSubItem());alignSide2()}
   d.after&&d.after(root);
   sc.scrollTop=keepScroll?y:0;
-}
-function alignSide2(){
-  const side2=document.getElementById("side2");
-  if(!side2)return;
-  const item=document.querySelector(".side-item.has-kids.on");
-  if(!item||!side2.firstElementChild){side2.style.paddingTop="";return}
-  const offset=item.getBoundingClientRect().top-side2.getBoundingClientRect().top;
-  side2.style.paddingTop=Math.max(0,offset)+"px";
 }
 function render(){const{svc,s}=route();document.body.dataset.svc=s;document.getElementById("app").innerHTML=shell();renderView();updBell();document.title="ParsYa Ads · "+svc.name}
 NEON.render=render;
@@ -2023,6 +2019,7 @@ NEON.acts.sideTog=(a,d)=>{const m=S.core.sideShut=S.core.sideShut||{};m[d.k]=!m[
 
 NEON.acts.navOpen=()=>document.getElementById("shell").classList.add("nav-open");
 NEON.acts.navClose=()=>document.getElementById("shell").classList.remove("nav-open");
+NEON.acts.sideCollapse=()=>{S.core.sideCollapsed=!S.core.sideCollapsed;NEON.save();render()};
 NEON.acts.themeSet=(a,d)=>{document.documentElement.dataset.theme=d.v;try{localStorage.setItem("neon-theme",d.v)}catch(e){}};
 try{const t=localStorage.getItem("neon-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}
 NEON.acts.feed=()=>{const f=S.core.feed;f.forEach(x=>x.read=true);NEON.save();updBell();overlay("drawer",{title:"События",subtitle:"Что произошло в сервисе",size:"sm",body:f.length?`<div class="list">${f.map(x=>`<div class="stack" style="gap:2px"><div>${esc(x.text)}</div><div class="row between"><span class="muted" style="font-size:12.5px">${esc((NEON.services[x.svc]||{}).name||"")} · ${NEON.ago(x.at)}</span>${x.go?`<nv-button variant="link" size="sm" data-go="${esc(x.go)}">Открыть</nv-button>`:""}</div></div>`).join("")}</div>`:`<nv-empty icon="bell" heading="Пока тихо" text="Здесь появятся завершённые сканирования и новые подборки."></nv-empty>`})};
