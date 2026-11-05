@@ -1877,6 +1877,12 @@ async function apiDelete(path){
  if(!res.ok)throw new Error("API error "+res.status);
  return res.status===204?null:res.json();
 }
+async function apiPut(path,body){
+ const res=await fetch(API_BASE+path,{method:"PUT",headers:{Authorization:"Bearer "+session.token,"Content-Type":"application/json"},body:JSON.stringify(body||{})});
+ if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
+ if(!res.ok){let detail="API error "+res.status;try{detail=(await res.json()).detail||detail}catch(e){}throw new Error(detail)}
+ return res.json();
+}
 function loadSavedCreativeIds(){try{const v=JSON.parse(localStorage.getItem("neon-ad-intelligence-saved")||"[]");return Array.isArray(v)?v.filter(x=>typeof x==="string"):[]}catch(e){return[]}}
 function persistSavedCreativeIds(ids){try{localStorage.setItem("neon-ad-intelligence-saved",JSON.stringify(ids))}catch(e){}}
 const DEFAULT_SAVED_VIEWS=[
@@ -2772,6 +2778,194 @@ loadLibrary();
 loadCollections();
 loadScans();
 loadIntentsList();
+
+/* ---------- Реклама (addAvto, через прокси /api/v1/ads/*) ---------- */
+const adsSeed=()=>({
+  projects:[],projectsLoaded:false,
+  clickru:[],clickruLoaded:false,
+  pool:{configured:false,items:[]},poolLoaded:false,
+  rep:{dateFrom:"",dateTo:"",loaded:false,loading:false,items:[],totals:{}}
+});
+async function loadProjects(){
+  const A=S.ads;
+  try{const data=await api("/api/v1/ads/projects",{});A.projects=data.items||[]}
+  catch(err){toast("Не удалось загрузить проекты: "+(err.message||""),{tone:"danger"})}
+  A.projectsLoaded=true;N.refreshIf("ads-projects");
+}
+async function loadClickru(){
+  const A=S.ads;
+  try{const data=await api("/api/v1/ads/clickru-connections",{});A.clickru=data.items||[]}
+  catch(err){toast("Не удалось загрузить подключения Click.ru: "+(err.message||""),{tone:"danger"})}
+  A.clickruLoaded=true;N.refreshIf("ads-clickru");
+}
+async function loadPool(){
+  const A=S.ads;
+  try{A.pool=await api("/api/v1/ads/parsya-pool/accounts",{})}
+  catch(err){A.pool={configured:false,items:[]};toast("Не удалось загрузить пул аккаунтов: "+(err.message||""),{tone:"danger"})}
+  A.poolLoaded=true;N.refreshIf("ads-accounts");
+}
+async function loadReport(){
+  const A=S.ads,r=A.rep;r.loading=true;N.refreshIf("ads-report");
+  try{
+    const data=await api("/api/v1/ads/report",{date_from:r.dateFrom,date_to:r.dateTo});
+    r.items=data.items||[];r.totals=data.totals||{};r.loaded=true;
+  }catch(err){toast("Не удалось загрузить отчёт: "+(err.message||""),{tone:"danger"})}
+  r.loading=false;N.refreshIf("ads-report");
+}
+function projectDlg(){
+  overlay("modal",{title:"Новый проект",subtitle:"Настройки для массового запуска кампаний Директа",size:"lg",
+    body:`<nv-input name="name" label="Название проекта" required></nv-input>
+    <nv-input name="domain" label="Сайт (домен)" placeholder="example.ru" required></nv-input>
+    <nv-select name="campaign_mode" label="Режим кампаний" value="separate" options="separate:Отдельные кампании|single_epk:Одна ЕПК"></nv-select>
+    <nv-input name="target_drr" label="Целевой ДРР, %" type="number" value="30"></nv-input>
+    <nv-textarea name="keywords" label="Ключевые фразы" rows="4" placeholder="По одной на строку"></nv-textarea>
+    <nv-tag-input name="headlines" label="Заголовки (до 56 символов)" value="" placeholder="Enter после каждого"></nv-tag-input>
+    <nv-tag-input name="ad_texts" label="Тексты объявлений (до 81 символа)" value="" placeholder="Enter после каждого"></nv-tag-input>
+    <nv-tag-input name="region_ids" label="ID регионов (Яндекс.Директ)" value="" placeholder="Например, 213"></nv-tag-input>`,
+    actions:[{label:"Отмена"},{label:"Создать проект",variant:"primary",icon:"plus",fn(r,close){
+      const v=formVals(r),name=(v.name||"").trim(),domain=(v.domain||"").trim();
+      if(!name){r.querySelector('[name="name"]').setAttribute("error","Введите название");return false}
+      if(!domain){r.querySelector('[name="domain"]').setAttribute("error","Введите домен");return false}
+      const payload={name,domain,campaign_mode:v.campaign_mode||"separate",target_drr:+v.target_drr||30,
+        keywords:v.keywords||"",
+        headlines:(v.headlines||"").split(",").map(x=>x.trim()).filter(Boolean),
+        ad_texts:(v.ad_texts||"").split(",").map(x=>x.trim()).filter(Boolean),
+        region_ids:(v.region_ids||"").split(",").map(x=>+x.trim()).filter(Boolean)};
+      (async()=>{
+        try{await apiPost("/api/v1/ads/projects",payload);await loadProjects();close();toast("Проект создан",{tone:"success"})}
+        catch(err){toast("Не удалось создать проект: "+(err.message||""),{tone:"danger"})}
+      })();
+    }}]});
+}
+function clickruDlg(){
+  overlay("modal",{title:"Подключить Click.ru",subtitle:"Токен API из личного кабинета Click.ru",size:"md",
+    body:`<nv-input name="label" label="Название подключения" required></nv-input>
+    <nv-input name="token" label="API-токен Click.ru" required></nv-input>
+    <nv-input name="user_id" label="User ID (необязательно)"></nv-input>`,
+    actions:[{label:"Отмена"},{label:"Подключить",variant:"primary",icon:"link",fn(r,close){
+      const v=formVals(r),label=(v.label||"").trim(),token=(v.token||"").trim();
+      if(!label){r.querySelector('[name="label"]').setAttribute("error","Введите название");return false}
+      if(!token){r.querySelector('[name="token"]').setAttribute("error","Введите токен");return false}
+      (async()=>{
+        try{await apiPost("/api/v1/ads/clickru-connections",{label,token,user_id:v.user_id||""});await loadClickru();close();toast("Подключение добавлено",{tone:"success"})}
+        catch(err){toast("Не удалось подключить: "+(err.message||""),{tone:"danger"})}
+      })();
+    }}]});
+}
+function openProjectCampaigns(p){
+  overlay("drawer",{title:p.name,subtitle:p.domain,size:"md",
+    body:`<div id="proj-camps"><nv-skeleton count="3"></nv-skeleton></div>`,
+    after(root){
+      (async()=>{
+        try{
+          const data=await api("/api/v1/ads/projects/"+p.id+"/campaigns",{});
+          const items=data.items||[];
+          const host=root.querySelector("#proj-camps");
+          host.innerHTML=items.length?`<nv-table id="proj-camps-t"></nv-table>`:
+            `<nv-empty icon="megaphone" heading="Кампаний пока нет" text="Запуск выполняется визардом массового запуска."></nv-empty>`;
+          if(items.length)wireTable(root,"proj-camps-t",items.map((c,i)=>({id:c.id!=null?c.id:"c"+i,...c})),
+            [{key:"account_id",label:"Аккаунт"},{key:"campaign_id",label:"Campaign ID"},{key:"status",label:"Статус"}]);
+        }catch(err){root.querySelector("#proj-camps").innerHTML=`<nv-empty icon="alert-triangle" heading="Не удалось загрузить" text="${esc(err.message||"")}"></nv-empty>`}
+      })();
+    }});
+}
+const views_ads={
+projects(){
+  const A=S.ads;
+  return{title:"Проекты",sub:"Проекты массового запуска кампаний Яндекс.Директа через Click.ru.",
+  actions:`<nv-button icon="plus" data-act="adsNewProject">Новый проект</nv-button>`,
+  body:`<div id="ads-proj-res">${!A.projectsLoaded?'<nv-skeleton count="4"></nv-skeleton>':""}</div>`,
+  after(root){
+    if(!A.projectsLoaded){loadProjects();return}
+    const el=root.querySelector("#ads-proj-res");
+    el.innerHTML=A.projects.length?`<nv-table id="ads-proj-t"></nv-table>`:
+      `<nv-card><nv-empty icon="rocket" heading="Проектов пока нет" text="Создайте проект, чтобы запускать кампании пачками."><nv-button icon="plus" data-act="adsNewProject">Новый проект</nv-button></nv-empty></nv-card>`;
+    if(A.projects.length)wireTable(root,"ads-proj-t",A.projects,
+      [{key:"name",label:"Проект"},{key:"domain",label:"Сайт"},
+       {key:"campaign_mode",label:"Режим",render:p=>p.campaign_mode==="single_epk"?"Одна ЕПК":"Отдельные"},
+       {key:"target_drr",label:"ДРР",align:"right",render:p=>p.target_drr+"%"},
+       {key:"has_launched",label:"Запущен",render:p=>p.has_launched?'<nv-badge tone="success">Да</nv-badge>':'<nv-badge>Нет</nv-badge>'}],
+      p=>openProjectCampaigns(p));
+  }}
+},
+clickru(){
+  const A=S.ads;
+  return{title:"Клик.ру",sub:"Подключения к Click.ru — через них создаются аккаунты и кампании Директа.",
+  actions:`<nv-button icon="link" data-act="adsNewClickru">Подключить</nv-button>`,
+  body:`<div id="ads-cr-res">${!A.clickruLoaded?'<nv-skeleton count="3"></nv-skeleton>':""}</div>`,
+  after(root){
+    if(!A.clickruLoaded){loadClickru();return}
+    const el=root.querySelector("#ads-cr-res");
+    el.innerHTML=A.clickru.length?`<nv-table id="ads-cr-t"></nv-table>`:
+      `<nv-card><nv-empty icon="link" heading="Подключений нет" text="Добавьте токен Click.ru, чтобы запускать кампании."><nv-button icon="link" data-act="adsNewClickru">Подключить</nv-button></nv-empty></nv-card>`;
+    if(A.clickru.length)wireTable(root,"ads-cr-t",A.clickru,
+      [{key:"label",label:"Название"},{key:"user_id",label:"User ID"},
+       {key:"token_preview",label:"Токен",render:c=>`<span class="mono">${esc(c.token_preview)}</span>`},
+       {key:"created_at",label:"Добавлено",render:c=>fmtDateTime(c.created_at)},
+       {key:"_del",label:"",align:"right",render:c=>`<nv-button size="sm" variant="danger" icon="trash-2" icon-only hint="Удалить" data-act="adsDelClickru" data-id="${c.id}">Удалить</nv-button>`}]);
+  }}
+},
+accounts(){
+  const A=S.ads;
+  return{title:"Аккаунты",sub:"Пул аккаунтов Яндекс.Директа ParsYa, из которого запускаются кампании.",
+  body:`<div id="ads-acc-res">${!A.poolLoaded?'<nv-skeleton count="4"></nv-skeleton>':""}</div>`,
+  after(root){
+    if(!A.poolLoaded){loadPool();return}
+    const el=root.querySelector("#ads-acc-res");
+    if(!A.pool.configured){el.innerHTML=`<nv-callout tone="warning" heading="Пул не настроен">Интеграция addAvto с пулом ParsYa ещё не сконфигурирована на сервере.</nv-callout>`;return}
+    el.innerHTML=A.pool.items.length?`<nv-table id="ads-acc-t"></nv-table>`:`<nv-empty icon="users" heading="В пуле пока нет аккаунтов" text=""></nv-empty>`;
+    if(A.pool.items.length)wireTable(root,"ads-acc-t",A.pool.items.map((a,i)=>({id:a.login||("a"+i),...a})),
+      [{key:"login",label:"Логин"},
+       {key:"is_free",label:"Статус",render:a=>a.is_free?'<nv-badge tone="success">Свободен</nv-badge>':'<nv-badge>Занят</nv-badge>'},
+       {key:"has_metrika_token",label:"Метрика",render:a=>a.has_metrika_token?'<nv-badge tone="success">Подключена</nv-badge>':'<nv-badge tone="warning">Нет токена</nv-badge>'},
+       {key:"metrika_connected_at",label:"Метрика подключена",render:a=>a.metrika_connected_at?fmtDateTime(a.metrika_connected_at):"—"}]);
+  }}
+},
+report(){
+  const A=S.ads,r=A.rep;
+  return{title:"Отчётность",sub:"Показы, клики и расход по Click.ru за период.",
+  body:`<div class="toolbar"><nv-date-range label="Период" presets="7:7 дней|30:30 дней|90:90 дней|365:Год" value="${esc(r.dateFrom&&r.dateTo?r.dateFrom+".."+r.dateTo:"30")}" data-chg="adsRepPeriod"></nv-date-range><nv-button icon="refresh-cw" data-act="adsRepLoad">Обновить</nv-button></div>
+  <div id="ads-rep-res">${r.loading?'<nv-skeleton count="4"></nv-skeleton>':!r.loaded?'<nv-empty icon="bar-chart-3" heading="Загружаем отчёт за 30 дней…" text=""></nv-empty>':""}</div>`,
+  after(root){
+    if(!r.loaded&&!r.loading&&!r.dateFrom){
+      const rg=NEONUI.rangeOf("30");
+      r.dateFrom=new Date(rg[0]).toISOString().slice(0,10);r.dateTo=new Date(rg[1]).toISOString().slice(0,10);
+      loadReport();return;
+    }
+    const el=root.querySelector("#ads-rep-res");
+    if(r.loaded&&!r.loading){
+      el.innerHTML=`<div class="grid g3">${stat("Показы",fmt(r.totals.impressions||0))}${stat("Клики",fmt(r.totals.clicks||0))}${stat("Расход",fmt(Math.round(r.totals.spend||0))+" ₽")}</div>
+        ${r.items.length?`<nv-table id="ads-rep-t" style="margin-top:14px"></nv-table>`:`<nv-empty icon="bar-chart-3" heading="Нет данных за период" text=""></nv-empty>`}`;
+      if(r.items.length)wireTable(root,"ads-rep-t",r.items.map((x,i)=>({id:i,...x})),
+        [{key:"date",label:"Дата"},{key:"account_id",label:"Аккаунт"},{key:"campaign_id",label:"Кампания"},
+         {key:"impressions",label:"Показы",align:"right"},{key:"clicks",label:"Клики",align:"right"},
+         {key:"spend",label:"Расход",align:"right",render:x=>fmt(Math.round(x.spend))+" ₽"}]);
+    }
+  }}
+}};
+N.acts.adsNewProject=()=>projectDlg();
+N.acts.adsNewClickru=()=>clickruDlg();
+N.acts.adsDelClickru=(a,d)=>{
+  confirm({title:"Удалить подключение?",text:"Кампании, уже созданные через него, не удаляются.",confirm:"Удалить",danger:true,fn(){
+    (async()=>{try{await apiDelete("/api/v1/ads/clickru-connections/"+d.id);await loadClickru();toast("Подключение удалено")}catch(err){toast("Не удалось удалить: "+(err.message||""),{tone:"danger"})}})();
+  }});
+};
+N.chg.adsRepPeriod=v=>{
+  const rg=NEONUI.rangeOf(v)||NEONUI.rangeOf("30");
+  S.ads.rep.dateFrom=new Date(rg[0]).toISOString().slice(0,10);S.ads.rep.dateTo=new Date(rg[1]).toISOString().slice(0,10);
+  loadReport();
+};
+N.acts.adsRepLoad=()=>loadReport();
+N.register({id:"ads",name:"Реклама",short:"Реклама",tag:"Ad Automation",icon:"megaphone",rail:"main",status:"ready",
+  desc:"Массовый запуск рекламных кампаний Яндекс.Директа через Click.ru",
+  metric:()=>(S.ads.projects.length||0)+" проектов",
+  nav:[{group:"Реклама",items:[
+    {id:"projects",label:"Проекты",icon:"rocket"},
+    {id:"accounts",label:"Аккаунты",icon:"users"},
+    {id:"clickru",label:"Клик.ру",icon:"link"},
+    {id:"report",label:"Отчётность",icon:"bar-chart-3"}
+  ]}],
+  views:views_ads,seed:adsSeed});
 
 NEON.start();
 })();
