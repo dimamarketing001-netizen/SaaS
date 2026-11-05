@@ -406,6 +406,7 @@ nv-service-card,nv-integration-card{display:block;min-width:0;height:100%}
 .int p{color:var(--ink-2);font-size:13px;flex:1}
 .int .cat{font-size:12px;color:var(--ink-3)}
 .int .f{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.int-actions{display:flex;gap:6px;flex-wrap:wrap}
 
 /* ---------- Канбан CRM ---------- */
 nv-kanban{display:block;min-width:0}
@@ -1535,9 +1536,9 @@ define("nv-service-card",class extends NvEl{
   html(){return `<button type="button" class="svc-c" data-svc="${esc(this.a("service"))}"><span class="ic">${ic(this.a("icon"))}</span><h3>${esc(this.a("name"))}</h3><p>${esc(this.a("description"))}</p><span class="m"><span>${esc(this.a("metric"))}</span><nv-status value="${esc(this.a("status"))}"></nv-status></span></button>`}
 },"Предметные",{desc:"Сервис в каталоге бренда.",previewW:300,attrs:{service:{type:"enum",values:["intel","launch","studio","connect","sites","crm","seo","mail","bots"],default:"launch",desc:"Определяет фирменный цвет"},name:{type:"string",default:"Массовый запуск",desc:"Название"},description:{type:"string",default:"Сотни объявлений на все площадки за один проход.",desc:"Польза в одной фразе"},icon:{type:"string",default:"rocket",desc:"Иконка"},metric:{type:"string",default:"3 кампании активны",desc:"Главный показатель"},status:{type:"enum",values:["ready","soon"],default:"ready",desc:"Состояние"}}});
 define("nv-integration-card",class extends NvEl{
-  html(){const st=this.a("status"),con=st==="connected";return `<article class="int"><div class="h"><span class="lg" style="color:var(--svc-ink)">${esc(this.a("logo"))}</span><div><h4>${esc(this.a("name"))}</h4><div class="cat">${esc(this.a("category"))}</div></div></div><p>${esc(this.a("description"))}</p><div class="f"><nv-status value="${esc(st)}"></nv-status><nv-button size="sm" variant="${con?"ghost":"secondary"}" data-int>${con?"Настроить":st==="error"?"Переподключить":"Подключить"}</nv-button></div></article>`}
-  mounted(){this.querySelector("[data-int]").onclick=()=>this.emit("nv-connect",{id:this.a("iid")})}
-},"Предметные",{desc:"Интеграция в каталоге.",events:["nv-connect {id}"],previewW:300,attrs:{iid:{type:"string",default:"bitrix",desc:"ID"},name:{type:"string",default:"Telegram-бот",desc:"Название"},logo:{type:"string",default:"TG",desc:"Буквы логотипа"},category:{type:"string",default:"Уведомления",desc:"Категория"},description:{type:"string",default:"Присылает заявки и оповещения в чат команды.",desc:"Что произойдёт после подключения"},status:{type:"enum",values:["connected","disconnected","error"],default:"disconnected",desc:"Состояние"}}});
+  html(){const st=this.a("status"),lbl=this.a("status-label");
+    return `<article class="int"><div class="h"><span class="lg" style="color:var(--svc-ink)">${esc(this.a("logo"))}</span><div><h4>${esc(this.a("name"))}</h4><div class="cat">${esc(this.a("category"))}</div></div></div>${this.a("description")?`<p>${esc(this.a("description"))}</p>`:""}<div class="f"><nv-status value="${esc(st)}" ${lbl?`label="${esc(lbl)}"`:""}></nv-status><span class="int-actions" data-slot></span></div></article>`}
+},"Предметные",{desc:"Карточка подключения/интеграции: лого, название, категория, статус, произвольные кнопки действий (передаются как содержимое, как у nv-folder-card).",slot:"Кнопки действий",demoHtml:'<nv-button size="sm" variant="secondary">Настроить</nv-button>',previewW:300,attrs:{name:{type:"string",default:"Telegram-бот",desc:"Название"},logo:{type:"string",default:"TG",desc:"Буквы логотипа"},category:{type:"string",default:"Уведомления",desc:"Категория/подзаголовок"},description:{type:"string",default:"Присылает заявки и оповещения в чат команды.",desc:"Необязательное пояснение"},status:{type:"enum",values:["connected","disconnected","error","active"],default:"disconnected",desc:"Состояние для nv-status"},"status-label":{type:"string",default:"",desc:"Своя подпись статуса вместо стандартной"}}});
 define("nv-folder-card",class extends NvEl{
   html(){return `<article class="folder"><div class="folder-tab"></div><div class="folder-body"><div class="folder-top"><div class="folder-head">${ic(this.a("icon")||"folder",20)}${this.a("count")!==""?`<span class="folder-count">${esc(this.a("count"))}</span>`:""}</div><h3 class="folder-name">${esc(this.a("name"))}</h3>${this.a("desc")?`<p class="folder-desc">${esc(this.a("desc"))}</p>`:""}</div><div class="folder-foot" data-slot></div></div></article>`}
 },"Предметные",{desc:"Карточка-папка для подборок и коллекций — действия (кнопки, меню) передаются внутрь как обычное содержимое.",slot:"Кнопки действий",demoHtml:'<nv-button size="sm" variant="secondary" icon-end="arrow-right">Открыть</nv-button>',previewW:260,attrs:{name:{type:"string",default:"Конкуренты",desc:"Название папки"},desc:{type:"string",default:"Главные игроки в нише",desc:"Описание"},count:{type:"string",default:"24",desc:"Счётчик содержимого"},icon:{type:"string",default:"folder",desc:"Иконка"}}});
@@ -3208,13 +3209,8 @@ clickru(){
   after(root){
     if(!A.clickruLoaded){loadClickru();return}
     const el=root.querySelector("#ads-cr-res");
-    el.innerHTML=A.clickru.length?`<nv-table id="ads-cr-t"></nv-table>`:
+    el.innerHTML=A.clickru.length?`<div class="grid g3">${A.clickru.map(c=>`<nv-integration-card logo="${esc((c.label||"??").slice(0,2).toUpperCase())}" name="${esc(c.label)}" category="${c.user_id?"User ID "+esc(c.user_id):"Добавлено "+esc(fmtDateTime(c.created_at))}" description="Токен: ${esc(c.token_preview)}" status="connected" status-label="Подключено"><span class="int-actions"><nv-button size="sm" variant="danger" icon="trash-2" icon-only hint="Удалить" data-act="adsDelClickru" data-id="${c.id}">Удалить</nv-button></span></nv-integration-card>`).join("")}</div>`:
       `<nv-card><nv-empty icon="link" heading="Подключений нет" text="Добавьте токен Click.ru, чтобы запускать кампании."><nv-button icon="link" data-act="adsNewClickru">Подключить</nv-button></nv-empty></nv-card>`;
-    if(A.clickru.length)wireTable(root,"ads-cr-t",A.clickru,
-      [{key:"label",label:"Название"},{key:"user_id",label:"User ID"},
-       {key:"token_preview",label:"Токен",render:c=>`<span class="mono">${esc(c.token_preview)}</span>`},
-       {key:"created_at",label:"Добавлено",render:c=>fmtDateTime(c.created_at)},
-       {key:"_del",label:"",align:"right",render:c=>`<nv-button size="sm" variant="danger" icon="trash-2" icon-only hint="Удалить" data-act="adsDelClickru" data-id="${c.id}">Удалить</nv-button>`}]);
   }}
 },
 accounts(){
@@ -3419,33 +3415,21 @@ ids(){
   after(root){
     if(!C.idsLoaded){loadMetrikaIds();return}
     const el=root.querySelector("#conv-ids-res");
-    el.innerHTML=C.ids.length?`<nv-table id="conv-ids-t"></nv-table>`:
+    el.innerHTML=C.ids.length?`<div class="grid g3">${C.ids.map(c=>`<nv-integration-card logo="${esc((c.label||"??").slice(0,2).toUpperCase())}" name="${esc(c.label)}" category="Подключён ${esc(fmtDateTime(c.created_at))}" description="${c.expires_at?"Токен действует до "+esc(fmtDateTime(c.expires_at)):""}" status="${c.status==="active"?"active":"error"}" status-label="${c.status==="active"?"Активно":esc(c.status||"—")}"><span class="int-actions"><nv-button size="sm" variant="danger" icon="unlink" icon-only hint="Отключить" data-act="convDelId" data-id="${c.id}">Отключить</nv-button></span></nv-integration-card>`).join("")}</div>`:
       `<nv-card><nv-empty icon="user" heading="Яндекс ID не подключены" text="Подключите хотя бы один, чтобы читать счётчики Метрики."><nv-button icon="external-link" data-act="convOauthStart">Подключить Яндекс ID</nv-button></nv-empty></nv-card>`;
-    if(C.ids.length)wireTable(root,"conv-ids-t",C.ids,
-      [{key:"label",label:"Название"},{key:"status",label:"Статус",render:c=>c.status==="active"?'<nv-badge tone="success">Активно</nv-badge>':`<nv-badge tone="warning">${esc(c.status||"—")}</nv-badge>`},
-       {key:"expires_at",label:"Токен действует до",render:c=>c.expires_at?fmtDateTime(c.expires_at):"—"},
-       {key:"created_at",label:"Подключён",render:c=>fmtDateTime(c.created_at)},
-       {key:"_del",label:"",align:"right",render:c=>`<nv-button size="sm" variant="danger" icon="unlink" icon-only hint="Отключить" data-act="convDelId" data-id="${c.id}">Отключить</nv-button>`}]);
   }}
 },
 sources(){
   const C=S.conv;
+  const MODE_LABEL={simple:"Простой",score_field:"Со скорингом",native:"Нативный скоринг Б24"};
   return{title:"Источники Б24",sub:"Вебхуки Битрикс24, из которых читаются лиды для отправки конверсий.",
   actions:`<nv-button icon="plus" data-act="convNewSource">Новый источник</nv-button>`,
   body:`<div id="conv-src-res">${!C.sourcesLoaded?'<nv-skeleton count="3"></nv-skeleton>':""}</div>`,
   after(root){
     if(!C.sourcesLoaded){loadSources();return}
     const el=root.querySelector("#conv-src-res");
-    el.innerHTML=C.sources.length?`<nv-table id="conv-src-t"></nv-table>`:
+    el.innerHTML=C.sources.length?`<div class="grid g3">${C.sources.map(s=>`<nv-integration-card logo="${esc((s.name||"??").slice(0,2).toUpperCase())}" name="${esc(s.name)}" category="${esc(MODE_LABEL[s.mode]||s.mode)}" description="${esc(s.last_status||"Ещё не запускался")}" status="${s.dry_run?"paused":"active"}" status-label="${s.dry_run?"Пробно":"Боевая"}"><span class="int-actions"><nv-button size="sm" variant="secondary" icon="play" icon-only hint="Запустить проверку" data-act="convRunSource" data-id="${s.id}">Запустить</nv-button><nv-button size="sm" variant="${s.dry_run?"primary":"secondary"}" icon="${s.dry_run?"zap":"zap-off"}" icon-only hint="${s.dry_run?"Включить боевую отправку":"Выключить боевую отправку"}" data-act="convToggleLive" data-id="${s.id}" data-on="${s.dry_run}">${s.dry_run?"Включить боевую":"Выключить"}</nv-button><nv-button size="sm" variant="danger" icon="trash-2" icon-only hint="Удалить" data-act="convDelSource" data-id="${s.id}">Удалить</nv-button></span></nv-integration-card>`).join("")}</div>`:
       `<nv-card><nv-empty icon="webhook" heading="Источников пока нет" text="Добавьте вебхук Битрикс24."><nv-button icon="plus" data-act="convNewSource">Новый источник</nv-button></nv-empty></nv-card>`;
-    if(C.sources.length)wireTable(root,"conv-src-t",C.sources,
-      [{key:"name",label:"Название"},
-       {key:"mode",label:"Режим",render:s=>({simple:"Простой",score_field:"Со скорингом",native:"Нативный скоринг Б24"})[s.mode]||esc(s.mode)},
-       {key:"dry_run",label:"Отправка",render:s=>s.dry_run?'<nv-badge tone="warning">Пробно</nv-badge>':'<nv-badge tone="success">Боевая</nv-badge>'},
-       {key:"last_status",label:"Последний запуск",render:s=>esc(s.last_status||"—")},
-       {key:"_run",label:"",align:"right",render:s=>`<nv-button size="sm" variant="secondary" icon="play" data-act="convRunSource" data-id="${s.id}">Запустить</nv-button>`},
-       {key:"_live",label:"",align:"right",render:s=>`<nv-button size="sm" variant="${s.dry_run?"primary":"secondary"}" icon="${s.dry_run?"zap":"zap-off"}" data-act="convToggleLive" data-id="${s.id}" data-on="${s.dry_run}">${s.dry_run?"Включить боевую":"Выключить"}</nv-button>`},
-       {key:"_del",label:"",align:"right",render:s=>`<nv-button size="sm" variant="danger" icon="trash-2" icon-only hint="Удалить" data-act="convDelSource" data-id="${s.id}">Удалить</nv-button>`}]);
   }}
 },
 mappings(){
