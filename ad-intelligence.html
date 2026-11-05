@@ -2605,10 +2605,9 @@ function wireAnalyticsTables(r,I){
     [{key:"keyword",label:"Ключевое слово"},{key:"n",label:"Креативов",align:"right"},{key:"last_seen_at",label:"Последний показ",render:x=>(x.last_seen_at||"").slice(0,10)}],
     x=>filterByKeyword(x.keyword));
   const campChart=r.querySelector("#an-camp-chart");
-  if(campChart){
-    const top=[...I.campaigns.map(x=>({label:"Кампания "+x.campaign_id,n:x.n})),...I.keywords.map(x=>({label:"«"+x.keyword+"»",n:x.n}))].sort((a,b)=>b.n-a.n).slice(0,10);
-    campChart.data={labels:top.map(x=>x.label),series:[{name:"Креативов",values:top.map(x=>x.n)}]};
-  }
+  if(campChart){const top=[...I.campaigns].sort((a,b)=>b.n-a.n).slice(0,10);campChart.data={labels:top.map(x=>"Кампания "+x.campaign_id),series:[{name:"Креативов",values:top.map(x=>x.n)}]}}
+  const kwChart=r.querySelector("#an-kw-chart");
+  if(kwChart){const top=[...I.keywords].sort((a,b)=>b.n-a.n).slice(0,10);kwChart.data={labels:top.map(x=>"«"+x.keyword+"»"),series:[{name:"Креативов",values:top.map(x=>x.n)}]}}
   wireTable(r,"an-grow",I.growing.map((x,i)=>({id:x.inn||("i"+i),...x})),
     [{key:"name",label:"Рекламодатель",render:x=>esc(x.canonical_name||("ИНН "+(x.inn||"—")))},{key:"this_week",label:"На этой неделе",align:"right"},{key:"growth",label:"Рост",align:"right",render:x=>`+${x.growth}<div class="cell-s">к прошлой неделе (${x.prior_week})</div>`}],
     x=>{if(x.inn)filterByAdvertiserInn(x.inn);else toast("ИНН не раскрыт для этого рекламодателя")});
@@ -2725,23 +2724,44 @@ analytics(){
   const tab=I.tab||"overview";
   const T=I.totals||{};
   const pd7=periodDelta(I.recentItems,7),trendSpark=dailyTrend(I.recentItems,7);
-  const sections={
-    overview:`<div class="grid g4">${stat("Всего креативов",T.creatives||0,`delta="${esc(pd7.delta)}" trend="${pd7.trend}" note="за 7 дней к прошлым 7" spark="${esc(JSON.stringify(trendSpark.values))}"`)}${stat("Рекламодателей раскрыто",T.advertisers||0)}${stat("Креативов с юрлицом",T.creatives_with_advertiser||0,'hint="Сколько объявлений удалось привязать к ИНН"')}${stat("Площадок под наблюдением",I.coverage.length||0)}</div>
-      <nv-card heading="Тренды" subtitle="Новых креативов в день, последние 14 дней"><nv-chart id="an-trend-chart" label="Новых креативов в день"></nv-chart></nv-card>
-      <div class="grid g2"><nv-card heading="Раскрытие рекламодателя по площадкам" subtitle="Доля креативов с известным юрлицом"><nv-chart id="an-cov-chart" type="hbar" label="Раскрытие по площадкам"></nv-chart></nv-card><nv-card heading="Источники" subtitle="Среди последних 200 креативов"><nv-chart id="an-brk-chart" type="hbar" label="Источники"></nv-chart></nv-card></div>
-      <div class="grid g2"><nv-card flush heading="Покрытие по площадкам — таблица" subtitle="Подробные цифры"><nv-table id="an-cov" empty-text="Пока нет данных"></nv-table></nv-card><nv-card flush heading="Раскрытие по условиям" subtitle="Площадка / сеть / формат"><nv-table id="an-cr" empty-text="Пока нет данных"></nv-table></nv-card></div>`,
-    fresh:`<div class="grid g2"><nv-card flush heading="Новое за 7 дней" subtitle="Свежие креативы"><nv-table id="an-fresh" clickable empty-text="За 7 дней новых креативов не найдено"></nv-table><div id="an-fresh-total" class="muted" style="padding:10px 14px;font-size:12.5px"></div></nv-card><nv-card flush heading="Со скидкой" subtitle="Где заявлена скидка в тексте"><nv-table id="an-disc" clickable empty-text="Скидки пока не найдены"></nv-table><div id="an-disc-total" class="muted" style="padding:10px 14px;font-size:12.5px"></div></nv-card></div>
-      <nv-card flush heading="Реклама приложений" subtitle="Найден app_package_id или app_store_id"><nv-table id="an-apps" clickable empty-text="Реклама приложений не найдена"></nv-table><div id="an-apps-total" class="muted" style="padding:10px 14px;font-size:12.5px"></div></nv-card>`,
-    repeats:`<nv-card flush heading="Повторы на нескольких площадках" subtitle="Один и тот же креатив в разных сетях"><nv-table id="an-cross" empty-text="Повторов пока нет"></nv-table></nv-card>
-      <nv-card heading="Карусели" subtitle="Объявления, распознанные как часть карусели"><div id="an-carousel"><nv-skeleton count="2"></nv-skeleton></div></nv-card>`,
-    campaigns:`<nv-card heading="Самые частые кампании и слова" subtitle="Топ-10 по числу креативов"><nv-chart id="an-camp-chart" type="hbar" label="Кампании и ключевые слова"></nv-chart></nv-card>
-      <div class="grid g2"><nv-card flush heading="Кампании" subtitle="По campaign_id из разметки"><nv-table id="an-camp" clickable empty-text="Кампании пока не найдены"></nv-table></nv-card><nv-card flush heading="Ключевые слова" subtitle="По utm_term из ссылки"><nv-table id="an-kw" clickable empty-text="Ключевые слова пока не найдены"></nv-table></nv-card></div>`,
-    growth:`${I.growing.length?`<div class="grid g3">${I.growing.slice(0,3).map(x=>`<nv-compare-stat label="${esc(x.canonical_name||("ИНН "+(x.inn||"—")))}" a-label="Эта неделя" a-value="${x.this_week}" b-label="Прошлая неделя" b-value="${x.prior_week}" unit="креат."></nv-compare-stat>`).join("")}</div>`:""}
-      <nv-card heading="Кто растёт быстрее всех" subtitle="Рост числа креативов за неделю к предыдущей"><nv-chart id="an-grow-chart" type="hbar" label="Рост рекламодателей"></nv-chart></nv-card>
-      <div class="grid g2"><nv-card flush heading="Быстрорастущие рекламодатели — таблица" subtitle="Подробные цифры"><nv-table id="an-grow" clickable empty-text="Пока нет истории минимум за 2 недели"></nv-table></nv-card><nv-card flush heading="Несовпадение посадочной" subtitle="Реклама ведёт не на сайт рекламодателя"><nv-table id="an-mis" clickable empty-text="Несовпадений не найдено"></nv-table></nv-card></div>`
+  const panels={
+    overview:{title:"Обзор",sub:"Сводка по всей рекламе, которую нашёл парсер.",body:
+      `<div class="grid g4">${stat("Всего креативов",T.creatives||0,`delta="${esc(pd7.delta)}" trend="${pd7.trend}" note="за 7 дней к прошлым 7" spark="${esc(JSON.stringify(trendSpark.values))}"`)}${stat("Рекламодателей раскрыто",T.advertisers||0)}${stat("Креативов с юрлицом",T.creatives_with_advertiser||0,'hint="Сколько объявлений удалось привязать к ИНН"')}${stat("Площадок под наблюдением",I.coverage.length||0)}</div>
+      <nv-card heading="Тренды" subtitle="Новых креативов в день, последние 14 дней"><nv-chart id="an-trend-chart" label="Новых креативов в день"></nv-chart></nv-card>`},
+    coverage:{title:"Покрытие по площадкам",sub:"Доля креативов с известным юрлицом, по площадкам.",body:
+      `<nv-card heading="Раскрытие рекламодателя по площадкам"><nv-chart id="an-cov-chart" type="hbar" label="Раскрытие по площадкам"></nv-chart></nv-card>
+      <nv-card flush><nv-table id="an-cov" empty-text="Пока нет данных"></nv-table></nv-card>`},
+    sources:{title:"Источники",sub:"Среди последних 200 креативов — по какому признаку распознана площадка.",body:
+      `<nv-card heading="Источники"><nv-chart id="an-brk-chart" type="hbar" label="Источники"></nv-chart></nv-card>
+      <nv-card flush><nv-table id="an-brk" empty-text="Пока нет данных"></nv-table></nv-card>`},
+    conditions:{title:"Раскрытие по условиям",sub:"Площадка / сеть / формат.",body:
+      `<nv-card flush><nv-table id="an-cr" empty-text="Пока нет данных"></nv-table></nv-card>`},
+    fresh:{title:"Новое за 7 дней",sub:"Свежие креативы.",body:
+      `<nv-card flush><nv-table id="an-fresh" clickable empty-text="За 7 дней новых креативов не найдено"></nv-table><div id="an-fresh-total" class="muted" style="padding:10px 14px;font-size:12.5px"></div></nv-card>`},
+    discounts:{title:"Со скидкой",sub:"Где заявлена скидка в тексте.",body:
+      `<nv-card flush><nv-table id="an-disc" clickable empty-text="Скидки пока не найдены"></nv-table><div id="an-disc-total" class="muted" style="padding:10px 14px;font-size:12.5px"></div></nv-card>`},
+    apps:{title:"Реклама приложений",sub:"Найден app_package_id или app_store_id.",body:
+      `<nv-card flush><nv-table id="an-apps" clickable empty-text="Реклама приложений не найдена"></nv-table><div id="an-apps-total" class="muted" style="padding:10px 14px;font-size:12.5px"></div></nv-card>`},
+    repeats:{title:"Повторы на нескольких площадках",sub:"Один и тот же креатив в разных сетях.",body:
+      `<nv-card flush><nv-table id="an-cross" empty-text="Повторов пока нет"></nv-table></nv-card>`},
+    carousels:{title:"Карусели",sub:"Объявления, распознанные как часть карусели.",body:
+      `<nv-card><div id="an-carousel"><nv-skeleton count="2"></nv-skeleton></div></nv-card>`},
+    campaigns:{title:"Кампании",sub:"По campaign_id из разметки.",body:
+      `<nv-card heading="Самые частые кампании" subtitle="Топ-10 по числу креативов"><nv-chart id="an-camp-chart" type="hbar" label="Кампании"></nv-chart></nv-card>
+      <nv-card flush><nv-table id="an-camp" clickable empty-text="Кампании пока не найдены"></nv-table></nv-card>`},
+    keywords:{title:"Ключевые слова",sub:"По utm_term из ссылки.",body:
+      `<nv-card heading="Самые частые слова" subtitle="Топ-10 по числу креативов"><nv-chart id="an-kw-chart" type="hbar" label="Ключевые слова"></nv-chart></nv-card>
+      <nv-card flush><nv-table id="an-kw" clickable empty-text="Ключевые слова пока не найдены"></nv-table></nv-card>`},
+    growth:{title:"Рост рекламодателей",sub:"Рост числа креативов за неделю к предыдущей.",body:
+      `${I.growing.length?`<div class="grid g3">${I.growing.slice(0,3).map(x=>`<nv-compare-stat label="${esc(x.canonical_name||("ИНН "+(x.inn||"—")))}" a-label="Эта неделя" a-value="${x.this_week}" b-label="Прошлая неделя" b-value="${x.prior_week}" unit="креат."></nv-compare-stat>`).join("")}</div>`:""}
+      <nv-card heading="Кто растёт быстрее всех"><nv-chart id="an-grow-chart" type="hbar" label="Рост рекламодателей"></nv-chart></nv-card>
+      <nv-card flush><nv-table id="an-grow" clickable empty-text="Пока нет истории минимум за 2 недели"></nv-table></nv-card>`},
+    mismatch:{title:"Несовпадение посадочной",sub:"Реклама ведёт не на сайт рекламодателя.",body:
+      `<nv-card flush><nv-table id="an-mis" clickable empty-text="Несовпадений не найдено"></nv-table></nv-card>`}
   };
-  return{title:"Аналитика рекламы",sub:"Что находит парсер: площадки, повторы, кампании, ключевые слова и аномалии.",actions:intentControlHtml(),
-  body:`<div class="tabbed"><nv-tabs items="overview:Обзор|fresh:Новое и акции|repeats:Повторы и карусели|campaigns:Кампании и слова|growth:Рост и аномалии" value="${esc(tab)}" data-chg="anaTab"></nv-tabs><div class="tab-b" style="padding:16px">${sections[tab]||sections.overview}</div></div>`,
+  const p=panels[tab]||panels.overview;
+  return{title:p.title,sub:p.sub,actions:intentControlHtml(),
+  body:p.body,
   after(root){wireAnalyticsTables(root,I)}}},
 advertisers(){
   const I=S.intel;
@@ -2786,7 +2806,6 @@ N.chg.cmpF=(v,d)=>{S.intel.cmpF[d.key]=v;N.refresh()};
 N.chg.scanF=(v,d)=>{S.intel.scanF[d.key]=v;N.refresh()};
 N.acts.scanFReset=()=>{S.intel.scanF={q:"",status:""};N.refresh()};
 N.chg.intentSet=v=>{const list=v?v.split(","):[];S.intel.activeIntents=list;setActiveIntents(list);loadLibrary();if(S.intel.ana.loaded)loadAnalytics(true);N.refresh()};
-N.chg.anaTab=v=>{S.intel.ana.tab=v;N.refresh()};
 N.acts.anaGoTab=(a,d)=>{S.intel.ana.tab=d.tab;NEON.go("intel-analytics")};
 
 async function loadIntentsList(){
@@ -2807,10 +2826,18 @@ N.register({id:"intel",name:"Разведка рекламы",short:"Разве�
   {group:"Анализ",items:[
     {id:"analytics",label:"Аналитика",icon:"bar-chart-3",items:[
       {id:"overview",label:"Обзор",icon:"layout-dashboard"},
-      {id:"fresh",label:"Новое и акции",icon:"sparkles"},
-      {id:"repeats",label:"Повторы и карусели",icon:"copy"},
-      {id:"campaigns",label:"Кампании и слова",icon:"target"},
-      {id:"growth",label:"Рост и аномалии",icon:"trending-up"}
+      {id:"coverage",label:"Покрытие по площадкам",icon:"radar"},
+      {id:"sources",label:"Источники",icon:"share-2"},
+      {id:"conditions",label:"Раскрытие по условиям",icon:"list-checks"},
+      {id:"fresh",label:"Новое за 7 дней",icon:"sparkles"},
+      {id:"discounts",label:"Со скидкой",icon:"percent"},
+      {id:"apps",label:"Реклама приложений",icon:"smartphone"},
+      {id:"repeats",label:"Повторы на площадках",icon:"copy"},
+      {id:"carousels",label:"Карусели",icon:"gallery-horizontal"},
+      {id:"campaigns",label:"Кампании",icon:"target"},
+      {id:"keywords",label:"Ключевые слова",icon:"hash"},
+      {id:"growth",label:"Рост рекламодателей",icon:"trending-up"},
+      {id:"mismatch",label:"Несовпадение посадочной",icon:"alert-triangle"}
     ]},
     {id:"advertisers",label:"Рекламодатели",icon:"building-2"}
   ]}
