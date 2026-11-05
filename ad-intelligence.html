@@ -100,8 +100,6 @@ nv-icon svg{width:1em;height:1em;stroke-width:2}
 .side-count{font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
 .side2{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;overflow-y:auto;padding:14px 10px}
 .side2:empty{display:none}
-.side2-head{display:flex;align-items:center;gap:8px;padding:2px 8px 12px;font-weight:700;color:var(--ink)}
-.side2-head nv-icon{color:var(--svc-ink);font-size:16px}
 .side2-list{display:flex;flex-direction:column;gap:2px}
 .side-foot{margin-top:auto;padding:12px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;font-size:12.5px}
 .side-foot strong{display:block;font-weight:600}
@@ -552,7 +550,6 @@ html,body{overflow:hidden}
 .tree .side-item::before{content:"";position:absolute;left:-14px;top:-16px;bottom:50%;width:11px;border-left:1px solid color-mix(in srgb,var(--ink-3) 50%,transparent);border-bottom:1px solid color-mix(in srgb,var(--ink-3) 50%,transparent);border-bottom-left-radius:8px;pointer-events:none}
 .tree .side-item:first-child::before{top:-3px}
 .side2{background:none;border-right:0;padding:14px 10px}
-.side2-head{padding:4px 10px 10px}
 .side-foot{border-top:0;padding:12px 16px;justify-content:space-between}
 .side-foot .mono{font-size:10.5px;color:var(--ink-2)}
 .tt{display:inline-flex;gap:2px;padding:3px;border-radius:999px;background:color-mix(in srgb,var(--ink) 7%,transparent)}
@@ -1986,7 +1983,7 @@ function subNav(){
   const item=activeSubItem();
   if(!item)return"";
   const anaTab=(S.intel.ana&&S.intel.ana.tab)||"overview";
-  return `<div class="side2-head">${ic(item.icon)}<span>${esc(item.label)}</span></div><div class="side2-list">${item.items.map(ci=>`<button type="button" class="side-item${anaTab===ci.id?" on":""}" data-act="anaGoTab" data-tab="${esc(ci.id)}">${ic(ci.icon||"circle",15)}<span class="t">${esc(ci.label)}</span></button>`).join("")}</div>`;
+  return `<div class="side2-list">${item.items.map(ci=>`<button type="button" class="side-item${anaTab===ci.id?" on":""}" data-act="anaGoTab" data-tab="${esc(ci.id)}">${ic(ci.icon||"circle",15)}<span class="t">${esc(ci.label)}</span></button>`).join("")}</div>`;
 }
 
 function renderView(keepScroll){
@@ -1997,9 +1994,17 @@ function renderView(keepScroll){
   document.getElementById("crumbs").innerHTML=`<nv-breadcrumbs items="${esc(s+"-"+Object.keys(svc.views)[0]+":"+svc.name+"|cur:"+d.title)}"></nv-breadcrumbs>`;
   document.getElementById("side-nav").innerHTML=sideNav();
   const side2=document.getElementById("side2");
-  if(side2){side2.innerHTML=subNav();document.getElementById("shell").classList.toggle("has-sub",!!activeSubItem())}
+  if(side2){side2.innerHTML=subNav();document.getElementById("shell").classList.toggle("has-sub",!!activeSubItem());alignSide2()}
   d.after&&d.after(root);
   sc.scrollTop=keepScroll?y:0;
+}
+function alignSide2(){
+  const side2=document.getElementById("side2");
+  if(!side2)return;
+  const item=document.querySelector(".side-item.has-kids.on");
+  if(!item||!side2.firstElementChild){side2.style.paddingTop="";return}
+  const offset=item.getBoundingClientRect().top-side2.getBoundingClientRect().top;
+  side2.style.paddingTop=Math.max(0,offset)+"px";
 }
 function render(){const{svc,s}=route();document.body.dataset.svc=s;document.getElementById("app").innerHTML=shell();renderView();updBell();document.title="ParsYa Ads · "+svc.name}
 NEON.render=render;
