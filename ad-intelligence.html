@@ -2835,31 +2835,6 @@ async function loadReport(){
   }catch(err){toast("Не удалось загрузить отчёт: "+(err.message||""),{tone:"danger"})}
   r.loading=false;N.refreshIf("ads-report");
 }
-function projectDlg(){
-  overlay("modal",{title:"Новый проект",subtitle:"Настройки для массового запуска кампаний Директа",size:"lg",
-    body:`<nv-input name="name" label="Название проекта" required></nv-input>
-    <nv-input name="domain" label="Сайт (домен)" placeholder="example.ru" required></nv-input>
-    <nv-select name="campaign_mode" label="Режим кампаний" value="separate" options="separate:Отдельные кампании|single_epk:Одна ЕПК"></nv-select>
-    <nv-input name="target_drr" label="Целевой ДРР, %" type="number" value="30"></nv-input>
-    <nv-textarea name="keywords" label="Ключевые фразы" rows="4" placeholder="По одной на строку"></nv-textarea>
-    <nv-tag-input name="headlines" label="Заголовки (до 56 символов)" value="" placeholder="Enter после каждого"></nv-tag-input>
-    <nv-tag-input name="ad_texts" label="Тексты объявлений (до 81 символа)" value="" placeholder="Enter после каждого"></nv-tag-input>
-    <nv-tag-input name="region_ids" label="ID регионов (Яндекс.Директ)" value="" placeholder="Например, 213"></nv-tag-input>`,
-    actions:[{label:"Отмена"},{label:"Создать проект",variant:"primary",icon:"plus",fn(r,close){
-      const v=formVals(r),name=(v.name||"").trim(),domain=(v.domain||"").trim();
-      if(!name){r.querySelector('[name="name"]').setAttribute("error","Введите название");return false}
-      if(!domain){r.querySelector('[name="domain"]').setAttribute("error","Введите домен");return false}
-      const payload={name,domain,campaign_mode:v.campaign_mode||"separate",target_drr:+v.target_drr||30,
-        keywords:v.keywords||"",
-        headlines:(v.headlines||"").split(",").map(x=>x.trim()).filter(Boolean),
-        ad_texts:(v.ad_texts||"").split(",").map(x=>x.trim()).filter(Boolean),
-        region_ids:(v.region_ids||"").split(",").map(x=>+x.trim()).filter(Boolean)};
-      (async()=>{
-        try{await apiPost("/api/v1/ads/projects",payload);await loadProjects();close();toast("Проект создан",{tone:"success"})}
-        catch(err){toast("Не удалось создать проект: "+(err.message||""),{tone:"danger"})}
-      })();
-    }}]});
-}
 function clickruDlg(){
   overlay("modal",{title:"Подключить Click.ru",subtitle:"Токен API из личного кабинета Click.ru",size:"md",
     body:`<nv-input name="label" label="Название подключения" required></nv-input>
@@ -2875,29 +2850,182 @@ function clickruDlg(){
       })();
     }}]});
 }
-function launchDlg(project){
-  const A=S.ads;
-  const connOpts=A.clickru.map(c=>c.id+":"+esc(c.label)).join("|")||"_:Нет подключений Click.ru";
-  const payerOpts=A.payers.map(p=>p.id+":"+esc(p.name||p.fullName||("Юрлицо "+p.id))).join("|")||"_:Без юрлица";
-  overlay("modal",{title:"Запустить «"+project.name+"»",subtitle:"Создаст черновики кампаний в Яндекс.Директе на новых аккаунтах из пула ParsYa — показы НЕ включаются автоматически.",size:"md",
-    body:`<nv-input name="count" label="Сколько аккаунтов запустить (1–20)" type="number" value="1"></nv-input>
-    <nv-select name="connection_id" label="Подключение Click.ru" options="${connOpts}"></nv-select>
-    <nv-select name="payer_id" label="Юрлицо (для маркировки рекламы ОРД)" options="${payerOpts}"></nv-select>
-    <nv-select name="creative_mode" label="Креативы" value="shuffle" options="shuffle:Случайно из пула проекта|duplicate_single:Один и тот же для всех"></nv-select>`,
-    actions:[{label:"Отмена"},{label:"Запустить",variant:"primary",icon:"rocket",fn(r,close){
-      const v=formVals(r),count=Math.max(1,Math.min(20,+v.count||1));
-      if(!v.connection_id||v.connection_id==="_"){toast("Сначала подключите Click.ru (вкладка «Клик.ру»)",{tone:"warning"});return false}
-      const payload={count,connection_id:+v.connection_id,creative_mode:v.creative_mode||"shuffle"};
-      if(v.payer_id&&v.payer_id!=="_")payload.payer_id=+v.payer_id;
+/* Визард массового запуска: 5 шагов, как в собственном ЛК addAvto
+   (Проект → Аккаунт Click.ru → Юрлицо → Количество → Креативы) — объединяет
+   создание/редактирование проекта и сам запуск в один поток, вместо двух
+   отдельных диалогов. */
+function normalizeDomain(raw){
+  let d=(raw||"").trim();
+  if(d&&!/^https?:\/\//i.test(d))d="https://"+d;
+  return d;
+}
+function resolveRegionIds(raw,geoRegions){
+  const names=(raw||"").split(",").map(x=>x.trim()).filter(Boolean);
+  const ids=[],unresolved=[];
+  for(const n of names){
+    if(/^\d+$/.test(n)){ids.push(+n);continue}
+    const hit=(geoRegions||[]).find(r=>(r.name||"").toLowerCase()===n.toLowerCase());
+    if(hit)ids.push(hit.id);else unresolved.push(n);
+  }
+  return{ids:[...new Set(ids)],unresolved};
+}
+function projectWizard(existingProject){
+  const wiz={
+    project:existingProject?{...existingProject}:null,
+    locked:!!(existingProject&&existingProject.has_launched),
+    step:1,
+    regionsRaw:existingProject&&existingProject.region_ids&&existingProject.region_ids.length?existingProject.region_ids.join(", "):"",
+    geoRegions:null,
+    connectionId:null,payers:null,payerId:null,
+    count:1,creativeMode:"shuffle",headlines:existingProject&&existingProject.headlines?existingProject.headlines.join(", "):"",
+    adTexts:existingProject&&existingProject.ad_texts?existingProject.ad_texts.join(", "):""
+  };
+  (async()=>{try{const data=await api("/api/v1/ads/geo-regions",{});wiz.geoRegions=data.items||[]}catch(e){wiz.geoRegions=[]}})();
+  const STEP_ITEMS="1. Проект|2. Аккаунт Click.ru|3. Юрлицо|4. Количество|5. Креативы";
+  let root;
+  const {close}=overlay("modal",{title:wiz.project?("Запустить «"+wiz.project.name+"»"):"Новый проект",
+    subtitle:"Каждая кампания создаётся черновиком — показы не включаются автоматически.",size:"lg",
+    body:`<nv-steps items="${STEP_ITEMS}" current="0"></nv-steps><div id="wiz-step" style="margin-top:16px"></div>`,
+    actions:[],
+    mount(r){root=r;root.querySelector("nv-steps").addEventListener("nv-change",e=>{wiz.step=+e.detail.value+1;draw()});draw()}});
+  function stepHtml(b){return `<div class="wizard-actions row between" style="margin-top:16px">${b}</div>`}
+  function setStep(n){wiz.step=n;root.querySelector("nv-steps").setAttribute("current",String(n-1));draw()}
+  function draw(){
+    const body=root.querySelector("#wiz-step");
+    if(wiz.step===1)return drawStep1(body);
+    if(wiz.step===2)return drawStep2(body);
+    if(wiz.step===3)return drawStep3(body);
+    if(wiz.step===4)return drawStep4(body);
+    return drawStep5(body);
+  }
+  function drawStep1(body){
+    const p=wiz.project||{};
+    if(wiz.locked){
+      body.innerHTML=`<nv-callout tone="info" heading="Проект уже запущен">Название, домен, ключевые фразы и регион менять нельзя — можно запустить ещё аккаунты с теми же настройками.</nv-callout>
+      <dl class="dl"><dt>Название</dt><dd>${esc(p.name)}</dd><dt>Домен</dt><dd>${esc(p.domain)}</dd><dt>Регион</dt><dd>${esc((p.region_ids||[]).join(", ")||"—")}</dd></dl>
+      ${stepHtml('<span></span><nv-button variant="primary" icon="arrow-right" data-wiz-next>Далее</nv-button>')}`;
+      body.querySelector("[data-wiz-next]").onclick=()=>setStep(2);
+      return;
+    }
+    body.innerHTML=`<nv-input name="name" label="Название проекта" value="${esc(p.name||"")}" required></nv-input>
+    <nv-input name="domain" label="Сайт (домен)" value="${esc(p.domain||"")}" placeholder="example.ru" required></nv-input>
+    <nv-select name="campaign_mode" label="Структура кампаний" value="${esc(p.campaign_mode||"separate")}" options="separate:Отдельные кампании (Поиск + РСЯ)|single_epk:Одна ЕПК"></nv-select>
+    <nv-input name="target_drr" label="Целевой ДРР, %" type="number" value="${esc(p.target_drr??30)}"></nv-input>
+    <nv-input name="mobile_bid_adjustment_percent" label="Корректировка ставки, моб. (необязательно)" type="number" value="${p.mobile_bid_adjustment_percent!=null?esc(p.mobile_bid_adjustment_percent):""}"></nv-input>
+    <nv-textarea name="keywords" label="Ключевые фразы" rows="3" placeholder="По одной на строку" value="${esc(p.keywords||"")}" required></nv-textarea>
+    <nv-textarea name="negative_keywords" label="Минус-фразы (необязательно)" rows="2" value="${esc(p.negative_keywords||"")}"></nv-textarea>
+    <nv-tag-input name="regions" label="Город или регион показа" value="${esc(wiz.regionsRaw)}" placeholder="${wiz.geoRegions&&wiz.geoRegions.length?"Начните вводить название":"Справочник регионов недоступен — введите числовые ID (Яндекс.Директ)"}" required></nv-tag-input>
+    ${stepHtml('<span></span><nv-button variant="primary" icon="arrow-right" data-wiz-next>'+(wiz.project?"Сохранить и далее":"Создать и далее")+'</nv-button>')}
+    <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
+    body.querySelector("[data-wiz-next]").onclick=()=>{
+      const v=formVals(body),msg=body.querySelector("#wiz-msg");
+      const name=(v.name||"").trim(),domain=normalizeDomain(v.domain);
+      if(!name){msg.textContent="Введите название проекта";msg.style.color="var(--bad)";return}
+      if(domain.length<8){msg.textContent="Введите корректный домен";msg.style.color="var(--bad)";return}
+      if(!(v.keywords||"").trim()){msg.textContent="Нужна хотя бы одна ключевая фраза";msg.style.color="var(--bad)";return}
+      const{ids,unresolved}=resolveRegionIds(v.regions,wiz.geoRegions);
+      if(!ids.length){msg.textContent="Выберите хотя бы один город или регион";msg.style.color="var(--bad)";return}
+      if(unresolved.length){msg.textContent="Не распознаны регионы: "+unresolved.join(", ");msg.style.color="var(--bad)";return}
+      wiz.regionsRaw=v.regions;
+      const payload={name,domain,campaign_mode:v.campaign_mode||"separate",target_drr:+v.target_drr||30,
+        mobile_bid_adjustment_percent:v.mobile_bid_adjustment_percent?+v.mobile_bid_adjustment_percent:null,
+        keywords:v.keywords||"",negative_keywords:v.negative_keywords||"",region_ids:ids};
+      msg.style.color="";msg.textContent=wiz.project?"Сохраняю…":"Создаю…";
       (async()=>{
         try{
-          const job=await apiPost("/api/v1/ads/projects/"+project.id+"/campaigns/bulk-create",payload);
-          close();
-          toast("Запуск начат — отслеживаем прогресс",{tone:"success"});
-          openJobDrawer(project,job.job_id);
-        }catch(err){toast("Не удалось запустить: "+(err.message||""),{tone:"danger"})}
+          const saved=wiz.project?await apiPut("/api/v1/ads/projects/"+wiz.project.id,{...wiz.project,...payload}):await apiPost("/api/v1/ads/projects",payload);
+          wiz.project=saved;loadProjects();setStep(2);
+        }catch(err){msg.textContent=err.message||"Не удалось сохранить";msg.style.color="var(--bad)"}
       })();
-    }}]});
+    };
+  }
+  function drawStep2(body){
+    body.innerHTML=`<p class="muted">Загружаю подключения…</p>`;
+    (async()=>{
+      if(!S.ads.clickruLoaded)await loadClickru();
+      const list=S.ads.clickru;
+      body.innerHTML=(list.length?`<div class="stack">${list.map(c=>`<label class="row" style="gap:9px;padding:10px;border:1px solid var(--line);border-radius:10px;cursor:pointer"><input type="radio" name="wizConn" value="${c.id}" ${wiz.connectionId===c.id?"checked":""}><span><b>${esc(c.label)}</b><br><span class="muted" style="font-size:12px">${esc(c.token_preview)}${c.user_id?" · User ID "+esc(c.user_id):""}</span></span></label>`).join("")}</div>`:
+        `<nv-empty icon="link" heading="Подключений ещё нет" text="Добавьте токен Click.ru ниже."></nv-empty>`)+
+        `<nv-button variant="ghost" size="sm" icon="plus" data-wiz-addconn style="margin-top:10px">Добавить подключение</nv-button>
+         <div id="wiz-conn-form" hidden style="margin-top:10px"><nv-input name="cl_label" label="Название"></nv-input><nv-input name="cl_token" label="API-токен"></nv-input><nv-button size="sm" variant="primary" data-wiz-addconn-save style="margin-top:6px">Добавить и проверить</nv-button></div>
+        ${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="arrow-right" data-wiz-next>Далее</nv-button>')}
+        <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
+      body.querySelectorAll('input[name="wizConn"]').forEach(inp=>inp.onchange=()=>{wiz.connectionId=+inp.value});
+      body.querySelector("[data-wiz-addconn]").onclick=()=>{body.querySelector("#wiz-conn-form").hidden=false};
+      body.querySelector("[data-wiz-addconn-save]").onclick=()=>{
+        const v=formVals(body),msg=body.querySelector("#wiz-msg");
+        if(!(v.cl_label||"").trim()||!(v.cl_token||"").trim()){msg.textContent="Укажите название и токен";msg.style.color="var(--bad)";return}
+        (async()=>{try{const c=await apiPost("/api/v1/ads/clickru-connections",{label:v.cl_label.trim(),token:v.cl_token.trim(),user_id:""});wiz.connectionId=c.id;await loadClickru();drawStep2(body)}catch(err){msg.textContent=err.message;msg.style.color="var(--bad)"}})();
+      };
+      body.querySelector("[data-wiz-back]").onclick=()=>setStep(1);
+      body.querySelector("[data-wiz-next]").onclick=()=>{
+        if(!wiz.connectionId){body.querySelector("#wiz-msg").textContent="Выберите аккаунт Click.ru";body.querySelector("#wiz-msg").style.color="var(--bad)";return}
+        setStep(3);
+      };
+    })();
+  }
+  function drawStep3(body){
+    body.innerHTML=`<p class="muted">Загружаю юрлица…</p>`;
+    (async()=>{
+      let items=[];
+      try{const data=await api("/api/v1/ads/payers",{connection_id:wiz.connectionId});items=data.items||[]}catch(err){}
+      wiz.payers=items;
+      body.innerHTML=`<nv-callout tone="info" heading="Для маркировки рекламы">Юрлицо нужно по закону (ОРД/ERID) перед включением показов — для черновика можно пропустить.</nv-callout>`+
+        (items.length?`<div class="stack" style="margin-top:10px">${items.map(p=>`<label class="row" style="gap:9px;padding:10px;border:1px solid var(--line);border-radius:10px;cursor:pointer"><input type="radio" name="wizPayer" value="${p.id}" ${wiz.payerId===p.id?"checked":""}><span><b>${esc(p.name||p.fullName||("Юрлицо "+p.id))}</b></span></label>`).join("")}</div>`:
+          `<nv-empty icon="building-2" heading="Юрлиц пока нет" text="Добавьте в личном кабинете Click.ru, либо пропустите этот шаг для черновика."></nv-empty>`)+
+        `${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="arrow-right" data-wiz-next>Далее</nv-button>')}
+        <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
+      body.querySelectorAll('input[name="wizPayer"]').forEach(inp=>inp.onchange=()=>{wiz.payerId=+inp.value});
+      body.querySelector("[data-wiz-back]").onclick=()=>setStep(2);
+      body.querySelector("[data-wiz-next]").onclick=()=>{
+        if(items.length&&!wiz.payerId){body.querySelector("#wiz-msg").textContent="Выберите юрлицо — без него нельзя запустить показы";body.querySelector("#wiz-msg").style.color="var(--bad)";return}
+        setStep(4);
+      };
+    })();
+  }
+  function drawStep4(body){
+    body.innerHTML=`<p class="muted">Проверяю пул ParsYa…</p>`;
+    (async()=>{
+      if(!S.ads.poolLoaded)await loadPool();
+      const pool=S.ads.pool,free=pool.configured?pool.items.filter(a=>a.is_free).length:null;
+      const hint=free==null?"Не удалось получить статус пула ParsYa.":`Свободно в пуле: ${free} из ${pool.items.length}.`;
+      body.innerHTML=`<nv-callout tone="info" heading="Сколько аккаунтов">${esc(hint)} Каждый — новый аккаунт Директа из пула, со своей кампанией.</nv-callout>
+      <nv-input name="count" label="Сколько аккаунтов запустить (1–20)" type="number" value="${wiz.count}" style="margin-top:10px"></nv-input>
+      ${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="arrow-right" data-wiz-next>Далее</nv-button>')}
+      <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
+      body.querySelector("[data-wiz-back]").onclick=()=>setStep(3);
+      body.querySelector("[data-wiz-next]").onclick=()=>{
+        const v=formVals(body),count=+v.count;
+        if(!Number.isInteger(count)||count<1||count>20){body.querySelector("#wiz-msg").textContent="Укажите число от 1 до 20";body.querySelector("#wiz-msg").style.color="var(--bad)";return}
+        wiz.count=count;setStep(5);
+      };
+    })();
+  }
+  function drawStep5(body){
+    body.innerHTML=`<nv-select name="creative_mode" label="Креативы" value="${wiz.creativeMode}" options="shuffle:Случайный набор на каждый аккаунт|duplicate_single:Один и тот же для всех"></nv-select>
+    <nv-tag-input name="headlines" label="Заголовки (до 56 символов)" value="${esc(wiz.headlines)}" placeholder="Enter после каждого" required></nv-tag-input>
+    <nv-tag-input name="ad_texts" label="Тексты объявлений (до 81 символа)" value="${esc(wiz.adTexts)}" placeholder="Enter после каждого" required></nv-tag-input>
+    ${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="rocket" data-wiz-launch>Запустить</nv-button>')}
+    <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
+    body.querySelector("[data-wiz-back]").onclick=()=>setStep(4);
+    body.querySelector("[data-wiz-launch]").onclick=()=>{
+      const v=formVals(body),msg=body.querySelector("#wiz-msg");
+      const headlines=(v.headlines||"").split(",").map(x=>x.trim()).filter(Boolean);
+      const adTexts=(v.ad_texts||"").split(",").map(x=>x.trim()).filter(Boolean);
+      if(!headlines.length||!adTexts.length){msg.textContent="Нужен хотя бы один заголовок и один текст объявления";msg.style.color="var(--bad)";return}
+      wiz.creativeMode=v.creative_mode||"shuffle";wiz.headlines=v.headlines;wiz.adTexts=v.ad_texts;
+      const payload={count:wiz.count,connection_id:wiz.connectionId,creative_mode:wiz.creativeMode};
+      if(wiz.payerId)payload.payer_id=wiz.payerId;
+      msg.style.color="";msg.textContent="Запускаю…";
+      (async()=>{
+        try{
+          await apiPut("/api/v1/ads/projects/"+wiz.project.id,{...wiz.project,headlines,ad_texts:adTexts});
+          const job=await apiPost("/api/v1/ads/projects/"+wiz.project.id+"/campaigns/bulk-create",payload);
+          close();toast("Запуск начат — отслеживаем прогресс",{tone:"success"});openJobDrawer(wiz.project,job.job_id);
+        }catch(err){msg.textContent=err.message||"Не удалось запустить";msg.style.color="var(--bad)"}
+      })();
+    };
+  }
 }
 const BULK_JOB_STATUS={running:"Выполняется",done:"Готово",failed:"Ошибка"};
 function jobStatusHtml(job){
@@ -2962,7 +3090,7 @@ projects(){
        {key:"campaign_mode",label:"Режим",render:p=>p.campaign_mode==="single_epk"?"Одна ЕПК":"Отдельные"},
        {key:"target_drr",label:"ДРР",align:"right",render:p=>p.target_drr+"%"},
        {key:"has_launched",label:"Запущен",render:p=>p.has_launched?'<nv-badge tone="success">Да</nv-badge>':'<nv-badge>Нет</nv-badge>'},
-       {key:"_launch",label:"",align:"right",render:p=>p.has_launched?"":`<nv-button size="sm" variant="primary" icon="rocket" data-act="adsLaunch" data-id="${p.id}">Запустить</nv-button>`}],
+       {key:"_launch",label:"",align:"right",render:p=>`<nv-button size="sm" variant="${p.has_launched?"secondary":"primary"}" icon="rocket" data-act="adsLaunch" data-id="${p.id}">${p.has_launched?"Запустить ещё":"Запустить"}</nv-button>`}],
       p=>openProjectCampaigns(p));
   }}
 },
@@ -3042,9 +3170,9 @@ report(){
     }
   }}
 }};
-N.acts.adsNewProject=()=>projectDlg();
+N.acts.adsNewProject=()=>projectWizard(null);
 N.acts.adsNewClickru=()=>clickruDlg();
-N.acts.adsLaunch=(a,d)=>{const p=S.ads.projects.find(x=>String(x.id)===String(d.id));if(p)launchDlg(p)};
+N.acts.adsLaunch=(a,d)=>{const p=S.ads.projects.find(x=>String(x.id)===String(d.id));if(p)projectWizard(p)};
 N.acts.adsDelClickru=(a,d)=>{
   confirm({title:"Удалить подключение?",text:"Кампании, уже созданные через него, не удаляются.",confirm:"Удалить",danger:true,fn(){
     (async()=>{try{await apiDelete("/api/v1/ads/clickru-connections/"+d.id);await loadClickru();toast("Подключение удалено")}catch(err){toast("Не удалось удалить: "+(err.message||""),{tone:"danger"})}})();
