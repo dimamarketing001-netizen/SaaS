@@ -73,7 +73,7 @@ nv-icon svg{width:1em;height:1em;stroke-width:2}
 /* ---------- Оболочка ---------- */
 #app{height:100%}
 .shell{display:grid;grid-template-columns:78px 228px minmax(0,1fr);height:100%;transition:grid-template-columns .15s ease}
-.shell.side-collapsed{grid-template-columns:78px 64px minmax(0,1fr)}
+.shell.side-collapsed{grid-template-columns:78px 68px minmax(0,1fr)}
 .rail{background:var(--rail);color:var(--rail-ink);display:flex;flex-direction:column;gap:2px;padding:12px 8px;overflow-y:auto;scrollbar-width:none}
 .rail-logo{width:40px;height:40px;margin:0 auto 12px;border-radius:12px;background:#39ff88;color:#0d1211;display:grid;place-items:center;font:800 19px var(--font-display);flex:none;border:0;cursor:pointer}
 .rail-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px 7px;border:0;background:none;border-radius:10px;color:var(--rail-ink-2);font-size:11px;line-height:1.15;cursor:pointer;text-align:center;flex:none;width:100%;position:relative}
@@ -555,12 +555,15 @@ html,body{overflow:hidden}
 .side-collapsed .side-head,.side-collapsed .side-label,.side-collapsed .side-item span.t,
 .side-collapsed .side-count,.side-collapsed .side-item.has-kids>nv-icon:last-child,
 .side-collapsed .side-item-tog,.side-collapsed .tree.sub,.side-collapsed .side-ws>span{display:none}
-.side-collapsed .side{align-items:center}
-.side-collapsed .side-group{padding:2px 6px}
+.side-collapsed .side{align-items:center;padding-top:10px}
+.side-collapsed .side-group{padding:0 8px;width:100%}
+.side-collapsed .side-group+.side-group{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
 .side-collapsed .side-label{justify-content:center;padding:7px 2px}
-.side-collapsed .side-item,.side-collapsed .side-item-row .side-item.grow{justify-content:center;padding:9px 2px;gap:0}
-.side-collapsed .tree{margin-left:0}
-.side-collapsed .tree .side-item{padding-left:9px}
+.side-collapsed .side-item,.side-collapsed .side-item-row .side-item.grow{justify-content:center;padding:11px 2px;gap:0;border-radius:11px}
+.side-collapsed .side-item nv-icon{font-size:18px;color:var(--ink-3)}
+.side-collapsed .side-item.on nv-icon{color:var(--svc-ink)}
+.side-collapsed .tree{margin-left:0;display:flex;flex-direction:column;gap:3px}
+.side-collapsed .tree .side-item{padding-left:11px}
 .side-collapsed .side-item-row{justify-content:center}
 .side-collapsed .side-ws{justify-content:center}
 .side-foot .mono{font-size:10.5px;color:var(--ink-2)}
