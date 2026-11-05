@@ -2967,6 +2967,247 @@ N.register({id:"ads",name:"Реклама",short:"Реклама",tag:"Ad Automa
   ]}],
   views:views_ads,seed:adsSeed});
 
+/* ---------- Конверсия в Метрику (addAvto /lk, тот же прокси) ---------- */
+const ADDAVTO_PUBLIC_URL="https://реклама.союзюристовроссии.рф";
+const convSeed=()=>({
+  ids:[],idsLoaded:false,oauthConfigured:false,
+  sources:[],sourcesLoaded:false,
+  mappings:[],mappingsLoaded:false,unmapped:[],unmappedLoaded:false,
+  log:{items:[],counts:{},loaded:false,status:""},
+  users:[],usersLoaded:false
+});
+async function loadMetrikaIds(){
+  const C=S.conv;
+  try{const data=await api("/api/v1/ads/metrika/connections",{});C.ids=data.items||[];C.oauthConfigured=!!data.oauth_configured}
+  catch(err){toast("Не удалось загрузить Яндекс ID: "+(err.message||""),{tone:"danger"})}
+  C.idsLoaded=true;N.refreshIf("conv-ids","conv-mappings");
+}
+async function loadSources(){
+  const C=S.conv;
+  try{const data=await api("/api/v1/ads/lk/sources",{});C.sources=data.items||[]}
+  catch(err){toast("Не удалось загрузить источники: "+(err.message||""),{tone:"danger"})}
+  C.sourcesLoaded=true;N.refreshIf("conv-sources");
+}
+async function loadMappings(){
+  const C=S.conv;
+  try{const data=await api("/api/v1/ads/lk/mappings",{});C.mappings=data.items||[]}
+  catch(err){toast("Не удалось загрузить привязки: "+(err.message||""),{tone:"danger"})}
+  C.mappingsLoaded=true;N.refreshIf("conv-mappings");
+}
+async function loadUnmapped(){
+  const C=S.conv;
+  try{const data=await api("/api/v1/ads/lk/unmapped",{});C.unmapped=data.items||[]}
+  catch(err){toast("Не удалось загрузить непривязанные кампании: "+(err.message||""),{tone:"danger"})}
+  C.unmappedLoaded=true;N.refreshIf("conv-mappings","conv-log");
+}
+async function loadConvLog(){
+  const C=S.conv;
+  try{
+    const data=await api("/api/v1/ads/lk/log",{limit:100,status:C.log.status||undefined});
+    C.log.items=data.items||[];C.log.counts=data.counts_24h||{};
+  }catch(err){toast("Не удалось загрузить журнал: "+(err.message||""),{tone:"danger"})}
+  C.log.loaded=true;N.refreshIf("conv-log");
+}
+async function loadConvUsers(){
+  const C=S.conv;
+  try{const data=await api("/api/v1/ads/lk/users",{});C.users=data.items||[]}
+  catch(err){toast("Не удалось загрузить пользователей: "+(err.message||""),{tone:"danger"})}
+  C.usersLoaded=true;N.refreshIf("conv-users");
+}
+function sourceDlg(){
+  overlay("modal",{title:"Новый источник Б24",subtitle:"Вебхук Битрикс24, из которого будут читаться лиды",size:"md",
+    body:`<nv-input name="name" label="Название" required></nv-input>
+    <nv-input name="webhook" label="Вебхук Б24" placeholder="https://portal.bitrix24.ru/rest/1/xxxx/" required></nv-input>
+    <nv-input name="lookback_hours" label="Смотреть лидов за, часов" type="number" value="24"></nv-input>
+    <nv-select name="mode" label="Режим" value="simple" options="simple:Простой|score_field:Со скорингом"></nv-select>
+    <nv-input name="score_field" label="Поле скоринга (для режима «со скорингом»)" placeholder="UF_CRM_..."></nv-input>
+    <nv-input name="scored_flag_field" label="Поле признака «прошёл скоринг»" placeholder="UF_CRM_..."></nv-input>`,
+    actions:[{label:"Отмена"},{label:"Добавить источник",variant:"primary",icon:"plus",fn(r,close){
+      const v=formVals(r),name=(v.name||"").trim(),webhook=(v.webhook||"").trim();
+      if(!name){r.querySelector('[name="name"]').setAttribute("error","Введите название");return false}
+      if(!webhook){r.querySelector('[name="webhook"]').setAttribute("error","Введите вебхук");return false}
+      (async()=>{
+        try{
+          await apiPost("/api/v1/ads/lk/sources",{name,webhook,lookback_hours:+v.lookback_hours||24,mode:v.mode||"simple",
+            score_field:v.score_field||"",scored_flag_field:v.scored_flag_field||"",enabled:true,send_backlog:false});
+          await loadSources();close();toast("Источник добавлен",{tone:"success"});
+        }catch(err){toast("Не удалось добавить источник: "+(err.message||""),{tone:"danger"})}
+      })();
+    }}]});
+}
+function mappingDlg(prefillKey){
+  overlay("modal",{title:"Привязать кампанию к счётчику",subtitle:"ID кампаний Директа → счётчик и цель Метрики",size:"md",
+    body:`<nv-textarea name="campaign_keys" label="ID кампаний" rows="3" value="${esc(prefillKey||"")}" placeholder="По одному на строку или через запятую" required></nv-textarea>
+    <nv-select name="connection_id" label="Яндекс ID" options="${S.conv.ids.map(c=>c.id+":"+esc(c.label||("ID "+c.id))).join("|")||"_:Нет подключённых Яндекс ID"}"></nv-select>
+    <nv-input name="counter_id" label="ID счётчика Метрики" type="number" required></nv-input>
+    <nv-input name="note" label="Заметка"></nv-input>`,
+    actions:[{label:"Отмена"},{label:"Сохранить",variant:"primary",icon:"link",fn(r,close){
+      const v=formVals(r),keys=(v.campaign_keys||"").trim(),counter=+v.counter_id;
+      if(!keys){r.querySelector('[name="campaign_keys"]').setAttribute("error","Укажите ID кампаний");return false}
+      if(!v.connection_id||v.connection_id==="_"){toast("Сначала подключите Яндекс ID",{tone:"warning"});return false}
+      if(!counter){r.querySelector('[name="counter_id"]').setAttribute("error","Укажите ID счётчика");return false}
+      (async()=>{
+        try{
+          await apiPost("/api/v1/ads/lk/mappings",{campaign_keys:keys,connection_id:+v.connection_id,counter_id:counter,note:v.note||""});
+          await loadMappings();close();toast("Привязка сохранена",{tone:"success"});
+        }catch(err){toast("Не удалось сохранить: "+(err.message||""),{tone:"danger"})}
+      })();
+    }}]});
+}
+function convUserDlg(){
+  overlay("modal",{title:"Новый пользователь ЛК",size:"sm",
+    body:`<nv-input name="username" label="Логин" required></nv-input><nv-input name="password" type="password" label="Пароль (от 10 символов)" required></nv-input>`,
+    actions:[{label:"Отмена"},{label:"Создать",variant:"primary",icon:"user-plus",fn(r,close){
+      const v=formVals(r),username=(v.username||"").trim(),password=v.password||"";
+      if(!username){r.querySelector('[name="username"]').setAttribute("error","Введите логин");return false}
+      if(password.length<10){r.querySelector('[name="password"]').setAttribute("error","Минимум 10 символов");return false}
+      (async()=>{
+        try{await apiPost("/api/v1/ads/lk/users",{username,password});await loadConvUsers();close();toast("Пользователь создан",{tone:"success"})}
+        catch(err){toast("Не удалось создать: "+(err.message||""),{tone:"danger"})}
+      })();
+    }}]});
+}
+const views_conv={
+ids(){
+  const C=S.conv;
+  return{title:"Яндекс ID",sub:"Аккаунты Яндекса, подключённые для чтения счётчиков Метрики.",
+  actions:`<nv-button icon="external-link" data-act="convOauthStart">Подключить Яндекс ID</nv-button>`,
+  body:`<div id="conv-ids-res">${!C.idsLoaded?'<nv-skeleton count="3"></nv-skeleton>':""}</div>`,
+  after(root){
+    if(!C.idsLoaded){loadMetrikaIds();return}
+    const el=root.querySelector("#conv-ids-res");
+    el.innerHTML=C.ids.length?`<nv-table id="conv-ids-t"></nv-table>`:
+      `<nv-card><nv-empty icon="user" heading="Яндекс ID не подключены" text="Подключите хотя бы один, чтобы читать счётчики Метрики."><nv-button icon="external-link" data-act="convOauthStart">Подключить Яндекс ID</nv-button></nv-empty></nv-card>`;
+    if(C.ids.length)wireTable(root,"conv-ids-t",C.ids,
+      [{key:"label",label:"Название"},{key:"status",label:"Статус",render:c=>c.status==="active"?'<nv-badge tone="success">Активно</nv-badge>':`<nv-badge tone="warning">${esc(c.status||"—")}</nv-badge>`},
+       {key:"expires_at",label:"Токен действует до",render:c=>c.expires_at?fmtDateTime(c.expires_at):"—"},
+       {key:"created_at",label:"Подключён",render:c=>fmtDateTime(c.created_at)},
+       {key:"_del",label:"",align:"right",render:c=>`<nv-button size="sm" variant="danger" icon="unlink" icon-only hint="Отключить" data-act="convDelId" data-id="${c.id}">Отключить</nv-button>`}]);
+  }}
+},
+sources(){
+  const C=S.conv;
+  return{title:"Источники Б24",sub:"Вебхуки Битрикс24, из которых читаются лиды для отправки конверсий.",
+  actions:`<nv-button icon="plus" data-act="convNewSource">Новый источник</nv-button>`,
+  body:`<div id="conv-src-res">${!C.sourcesLoaded?'<nv-skeleton count="3"></nv-skeleton>':""}</div>`,
+  after(root){
+    if(!C.sourcesLoaded){loadSources();return}
+    const el=root.querySelector("#conv-src-res");
+    el.innerHTML=C.sources.length?`<nv-table id="conv-src-t"></nv-table>`:
+      `<nv-card><nv-empty icon="webhook" heading="Источников пока нет" text="Добавьте вебхук Битрикс24."><nv-button icon="plus" data-act="convNewSource">Новый источник</nv-button></nv-empty></nv-card>`;
+    if(C.sources.length)wireTable(root,"conv-src-t",C.sources,
+      [{key:"name",label:"Название"},
+       {key:"mode",label:"Режим",render:s=>s.mode==="score_field"?"Со скорингом":"Простой"},
+       {key:"dry_run",label:"Отправка",render:s=>s.dry_run?'<nv-badge tone="warning">Пробно</nv-badge>':'<nv-badge tone="success">Боевая</nv-badge>'},
+       {key:"last_status",label:"Последний запуск",render:s=>esc(s.last_status||"—")},
+       {key:"_run",label:"",align:"right",render:s=>`<nv-button size="sm" variant="secondary" icon="play" data-act="convRunSource" data-id="${s.id}">Запустить</nv-button>`},
+       {key:"_live",label:"",align:"right",render:s=>`<nv-button size="sm" variant="${s.dry_run?"primary":"secondary"}" icon="${s.dry_run?"zap":"zap-off"}" data-act="convToggleLive" data-id="${s.id}" data-on="${s.dry_run}">${s.dry_run?"Включить боевую":"Выключить"}</nv-button>`},
+       {key:"_del",label:"",align:"right",render:s=>`<nv-button size="sm" variant="danger" icon="trash-2" icon-only hint="Удалить" data-act="convDelSource" data-id="${s.id}">Удалить</nv-button>`}]);
+  }}
+},
+mappings(){
+  const C=S.conv;
+  return{title:"Кампании и счётчики",sub:"Какой счётчик Метрики и цель получает конверсии от каждой кампании.",
+  actions:`<nv-button icon="plus" data-act="convNewMapping">Привязать кампанию</nv-button>`,
+  body:`<div class="stack"><nv-card heading="Привязки" subtitle="Кампания → счётчик"><div id="conv-map-res">${!C.mappingsLoaded?'<nv-skeleton count="2"></nv-skeleton>':""}</div></nv-card>
+  <nv-card heading="Без привязки" subtitle="Лиды пришли, но кампания ни к какому счётчику не привязана"><div id="conv-unmap-res">${!C.unmappedLoaded?'<nv-skeleton count="2"></nv-skeleton>':""}</div></nv-card></div>`,
+  after(root){
+    if(!C.mappingsLoaded)loadMappings();
+    if(!C.unmappedLoaded)loadUnmapped();
+    if(!C.idsLoaded)loadMetrikaIds();
+    if(C.mappingsLoaded){
+      const mapEl=root.querySelector("#conv-map-res");
+      mapEl.innerHTML=C.mappings.length?`<nv-table id="conv-map-t"></nv-table>`:`<nv-empty icon="link" heading="Привязок пока нет" text=""></nv-empty>`;
+      if(C.mappings.length)wireTable(root,"conv-map-t",C.mappings,
+        [{key:"campaign_key",label:"Кампания"},{key:"counter_id",label:"Счётчик"},{key:"note",label:"Заметка"},
+         {key:"created_at",label:"Добавлено",render:m=>fmtDateTime(m.created_at)},
+         {key:"_del",label:"",align:"right",render:m=>`<nv-button size="sm" variant="danger" icon="trash-2" icon-only hint="Удалить" data-act="convDelMapping" data-id="${m.id}">Удалить</nv-button>`}]);
+    }
+    if(C.unmappedLoaded){
+      const unmapEl=root.querySelector("#conv-unmap-res");
+      unmapEl.innerHTML=C.unmapped.length?`<nv-table id="conv-unmap-t"></nv-table>`:`<nv-empty icon="check" heading="Непривязанных кампаний нет" text=""></nv-empty>`;
+      if(C.unmapped.length)wireTable(root,"conv-unmap-t",C.unmapped.map((u,i)=>({id:u.campaign_key||("u"+i),...u})),
+        [{key:"campaign_key",label:"Кампания"},{key:"leads",label:"Лидов",align:"right"},{key:"sources",label:"Источник"},
+         {key:"_add",label:"",align:"right",render:u=>`<nv-button size="sm" variant="secondary" icon="link" data-act="convMapFromUnmapped" data-key="${esc(u.campaign_key)}">Привязать</nv-button>`}]);
+    }
+  }}
+},
+log(){
+  const C=S.conv,l=C.log,counts=l.counts||{};
+  return{title:"Журнал",sub:"Что отправлено в Метрику, пробно и с ошибками.",
+  body:`<div class="grid g4">${stat("Отправлено за 24 ч",counts.ok||0)}${stat("Пробно",counts.dry||0)}${stat("Ошибки",counts.failed||0)}${stat("Кампании без счётчика",C.unmappedLoaded?C.unmapped.length:0)}</div>
+  <div id="conv-log-res" style="margin-top:14px">${!l.loaded?'<nv-skeleton count="4"></nv-skeleton>':""}</div>`,
+  after(root){
+    if(!l.loaded)loadConvLog();
+    if(!C.unmappedLoaded)loadUnmapped();
+    if(!l.loaded)return;
+    const el=root.querySelector("#conv-log-res");
+    el.innerHTML=l.items.length?`<nv-table id="conv-log-t"></nv-table>`:`<nv-empty icon="scroll-text" heading="Журнал пуст" text=""></nv-empty>`;
+    if(l.items.length)wireTable(root,"conv-log-t",l.items,
+      [{key:"created_at",label:"Время",render:x=>fmtDateTime(x.created_at)},
+       {key:"source_name",label:"Источник"},{key:"lead_id",label:"Лид"},{key:"campaign_key",label:"Кампания"},
+       {key:"counter_id",label:"Счётчик"},{key:"revenue",label:"Сумма",align:"right",render:x=>x.revenue!=null?fmt(x.revenue):"—"},
+       {key:"status",label:"Результат",render:x=>({ok:'<nv-badge tone="success">Отправлено</nv-badge>',dry:'<nv-badge tone="warning">Пробно</nv-badge>',failed:'<nv-badge tone="danger">Ошибка</nv-badge>'})[x.status]||esc(x.status)}]);
+  }}
+},
+users(){
+  const C=S.conv;
+  return{title:"Пользователи",sub:"Кто ещё имеет доступ к ЛК конверсий.",
+  actions:`<nv-button icon="user-plus" data-act="convNewUser">Новый пользователь</nv-button>`,
+  body:`<div id="conv-usr-res">${!C.usersLoaded?'<nv-skeleton count="2"></nv-skeleton>':""}</div>`,
+  after(root){
+    if(!C.usersLoaded){loadConvUsers();return}
+    const el=root.querySelector("#conv-usr-res");
+    el.innerHTML=C.users.length?`<nv-table id="conv-usr-t"></nv-table>`:`<nv-empty icon="users" heading="Других пользователей нет" text=""></nv-empty>`;
+    if(C.users.length)wireTable(root,"conv-usr-t",C.users.map(u=>({id:u.username,...u})),
+      [{key:"username",label:"Логин"},{key:"created_at",label:"Создан",render:u=>fmtDateTime(u.created_at)},
+       {key:"_del",label:"",align:"right",render:u=>`<nv-button size="sm" variant="danger" icon="trash-2" icon-only hint="Удалить" data-act="convDelUser" data-id="${esc(u.username)}">Удалить</nv-button>`}]);
+  }}
+}};
+N.acts.convOauthStart=()=>window.open(ADDAVTO_PUBLIC_URL+"/oauth/yandex/start","_blank");
+N.acts.convDelId=(a,d)=>{
+  confirm({title:"Отключить Яндекс ID?",text:"Кампании, привязанные к его счётчикам, перестанут получать конверсии.",confirm:"Отключить",danger:true,fn(){
+    (async()=>{try{await apiDelete("/api/v1/ads/metrika/connections/"+d.id);await loadMetrikaIds();toast("Яндекс ID отключён")}catch(err){toast("Не удалось отключить: "+(err.message||""),{tone:"danger"})}})();
+  }});
+};
+N.acts.convNewSource=()=>sourceDlg();
+N.acts.convRunSource=(a,d)=>{
+  (async()=>{try{await apiPost("/api/v1/ads/lk/sources/"+d.id+"/run",{});await loadSources();toast("Проверка запущена")}catch(err){toast("Не удалось запустить: "+(err.message||""),{tone:"danger"})}})();
+};
+N.acts.convToggleLive=(a,d)=>{
+  const turnOn=d.on==="true";
+  (async()=>{try{await apiPost("/api/v1/ads/lk/sources/"+d.id+"/live?on="+turnOn,{});await loadSources();toast(turnOn?"Боевая отправка включена":"Боевая отправка выключена")}catch(err){toast("Не удалось переключить: "+(err.message||""),{tone:"danger"})}})();
+};
+N.acts.convDelSource=(a,d)=>{
+  confirm({title:"Удалить источник?",text:"Журнал и статистика этого источника удалятся без возможности восстановления.",confirm:"Удалить",danger:true,fn(){
+    (async()=>{try{await apiDelete("/api/v1/ads/lk/sources/"+d.id);await loadSources();toast("Источник удалён")}catch(err){toast("Не удалось удалить: "+(err.message||""),{tone:"danger"})}})();
+  }});
+};
+N.acts.convNewMapping=()=>mappingDlg();
+N.acts.convMapFromUnmapped=(a,d)=>mappingDlg(d.key);
+N.acts.convDelMapping=(a,d)=>{
+  confirm({title:"Удалить привязку?",text:"Кампания перестанет отправлять конверсии в этот счётчик.",confirm:"Удалить",danger:true,fn(){
+    (async()=>{try{await apiDelete("/api/v1/ads/lk/mappings/"+d.id);await loadMappings();toast("Привязка удалена")}catch(err){toast("Не удалось удалить: "+(err.message||""),{tone:"danger"})}})();
+  }});
+};
+N.acts.convNewUser=()=>convUserDlg();
+N.acts.convDelUser=(a,d)=>{
+  confirm({title:"Удалить пользователя «"+d.id+"»?",confirm:"Удалить",danger:true,fn(){
+    (async()=>{try{await apiDelete("/api/v1/ads/lk/users/"+encodeURIComponent(d.id));await loadConvUsers();toast("Пользователь удалён")}catch(err){toast("Не удалось удалить: "+(err.message||""),{tone:"danger"})}})();
+  }});
+};
+N.register({id:"conv",name:"Конверсия в Метрику",short:"Конверсии",tag:"Lead Tracking",icon:"target",rail:"main",status:"ready",
+  desc:"Лиды из Битрикс24 → офлайн-конверсии в Яндекс Метрику",
+  metric:()=>(S.conv.mappings.length||0)+" привязок кампаний",
+  nav:[{group:"Конверсии",items:[
+    {id:"ids",label:"Яндекс ID",icon:"user"},
+    {id:"sources",label:"Источники Б24",icon:"webhook"},
+    {id:"mappings",label:"Кампании и счётчики",icon:"link"},
+    {id:"log",label:"Журнал",icon:"scroll-text"},
+    {id:"users",label:"Пользователи",icon:"users"}
+  ]}],
+  views:views_conv,seed:convSeed});
+
 NEON.start();
 })();
 </script>
