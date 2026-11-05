@@ -95,6 +95,12 @@ nv-icon svg{width:1em;height:1em;stroke-width:2}
 .side-item:hover{background:var(--surface-2);color:var(--ink)}
 .side-item.on{background:var(--svc-soft);color:var(--ink);font-weight:600}
 .side-item.on nv-icon{color:var(--svc-ink)}
+.side-item-row{display:flex;align-items:center;gap:2px}
+.side-item-row .side-item.grow{flex:1;min-width:0}
+.side-item-tog{flex:none;display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;background:none;border-radius:8px;color:var(--ink-3);cursor:pointer}
+.side-item-tog:hover{background:var(--surface-2);color:var(--ink)}
+.tree.sub{margin-left:30px}
+.tree.sub .side-item{font-size:13px;padding:6px 8px}
 .side-count{font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
 .side-foot{margin-top:auto;padding:12px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;font-size:12.5px}
 .side-foot strong{display:block;font-weight:600}
@@ -537,6 +543,7 @@ html,body{overflow:hidden}
 .side-label{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:none;cursor:pointer;padding:7px 10px;font:400 12.5px var(--font-body);letter-spacing:0;text-transform:none;color:var(--ink);border-radius:999px}
 .side-label:hover{background:color-mix(in srgb,var(--l2) 50%,transparent)}
 .side-label nv-icon{color:var(--ink-2)}
+.side-item-tog{border-radius:999px;width:26px;height:26px}
 .tree{margin-left:17px}
 .tree .side-item{position:relative;margin-left:14px;width:calc(100% - 14px)}
 .tree .side-item>nv-icon{display:none}
@@ -1946,7 +1953,17 @@ function shell(){
     <button type="button" class="top-av" data-act="account" aria-label="Аккаунт" data-tip="Аккаунт"><nv-avatar name="${esc(session.email||"?")}" size="34"></nv-avatar></button>
   </header><main class="scroll" id="scroll"><div class="view" id="view"></div></main></div></div>`;
 }
-function sideNav(){const{s,v,svc}=route(),shut=S.core.sideShut||{};return (svc.nav||[]).map(g=>{const k=s+"/"+g.group,closed=g.group&&shut[k];return `<div class="side-group">${g.group?`<button type="button" class="side-label" data-act="sideTog" data-k="${esc(k)}" aria-expanded="${!closed}"><span>${esc(g.group)}</span>${ic(closed?"chevron-down":"chevron-up",14)}</button>`:""}${closed?"":`<div class="${g.group?"tree":""}">${g.items.map(i=>{const c=typeof i.count==="function"?i.count():i.count;return `<button type="button" class="side-item${i.id===v?" on":""}" data-go="${s}-${i.id}" ${i.id===v?'aria-current="page"':""}>${ic(i.icon)}<span class="t">${esc(i.label)}</span>${c!=null&&c!==""?`<span class="side-count">${esc(c)}</span>`:""}</button>`}).join("")}</div>`}</div>`}).join("")}
+function sideNav(){
+  const{s,v,svc}=route(),shut=S.core.sideShut||{};
+  const anaTab=(S.intel.ana&&S.intel.ana.tab)||"overview";
+  const itemHtml=(i,k)=>{
+    const c=typeof i.count==="function"?i.count():i.count,on=i.id===v;
+    if(!i.items||!i.items.length)return `<button type="button" class="side-item${on?" on":""}" data-go="${s}-${i.id}" ${on?'aria-current="page"':""}>${ic(i.icon)}<span class="t">${esc(i.label)}</span>${c!=null&&c!==""?`<span class="side-count">${esc(c)}</span>`:""}</button>`;
+    const ik=k+"/"+i.id,iclosed=shut[ik];
+    return `<div class="side-item-row"><button type="button" class="side-item grow${on?" on":""}" data-go="${s}-${i.id}" ${on?'aria-current="page"':""}>${ic(i.icon)}<span class="t">${esc(i.label)}</span></button><button type="button" class="side-item-tog" data-act="sideTog" data-k="${esc(ik)}" aria-expanded="${!iclosed}" aria-label="${esc(i.label)}: подразделы">${ic(iclosed?"chevron-down":"chevron-up",13)}</button></div>${iclosed?"":`<div class="tree sub">${i.items.map(ci=>`<button type="button" class="side-item${on&&anaTab===ci.id?" on":""}" data-act="anaGoTab" data-tab="${esc(ci.id)}">${ic(ci.icon||"circle",13)}<span class="t">${esc(ci.label)}</span></button>`).join("")}</div>`}`;
+  };
+  return (svc.nav||[]).map(g=>{const k=s+"/"+g.group,closed=g.group&&shut[k];return `<div class="side-group">${g.group?`<button type="button" class="side-label" data-act="sideTog" data-k="${esc(k)}" aria-expanded="${!closed}"><span>${esc(g.group)}</span>${ic(closed?"chevron-down":"chevron-up",14)}</button>`:""}${closed?"":`<div class="${g.group?"tree":""}">${g.items.map(i=>itemHtml(i,k)).join("")}</div>`}</div>`}).join("");
+}
 
 function renderView(keepScroll){
   const{s,v,svc}=route(),old=document.getElementById("view"),sc=document.getElementById("scroll");if(!old)return;const root=old.cloneNode(false);old.replaceWith(root);
@@ -2704,6 +2721,7 @@ N.chg.scanF=(v,d)=>{S.intel.scanF[d.key]=v;N.refresh()};
 N.acts.scanFReset=()=>{S.intel.scanF={q:"",status:""};N.refresh()};
 N.chg.intentSet=v=>{const list=v?v.split(","):[];S.intel.activeIntents=list;setActiveIntents(list);loadLibrary();if(S.intel.ana.loaded)loadAnalytics(true);N.refresh()};
 N.chg.anaTab=v=>{S.intel.ana.tab=v;N.refresh()};
+N.acts.anaGoTab=(a,d)=>{S.intel.ana.tab=d.tab;NEON.go("intel-analytics")};
 
 async function loadIntentsList(){
   try{const data=await api("/api/v1/intents",{});S.intel.intents=data.items||[];S.intel.intentsLoaded=true;N.refresh()}
@@ -2721,7 +2739,13 @@ N.register({id:"intel",name:"Разведка рекламы",short:"Разве�
     {id:"scans",label:"Сканирования",icon:"scan-search",count:()=>S.intel.scans.filter(s=>s.status==="queued"||s.status==="running").length||""}
   ]},
   {group:"Анализ",items:[
-    {id:"analytics",label:"Аналитика",icon:"bar-chart-3"},
+    {id:"analytics",label:"Аналитика",icon:"bar-chart-3",items:[
+      {id:"overview",label:"Обзор",icon:"layout-dashboard"},
+      {id:"fresh",label:"Новое и акции",icon:"sparkles"},
+      {id:"repeats",label:"Повторы и карусели",icon:"copy"},
+      {id:"campaigns",label:"Кампании и слова",icon:"target"},
+      {id:"growth",label:"Рост и аномалии",icon:"trending-up"}
+    ]},
     {id:"advertisers",label:"Рекламодатели",icon:"building-2"}
   ]}
  ],
