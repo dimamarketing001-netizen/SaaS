@@ -2729,6 +2729,7 @@ N.register({id:"intel",name:"Разведка рекламы",short:"Разве�
  commands:[{label:"Новое сканирование",icon:"radar",run:scanDlg}],
  search:q=>CR().filter(g=>((g.representative.title||"")+(g.representative.domain||"")).toLowerCase().includes(q)).slice(0,5).map(g=>({icon:"image",label:g.representative.title||g.representative.domain,sub:g.representative.domain,run(){N.go("intel-library");setTimeout(()=>openCreative(g.representative.id),50)}}))
 });
+S.intel.savedViews=loadSavedViews();
 
 loadLibrary();
 loadCollections();
