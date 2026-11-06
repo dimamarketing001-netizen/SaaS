@@ -1277,6 +1277,16 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stud-layer-image{width:100%;height:100%;overflow:hidden}
 .stud-layer-image img{width:100%;height:100%;object-fit:cover;display:block}
 .stud-layer-empty{display:flex;align-items:center;justify-content:center;background:var(--surface-2);color:var(--ink-3)}
+.stud-layer-icon{width:100%;height:100%;display:flex}
+.stud-layer-icon svg{width:100%;height:100%}
+.stud-toolgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.stud-tool{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:12px 4px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink-2);cursor:pointer;font-size:11px;text-align:center;line-height:1.2}
+.stud-tool:hover{border-color:var(--svc-ink);color:var(--ink);background:var(--svc-soft)}
+.stud-quick-row{display:flex;gap:6px}
+.stud-icon-pick{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.stud-icon-pick button{display:flex;align-items:center;justify-content:center;height:32px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink-2);cursor:pointer}
+.stud-icon-pick button:hover{border-color:var(--svc-ink);color:var(--ink)}
+.stud-icon-pick button.on{background:var(--svc-soft);border-color:var(--svc-ink);color:var(--svc-ink)}
 .stud-panel{display:flex;flex-direction:column;gap:8px;position:sticky;top:8px}
 .stud-layers{display:flex;flex-direction:column;gap:2px}
 .stud-layer-row{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;cursor:pointer;font-size:12.5px;color:var(--ink-2)}
@@ -2216,7 +2226,7 @@ NEON.start=render;
    /api/v1/advertisers, /api/v1/analytics/* и /api/v1/intents парсера. Бек не менялся —
    меняется только то, как это рисуется (дизайн-система NEON). */
 (function(){
-const {esc,ic,fmt,overlay,toast,confirm,formVals,FORMAT,favUrl}=NEONUI,N=NEON,S=N.state;
+const {esc,ic,fmt,overlay,toast,confirm,formVals,FORMAT,favUrl,iconSvg}=NEONUI,N=NEON,S=N.state;
 
 const RUN_STATUS_MAP={queued:"queued",running:"running",succeeded:"done",failed:"failed"};
 
@@ -3794,30 +3804,48 @@ function studioNewDesign(){return{id:null,name:"Новый дизайн",format:
 const studioSeed=()=>({designs:[],editor:studioNewDesign()});
 function studioDesign(){return S.studio.editor}
 function studioSelected(){const d=studioDesign();return d.layers.find(l=>l.id===d.selectedId)||null}
-function studioLayerDefaults(type){
+const STUDIO_ICONS=["star","heart","zap","flame","gift","tag","badge-percent","thumbs-up","sparkles","trophy","shield-check","truck","clock","phone","map-pin","award","check-circle-2","rocket"];
+function studioLayerDefaults(type,sub){
   const base={id:studioUid(),type,x:20,y:44,w:60,h:12,rotation:0};
   if(type==="text")return{...base,text:"Текст",fontSize:7,color:"#161a18",weight:"700",align:"center"};
   if(type==="image")return{...base,y:30,h:40,src:""};
-  if(type==="shape")return{...base,y:35,h:30,shape:"rect",color:"#16c784",radius:12};
+  if(type==="icon")return{...base,y:35,w:18,h:18,icon:sub||"star",color:"#16c784"};
+  if(type==="shape"){
+    const shape=sub||"rect";
+    if(shape==="line")return{...base,y:40,h:3,shape,color:"#16c784",radius:0};
+    return{...base,y:35,h:30,shape,color:"#16c784",radius:12};
+  }
   return base;
 }
-function studioLayerIcon(l){return l.type==="text"?"type":l.type==="image"?"image":(l.shape==="ellipse"?"circle":"square")}
-function studioLayerLabel(l){return l.type==="text"?(l.text||"Текст").slice(0,22):l.type==="image"?"Изображение":(l.shape==="ellipse"?"Эллипс":"Прямоугольник")}
+function studioLayerIcon(l){if(l.type==="text")return"type";if(l.type==="image")return"image";if(l.type==="icon")return l.icon||"star";return l.shape==="ellipse"?"circle":l.shape==="triangle"?"triangle":l.shape==="line"?"minus":"square"}
+function studioLayerLabel(l){if(l.type==="text")return(l.text||"Текст").slice(0,22);if(l.type==="image")return"Изображение";if(l.type==="icon")return"Иконка";return{rect:"Прямоугольник",ellipse:"Эллипс",triangle:"Треугольник",line:"Линия"}[l.shape]||"Фигура"}
 function studioLayerInner(l){
   if(l.type==="text")return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"}">${esc(l.text)}</div>`;
   if(l.type==="image")return l.src?`<div class="stud-layer-image"><img src="${esc(l.src)}" alt="" draggable="false"></div>`:`<div class="stud-layer-image stud-layer-empty">${ic("image",22)}</div>`;
-  if(l.type==="shape")return`<div class="stud-layer-shape" style="background:${esc(l.color)};border-radius:${l.shape==="ellipse"?"50%":l.radius+"px"}"></div>`;
+  if(l.type==="icon")return`<div class="stud-layer-icon" style="color:${esc(l.color)}">${iconSvg(l.icon||"star")}</div>`;
+  if(l.type==="shape"){
+    if(l.shape==="triangle")return`<div class="stud-layer-shape" style="background:${esc(l.color)};clip-path:polygon(50% 0%,0% 100%,100% 100%)"></div>`;
+    return`<div class="stud-layer-shape" style="background:${esc(l.color)};border-radius:${l.shape==="ellipse"?"50%":(l.radius||0)+"px"}"></div>`;
+  }
   return"";
 }
-function studioLayerHtml(l,on){return`<div class="stud-layer${on?" on":""}" data-id="${esc(l.id)}" data-type="${l.type}" style="left:${l.x}%;top:${l.y}%;width:${l.w}%;height:${l.h}%">${studioLayerInner(l)}${on?`<span class="stud-h" aria-hidden="true"></span>`:""}</div>`}
+function studioLayerHtml(l,on){return`<div class="stud-layer${on?" on":""}" data-id="${esc(l.id)}" data-type="${l.type}" style="left:${l.x}%;top:${l.y}%;width:${l.w}%;height:${l.h}%;transform:rotate(${l.rotation||0}deg)">${studioLayerInner(l)}${on?`<span class="stud-h" aria-hidden="true"></span>`:""}</div>`}
 function studioStageHtml(){
   const d=studioDesign(),fmt=STUDIO_FMT[d.format],bgStyle=d.bg.type==="image"&&d.bg.image?`background-image:url('${esc(d.bg.image)}')`:`background:${esc(d.bg.color||"#fff")}`;
   return`<div class="stud-stage" style="aspect-ratio:${fmt.w}/${fmt.h};${bgStyle}">${d.layers.map(l=>studioLayerHtml(l,l.id===d.selectedId)).join("")}</div>`;
 }
 function studioLayersListHtml(){
   const d=studioDesign();
-  if(!d.layers.length)return'<p class="muted" style="font-size:12.5px">Добавьте текст, картинку или фигуру кнопками слева.</p>';
+  if(!d.layers.length)return'<p class="muted" style="font-size:12.5px">Выберите инструмент слева, чтобы добавить первый слой.</p>';
   return`<div class="stud-layers">${d.layers.map((l,i)=>`<div class="stud-layer-row${l.id===d.selectedId?" on":""}" data-sel="${esc(l.id)}">${ic(studioLayerIcon(l),14)}<span>${esc(studioLayerLabel(l))}</span><span class="row-ic"><button type="button" data-mv="${esc(l.id)}" data-dir="-1" aria-label="Выше" ${i===0?"disabled":""}>${ic("chevron-up",13)}</button><button type="button" data-mv="${esc(l.id)}" data-dir="1" aria-label="Ниже" ${i===d.layers.length-1?"disabled":""}>${ic("chevron-down",13)}</button><button type="button" data-del="${esc(l.id)}" aria-label="Удалить слой">${ic("trash-2",13)}</button></span></div>`).join("")}</div>`;
+}
+function studioPropsCommonHtml(l){
+  return`<div class="stud-quick-row">
+    <button type="button" class="nv-btn v-secondary s-sm" icon-only data-tip="По центру по горизонтали" data-act-center="h">${ic("align-horizontal-justify-center",14)}</button>
+    <button type="button" class="nv-btn v-secondary s-sm" icon-only data-tip="По центру по вертикали" data-act-center="v">${ic("align-vertical-justify-center",14)}</button>
+    <button type="button" class="nv-btn v-secondary s-sm" icon-only data-tip="Дублировать" data-act-dup>${ic("copy",14)}</button>
+  </div>
+  <div class="fld"><span class="lbl">Поворот</span><div class="rng"><input type="range" min="0" max="360" step="1" value="${l.rotation||0}" data-prop="rotation"><output>${l.rotation||0}°</output></div></div>`;
 }
 function studioPropsHtml(){
   const l=studioSelected();
@@ -3828,13 +3856,21 @@ function studioPropsHtml(){
     <div class="stud-color"><span class="lbl">Цвет</span><input type="color" value="${esc(l.color)}" data-prop="color"></div>
     <div class="row" style="gap:6px"><button type="button" class="nv-btn ${l.weight==="700"?"v-primary":"v-secondary"} s-sm" data-prop-set="weight" data-val="700">Жирный</button><button type="button" class="nv-btn ${l.weight==="400"?"v-primary":"v-secondary"} s-sm" data-prop-set="weight" data-val="400">Обычный</button></div>
     <div class="row" style="gap:6px"><button type="button" class="nv-btn ${l.align==="left"?"v-primary":"v-secondary"} s-sm" icon-only data-prop-set="align" data-val="left">${ic("align-left",14)}</button><button type="button" class="nv-btn ${l.align==="center"?"v-primary":"v-secondary"} s-sm" icon-only data-prop-set="align" data-val="center">${ic("align-center",14)}</button><button type="button" class="nv-btn ${l.align==="right"?"v-primary":"v-secondary"} s-sm" icon-only data-prop-set="align" data-val="right">${ic("align-right",14)}</button></div>
+    ${studioPropsCommonHtml(l)}
   </div>`;
   if(l.type==="shape")return`<div class="stack" style="gap:10px">
-    <div class="row" style="gap:6px"><button type="button" class="nv-btn ${l.shape==="rect"?"v-primary":"v-secondary"} s-sm" data-prop-set="shape" data-val="rect">Прямоугольник</button><button type="button" class="nv-btn ${l.shape==="ellipse"?"v-primary":"v-secondary"} s-sm" data-prop-set="shape" data-val="ellipse">Эллипс</button></div>
+    <div class="row" style="gap:6px;flex-wrap:wrap">${[["rect","Прямоугольник"],["ellipse","Эллипс"],["triangle","Треугольник"],["line","Линия"]].map(([v,lb])=>`<button type="button" class="nv-btn ${l.shape===v?"v-primary":"v-secondary"} s-sm" data-prop-set="shape" data-val="${v}">${lb}</button>`).join("")}</div>
     <div class="stud-color"><span class="lbl">Цвет</span><input type="color" value="${esc(l.color)}" data-prop="color"></div>
     ${l.shape==="rect"?`<div class="fld"><span class="lbl">Скругление</span><div class="rng"><input type="range" min="0" max="80" step="2" value="${l.radius}" data-prop="radius"><output>${l.radius}</output></div></div>`:""}
+    ${studioPropsCommonHtml(l)}
   </div>`;
-  if(l.type==="image")return`<div class="stack" style="gap:10px"><p class="muted" style="font-size:12.5px">Потяните за уголок, чтобы изменить размер, или за картинку — чтобы передвинуть.</p></div>`;
+  if(l.type==="icon")return`<div class="stack" style="gap:10px">
+    <div class="stud-color"><span class="lbl">Цвет</span><input type="color" value="${esc(l.color)}" data-prop="color"></div>
+    <span class="lbl">Иконка</span>
+    <div class="stud-icon-pick">${STUDIO_ICONS.map(n=>`<button type="button" class="${l.icon===n?"on":""}" data-prop-set="icon" data-val="${n}" aria-label="${n}">${ic(n,16)}</button>`).join("")}</div>
+    ${studioPropsCommonHtml(l)}
+  </div>`;
+  if(l.type==="image")return`<div class="stack" style="gap:10px"><p class="muted" style="font-size:12.5px">Потяните за уголок, чтобы изменить размер, или за картинку — чтобы передвинуть.</p>${studioPropsCommonHtml(l)}</div>`;
   return"";
 }
 function studioLayoutStage(root){
@@ -3848,6 +3884,8 @@ function studioLayoutStage(root){
 function studioPatchLayerDom(l){
   const el=document.querySelector(`.stud-layer[data-id="${l.id}"]`);if(!el)return;
   el.innerHTML=studioLayerInner(l)+(el.querySelector(".stud-h")?`<span class="stud-h" aria-hidden="true"></span>`:"");
+  el.style.transform=`rotate(${l.rotation||0}deg)`;
+  el.style.left=l.x+"%";el.style.top=l.y+"%";el.style.width=l.w+"%";el.style.height=l.h+"%";
   studioLayoutStage(document);
 }
 function studioRenderSidebar(root){
@@ -3870,6 +3908,14 @@ function fileToDataUrl(file,maxDim){
   });
 }
 function studioLoadImg(src){return new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=src})}
+function studioIconDataUrl(name,color){
+  /* iconSvg()'s markup is written to be innerHTML'd into an existing document, where the
+     HTML parser recognizes <svg> implicitly — it has no xmlns, which a standalone
+     data:image/svg+xml resource (decoded by the image loader, not the HTML parser) needs
+     explicitly or the load silently fails. */
+  const svg=iconSvg(name).replace('stroke="currentColor"',`stroke="${color}"`).replace("<svg ",'<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" ');
+  return"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+}
 async function studioRenderCanvas(design,scale){
   const fmt=STUDIO_FMT[design.format],W=Math.round(fmt.w*(scale||1)),H=Math.round(fmt.h*(scale||1));
   const c=document.createElement("canvas");c.width=W;c.height=H;const ctx=c.getContext("2d");
@@ -3877,15 +3923,20 @@ async function studioRenderCanvas(design,scale){
   else{ctx.fillStyle=design.bg.color||"#fff";ctx.fillRect(0,0,W,H)}
   for(const l of design.layers){
     const x=l.x/100*W,y=l.y/100*H,w=l.w/100*W,h=l.h/100*H;
+    ctx.save();
+    if(l.rotation){const cx=x+w/2,cy=y+h/2;ctx.translate(cx,cy);ctx.rotate(l.rotation*Math.PI/180);ctx.translate(-cx,-cy)}
     if(l.type==="shape"){
       ctx.fillStyle=l.color;
       if(l.shape==="ellipse"){ctx.beginPath();ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);ctx.fill()}
-      else{const r=Math.min(l.radius*(scale||1),w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();ctx.fill()}
+      else if(l.shape==="triangle"){ctx.beginPath();ctx.moveTo(x+w/2,y);ctx.lineTo(x+w,y+h);ctx.lineTo(x,y+h);ctx.closePath();ctx.fill()}
+      else{const r=Math.min((l.radius||0)*(scale||1),w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();ctx.fill()}
+    }else if(l.type==="icon"){
+      try{const img=await studioLoadImg(studioIconDataUrl(l.icon||"star",l.color));ctx.drawImage(img,x,y,w,h)}catch(e){}
     }else if(l.type==="image"&&l.src){
-      try{const img=await studioLoadImg(l.src);ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+      try{const img=await studioLoadImg(l.src);ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
         const ir=img.naturalWidth/img.naturalHeight,br=w/h;let dw=w,dh=h,dx=x,dy=y;
         if(ir>br){dh=h;dw=h*ir;dx=x-(dw-w)/2}else{dw=w;dh=w/ir;dy=y-(dh-h)/2}
-        ctx.drawImage(img,dx,dy,dw,dh);ctx.restore()}catch(e){}
+        ctx.drawImage(img,dx,dy,dw,dh)}catch(e){}
     }else if(l.type==="text"){
       const fs=Math.max(8,H*l.fontSize/100);
       ctx.fillStyle=l.color;ctx.font=`${l.weight==="700"?"700":"400"} ${fs}px var(--font-display),Arial,sans-serif`;
@@ -3897,6 +3948,7 @@ async function studioRenderCanvas(design,scale){
       const lh=fs*1.18,totalH=lh*lines.length,startY=y+h/2-totalH/2+lh/2;
       lines.forEach((ln,i)=>ctx.fillText(ln,tx,startY+i*lh));
     }
+    ctx.restore();
   }
   return c;
 }
@@ -3935,11 +3987,17 @@ editor(){
       <input type="file" id="stud-bg-file" accept="image/*" class="sr">
       <label class="nv-btn v-secondary s-sm" for="stud-bg-file" style="width:100%;justify-content:center">${ic("image",14)}Фон картинкой</label>
       ${d.bg.type==="image"?`<nv-button variant="ghost" size="sm" icon="x" data-act="studBgClear">Убрать фон-картинку</nv-button>`:""}
-      <div class="sect-t" style="margin-top:6px">Добавить</div>
-      <nv-button variant="secondary" icon="type" data-act="studAdd" data-type="text">Текст</nv-button>
+      <div class="sect-t" style="margin-top:6px">Инструменты</div>
+      <div class="stud-toolgrid">
+        <button type="button" class="stud-tool" data-act="studAdd" data-type="text">${ic("type",19)}<span>Текст</span></button>
+        <label class="stud-tool" for="stud-img-file">${ic("image-plus",19)}<span>Картинка</span></label>
+        <button type="button" class="stud-tool" data-act="studAdd" data-type="shape" data-shape="rect">${ic("square",19)}<span>Прямоугольник</span></button>
+        <button type="button" class="stud-tool" data-act="studAdd" data-type="shape" data-shape="ellipse">${ic("circle",19)}<span>Эллипс</span></button>
+        <button type="button" class="stud-tool" data-act="studAdd" data-type="shape" data-shape="triangle">${ic("triangle",19)}<span>Треугольник</span></button>
+        <button type="button" class="stud-tool" data-act="studAdd" data-type="shape" data-shape="line">${ic("minus",19)}<span>Линия</span></button>
+        <button type="button" class="stud-tool" data-act="studAdd" data-type="icon">${ic("star",19)}<span>Иконка</span></button>
+      </div>
       <input type="file" id="stud-img-file" accept="image/*" class="sr">
-      <label class="nv-btn v-secondary" for="stud-img-file" style="width:100%;justify-content:flex-start">${ic("image-plus",15)}Картинка</label>
-      <nv-button variant="secondary" icon="square" data-act="studAdd" data-type="shape">Фигура</nv-button>
     </div>
     <div class="stud-stage-wrap"><div id="stud-stage-host">${studioStageHtml()}</div></div>
     <div class="stud-panel">
@@ -3996,10 +4054,13 @@ editor(){
         studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();
       });
       pp.addEventListener("click",e=>{
-        const b=e.target.closest("[data-prop-set]");if(!b)return;
         const l=studioSelected();if(!l)return;
-        l[b.dataset.propSet]=b.dataset.val;
-        studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();
+        const set=e.target.closest("[data-prop-set]");
+        if(set){l[set.dataset.propSet]=set.dataset.val;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
+        const center=e.target.closest("[data-act-center]");
+        if(center){if(center.dataset.actCenter==="h")l.x=Math.max(0,(100-l.w)/2);else l.y=Math.max(0,(100-l.h)/2);studioPatchLayerDom(l);NEON.save();return}
+        const dup=e.target.closest("[data-act-dup]");
+        if(dup){const copy=JSON.parse(JSON.stringify(l));copy.id=studioUid();copy.x=Math.min(100-copy.w,copy.x+4);copy.y=Math.min(100-copy.h,copy.y+4);const d=studioDesign();d.layers.push(copy);d.selectedId=copy.id;N.refresh();NEON.save();return}
       });
     }
     const bgFile=root.querySelector("#stud-bg-file");
@@ -4043,7 +4104,7 @@ Object.assign(N.chg,{
   studFormat(v){studioDesign().format=v;N.refresh();NEON.save()}
 });
 Object.assign(N.acts,{
-  studAdd(a,d){const l=studioLayerDefaults(d.type);studioDesign().layers.push(l);studioDesign().selectedId=l.id;N.refresh();NEON.save()},
+  studAdd(a,d){const l=studioLayerDefaults(d.type,d.shape);studioDesign().layers.push(l);studioDesign().selectedId=l.id;N.refresh();NEON.save()},
   studSave:studioSaveDesign,
   studExport:studioExportPng,
   studNew(){S.studio.editor=studioNewDesign();N.go("studio-editor")},
