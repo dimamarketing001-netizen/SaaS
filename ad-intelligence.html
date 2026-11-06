@@ -375,17 +375,15 @@ nv-creative-card{display:block;min-width:0}
 .folder-name{margin:0;font:700 14.5px var(--font-display);color:var(--ink)}
 .folder-desc{margin:0;font-size:12.5px;line-height:1.4;color:var(--ink-3);flex:1}
 .folder-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.scanc{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:20px 14px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);height:100%}
-.scanc-badge{position:absolute;top:12px;right:12px}
-.scanc-ring{margin:2px 0 6px}
-.scanc-ring.indet{animation:scancSpin 1.1s linear infinite}
-@keyframes scancSpin{to{transform:rotate(360deg)}}
-.scanc-title{font-size:14px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.scanc-sub{font-size:12px;color:var(--ink-3)}
-.scanc-note{font-size:12px;font-weight:600;color:var(--ink-2);margin-top:4px;min-height:15px}
-.scanc-f{display:flex;flex-direction:column;align-items:center;gap:9px;margin-top:10px;width:100%}
-.scanc-found{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink-2);font-weight:500}
-.scanc-actions{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.scanc-bar{height:6px;background:var(--surface-3);border-radius:99px;overflow:hidden;margin-top:2px}
+.scanc-bar i{display:block;height:100%;border-radius:99px;background:var(--ink-3);transition:width .4s}
+.scanc-bar.t-running i{background:var(--svc-ink)}
+.scanc-bar.t-done i{background:var(--ok)}
+.scanc-bar.t-failed i{background:var(--bad)}
+.scanc-bar.t-queued i{background:var(--ink-3);opacity:.5}
+.scanc-bar.indet{position:relative}
+.scanc-bar.indet i{width:40%!important;position:absolute;animation:scancIndet 1.3s ease-in-out infinite}
+@keyframes scancIndet{0%{left:-40%}100%{left:100%}}
 .g4lg{grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
 .cr-copy{font-size:12px;line-height:1.4;color:var(--ink-3);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cr-intent{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--svc-ink);background:var(--svc-soft);border-radius:999px;padding:3px 9px;align-self:flex-start;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
@@ -1561,21 +1559,19 @@ define("nv-folder-card",class extends NvEl{
 define("nv-scan-card",class extends NvEl{
   html(){
     const st=this.a("status"),pctRaw=this.a("pct"),known=pctRaw!=="",pct=known?Math.max(0,Math.min(100,+pctRaw)):0,indet=this.b("indeterminate");
-    const tone={done:"ok",failed:"bad"}[st]||"accent",ringPct=indet?28:pct,ringText=indet?"…":(known?pct+"%":"—");
-    return `<article class="scanc"><nv-status class="scanc-badge" value="${esc(st)}"></nv-status>
-    <nv-ring class="scanc-ring${indet?" indet":""}" value="${ringPct}" max="100" size="60" tone="${tone}" text="${esc(ringText)}"></nv-ring>
-    <h4 class="scanc-title">${esc(this.a("title"))}</h4>
-    ${this.a("subtitle")?`<div class="scanc-sub">${esc(this.a("subtitle"))}</div>`:""}
-    <div class="scanc-note">${esc(this.a("note"))}</div>
-    <div class="scanc-f"><span class="scanc-found">${ic("layout-grid",13)}${esc(this.a("found"))} найдено</span><div class="scanc-actions" data-slot></div></div></article>`;
+    const title=this.a("title"),initials=(title||"??").slice(0,2).toUpperCase();
+    return `<article class="int scanc"><div class="h"><span class="lg" style="color:var(--svc-ink)">${esc(initials)}</span><div><h4>${esc(title)}</h4>${this.a("subtitle")?`<div class="cat">${esc(this.a("subtitle"))}</div>`:""}</div></div>
+    <div class="scanc-bar t-${esc(st)}${indet?" indet":""}"><i style="width:${indet?100:pct}%"></i></div>
+    <p>${esc(this.a("note"))} · ${esc(this.a("found"))} найдено</p>
+    <div class="f"><nv-status value="${esc(st)}"></nv-status><span class="int-actions" data-slot></span></div></article>`;
   }
-},"Предметные",{desc:"Карточка задания сканирования: статус, прогресс круглым таймером с процентом внутри, что уже найдено.",slot:"Кнопки действий",demoHtml:'<nv-button size="sm" variant="secondary" icon-end="arrow-right">Открыть</nv-button>',previewW:220,attrs:{
+},"Предметные",{desc:"Карточка задания сканирования: статус, линия прогресса/ETA, что уже найдено.",slot:"Кнопки действий",demoHtml:'<nv-button size="sm" variant="secondary" icon="external-link" icon-only hint="Открыть">Открыть</nv-button>',previewW:300,attrs:{
   title:{type:"string",default:"кроссовки",desc:"Запрос"},
   subtitle:{type:"string",default:"Москва",desc:"Город"},
   status:{type:"enum",values:["queued","running","done","failed"],default:"running",desc:"Статус (совпадает со значениями nv-status)"},
   pct:{type:"string",default:"62",desc:"Процент выполнения (оценка). Пусто — неизвестно"},
-  indeterminate:{type:"bool",desc:"Прогресс нельзя оценить — кольцо крутится вместо процента"},
-  note:{type:"string",default:"~2 мин осталось",desc:"Главное сообщение под кольцом"},
+  indeterminate:{type:"bool",desc:"Прогресс нельзя оценить — вместо процента полосатая анимация"},
+  note:{type:"string",default:"~2 мин осталось",desc:"Главное сообщение рядом с «найдено»"},
   found:{type:"string",default:"12",desc:"Найдено креативов"}
 }});
 define("nv-kanban",class extends NvEl{
@@ -2755,7 +2751,7 @@ scans(){
   body:`<div class="grid g4">${stat("Всего задач",total)}${stat("Выполняется",active)}${stat("Завершено",done)}${stat("Ошибка",failed)}</div>
   <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Запрос или город" value="${esc(sf.q)}" data-chg="scanF" data-key="q"></nv-input><nv-select label="Статус" value="${esc(sf.status)}" options=":Все статусы|queued:В очереди|running:Выполняется|succeeded:Завершено|failed:Ошибка" data-chg="scanF" data-key="status"></nv-select>${(sf.q||sf.status)?'<nv-button variant="ghost" size="sm" icon="x" data-act="scanFReset">Сбросить</nv-button>':""}</div>
   <div class="grid g4lg">${rows.length?rows.map(s=>{const info=scanCardInfo(s,medianMs);
-    return `<nv-scan-card title="${esc(s.key_text)}" subtitle="${esc(s.city||"")}" status="${esc(info.status)}" pct="${esc(info.pct)}" ${info.indeterminate?"indeterminate":""} note="${esc(info.note)}" found="${esc(s.total||0)}"><nv-button size="sm" variant="secondary" icon-end="arrow-right" data-act="scanOpen" data-id="${esc(s.id)}">Открыть</nv-button>${s.status==="succeeded"?`<nv-button size="sm" variant="ghost" icon="layout-grid" data-act="scanToLib" data-id="${esc(s.id)}">В библиотеку</nv-button>`:""}</nv-scan-card>`;
+    return `<nv-scan-card title="${esc(s.key_text)}" subtitle="${esc(s.city||"")}" status="${esc(info.status)}" pct="${esc(info.pct)}" ${info.indeterminate?"indeterminate":""} note="${esc(info.note)}" found="${esc(s.total||0)}"><nv-button size="sm" variant="secondary" icon="external-link" icon-only hint="Открыть" data-act="scanOpen" data-id="${esc(s.id)}">Открыть</nv-button>${s.status==="succeeded"?`<nv-button size="sm" variant="secondary" icon="layout-grid" icon-only hint="Показать в библиотеке" data-act="scanToLib" data-id="${esc(s.id)}">Показать в библиотеке</nv-button>`:""}</nv-scan-card>`;
   }).join(""):'<nv-card><nv-empty icon="search-x" heading="Заданий не найдено" text="Измените фильтры или создайте новое сканирование."><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>'}</div>`,
   after(root){
     if(!S.intel.scansLoaded)loadScans();
