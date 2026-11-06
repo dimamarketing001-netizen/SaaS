@@ -334,6 +334,8 @@ nv-chart{display:block;min-width:0}
 
 /* ---------- Креатив ---------- */
 nv-creative-card{display:block;min-width:0}
+.k-item{height:100%}
+.k-item nv-creative-card{flex:1;min-width:0}
 .cr{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden;display:flex;flex-direction:column;height:100%;position:relative;transition:border-color .12s,box-shadow .12s;contain:layout paint}
 .cr:hover{border-color:var(--ink-3);box-shadow:var(--shadow-2)}
 .cr.sel{border-color:var(--svc-ink);box-shadow:0 0 0 1px var(--svc-ink)}
@@ -2446,7 +2448,7 @@ async function removeFromCollection(colId,groupKey){
 function gridOfCollectionItems(items,colId){
   return `<div class="grid g3">${items.map(it=>{
     const g={group_key:it.group_key,representative:it,last_seen_at:it.captured_at};
-    return `<div class="stack" style="gap:6px">${cardHtml(g,false)}<nv-button size="sm" variant="ghost" icon="x" data-act="kRemoveItem" data-col="${esc(colId)}" data-key="${esc(it.group_key)}">Убрать из подборки</nv-button></div>`;
+    return `<div class="stack k-item" style="gap:6px">${cardHtml(g,false)}<nv-button size="sm" variant="ghost" icon="x" data-act="kRemoveItem" data-col="${esc(colId)}" data-key="${esc(it.group_key)}">Убрать из подборки</nv-button></div>`;
   }).join("")}</div>`;
 }
 
