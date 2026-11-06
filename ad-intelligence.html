@@ -1572,7 +1572,7 @@ define("nv-creative-card",class extends NvEl{
     if(disc)media=`<span class="disc">−${esc(disc)}%</span>`+media;
     return `<article class="cr${this.b("selected")?" sel":""}${sc?" has-ck":""}">${sc?`<label class="ck cr-ck"><input type="checkbox" ${this.b("selected")?"checked":""} aria-label="Выбрать креатив"><span class="box">${ic("check",14)}</span></label>`:""}<button type="button" class="cr-save${this.b("saved")?" on":""}" data-tip="${this.b("saved")?"Убрать из сохранённых":"Сохранить в избранное"}" aria-pressed="${this.b("saved")}" aria-label="Сохранить креатив">${ic("bookmark")}</button>
       <button type="button" class="art${img||vid?"":" empty"}" data-open aria-label="Открыть подробности">${media}</button>
-      <div class="cr-b"><div class="cr-top"><button type="button" class="cr-t" data-open>${esc(headline)}</button><div class="cr-m">${this.a("domain")?`<img class="cr-fav" src="${esc(favUrl(this.a("domain")))}" alt="" width="14" height="14" loading="lazy" onerror="this.style.visibility='hidden'">`:""}${esc(this.a("domain"))}${this.a("date")?" · "+esc(this.a("date")):""}</div>${copy?`<p class="cr-copy">${esc(copy)}</p>`:""}</div><div class="cr-f"><nv-badge>${esc(this.a("platform"))}</nv-badge><nv-badge tone="accent">${esc(FORMAT[fm]||fm)}</nv-badge>${plats.map(p=>`<nv-badge tone="neutral">${esc(p)}</nv-badge>`).join("")}<span class="cr-copy-btns"><button type="button" data-act="copyField" data-value="${esc(headline)}" data-label="Заголовок" data-tip="Скопировать заголовок" aria-label="Скопировать заголовок">${ic("copy",13)}</button>${descFull?`<button type="button" data-act="copyField" data-value="${esc(descFull)}" data-label="Текст объявления" data-tip="Скопировать текст объявления" aria-label="Скопировать текст объявления">${ic("file-text",13)}</button>`:""}</span></div></div></article>`}
+      <div class="cr-b"><div class="cr-top"><button type="button" class="cr-t" data-open>${esc(headline)}</button><div class="cr-m">${this.a("domain")?`<img class="cr-fav" src="${esc(favUrl(this.a("domain")))}" alt="" width="14" height="14" loading="lazy" onerror="this.style.visibility='hidden'">`:""}${esc(this.a("domain"))}${this.a("date")?" · "+esc(this.a("date")):""}</div>${copy?`<p class="cr-copy">${esc(copy)}</p>`:""}</div><div class="cr-f"><nv-badge>${esc(this.a("platform"))}</nv-badge><nv-badge tone="accent">${esc(FORMAT[fm]||fm)}</nv-badge>${plats.map(p=>`<nv-badge tone="neutral">${esc(p)}</nv-badge>`).join("")}<span class="cr-copy-btns"><button type="button" data-act="studFromCreative" data-id="${this.a("cid")}" data-tip="Открыть в редакторе" aria-label="Открыть в редакторе">${ic("square-pen",13)}</button><button type="button" data-act="cardAddToCollection" data-id="${this.a("cid")}" data-tip="Добавить в подборку" aria-label="Добавить в подборку">${ic("folder-plus",13)}</button></span></div></div></article>`}
   mounted(){const q=s=>this.querySelector(s);this.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>this.emit("nv-open",{id:this.a("cid")}));
     q(".cr-save").onclick=()=>this.emit("nv-save",{id:this.a("cid"),saved:!this.b("saved")});
     const c=q(".cr-ck input");if(c)c.onchange=()=>this.emit("nv-select",{id:this.a("cid"),selected:c.checked})}
@@ -2987,6 +2987,7 @@ advertisers(){
 Object.assign(N.acts,{
   carouselOpen(a,d){openCreative(d.id)},
   copyField(a,d){const v=d.value||"";const done=()=>toast("Скопировано",{tone:"success"});if(navigator.clipboard)navigator.clipboard.writeText(v).then(done).catch(()=>toast("Браузер запретил копирование. Скопируйте текст вручную",{tone:"warning"}));else toast("Скопируйте текст вручную",{tone:"warning"})},
+  cardAddToCollection(a,d){const g=findGroup(d.id);if(!g){toast("Креатив не найден",{tone:"warning"});return}collectDlg([{group_key:g.group_key,creative_id:g.representative.id}])},
   libReset(){Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:""});loadLibrary()},
   bulkSave(){const set=new Set(S.intel.savedIds);S.intel.sel.forEach(g=>set.add(String(g.representative.id)));S.intel.savedIds=[...set];persistSavedCreativeIds(S.intel.savedIds);const n=S.intel.sel.length;S.intel.sel=[];N.refresh();toast("В избранное добавлено: "+n,{tone:"success"})},
   bulkCollect(){collectDlg(S.intel.sel.map(g=>({group_key:g.group_key,creative_id:g.representative.id})))},
@@ -3908,6 +3909,7 @@ function fileToDataUrl(file,maxDim){
   });
 }
 function studioLoadImg(src){return new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=src})}
+async function studioUrlToDataUrl(url,maxDim){const resp=await fetch(url,{mode:"cors"});if(!resp.ok)throw new Error("fetch failed");return await fileToDataUrl(await resp.blob(),maxDim)}
 function studioIconDataUrl(name,color){
   /* iconSvg()'s markup is written to be innerHTML'd into an existing document, where the
      HTML parser recognizes <svg> implicitly — it has no xmlns, which a standalone
@@ -4110,7 +4112,20 @@ Object.assign(N.acts,{
   studNew(){S.studio.editor=studioNewDesign();N.go("studio-editor")},
   studOpen(a,d){const x=S.studio.designs.find(y=>y.id===d.id);if(x){S.studio.editor=JSON.parse(JSON.stringify(x));S.studio.editor.selectedId=null;N.go("studio-editor")}},
   studDel(a,d){confirm({title:"Удалить дизайн?",text:"Это действие нельзя отменить.",confirm:"Удалить",danger:true,fn(){const i=S.studio.designs.findIndex(x=>x.id===d.id);if(i>=0)S.studio.designs.splice(i,1);N.refresh();NEON.save();toast("Дизайн удалён")}})},
-  studBgClear(){studioDesign().bg={type:"color",color:studioDesign().bg.color||"#ffffff"};N.refresh();NEON.save()}
+  studBgClear(){studioDesign().bg={type:"color",color:studioDesign().bg.color||"#ffffff"};N.refresh();NEON.save()},
+  async studFromCreative(a,d){
+    const g=findGroup(d.id);
+    if(!g){toast("Креатив не найден",{tone:"warning"});return}
+    const rep=g.representative,design=studioNewDesign();
+    design.name=(rep.title||"Новый дизайн").slice(0,60);
+    if(rep.image_url){
+      try{const{dataUrl}=await studioUrlToDataUrl(rep.image_url,1600);design.bg={type:"image",image:dataUrl}}
+      catch(e){design.bg={type:"image",image:rep.image_url}}
+    }
+    if(rep.title){const l=studioLayerDefaults("text");Object.assign(l,{text:rep.title,y:72,h:16,fontSize:6,color:"#ffffff",weight:"800"});design.layers.push(l)}
+    S.studio.editor=design;N.go("studio-editor");NEON.save();
+    toast("Дизайн создан из креатива",{tone:"success"});
+  }
 });
 document.body.addEventListener("input",e=>{
   if(e.target.matches("[data-act-bg-color]")){studioDesign().bg={type:"color",color:e.target.value};const stage=document.querySelector(".stud-stage");if(stage&&studioDesign().bg.type==="color")stage.style.background=e.target.value;NEON.save()}
