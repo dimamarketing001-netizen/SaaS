@@ -143,9 +143,6 @@ nv-page-header{display:block}
 .ph:has(.ph-back){background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:14px 20px;box-shadow:var(--shadow-1)}
 .ph-main .ph-back{position:relative;margin-right:2px;padding-right:16px}
 .ph-main .ph-back::after{content:"";position:absolute;right:0;top:50%;transform:translateY(-50%);width:1px;height:24px;background:var(--line)}
-.ph-actions .mn{height:36px;min-width:36px;border:1px solid var(--line-2);border-radius:var(--r-m);background:var(--surface);color:var(--ink-2)}
-.ph-actions .mn.txt{padding:0 12px 0 10px}
-.ph-actions .mn:hover,.ph-actions .mn[aria-expanded="true"]{border-color:var(--ink-3);background:var(--surface-2);color:var(--ink)}
 
 /* ---------- Кнопка ---------- */
 nv-button{display:inline-flex;vertical-align:middle;max-width:100%}
@@ -2000,7 +1997,7 @@ function shell(){
     <button type="button" class="rail-logo" data-go="${mainIds[0]}-${Object.keys(NEON.services[mainIds[0]].views)[0]}" aria-label="NEON, на главную">N</button>
     ${mainIds.map(railBtn).join("")}
   </nav>
-  <aside class="side" aria-label="Разделы сервиса"><div class="side-head"><div class="side-head-t"><h2>${esc(svc.name)}</h2><p>${esc(svc.tag||"")}</p></div><nv-button class="side-collapse-btn" variant="ghost" size="sm" icon="${collapsed?"panel-left-open":"panel-left-close"}" icon-only data-act="sideCollapse" hint="${collapsed?"Развернуть меню":"Свернуть меню"}">${collapsed?"Развернуть меню":"Свернуть меню"}</nv-button></div>
+  <aside class="side" aria-label="Разделы сервиса"><div class="side-head"><div class="side-head-t"><h2>${esc(svc.name)}</h2><p>${esc(svc.tag||"")}</p></div><nv-button class="side-collapse-btn" variant="ghost" size="sm" icon="${collapsed?"chevrons-right":"chevrons-left"}" icon-only data-act="sideCollapse" hint="${collapsed?"Развернуть меню":"Свернуть меню"}">${collapsed?"Развернуть меню":"Свернуть меню"}</nv-button></div>
     <button type="button" class="side-search" data-act="palette" aria-label="Поиск и команды">${ic("search",14)}<span>Поиск…</span><kbd>Ctrl K</kbd></button>
     <div id="side-nav">${sideNav()}</div>
   </aside>
@@ -2713,15 +2710,9 @@ collections(){
     const items=I.collectionItemsCache[open.id];
     return{title:open.name,sub:open.description||"Пользовательская подборка",
     back:"kBack",backLabel:"Все подборки",
-    actions:`<nv-menu data-act-col="${open.id}" label="Действия" items="dup:Дублировать:copy|del:Удалить:trash-2:danger"></nv-menu>`,
+    actions:`<nv-button variant="secondary" icon="copy" data-act="kDuplicate" data-id="${open.id}">Дублировать</nv-button><nv-button variant="danger" icon="trash-2" data-act="kDel" data-id="${open.id}">Удалить</nv-button>`,
     body:`<div id="k-res">${!items?'<nv-skeleton count="4"></nv-skeleton>':(items.length?gridOfCollectionItems(items,open.id):'<nv-card><nv-empty icon="folder-open" heading="В подборке пусто" text="Откройте библиотеку, отметьте креативы и нажмите «В подборку»."><nv-button data-go="intel-library" icon="layout-grid">Открыть библиотеку</nv-button></nv-empty></nv-card>')}</div>`,
-    after(root){
-      bindCards(root.querySelector("#k-res"));if(!items)openCollection(open.id);
-      root.querySelector("nv-menu[data-act-col]")?.addEventListener("nv-select",e=>{
-        if(e.detail.id==="dup")duplicateCollection(open.id);
-        else if(e.detail.id==="del")N.acts.kDel(null,{id:open.id});
-      });
-    }};
+    after(root){bindCards(root.querySelector("#k-res"));if(!items)openCollection(open.id)}};
   }
   return{title:"Подборки",sub:"Папки с креативами для команды: конкуренты, идеи, примеры для клиента.",actions:`<nv-button icon="plus" data-act="kNew">Новая подборка</nv-button>`,
   body:!I.collectionsLoaded?'<nv-skeleton count="3"></nv-skeleton>':`<div class="grid g3">${K.map(k=>`<nv-folder-card name="${esc(k.name)}" desc="${esc(k.description||"")}" count="${k.items_count||0}"><nv-button size="sm" variant="secondary" icon-end="arrow-right" data-act="kOpen" data-id="${k.id}">Открыть</nv-button><nv-menu data-col="${esc(k.id)}" items="dup:Дублировать:copy|del:Удалить:trash-2:danger"></nv-menu></nv-folder-card>`).join("")}${!K.length?'<nv-card><nv-empty icon="folder-heart" heading="Подборок пока нет" text="Создайте подборку, чтобы группировать находки для команды."><nv-button icon="plus" data-act="kNew">Новая подборка</nv-button></nv-empty></nv-card>':""}</div>`,
