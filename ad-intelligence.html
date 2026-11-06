@@ -375,6 +375,24 @@ nv-creative-card{display:block;min-width:0}
 .folder-name{margin:0;font:700 14.5px var(--font-display);color:var(--ink)}
 .folder-desc{margin:0;font-size:12.5px;line-height:1.4;color:var(--ink-3);flex:1}
 .folder-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.scanc{display:flex;flex-direction:column;gap:12px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l)}
+.scanc-h{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.scanc-ht h4{font-size:14.5px;font-weight:700}
+.scanc-sub{font-size:12.5px;color:var(--ink-3);margin-top:1px}
+.scanc-tl{display:flex;flex-direction:column;gap:6px}
+.scanc-bar{height:6px;background:var(--surface-3);border-radius:99px;overflow:hidden}
+.scanc-bar i{display:block;height:100%;border-radius:99px;background:var(--ink-3);transition:width .4s}
+.scanc-tl.t-running .scanc-bar i{background:var(--svc-ink)}
+.scanc-tl.t-done .scanc-bar i{background:var(--ok)}
+.scanc-tl.t-failed .scanc-bar i{background:var(--bad)}
+.scanc-tl.t-queued .scanc-bar i{background:var(--ink-3);opacity:.5}
+.scanc-tl.indet .scanc-bar{position:relative}
+.scanc-tl.indet .scanc-bar i{width:40%!important;position:absolute;animation:scancIndet 1.3s ease-in-out infinite}
+@keyframes scancIndet{0%{left:-40%}100%{left:100%}}
+.scanc-marks{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:11.5px;color:var(--ink-3)}
+.scanc-marks .scanc-note{font-weight:600;color:var(--ink-2);text-align:center;flex:1}
+.scanc-f{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.scanc-found{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink-2);font-weight:500}
 .cr-copy{font-size:12px;line-height:1.4;color:var(--ink-3);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cr-intent{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--svc-ink);background:var(--svc-soft);border-radius:999px;padding:3px 9px;align-self:flex-start;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .cr-ck{position:absolute;top:9px;left:9px;z-index:2}
@@ -1546,6 +1564,24 @@ define("nv-integration-card",class extends NvEl{
 define("nv-folder-card",class extends NvEl{
   html(){return `<article class="folder"><div class="folder-tab"></div><div class="folder-body"><div class="folder-top"><div class="folder-head">${ic(this.a("icon")||"folder",20)}${this.a("count")!==""?`<span class="folder-count">${esc(this.a("count"))}</span>`:""}</div><h3 class="folder-name">${esc(this.a("name"))}</h3>${this.a("desc")?`<p class="folder-desc">${esc(this.a("desc"))}</p>`:""}</div><div class="folder-foot" data-slot></div></div></article>`}
 },"Предметные",{desc:"Карточка-папка для подборок и коллекций — действия (кнопки, меню) передаются внутрь как обычное содержимое.",slot:"Кнопки действий",demoHtml:'<nv-button size="sm" variant="secondary" icon-end="arrow-right">Открыть</nv-button>',previewW:260,attrs:{name:{type:"string",default:"Конкуренты",desc:"Название папки"},desc:{type:"string",default:"Главные игроки в нише",desc:"Описание"},count:{type:"string",default:"24",desc:"Счётчик содержимого"},icon:{type:"string",default:"folder",desc:"Иконка"}}});
+define("nv-scan-card",class extends NvEl{
+  html(){
+    const st=this.a("status"),pctRaw=this.a("pct"),known=pctRaw!=="",pct=known?Math.max(0,Math.min(100,+pctRaw)):0,indet=this.b("indeterminate");
+    return `<article class="scanc"><div class="scanc-h"><div class="scanc-ht"><h4>${esc(this.a("title"))}</h4>${this.a("subtitle")?`<div class="scanc-sub">${esc(this.a("subtitle"))}</div>`:""}</div><nv-status value="${esc(st)}"></nv-status></div>
+    <div class="scanc-tl t-${esc(st)}${indet?" indet":""}"><div class="scanc-bar"><i style="width:${indet?100:pct}%"></i></div><div class="scanc-marks"><span>${esc(this.a("start-label"))}</span><span class="scanc-note">${esc(this.a("note"))}</span><span>${esc(this.a("end-label"))}</span></div></div>
+    <div class="scanc-f"><span class="scanc-found">${ic("layout-grid",13)}${esc(this.a("found"))} найдено</span><span data-slot></span></div></article>`;
+  }
+},"Предметные",{desc:"Карточка задания сканирования: статус, прогресс в виде шкалы времени (прошло/осталось), что уже найдено.",slot:"Кнопки действий",demoHtml:'<nv-button size="sm" variant="secondary" icon-end="arrow-right">Открыть</nv-button>',previewW:340,attrs:{
+  title:{type:"string",default:"кроссовки",desc:"Запрос"},
+  subtitle:{type:"string",default:"Москва",desc:"Город"},
+  status:{type:"enum",values:["queued","running","done","failed"],default:"running",desc:"Статус (совпадает со значениями nv-status)"},
+  pct:{type:"string",default:"62",desc:"Процент выполнения (оценка). Пусто — неизвестно"},
+  indeterminate:{type:"bool",desc:"Прогресс нельзя оценить — вместо процента полосатая анимация"},
+  "start-label":{type:"string",default:"Начато в 10:02",desc:"Подпись слева от шкалы"},
+  note:{type:"string",default:"~2 мин осталось",desc:"Подпись по центру шкалы — главное сообщение"},
+  "end-label":{type:"string",default:"",desc:"Подпись справа от шкалы"},
+  found:{type:"string",default:"12",desc:"Найдено креативов"}
+}});
 define("nv-kanban",class extends NvEl{
   set columns(v){this._c=v;this._init&&this.update()}
   html(){const cols=this._c||parseJSON(this.a("columns"),[]);const unit=this.a("currency")||"₽";
@@ -2444,12 +2480,34 @@ function gridOfCollectionItems(items,colId){
 async function loadScans(){
   try{
     const data=await api("/api/v1/runs",{limit:50});
-    S.intel.scans=(data.items||[]).map(r=>({id:r.id,key_text:r.key_text,city:r.city,status:r.status,total:r.total_creatives||0,started_at:r.started_at}));
+    S.intel.scans=(data.items||[]).map(r=>({id:r.id,key_text:r.key_text,city:r.city,status:r.status,total:r.total_creatives||0,created_at:r.created_at,started_at:r.started_at,finished_at:r.finished_at,error_text:r.error_text}));
     S.intel.scansLoaded=true;
     clearTimeout(S.intel._scanPoll);
     if((data.items||[]).some(r=>r.status==="queued"||r.status==="running"))S.intel._scanPoll=setTimeout(loadScans,5000);
     N.refreshIf("intel-scans");
   }catch(err){S.intel.scansLoaded=true;toast("Не удалось загрузить сканирования: "+(err.message||""),{tone:"danger"});N.refreshIf("intel-scans")}
+}
+function fmtMinutes(ms){const m=Math.round(ms/60000);return m<1?"меньше минуты":m+" мин"}
+function fmtTimeOnly(iso){if(!iso)return"—";const d=new Date(iso);return isNaN(d.getTime())?"—":d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}
+/* Медиана длительности уже завершённых заданий — единственная честная база для оценки ETA у текущих. */
+function scanDurationMedian(list){
+  const durs=list.filter(s=>s.status==="succeeded"&&s.started_at&&s.finished_at).map(s=>new Date(s.finished_at)-new Date(s.started_at)).filter(d=>d>0).sort((a,b)=>a-b);
+  return durs.length?durs[Math.floor(durs.length/2)]:null;
+}
+function scanCardInfo(s,medianMs){
+  if(s.status==="succeeded"){
+    const durMs=s.started_at&&s.finished_at?new Date(s.finished_at)-new Date(s.started_at):null;
+    return{status:"done",pct:"100",startLabel:"Начато в "+fmtTimeOnly(s.started_at),note:durMs!=null?"Готово за "+fmtMinutes(durMs):"Готово",endLabel:s.finished_at?fmtTimeOnly(s.finished_at):""};
+  }
+  if(s.status==="failed"){
+    const durMs=s.started_at&&s.finished_at?new Date(s.finished_at)-new Date(s.started_at):null;
+    return{status:"failed",pct:"100",startLabel:"Начато в "+fmtTimeOnly(s.started_at),note:durMs!=null?"Ошибка через "+fmtMinutes(durMs):"Ошибка",endLabel:s.finished_at?fmtTimeOnly(s.finished_at):""};
+  }
+  if(s.status==="queued")return{status:"queued",pct:"0",startLabel:"В очереди",note:"Ждёт воркера",endLabel:""};
+  if(!s.started_at||!medianMs)return{status:"running",pct:"",indeterminate:true,startLabel:s.started_at?"Начато в "+fmtTimeOnly(s.started_at):"Начинается",note:"Идёт сканирование…",endLabel:""};
+  const elapsed=Date.now()-new Date(s.started_at),remain=medianMs-elapsed;
+  const pct=Math.max(5,Math.min(96,Math.round(elapsed/medianMs*100)));
+  return{status:"running",pct:String(pct),startLabel:"Начато в "+fmtTimeOnly(s.started_at),note:remain>0?"~"+fmtMinutes(remain)+" осталось":"дольше обычного ("+fmtMinutes(elapsed)+")",endLabel:""};
 }
 function scanDlg(){
   overlay("modal",{title:"Новое сканирование",subtitle:"Воркер подберёт задание при следующем опросе и начнёт собирать креативы.",size:"md",
@@ -2696,17 +2754,17 @@ scans(){
     if(q&&!((s.key_text||"")+" "+(s.city||"")).toLowerCase().includes(q))return false;
     return true;
   });
+  const medianMs=scanDurationMedian(L);
   return{title:"Сканирования",sub:"Задания для парсера: что искать и где.",actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
   help:{steps:["Создайте задание: запрос и город.","Воркер заберёт его из очереди при следующем опросе.","Когда статус станет «Завершено», реклама появится в библиотеке."]},
   body:`<div class="grid g4">${stat("Всего задач",total)}${stat("Выполняется",active)}${stat("Завершено",done)}${stat("Ошибка",failed)}</div>
   <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Запрос или город" value="${esc(sf.q)}" data-chg="scanF" data-key="q"></nv-input><nv-select label="Статус" value="${esc(sf.status)}" options=":Все статусы|queued:В очереди|running:Выполняется|succeeded:Завершено|failed:Ошибка" data-chg="scanF" data-key="status"></nv-select>${(sf.q||sf.status)?'<nv-button variant="ghost" size="sm" icon="x" data-act="scanFReset">Сбросить</nv-button>':""}</div>
-  <nv-card flush><nv-table id="sc-t" clickable empty-text="Заданий по этим фильтрам нет"></nv-table></nv-card>`,
+  <div class="stack">${rows.length?rows.map(s=>{const info=scanCardInfo(s,medianMs);
+    return `<nv-scan-card title="${esc(s.key_text)}" subtitle="${esc(s.city||"")}" status="${esc(info.status)}" pct="${esc(info.pct)}" ${info.indeterminate?"indeterminate":""} start-label="${esc(info.startLabel)}" note="${esc(info.note)}" end-label="${esc(info.endLabel||"")}" found="${esc(s.total||0)}"><nv-button size="sm" variant="secondary" icon-end="arrow-right" data-act="scanOpen" data-id="${esc(s.id)}">Открыть</nv-button></nv-scan-card>`;
+  }).join(""):'<nv-card><nv-empty icon="search-x" heading="Заданий не найдено" text="Измените фильтры или создайте новое сканирование."><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>'}</div>`,
   after(root){
     if(!S.intel.scansLoaded)loadScans();
-    const t=root.querySelector("#sc-t");
-    t.columns=[{key:"id",label:"№",render:s=>`<span class="num">#${s.id}</span>`},{key:"key_text",label:"Запрос",render:s=>`<div class="cell-t">${esc(s.key_text)}</div><div class="cell-s">${esc(s.city||"")}</div>`},{key:"status",label:"Статус",render:s=>`<nv-status value="${RUN_STATUS_MAP[s.status]||s.status}"></nv-status>`},{key:"total",label:"Найдено",align:"right"},{key:"started_at",label:"Создано",render:s=>esc(fmtDateTime(s.started_at))}];
-    t.rows=rows.map(s=>({...s}));
-    t.addEventListener("nv-row-click",e=>{const s=L.find(x=>String(x.id)===e.detail.id);if(s)openScanDetail(s)});
+    root.querySelectorAll('[data-act="scanOpen"]').forEach(b=>b.onclick=()=>{const s=L.find(x=>String(x.id)===b.dataset.id);if(s)openScanDetail(s)});
   }}},
 overview(){
   const I=S.intel.ana;
