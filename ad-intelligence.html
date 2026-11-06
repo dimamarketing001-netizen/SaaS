@@ -1928,6 +1928,12 @@ async function apiPut(path,body){
  if(!res.ok){let detail="API error "+res.status;try{detail=errDetail(await res.json(),detail)}catch(e){}throw new Error(detail)}
  return res.json();
 }
+async function apiPatch(path,body){
+ const res=await fetch(API_BASE+path,{method:"PATCH",headers:{Authorization:"Bearer "+session.token,"Content-Type":"application/json"},body:JSON.stringify(body||{})});
+ if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
+ if(!res.ok){let detail="API error "+res.status;try{detail=errDetail(await res.json(),detail)}catch(e){}throw new Error(detail)}
+ return res.json();
+}
 function loadSavedCreativeIds(){try{const v=JSON.parse(localStorage.getItem("neon-ad-intelligence-saved")||"[]");return Array.isArray(v)?v.filter(x=>typeof x==="string"):[]}catch(e){return[]}}
 function persistSavedCreativeIds(ids){try{localStorage.setItem("neon-ad-intelligence-saved",JSON.stringify(ids))}catch(e){}}
 const DEFAULT_SAVED_VIEWS=[
@@ -1970,13 +1976,49 @@ function mergeState(fresh,savedPart){
   }
   return fresh;
 }
-S.core=mergeState({feed:[],sideCollapsed:false},saved.core);
+S.core=mergeState({sideCollapsed:false},saved.core);
 let saveT;
 NEON.save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},200)};
 
 NEON.register=svc=>{NEON.services[svc.id]=svc;NEON.order.push(svc.id);if(svc.seed)S[svc.id]=mergeState(svc.seed(),saved[svc.id]);svc.commands&&NEON.commands.push(...svc.commands.map(c=>({...c,svc:svc.id})))};
 
-NEON.log=(text,svc,go)=>{S.core.feed.unshift({text,svc,go,at:Date.now()});S.core.feed=S.core.feed.slice(0,30);NEON.save();updBell()};
+/* Уведомления и профиль — общие для всех сервисов, не сохраняются в localStorage
+   (всегда свежие с бэкенда, а не кэш, который может протухнуть между заходами). */
+const NOTIF_TYPES={
+  scan_done:{icon:"check-circle-2",label:"Сканирование завершено"},
+  scan_failed:{icon:"alert-octagon",label:"Ошибка сканирования"},
+  captcha_required:{icon:"shield-alert",label:"Нужна капча"},
+  collection_created:{icon:"folder-plus",label:"Новая подборка"},
+  landing_mismatch:{icon:"link-2-off",label:"Несовпадение посадочной"},
+};
+const NOTIF={items:[],unreadCount:0,loaded:false};
+const PROFILE={name:"",email:"",role:"",avatarDataUrl:"",prefs:{},loaded:false};
+async function loadNotifications(){
+  try{const d=await api("/api/v1/notifications",{limit:30});NOTIF.items=d.items||[];NOTIF.unreadCount=d.unread_count||0}catch(e){}
+  NOTIF.loaded=true;updBell();
+}
+async function loadProfile(){
+  try{const d=await api("/api/v1/profile",{});Object.assign(PROFILE,{name:d.name||"",email:d.email||"",role:d.role||"",avatarDataUrl:d.avatar_data_url||"",prefs:d.notification_prefs||{}})}catch(e){}
+  PROFILE.loaded=true;
+  const av=document.querySelector(".top-av nv-avatar");
+  if(av){av.setAttribute("name",PROFILE.name||session.email||"?");if(PROFILE.avatarDataUrl)av.setAttribute("src",PROFILE.avatarDataUrl)}
+}
+NEON.loadNotifications=loadNotifications;
+NEON.loadProfile=loadProfile;
+function resizeImageFile(file,size){
+  return new Promise((resolve,reject)=>{
+    const img=new Image(),url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const c=document.createElement("canvas");c.width=size;c.height=size;
+      const ctx=c.getContext("2d"),side=Math.min(img.width,img.height),sx=(img.width-side)/2,sy=(img.height-side)/2;
+      ctx.drawImage(img,sx,sy,side,side,0,0,size,size);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL("image/jpeg",0.86));
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Не удалось прочитать изображение"))};
+    img.src=url;
+  });
+}
 
 NEON.daysAgo=n=>new Date(Date.now()-n*864e5).toISOString();
 NEON.rel=iso=>{if(!iso)return"";const d=Math.floor((Date.now()-new Date(iso))/864e5);return d<=0?"сегодня":d===1?"вчера":d<5?d+" дня назад":d<21?d+" дн. назад":new Date(iso).toLocaleDateString("ru-RU")};
@@ -2005,8 +2047,8 @@ function shell(){
     <nv-button class="burger" variant="ghost" icon="menu" icon-only data-act="navOpen">Открыть меню</nv-button>
     <div class="crumbs" id="crumbs"></div>
     <span class="top-sp"></span>
-    <nv-button variant="ghost" icon="bell" icon-only data-act="feed" id="bell" hint="События">События</nv-button>
-    <button type="button" class="top-av" data-act="account" aria-label="Аккаунт" data-tip="Аккаунт"><nv-avatar name="${esc(session.email||"?")}" size="34"></nv-avatar></button>
+    <nv-button variant="ghost" icon="bell" icon-only data-act="notifOpen" id="bell" hint="Уведомления">Уведомления</nv-button>
+    <button type="button" class="top-av" data-act="account" aria-label="Профиль" data-tip="Профиль"><nv-avatar name="${esc(PROFILE.name||session.email||"?")}" src="${esc(PROFILE.avatarDataUrl||"")}" size="34"></nv-avatar></button>
   </header><main class="scroll" id="scroll"><div class="view" id="view"></div></main></div></div>`;
 }
 function sideNav(){
@@ -2032,7 +2074,7 @@ NEON.render=render;
 NEON.refresh=()=>{renderView(true);NEON.save()};
 NEON.refreshIf=(...keys)=>{const{s,v}=route();if(keys.includes(s+"-"+v))renderView(true)};
 window.addEventListener("hashchange",()=>{document.getElementById("shell")&&document.getElementById("shell").classList.remove("nav-open");render()});
-function updBell(){const b=document.getElementById("bell");if(!b)return;const n=S.core.feed.filter(f=>!f.read).length;b.setAttribute("label",n?"События, новых: "+n:"События");const old=b.querySelector(".belln");old&&old.remove();if(n){const i=document.createElement("span");i.className="belln";i.textContent=n;i.style.cssText="position:absolute;margin:-22px 0 0 18px;background:var(--bad);color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:0 5px;pointer-events:none";b.style.position="relative";b.append(i)}}
+function updBell(){const b=document.getElementById("bell");if(!b)return;const n=NOTIF.unreadCount;b.setAttribute("label",n?"Уведомления, новых: "+n:"Уведомления");const old=b.querySelector(".belln");old&&old.remove();if(n){const i=document.createElement("span");i.className="belln";i.textContent=n;i.style.cssText="position:absolute;margin:-22px 0 0 18px;background:var(--bad);color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:0 5px;pointer-events:none";b.style.position="relative";b.append(i)}}
 
 document.addEventListener("click",e=>{
   const g=e.target.closest("[data-go]");if(g){e.preventDefault();[...document.querySelectorAll(".ov")].forEach(o=>o.remove());NEON.go(g.dataset.go);return}
@@ -2047,8 +2089,73 @@ NEON.acts.navClose=()=>document.getElementById("shell").classList.remove("nav-op
 NEON.acts.sideCollapse=()=>{S.core.sideCollapsed=!S.core.sideCollapsed;NEON.save();render()};
 NEON.acts.themeSet=(a,d)=>{document.documentElement.dataset.theme=d.v;try{localStorage.setItem("neon-theme",d.v)}catch(e){}};
 try{const t=localStorage.getItem("neon-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}
-NEON.acts.feed=()=>{const f=S.core.feed;f.forEach(x=>x.read=true);NEON.save();updBell();overlay("drawer",{title:"События",subtitle:"Что произошло в сервисе",size:"sm",body:f.length?`<div class="list">${f.map(x=>`<div class="stack" style="gap:2px"><div>${esc(x.text)}</div><div class="row between"><span class="muted" style="font-size:12.5px">${esc((NEON.services[x.svc]||{}).name||"")} · ${NEON.ago(x.at)}</span>${x.go?`<nv-button variant="link" size="sm" data-go="${esc(x.go)}">Открыть</nv-button>`:""}</div></div>`).join("")}</div>`:`<nv-empty icon="bell" heading="Пока тихо" text="Здесь появятся завершённые сканирования и новые подборки."></nv-empty>`})};
-NEON.acts.account=()=>overlay("drawer",{title:"Аккаунт",size:"sm",body:`<dl class="dl"><dt>Email</dt><dd>${esc(session.email||"—")}</dd><dt>Роль</dt><dd>${esc(session.role==="admin"?"Администратор":"Клиент")}</dd></dl><nv-button variant="danger" full icon="log-out" data-act="logout">Выйти</nv-button>`});
+NEON.acts.notifOpen=async()=>{
+  if(!NOTIF.loaded)await loadNotifications();
+  const list=NOTIF.items;
+  overlay("drawer",{title:"Уведомления",subtitle:"Что произошло в сервисе",size:"sm",
+    body:`<div class="row" style="justify-content:flex-end;margin-bottom:8px"><nv-button variant="ghost" size="sm" icon="settings" icon-only hint="Настроить уведомления" data-notif-settings>Настроить уведомления</nv-button></div>
+    ${list.length?`<div class="list">${list.map(x=>{const meta=NOTIF_TYPES[x.type]||{icon:"bell"};
+      return `<div class="stack" style="gap:2px;padding:8px 0;border-top:1px solid var(--line)"><div class="row" style="gap:8px;align-items:flex-start">${ic(meta.icon,15)}<div style="flex:1;min-width:0"><div>${esc(x.title)}</div>${x.text?`<div class="muted" style="font-size:12.5px">${esc(x.text)}</div>`:""}<div class="row between" style="margin-top:3px"><span class="muted" style="font-size:12px">${esc(NEON.ago(new Date(x.created_at).getTime()))}</span>${x.link?`<nv-button variant="link" size="sm" data-go="${esc(x.link)}">Открыть</nv-button>`:""}</div></div></div></div>`;
+    }).join("")}</div>`:`<nv-empty icon="bell" heading="Пока тихо" text="Здесь появятся завершённые сканирования, несовпадения посадочной и другие события."></nv-empty>`}`,
+    mount(root,close){root.querySelector("[data-notif-settings]").onclick=()=>{close();NEON.acts.account(null,{section:"notifications"})}}
+  });
+  if(NOTIF.unreadCount){try{await apiPost("/api/v1/notifications/read-all",{})}catch(e){}NOTIF.unreadCount=0;updBell()}
+};
+NEON.acts.account=async(a,d)=>{
+  if(!PROFILE.loaded)await loadProfile();
+  const prefRows=Object.entries(NOTIF_TYPES).map(([id,meta])=>({id,label:meta.label,values:[PROFILE.prefs[id]!==false]}));
+  overlay("drawer",{title:"Профиль",subtitle:PROFILE.email||session.email,size:"md",
+    body:`<div class="sect-t">Профиль</div>
+    <nv-avatar-upload name="${esc(PROFILE.name||session.email||"?")}" image="${esc(PROFILE.avatarDataUrl||"")}" hint="PNG или JPG, обрежется квадратом"></nv-avatar-upload>
+    <nv-input name="name" label="Имя" value="${esc(PROFILE.name||"")}" placeholder="Например, Дима"></nv-input>
+    <dl class="dl"><dt>Email</dt><dd>${esc(PROFILE.email||session.email||"—")}</dd><dt>Роль</dt><dd>${esc(PROFILE.role==="admin"?"Администратор":"Клиент")}</dd></dl>
+    <nv-button variant="primary" size="sm" data-act-save-profile>Сохранить профиль</nv-button>
+    <div class="sect-t" style="margin-top:18px">Пароль</div>
+    <nv-password-input name="curpw" label="Текущий пароль"></nv-password-input>
+    <nv-password-input name="newpw" label="Новый пароль" strength></nv-password-input>
+    <nv-button variant="secondary" size="sm" data-act-change-pw>Сменить пароль</nv-button>
+    <div class="sect-t" id="notif-prefs-sect" style="margin-top:18px">Уведомления</div>
+    <nv-notify-matrix channels="В сервисе" rows='${esc(JSON.stringify(prefRows))}'></nv-notify-matrix>
+    <nv-button variant="danger" full icon="log-out" data-act="logout" style="margin-top:18px">Выйти</nv-button>`,
+    mount(root){
+      if(d&&d.section==="notifications")setTimeout(()=>root.querySelector("#notif-prefs-sect")?.scrollIntoView({block:"start"}),50);
+      const au=root.querySelector("nv-avatar-upload");
+      /* nv-avatar-upload's own change handler calls this.update() (replacing its <input>,
+         wiping .files) BEFORE it emits nv-change — so by the time a bubble-phase nv-change
+         listener runs, the File is already gone. A capture-phase "change" listener on an
+         ancestor fires on the way DOWN, before the input's own handler runs at all. */
+      root.addEventListener("change",e=>{
+        if(!e.target.matches('nv-avatar-upload input[type="file"]'))return;
+        const file=e.target.files[0];
+        if(!file)return;
+        resizeImageFile(file,160).then(dataUrl=>apiPost("/api/v1/profile/avatar",{data_url:dataUrl}).then(()=>{
+          PROFILE.avatarDataUrl=dataUrl;
+          document.querySelectorAll(".top-av nv-avatar").forEach(el=>el.setAttribute("src",dataUrl));
+          toast("Фото обновлено",{tone:"success"});
+        })).catch(err=>toast("Не удалось загрузить фото: "+(err.message||""),{tone:"danger"}));
+      },true);
+      au.addEventListener("nv-error",e=>toast(e.detail.message,{tone:"danger"}));
+      root.querySelector("[data-act-save-profile]").onclick=async()=>{
+        const name=root.querySelector('nv-input[name="name"]').value.trim();
+        try{await apiPatch("/api/v1/profile",{name});PROFILE.name=name;toast("Профиль сохранён",{tone:"success"});render()}
+        catch(err){toast("Не удалось сохранить: "+(err.message||""),{tone:"danger"})}
+      };
+      root.querySelector("[data-act-change-pw]").onclick=async()=>{
+        const curEl=root.querySelector('nv-password-input[name="curpw"]'),newEl=root.querySelector('nv-password-input[name="newpw"]');
+        const cur=curEl.value,nw=newEl.value;
+        if(!cur||!nw){toast("Заполните оба поля",{tone:"warning"});return}
+        if(nw.length<8){toast("Новый пароль — минимум 8 символов",{tone:"warning"});return}
+        try{await apiPost("/api/v1/auth/change-password",{current_password:cur,new_password:nw});toast("Пароль изменён",{tone:"success"});curEl.value="";newEl.value=""}
+        catch(err){toast("Не удалось сменить пароль: "+(err.message||""),{tone:"danger"})}
+      };
+      root.querySelector("nv-notify-matrix").addEventListener("nv-toggle",async e=>{
+        PROFILE.prefs[e.detail.id]=e.detail.value;
+        try{await apiPut("/api/v1/profile/notification-prefs",{prefs:PROFILE.prefs})}
+        catch(err){toast("Не удалось сохранить настройку: "+(err.message||""),{tone:"danger"})}
+      });
+    }
+  });
+};
 NEON.acts.logout=()=>{localStorage.removeItem("parsya_session");location.replace("index.html")};
 
 /* Поиск и команды: Ctrl+K */
@@ -3649,6 +3756,8 @@ N.register({id:"conv",name:"Конверсия в Метрику",short:"Кон�
 Object.assign(S.conv,{idsLoaded:false,sourcesLoaded:false,mappingsLoaded:false,unmappedLoaded:false,usersLoaded:false});
 S.conv.log.loaded=false;
 
+NEON.loadNotifications();
+NEON.loadProfile();
 NEON.start();
 })();
 </script>
