@@ -1301,6 +1301,25 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stud-color input[type="color"]{width:36px;height:36px;border:1px solid var(--line-2);border-radius:9px;padding:2px;background:none;cursor:pointer}
 .stud-designs-grid .stud-thumb{aspect-ratio:1;background:var(--surface-2);border-radius:var(--r-l) var(--r-l) 0 0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--ink-3)}
 .stud-designs-grid .stud-thumb img{width:100%;height:100%;object-fit:contain}
+.stud-layer-shape{box-sizing:border-box}
+.stud-layer.sel2{outline:2px dashed var(--ink-3);outline-offset:1px}
+.stud-stage.pen-on{cursor:crosshair}
+.stud-pen-overlay,.stud-edit-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.stud-anchor,.stud-handle{position:absolute;transform:translate(-50%,-50%);border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.35);cursor:pointer;padding:0;pointer-events:auto}
+.stud-anchor{width:11px;height:11px;background:var(--svc-ink);border-radius:2px}
+.stud-anchor.pt-on{background:#fff;border-color:var(--svc-ink)}
+.stud-handle{width:9px;height:9px;background:#fff;border-color:var(--svc-ink);border-radius:50%}
+.stud-tool.on{border-color:var(--svc-ink);background:var(--svc-soft);color:var(--svc-ink)}
+.stud-align-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.stud-align-row button{display:flex;align-items:center;justify-content:center;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink-2);cursor:pointer}
+.stud-align-row button:hover{border-color:var(--svc-ink);color:var(--svc-ink)}
+.stud-num-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stud-num-row .fld{display:flex;flex-direction:column;gap:3px}
+.stud-num-row .fld span{font-size:11px;color:var(--ink-3)}
+.stud-num-row input[type="number"]{width:100%;border:1px solid var(--line-2);border-radius:7px;padding:5px 7px;font-size:12.5px;background:var(--surface)}
+.stud-seg2{display:flex;gap:6px}
+.stud-seg2 button{flex:1;padding:6px 4px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink-2);cursor:pointer;font-size:11.5px}
+.stud-seg2 button.on{border-color:var(--svc-ink);background:var(--svc-soft);color:var(--svc-ink)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 <div id="app"></div>
@@ -3806,34 +3825,100 @@ const studioSeed=()=>({designs:[],editor:studioNewDesign()});
 function studioDesign(){return S.studio.editor}
 function studioSelected(){const d=studioDesign();return d.layers.find(l=>l.id===d.selectedId)||null}
 const STUDIO_ICONS=["star","heart","zap","flame","gift","tag","badge-percent","thumbs-up","sparkles","trophy","shield-check","truck","clock","phone","map-pin","award","check-circle-2","rocket"];
+const studioDefFill=c=>({type:"solid",color:c,color2:"#0ea5e9",angle:90});
+const studioDefStroke=(on,c)=>({enabled:!!on,color:c||"#111827",width:3,dash:"solid"});
 function studioLayerDefaults(type,sub){
-  const base={id:studioUid(),type,x:20,y:44,w:60,h:12,rotation:0};
+  const base={id:studioUid(),type,x:20,y:44,w:60,h:12,rotation:0,opacity:100};
   if(type==="text")return{...base,text:"Текст",fontSize:7,color:"#161a18",weight:"700",align:"center"};
   if(type==="image")return{...base,y:30,h:40,src:""};
   if(type==="icon")return{...base,y:35,w:18,h:18,icon:sub||"star",color:"#16c784"};
+  if(type==="path")return{...base,points:[],closed:false,fill:studioDefFill("#16c784"),stroke:studioDefStroke(true,"#16c784")};
   if(type==="shape"){
     const shape=sub||"rect";
-    if(shape==="line")return{...base,y:40,h:3,shape,color:"#16c784",radius:0};
-    return{...base,y:35,h:30,shape,color:"#16c784",radius:12};
+    if(shape==="line")return{...base,y:40,h:3,shape,fill:studioDefFill("#16c784"),stroke:studioDefStroke(false),radius:0};
+    return{...base,y:35,h:30,shape,fill:studioDefFill("#16c784"),stroke:studioDefStroke(false),radius:12};
   }
   return base;
 }
-function studioLayerIcon(l){if(l.type==="text")return"type";if(l.type==="image")return"image";if(l.type==="icon")return l.icon||"star";return l.shape==="ellipse"?"circle":l.shape==="triangle"?"triangle":l.shape==="line"?"minus":"square"}
-function studioLayerLabel(l){if(l.type==="text")return(l.text||"Текст").slice(0,22);if(l.type==="image")return"Изображение";if(l.type==="icon")return"Иконка";return{rect:"Прямоугольник",ellipse:"Эллипс",triangle:"Треугольник",line:"Линия"}[l.shape]||"Фигура"}
+/* Старые сохранённые дизайны (до градиентов/обводки) хранят у фигур только
+   l.color — эти геттеры читают l.fill/l.stroke, если есть, иначе достраивают
+   их на лету из l.color, без мутации сохранённого объекта. */
+function studioFillOf(l){return l.fill||{type:"solid",color:l.color||"#16c784",color2:"#0ea5e9",angle:90}}
+function studioStrokeOf(l){return l.stroke||{enabled:false,color:"#111827",width:3,dash:"solid"}}
+function studioOpacityOf(l){return l.opacity==null?100:l.opacity}
+function studioDashArr(dash,scale){const s=scale||1;return dash==="dashed"?`${8*s},${6*s}`:dash==="dotted"?`${2*s},${4*s}`:""}
+function studioGradLine(x,y,w,h,angle){
+  const rad=(angle-90)*Math.PI/180,dx=Math.cos(rad),dy=Math.sin(rad),cx=x+w/2,cy=y+h/2,half=Math.sqrt(w*w+h*h)/2;
+  return{x0:cx-half*dx,y0:cy-half*dy,x1:cx+half*dx,y1:cy+half*dy};
+}
+function studioLayerIcon(l){if(l.type==="text")return"type";if(l.type==="image")return"image";if(l.type==="icon")return l.icon||"star";if(l.type==="path")return"spline";return l.shape==="ellipse"?"circle":l.shape==="triangle"?"triangle":l.shape==="line"?"minus":"square"}
+function studioLayerLabel(l){if(l.type==="text")return(l.text||"Текст").slice(0,22);if(l.type==="image")return"Изображение";if(l.type==="icon")return"Иконка";if(l.type==="path")return"Кривая";return{rect:"Прямоугольник",ellipse:"Эллипс",triangle:"Треугольник",line:"Линия"}[l.shape]||"Фигура"}
+function studioFillCss(f){if(f.type==="none")return"transparent";if(f.type==="gradient")return`linear-gradient(${f.angle||90}deg,${esc(f.color)},${esc(f.color2)})`;return esc(f.color)}
+function studioStrokeCssBorder(s){return s.enabled?`${s.width}px ${s.dash==="dashed"?"dashed":s.dash==="dotted"?"dotted":"solid"} ${esc(s.color)}`:"none"}
+function studioPathD(l){
+  const pts=l.points||[];if(pts.length<2)return"";
+  let d=`M ${pts[0].x} ${pts[0].y}`;
+  for(let i=1;i<pts.length;i++){
+    const p0=pts[i-1],p1=pts[i];
+    const c1x=p0.out?p0.x+p0.out.dx:p0.x,c1y=p0.out?p0.y+p0.out.dy:p0.y;
+    const c2x=p1.in?p1.x+p1.in.dx:p1.x,c2y=p1.in?p1.y+p1.in.dy:p1.y;
+    d+=` C ${c1x} ${c1y} ${c2x} ${c2y} ${p1.x} ${p1.y}`;
+  }
+  if(l.closed){
+    const p0=pts[pts.length-1],p1=pts[0];
+    const c1x=p0.out?p0.x+p0.out.dx:p0.x,c1y=p0.out?p0.y+p0.out.dy:p0.y;
+    const c2x=p1.in?p1.x+p1.in.dx:p1.x,c2y=p1.in?p1.y+p1.in.dy:p1.y;
+    d+=` C ${c1x} ${c1y} ${c2x} ${c2y} ${p1.x} ${p1.y} Z`;
+  }
+  return d;
+}
 function studioLayerInner(l){
   if(l.type==="text")return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"}">${esc(l.text)}</div>`;
   if(l.type==="image")return l.src?`<div class="stud-layer-image"><img src="${esc(l.src)}" alt="" draggable="false"></div>`:`<div class="stud-layer-image stud-layer-empty">${ic("image",22)}</div>`;
   if(l.type==="icon")return`<div class="stud-layer-icon" style="color:${esc(l.color)}">${iconSvg(l.icon||"star")}</div>`;
+  if(l.type==="path"){
+    const f=studioFillOf(l),s=studioStrokeOf(l),gid="pg-"+l.id;
+    return`<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:100%;overflow:visible">${f.type==="gradient"?`<defs><linearGradient id="${gid}" gradientTransform="rotate(${f.angle||90} .5 .5)"><stop offset="0" stop-color="${esc(f.color)}"/><stop offset="1" stop-color="${esc(f.color2)}"/></linearGradient></defs>`:""}<path d="${studioPathD(l)}" fill="${f.type==="none"?"none":f.type==="gradient"?`url(#${gid})`:esc(f.color)}" stroke="${s.enabled?esc(s.color):"none"}" stroke-width="${s.width}" stroke-dasharray="${studioDashArr(s.dash)}" vector-effect="non-scaling-stroke"/></svg>`;
+  }
   if(l.type==="shape"){
-    if(l.shape==="triangle")return`<div class="stud-layer-shape" style="background:${esc(l.color)};clip-path:polygon(50% 0%,0% 100%,100% 100%)"></div>`;
-    return`<div class="stud-layer-shape" style="background:${esc(l.color)};border-radius:${l.shape==="ellipse"?"50%":(l.radius||0)+"px"}"></div>`;
+    const f=studioFillOf(l),s=studioStrokeOf(l);
+    if(l.shape==="triangle")return`<div class="stud-layer-shape" style="background:${studioFillCss(f)};clip-path:polygon(50% 0%,0% 100%,100% 100%)"></div>`;
+    return`<div class="stud-layer-shape" style="background:${studioFillCss(f)};border:${studioStrokeCssBorder(s)};border-radius:${l.shape==="ellipse"?"50%":(l.radius||0)+"px"}"></div>`;
   }
   return"";
 }
-function studioLayerHtml(l,on){return`<div class="stud-layer${on?" on":""}" data-id="${esc(l.id)}" data-type="${l.type}" style="left:${l.x}%;top:${l.y}%;width:${l.w}%;height:${l.h}%;transform:rotate(${l.rotation||0}deg)">${studioLayerInner(l)}${on?`<span class="stud-h" aria-hidden="true"></span>`:""}</div>`}
+function studioLayerHtml(l,on,sel2){return`<div class="stud-layer${on?" on":""}${sel2?" sel2":""}" data-id="${esc(l.id)}" data-type="${l.type}" style="left:${l.x}%;top:${l.y}%;width:${l.w}%;height:${l.h}%;transform:rotate(${l.rotation||0}deg);opacity:${studioOpacityOf(l)/100}">${studioLayerInner(l)}${on?`<span class="stud-h" aria-hidden="true"></span>`:""}</div>`}
+function studioPenPreviewHtml(){
+  if(!studioPenDraft)return"";
+  const pts=studioPenDraft.points,cur=studioPenDraft.cursor;
+  let d=pts.length?`M ${pts[0].x} ${pts[0].y}`:"";
+  for(let i=1;i<pts.length;i++){
+    const p0=pts[i-1],p1=pts[i];
+    const c1x=p0.out?p0.x+p0.out.dx:p0.x,c1y=p0.out?p0.y+p0.out.dy:p0.y;
+    const c2x=p1.in?p1.x+p1.in.dx:p1.x,c2y=p1.in?p1.y+p1.in.dy:p1.y;
+    d+=` C ${c1x} ${c1y} ${c2x} ${c2y} ${p1.x} ${p1.y}`;
+  }
+  let rubber="";
+  if(cur&&pts.length){const last=pts[pts.length-1],cx=last.out?last.x+last.out.dx:last.x,cy=last.out?last.y+last.out.dy:last.y;rubber=`<path d="M ${last.x} ${last.y} C ${cx} ${cy} ${cur.x} ${cur.y} ${cur.x} ${cur.y}" fill="none" stroke="#16c784" stroke-width="0.4" stroke-dasharray="1.2,1" vector-effect="non-scaling-stroke"/>`}
+  const dots=pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="0.9" fill="#fff" stroke="#16c784" stroke-width="0.4"/>`).join("");
+  return`<svg class="stud-pen-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">${d?`<path d="${d}" fill="none" stroke="#16c784" stroke-width="0.4" vector-effect="non-scaling-stroke"/>`:""}${rubber}${dots}</svg>`;
+}
+function studioEditOverlayHtml(){
+  if(!studioEditingPathId)return"";
+  const d=studioDesign(),l=d.layers.find(x=>x.id===studioEditingPathId);if(!l||l.type!=="path")return"";
+  const pts=l.points||[];
+  let lines="";
+  const btns=pts.map((p,i)=>{
+    let h="";
+    if(p.out)h+=`<div class="stud-handle" data-pt="${i}" data-side="out" style="left:${l.x+(p.x+p.out.dx)/100*l.w}%;top:${l.y+(p.y+p.out.dy)/100*l.h}%"></div>`;
+    if(p.in)h+=`<div class="stud-handle" data-pt="${i}" data-side="in" style="left:${l.x+(p.x+p.in.dx)/100*l.w}%;top:${l.y+(p.y+p.in.dy)/100*l.h}%"></div>`;
+    return `<div class="stud-anchor${i===studioEditingPointIndex?" pt-on":""}" data-pt="${i}" data-side="anchor" style="left:${l.x+p.x/100*l.w}%;top:${l.y+p.y/100*l.h}%"></div>${h}`;
+  }).join("");
+  return`<div class="stud-edit-overlay">${btns}</div>`;
+}
 function studioStageHtml(){
   const d=studioDesign(),fmt=STUDIO_FMT[d.format],bgStyle=d.bg.type==="image"&&d.bg.image?`background-image:url('${esc(d.bg.image)}')`:`background:${esc(d.bg.color||"#fff")}`;
-  return`<div class="stud-stage" style="aspect-ratio:${fmt.w}/${fmt.h};${bgStyle}">${d.layers.map(l=>studioLayerHtml(l,l.id===d.selectedId)).join("")}</div>`;
+  return`<div class="stud-stage${studioTool==="pen"?" pen-on":""}" style="aspect-ratio:${fmt.w}/${fmt.h};${bgStyle}">${d.layers.map(l=>studioLayerHtml(l,l.id===d.selectedId,studioMultiSel.includes(l.id))).join("")}${studioPenPreviewHtml()}${studioEditOverlayHtml()}</div>`;
 }
 function studioLayersListHtml(){
   const d=studioDesign();
@@ -3841,14 +3926,55 @@ function studioLayersListHtml(){
   return`<div class="stud-layers">${d.layers.map((l,i)=>`<div class="stud-layer-row${l.id===d.selectedId?" on":""}" data-sel="${esc(l.id)}">${ic(studioLayerIcon(l),14)}<span>${esc(studioLayerLabel(l))}</span><span class="row-ic"><button type="button" data-mv="${esc(l.id)}" data-dir="-1" aria-label="Выше" ${i===0?"disabled":""}>${ic("chevron-up",13)}</button><button type="button" data-mv="${esc(l.id)}" data-dir="1" aria-label="Ниже" ${i===d.layers.length-1?"disabled":""}>${ic("chevron-down",13)}</button><button type="button" data-del="${esc(l.id)}" aria-label="Удалить слой">${ic("trash-2",13)}</button></span></div>`).join("")}</div>`;
 }
 function studioPropsCommonHtml(l){
-  return`<div class="stud-quick-row">
+  return`<div class="stud-num-row">
+    <label class="fld"><span>X %</span><input type="number" step="1" value="${Math.round(l.x)}" data-prop="x"></label>
+    <label class="fld"><span>Y %</span><input type="number" step="1" value="${Math.round(l.y)}" data-prop="y"></label>
+    <label class="fld"><span>Ширина %</span><input type="number" step="1" min="1" value="${Math.round(l.w)}" data-prop="w"></label>
+    <label class="fld"><span>Высота %</span><input type="number" step="1" min="1" value="${Math.round(l.h)}" data-prop="h"></label>
+  </div>
+  <div class="stud-quick-row">
     <button type="button" class="nv-btn v-secondary s-sm" icon-only data-tip="По центру по горизонтали" data-act-center="h">${ic("align-horizontal-justify-center",14)}</button>
     <button type="button" class="nv-btn v-secondary s-sm" icon-only data-tip="По центру по вертикали" data-act-center="v">${ic("align-vertical-justify-center",14)}</button>
     <button type="button" class="nv-btn v-secondary s-sm" icon-only data-tip="Дублировать" data-act-dup>${ic("copy",14)}</button>
   </div>
-  <div class="fld"><span class="lbl">Поворот</span><div class="rng"><input type="range" min="0" max="360" step="1" value="${l.rotation||0}" data-prop="rotation"><output>${l.rotation||0}°</output></div></div>`;
+  <div class="fld"><span class="lbl">Поворот</span><div class="rng"><input type="range" min="0" max="360" step="1" value="${l.rotation||0}" data-prop="rotation"><output>${l.rotation||0}°</output></div></div>
+  <div class="fld"><span class="lbl">Прозрачность</span><div class="rng"><input type="range" min="0" max="100" step="1" value="${studioOpacityOf(l)}" data-prop="opacity"><output>${studioOpacityOf(l)}%</output></div></div>`;
+}
+function studioFillStrokeHtml(l){
+  const f=studioFillOf(l),s=studioStrokeOf(l);
+  return`<div class="sect-t" style="margin-top:2px">Заливка</div>
+  <div class="stud-seg2">${[["solid","Цвет"],["gradient","Градиент"],["none","Нет"]].map(([v,lb])=>`<button type="button" class="${f.type===v?"on":""}" data-prop-set="fill.type" data-val="${v}">${lb}</button>`).join("")}</div>
+  ${f.type!=="none"?`<div class="stud-color"><span class="lbl">Цвет${f.type==="gradient"?" 1":""}</span><input type="color" value="${esc(f.color)}" data-prop="fill.color"></div>`:""}
+  ${f.type==="gradient"?`<div class="stud-color"><span class="lbl">Цвет 2</span><input type="color" value="${esc(f.color2)}" data-prop="fill.color2"></div>
+  <div class="fld"><span class="lbl">Угол градиента</span><div class="rng"><input type="range" min="0" max="360" step="5" value="${f.angle||90}" data-prop="fill.angle"><output>${f.angle||90}°</output></div></div>`:""}
+  <div class="sect-t" style="margin-top:2px">Обводка</div>
+  <div class="stud-seg2"><button type="button" class="${!s.enabled?"on":""}" data-prop-set="stroke.enabled" data-val="">Нет</button><button type="button" class="${s.enabled?"on":""}" data-prop-set="stroke.enabled" data-val="1">Есть</button></div>
+  ${s.enabled?`<div class="stud-color"><span class="lbl">Цвет обводки</span><input type="color" value="${esc(s.color)}" data-prop="stroke.color"></div>
+  <div class="fld"><span class="lbl">Толщина</span><div class="rng"><input type="range" min="1" max="20" step="1" value="${s.width}" data-prop="stroke.width"><output>${s.width}px</output></div></div>
+  <div class="stud-seg2">${[["solid","Линия"],["dashed","Штрих"],["dotted","Точки"]].map(([v,lb])=>`<button type="button" class="${s.dash===v?"on":""}" data-prop-set="stroke.dash" data-val="${v}">${lb}</button>`).join("")}</div>`:""}`;
+}
+function studioAlignDistributeHtml(){
+  return`<p class="muted" style="font-size:12.5px">Выбрано слоёв: ${studioMultiSel.length}. Выравнивание — относительно общего охвата выбранных.</p>
+  <div class="sect-t">Выравнивание</div>
+  <div class="stud-align-row">
+    <button type="button" data-act-align="left" data-tip="Слева">${ic("align-horizontal-justify-start",16)}</button>
+    <button type="button" data-act-align="ch" data-tip="По центру">${ic("align-horizontal-justify-center",16)}</button>
+    <button type="button" data-act-align="right" data-tip="Справа">${ic("align-horizontal-justify-end",16)}</button>
+    <button type="button" data-act-align="top" data-tip="Сверху">${ic("align-vertical-justify-start",16)}</button>
+    <button type="button" data-act-align="cv" data-tip="По центру">${ic("align-vertical-justify-center",16)}</button>
+    <button type="button" data-act-align="bottom" data-tip="Снизу">${ic("align-vertical-justify-end",16)}</button>
+  </div>
+  ${studioMultiSel.length>=3?`<div class="sect-t">Распределение</div>
+  <div class="row" style="gap:6px"><button type="button" class="nv-btn v-secondary s-sm" data-act-dist="h">По горизонтали</button><button type="button" class="nv-btn v-secondary s-sm" data-act-dist="v">По вертикали</button></div>`:""}`;
+}
+function studioPointPanelHtml(l){
+  if(studioEditingPointIndex==null||!l.points[studioEditingPointIndex])return"";
+  const p=l.points[studioEditingPointIndex];
+  return`<div class="sect-t">Выбранная точка</div>
+  <div class="row" style="gap:6px"><button type="button" class="nv-btn ${p.type==="corner"?"v-primary":"v-secondary"} s-sm" data-act-pttype="corner">Излом</button><button type="button" class="nv-btn ${p.type==="smooth"?"v-primary":"v-secondary"} s-sm" data-act-pttype="smooth">Плавная</button><button type="button" class="nv-btn v-danger s-sm" icon="trash-2" icon-only hint="Удалить точку" data-act-ptdel></button></div>`;
 }
 function studioPropsHtml(){
+  if(studioMultiSel.length>1)return`<div class="stack" style="gap:10px">${studioAlignDistributeHtml()}</div>`;
   const l=studioSelected();
   if(!l)return'<p class="muted" style="font-size:12.5px">Выберите слой на холсте или в списке, чтобы изменить его.</p>';
   if(l.type==="text")return`<div class="stack" style="gap:10px">
@@ -3861,8 +3987,15 @@ function studioPropsHtml(){
   </div>`;
   if(l.type==="shape")return`<div class="stack" style="gap:10px">
     <div class="row" style="gap:6px;flex-wrap:wrap">${[["rect","Прямоугольник"],["ellipse","Эллипс"],["triangle","Треугольник"],["line","Линия"]].map(([v,lb])=>`<button type="button" class="nv-btn ${l.shape===v?"v-primary":"v-secondary"} s-sm" data-prop-set="shape" data-val="${v}">${lb}</button>`).join("")}</div>
-    <div class="stud-color"><span class="lbl">Цвет</span><input type="color" value="${esc(l.color)}" data-prop="color"></div>
+    ${studioFillStrokeHtml(l)}
     ${l.shape==="rect"?`<div class="fld"><span class="lbl">Скругление</span><div class="rng"><input type="range" min="0" max="80" step="2" value="${l.radius}" data-prop="radius"><output>${l.radius}</output></div></div>`:""}
+    ${studioPropsCommonHtml(l)}
+  </div>`;
+  if(l.type==="path")return`<div class="stack" style="gap:10px">
+    <button type="button" class="nv-btn v-secondary s-sm" data-act="studEditPts">${studioEditingPathId===l.id?"Закончить правку узлов":"Редактировать узлы"}</button>
+    <div class="row" style="gap:6px"><button type="button" class="nv-btn ${!l.closed?"v-primary":"v-secondary"} s-sm" data-prop-set="closed" data-val="">Открытая</button><button type="button" class="nv-btn ${l.closed?"v-primary":"v-secondary"} s-sm" data-prop-set="closed" data-val="1">Замкнутая</button></div>
+    ${studioFillStrokeHtml(l)}
+    ${studioPointPanelHtml(l)}
     ${studioPropsCommonHtml(l)}
   </div>`;
   if(l.type==="icon")return`<div class="stack" style="gap:10px">
@@ -3886,9 +4019,37 @@ function studioPatchLayerDom(l){
   const el=document.querySelector(`.stud-layer[data-id="${l.id}"]`);if(!el)return;
   el.innerHTML=studioLayerInner(l)+(el.querySelector(".stud-h")?`<span class="stud-h" aria-hidden="true"></span>`:"");
   el.style.transform=`rotate(${l.rotation||0}deg)`;
-  el.style.left=l.x+"%";el.style.top=l.y+"%";el.style.width=l.w+"%";el.style.height=l.h+"%";
+  el.style.left=l.x+"%";el.style.top=l.y+"%";el.style.width=l.w+"%";el.style.height=l.h+"%";el.style.opacity=studioOpacityOf(l)/100;
+  if(studioEditingPathId===l.id){const ov=document.querySelector(".stud-edit-overlay");if(ov)ov.outerHTML=studioEditOverlayHtml()}
   studioLayoutStage(document);
 }
+/* Эфемерное состояние редактора — НЕ сохраняется в дизайне (NEON.save()),
+   чтобы перезагрузка страницы никогда не "застревала" в режиме рисования
+   пером/правки узлов с чужими id слоёв — тот же принцип, что у NOTIF/PROFILE
+   в "Ядре NEON": временный UI-стейт живёт только в памяти текущей сессии. */
+let studioTool="select";
+let studioPenDraft=null;
+let studioEditingPathId=null;
+let studioEditingPointIndex=null;
+let studioMultiSel=[];
+const studioHistory={undo:[],redo:[]};
+function studioResetEphemeral(){studioTool="select";studioPenDraft=null;studioEditingPathId=null;studioEditingPointIndex=null;studioMultiSel=[];studioHistory.undo=[];studioHistory.redo=[]}
+function studioBeforeChange(){studioHistory.undo.push(JSON.stringify(studioDesign()));if(studioHistory.undo.length>60)studioHistory.undo.shift();studioHistory.redo=[]}
+function studioUndo(){
+  if(!studioHistory.undo.length)return;
+  studioHistory.redo.push(JSON.stringify(studioDesign()));
+  const prev=JSON.parse(studioHistory.undo.pop());
+  S.studio.editor=prev;studioEditingPathId=null;studioEditingPointIndex=null;studioMultiSel=[];
+  N.refresh();NEON.save();
+}
+function studioRedo(){
+  if(!studioHistory.redo.length)return;
+  studioHistory.undo.push(JSON.stringify(studioDesign()));
+  const next=JSON.parse(studioHistory.redo.pop());
+  S.studio.editor=next;studioEditingPathId=null;studioEditingPointIndex=null;studioMultiSel=[];
+  N.refresh();NEON.save();
+}
+function studioToBoxPct(stagePct,boxDim){return stagePct/Math.max(1,boxDim)*100}
 function studioRenderSidebar(root){
   const lp=root.querySelector("#stud-layers");if(lp)lp.innerHTML=studioLayersListHtml();
   const pp=root.querySelector("#stud-props");if(pp)pp.innerHTML=studioPropsHtml();
@@ -3926,12 +4087,38 @@ async function studioRenderCanvas(design,scale){
   for(const l of design.layers){
     const x=l.x/100*W,y=l.y/100*H,w=l.w/100*W,h=l.h/100*H;
     ctx.save();
+    ctx.globalAlpha=studioOpacityOf(l)/100;
     if(l.rotation){const cx=x+w/2,cy=y+h/2;ctx.translate(cx,cy);ctx.rotate(l.rotation*Math.PI/180);ctx.translate(-cx,-cy)}
     if(l.type==="shape"){
-      ctx.fillStyle=l.color;
-      if(l.shape==="ellipse"){ctx.beginPath();ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);ctx.fill()}
-      else if(l.shape==="triangle"){ctx.beginPath();ctx.moveTo(x+w/2,y);ctx.lineTo(x+w,y+h);ctx.lineTo(x,y+h);ctx.closePath();ctx.fill()}
-      else{const r=Math.min((l.radius||0)*(scale||1),w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();ctx.fill()}
+      const f=studioFillOf(l),s=studioStrokeOf(l);
+      ctx.fillStyle=f.type==="none"?"transparent":f.type==="gradient"?(()=>{const g=studioGradLine(x,y,w,h,f.angle||90);const gr=ctx.createLinearGradient(g.x0,g.y0,g.x1,g.y1);gr.addColorStop(0,f.color);gr.addColorStop(1,f.color2);return gr})():f.color;
+      ctx.beginPath();
+      if(l.shape==="ellipse")ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);
+      else if(l.shape==="triangle"){ctx.moveTo(x+w/2,y);ctx.lineTo(x+w,y+h);ctx.lineTo(x,y+h);ctx.closePath()}
+      else{const r=Math.min((l.radius||0)*(scale||1),w/2,h/2);ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+      if(f.type!=="none")ctx.fill();
+      if(s.enabled){ctx.strokeStyle=s.color;ctx.lineWidth=s.width*(scale||1);ctx.setLineDash(studioDashArr(s.dash,scale).split(",").filter(Boolean).map(Number));ctx.stroke()}
+    }else if(l.type==="path"){
+      const f=studioFillOf(l),s=studioStrokeOf(l),pts=l.points||[];
+      if(pts.length>1){
+        ctx.beginPath();
+        const toPx=p=>({x:x+p.x/100*w,y:y+p.y/100*h});
+        const a0=toPx(pts[0]);ctx.moveTo(a0.x,a0.y);
+        for(let i=1;i<pts.length;i++){
+          const p0=pts[i-1],p1=pts[i],a=toPx(p0),b=toPx(p1);
+          const c1=p0.out?toPx({x:p0.x+p0.out.dx,y:p0.y+p0.out.dy}):a;
+          const c2=p1.in?toPx({x:p1.x+p1.in.dx,y:p1.y+p1.in.dy}):b;
+          ctx.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,b.x,b.y);
+        }
+        if(l.closed){
+          const p0=pts[pts.length-1],p1=pts[0],a=toPx(p0),b=toPx(p1);
+          const c1=p0.out?toPx({x:p0.x+p0.out.dx,y:p0.y+p0.out.dy}):a;
+          const c2=p1.in?toPx({x:p1.x+p1.in.dx,y:p1.y+p1.in.dy}):b;
+          ctx.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,b.x,b.y);ctx.closePath();
+        }
+        if(f.type!=="none"){ctx.fillStyle=f.type==="gradient"?(()=>{const g=studioGradLine(x,y,w,h,f.angle||90);const gr=ctx.createLinearGradient(g.x0,g.y0,g.x1,g.y1);gr.addColorStop(0,f.color);gr.addColorStop(1,f.color2);return gr})():f.color;ctx.fill()}
+        if(s.enabled){ctx.strokeStyle=s.color;ctx.lineWidth=s.width*(scale||1);ctx.setLineDash(studioDashArr(s.dash,scale).split(",").filter(Boolean).map(Number));ctx.stroke()}
+      }
     }else if(l.type==="icon"){
       try{const img=await studioLoadImg(studioIconDataUrl(l.icon||"star",l.color));ctx.drawImage(img,x,y,w,h)}catch(e){}
     }else if(l.type==="image"&&l.src){
@@ -3979,8 +4166,8 @@ async function studioSaveDesign(){
 const views_studio={
 editor(){
   const d=studioDesign(),fmt=STUDIO_FMT[d.format];
-  return{title:d.id?"Редактор — "+d.name:"Новый дизайн",sub:"Перетаскивайте слои по холсту, тяните за уголок, чтобы изменить размер.",
-  actions:`<nv-button variant="secondary" icon="save" data-act="studSave">Сохранить</nv-button><nv-button icon="download" data-act="studExport">Экспорт PNG</nv-button>`,
+  return{title:d.id?"Редактор — "+d.name:"Новый дизайн",sub:"Перетаскивайте слои по холсту, тяните за уголок, чтобы изменить размер. Shift+клик — выбрать несколько слоёв.",
+  actions:`<nv-button variant="ghost" size="sm" icon="undo-2" icon-only hint="Отменить (Ctrl+Z)" data-act="studUndo"></nv-button><nv-button variant="ghost" size="sm" icon="redo-2" icon-only hint="Повторить (Ctrl+Shift+Z)" data-act="studRedo"></nv-button><nv-button variant="secondary" icon="save" data-act="studSave">Сохранить</nv-button><nv-button icon="download" data-act="studExport">Экспорт PNG</nv-button>`,
   body:`<div class="stud">
     <div class="stud-tools">
       <nv-input label="Название" value="${esc(d.name)}" data-chg="studName"></nv-input>
@@ -3998,8 +4185,10 @@ editor(){
         <button type="button" class="stud-tool" data-act="studAdd" data-type="shape" data-shape="triangle">${ic("triangle",19)}<span>Треугольник</span></button>
         <button type="button" class="stud-tool" data-act="studAdd" data-type="shape" data-shape="line">${ic("minus",19)}<span>Линия</span></button>
         <button type="button" class="stud-tool" data-act="studAdd" data-type="icon">${ic("star",19)}<span>Иконка</span></button>
+        <button type="button" class="stud-tool${studioTool==="pen"?" on":""}" data-act="studTool" data-tool="pen">${ic("pen-tool",19)}<span>Перо</span></button>
       </div>
       <input type="file" id="stud-img-file" accept="image/*" class="sr">
+      ${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Клик — точка. Клик+тяни — плавная точка. Клик по первой точке — замкнуть. Enter/двойной клик — закончить открытой. Esc — отмена.</p>':""}
     </div>
     <div class="stud-stage-wrap"><div id="stud-stage-host">${studioStageHtml()}</div></div>
     <div class="stud-panel">
@@ -4014,37 +4203,102 @@ editor(){
     const stageHost=root.querySelector("#stud-stage-host");
     if(stageHost&&!this._ro){const ro=new ResizeObserver(()=>studioLayoutStage(root));ro.observe(stageHost)}
     const stage=root.querySelector(".stud-stage");
-    if(stage)stage.addEventListener("mousedown",e=>{
-      const layerEl=e.target.closest(".stud-layer"),d=studioDesign();
-      if(!layerEl){if(d.selectedId){d.selectedId=null;stage.querySelectorAll(".stud-layer.on").forEach(x=>{x.classList.remove("on");const h=x.querySelector(".stud-h");h&&h.remove()});studioRenderSidebar(root)}return}
-      const id=layerEl.dataset.id,l=d.layers.find(x=>x.id===id);if(!l)return;
-      const handle=e.target.closest(".stud-h");
-      if(d.selectedId!==id){
-        d.selectedId=id;
-        stage.querySelectorAll(".stud-layer.on").forEach(x=>{x.classList.remove("on");const h=x.querySelector(".stud-h");h&&h.remove()});
-        layerEl.classList.add("on");
-        if(!layerEl.querySelector(".stud-h")){const h=document.createElement("span");h.className="stud-h";layerEl.append(h)}
-        studioRenderSidebar(root);
-      }
-      const rect=stage.getBoundingClientRect();
-      studioDrag=e.target.closest(".stud-h")?{mode:"resize",id,startX:e.clientX,startY:e.clientY,rect,startW:l.w,startH:l.h}:{mode:"move",id,startX:e.clientX,startY:e.clientY,rect,startXp:l.x,startYp:l.y};
-      e.preventDefault();
-    });
+    if(stage){
+      stage.addEventListener("mousedown",e=>{
+        const d=studioDesign();
+        if(studioEditingPathId){
+          const anchor=e.target.closest(".stud-anchor"),handle=e.target.closest(".stud-handle");
+          if(anchor||handle){
+            const l=d.layers.find(x=>x.id===studioEditingPathId);
+            const idx=+(anchor||handle).dataset.pt,side=anchor?"anchor":handle.dataset.side;
+            if(!l||!l.points[idx])return;
+            if(anchor){studioEditingPointIndex=idx;studioRenderSidebar(root)}
+            studioBeforeChange();
+            const p=l.points[idx],sd=side==="anchor"?{dx:p.x,dy:p.y}:(p[side]||{dx:0,dy:0});
+            studioDrag={mode:"point",ptIndex:idx,side,rect:stage.getBoundingClientRect(),startX:e.clientX,startY:e.clientY,layerId:l.id,boxW:l.w,boxH:l.h,startDx:sd.dx,startDy:sd.dy};
+            e.preventDefault();e.stopPropagation();
+            return;
+          }
+          studioEditingPathId=null;studioEditingPointIndex=null;N.refresh();return;
+        }
+        if(studioTool==="pen"){
+          const rect=stage.getBoundingClientRect();
+          const x=Math.max(0,Math.min(100,(e.clientX-rect.left)/rect.width*100)),y=Math.max(0,Math.min(100,(e.clientY-rect.top)/rect.height*100));
+          if(!studioPenDraft){studioBeforeChange();studioPenDraft={points:[{x,y,type:"corner",out:null,in:null}],cursor:null}}
+          else{
+            const p0=studioPenDraft.points[0];
+            if(studioPenDraft.points.length>=2&&Math.hypot(x-p0.x,y-p0.y)<2.5){studioPenFinish(true);e.preventDefault();return}
+            studioPenDraft.points.push({x,y,type:"corner",out:null,in:null});
+          }
+          const pt=studioPenDraft.points[studioPenDraft.points.length-1];
+          studioDrag={mode:"pen",rect,startX:e.clientX,startY:e.clientY,pt};
+          studioPenRepaint();
+          e.preventDefault();
+          return;
+        }
+        const layerEl=e.target.closest(".stud-layer");
+        if(e.shiftKey){
+          if(!layerEl)return;
+          const id=layerEl.dataset.id;
+          if(!studioMultiSel.length&&d.selectedId)studioMultiSel.push(d.selectedId);
+          const i=studioMultiSel.indexOf(id);
+          if(i>=0)studioMultiSel.splice(i,1);else studioMultiSel.push(id);
+          d.selectedId=studioMultiSel[studioMultiSel.length-1]||null;
+          N.refresh();e.preventDefault();return;
+        }
+        if(studioMultiSel.length){studioMultiSel=[];stage.querySelectorAll(".stud-layer.sel2").forEach(x=>x.classList.remove("sel2"));studioRenderSidebar(root)}
+        if(!layerEl){if(d.selectedId){d.selectedId=null;stage.querySelectorAll(".stud-layer.on").forEach(x=>{x.classList.remove("on");const h=x.querySelector(".stud-h");h&&h.remove()});studioRenderSidebar(root)}return}
+        const id=layerEl.dataset.id,l=d.layers.find(x=>x.id===id);if(!l)return;
+        if(d.selectedId!==id){
+          d.selectedId=id;
+          stage.querySelectorAll(".stud-layer.on").forEach(x=>{x.classList.remove("on");const h=x.querySelector(".stud-h");h&&h.remove()});
+          layerEl.classList.add("on");
+          if(!layerEl.querySelector(".stud-h")){const h=document.createElement("span");h.className="stud-h";layerEl.append(h)}
+          studioRenderSidebar(root);
+        }
+        const handle=e.target.closest(".stud-h");
+        studioBeforeChange();
+        const rect=stage.getBoundingClientRect();
+        studioDrag=handle?{mode:"resize",id,startX:e.clientX,startY:e.clientY,rect,startW:l.w,startH:l.h}:{mode:"move",id,startX:e.clientX,startY:e.clientY,rect,startXp:l.x,startYp:l.y};
+        e.preventDefault();
+      });
+      stage.addEventListener("mousemove",e=>{
+        if(studioTool!=="pen"||!studioPenDraft)return;
+        const rect=stage.getBoundingClientRect();
+        studioPenDraft.cursor={x:Math.max(0,Math.min(100,(e.clientX-rect.left)/rect.width*100)),y:Math.max(0,Math.min(100,(e.clientY-rect.top)/rect.height*100))};
+        studioPenRepaint();
+      });
+      stage.addEventListener("dblclick",e=>{
+        if(studioTool==="pen"){if(studioPenDraft)studioPenFinish(false);return}
+        const layerEl=e.target.closest(".stud-layer");if(!layerEl)return;
+        const d=studioDesign(),l=d.layers.find(x=>x.id===layerEl.dataset.id);
+        if(l&&l.type==="path"){studioEditingPathId=l.id;studioEditingPointIndex=null;N.refresh()}
+      });
+    }
     const lp=root.querySelector("#stud-layers");
     if(lp)lp.addEventListener("click",e=>{
       const d=studioDesign();
       const sel=e.target.closest("[data-sel]"),mv=e.target.closest("[data-mv]"),del=e.target.closest("[data-del]");
-      if(del){const i=d.layers.findIndex(x=>x.id===del.dataset.del);if(i>=0){d.layers.splice(i,1);if(d.selectedId===del.dataset.del)d.selectedId=null}N.refresh();NEON.save();return}
-      if(mv){const i=d.layers.findIndex(x=>x.id===mv.dataset.mv),j=i+(+mv.dataset.dir);if(i>=0&&j>=0&&j<d.layers.length){[d.layers[i],d.layers[j]]=[d.layers[j],d.layers[i]];N.refresh();NEON.save()}return}
-      if(sel){d.selectedId=sel.dataset.sel;N.refresh();return}
+      if(del){studioBeforeChange();const i=d.layers.findIndex(x=>x.id===del.dataset.del);if(i>=0){d.layers.splice(i,1);if(d.selectedId===del.dataset.del)d.selectedId=null}studioMultiSel=studioMultiSel.filter(x=>x!==del.dataset.del);N.refresh();NEON.save();return}
+      if(mv){studioBeforeChange();const i=d.layers.findIndex(x=>x.id===mv.dataset.mv),j=i+(+mv.dataset.dir);if(i>=0&&j>=0&&j<d.layers.length){[d.layers[i],d.layers[j]]=[d.layers[j],d.layers[i]];N.refresh();NEON.save()}return}
+      if(sel){
+        if(e.shiftKey){
+          const id=sel.dataset.sel;
+          if(!studioMultiSel.length&&d.selectedId)studioMultiSel.push(d.selectedId);
+          const i=studioMultiSel.indexOf(id);if(i>=0)studioMultiSel.splice(i,1);else studioMultiSel.push(id);
+          d.selectedId=studioMultiSel[studioMultiSel.length-1]||null;
+        }else{studioMultiSel=[];d.selectedId=sel.dataset.sel}
+        N.refresh();return;
+      }
     });
     const pp=root.querySelector("#stud-props");
     if(pp){
+      pp.addEventListener("mousedown",e=>{if(e.target.matches("input,[data-prop-set],[data-act-dup],[data-act-center],[data-act-align],[data-act-dist]"))studioBeforeChange()},true);
       pp.addEventListener("input",e=>{
         const l=studioSelected();if(!l)return;const k=e.target.dataset.prop;if(!k)return;
-        let v=e.target.value;if(e.target.type==="range")v=+v;
-        l[k]=v;
-        const out=e.target.closest(".rng");if(out)out.querySelector("output").textContent=v;
+        let v=e.target.value;if(e.target.type==="range"||e.target.type==="number")v=+v;
+        studioSetPath(l,k,v);
+        const out=e.target.closest(".rng");if(out)out.querySelector("output").textContent=v+(k==="rotation"||k==="fill.angle"?"°":k==="opacity"?"%":k==="stroke.width"?"px":"");
         studioPatchLayerDom(l);NEON.save();
       });
       /* nv-textarea (FieldEl) stops its native "input" event from bubbling and emits
@@ -4052,13 +4306,27 @@ editor(){
          custom element itself here (unlike the raw <input> case above). */
       pp.addEventListener("nv-change",e=>{
         const l=studioSelected();if(!l)return;const k=e.target.dataset.prop;if(!k)return;
-        l[k]=e.detail.value;
+        studioSetPath(l,k,e.detail.value);
         studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();
       });
       pp.addEventListener("click",e=>{
+        const alignBtn=e.target.closest("[data-act-align]"),distBtn=e.target.closest("[data-act-dist]");
+        if(alignBtn){studioAlign(alignBtn.dataset.actAlign);NEON.save();return}
+        if(distBtn){studioDistribute(distBtn.dataset.actDist);NEON.save();return}
         const l=studioSelected();if(!l)return;
+        const pttype=e.target.closest("[data-act-pttype]");
+        if(pttype&&studioEditingPointIndex!=null&&l.points&&l.points[studioEditingPointIndex]){
+          studioBeforeChange();l.points[studioEditingPointIndex].type=pttype.dataset.actPttype;
+          studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return;
+        }
+        const ptdel=e.target.closest("[data-act-ptdel]");
+        if(ptdel){studioPointDelete();return}
         const set=e.target.closest("[data-prop-set]");
-        if(set){l[set.dataset.propSet]=set.dataset.val;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
+        if(set){
+          const k=set.dataset.propSet,boolKeys=["closed","stroke.enabled"];
+          studioSetPath(l,k,boolKeys.includes(k)?set.dataset.val==="1":set.dataset.val);
+          studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return;
+        }
         const center=e.target.closest("[data-act-center]");
         if(center){if(center.dataset.actCenter==="h")l.x=Math.max(0,(100-l.w)/2);else l.y=Math.max(0,(100-l.h)/2);studioPatchLayerDom(l);NEON.save();return}
         const dup=e.target.closest("[data-act-dup]");
@@ -4068,13 +4336,14 @@ editor(){
     const bgFile=root.querySelector("#stud-bg-file");
     if(bgFile)bgFile.addEventListener("change",async()=>{
       const f=bgFile.files[0];if(!f)return;
-      try{const{dataUrl}=await fileToDataUrl(f,1600);studioDesign().bg={type:"image",image:dataUrl};N.refresh();NEON.save()}
+      try{studioBeforeChange();const{dataUrl}=await fileToDataUrl(f,1600);studioDesign().bg={type:"image",image:dataUrl};N.refresh();NEON.save()}
       catch(err){toast("Не удалось загрузить фон: "+(err.message||""),{tone:"danger"})}
     });
     const imgFile=root.querySelector("#stud-img-file");
     if(imgFile)imgFile.addEventListener("change",async()=>{
       const f=imgFile.files[0];if(!f)return;
       try{
+        studioBeforeChange();
         const{dataUrl,naturalW,naturalH}=await fileToDataUrl(f,1400);
         const l=studioLayerDefaults("image");l.src=dataUrl;
         const fmt2=STUDIO_FMT[studioDesign().format],targetWpx=fmt2.w*0.6,targetHpx=targetWpx*(naturalH/naturalW);
@@ -4090,8 +4359,91 @@ library(){
   body:L.length?`<div class="grid g4 stud-designs-grid">${L.map(x=>`<nv-card flush><div class="stud-thumb">${x.thumb?`<img src="${esc(x.thumb)}" alt="">`:ic("image",28)}</div><div style="padding:12px"><b style="font-size:13.5px">${esc(x.name)}</b><div class="muted" style="font-size:12px;margin-top:2px">${esc(STUDIO_FMT[x.format].label)} · ${x.updatedAt?NEON.ago(x.updatedAt):""}</div><div class="row" style="gap:6px;margin-top:10px"><nv-button size="sm" data-act="studOpen" data-id="${esc(x.id)}">Открыть</nv-button><nv-button size="sm" variant="ghost" icon="trash-2" icon-only hint="Удалить" data-act="studDel" data-id="${esc(x.id)}">Удалить</nv-button></div></div></nv-card>`).join("")}</div>`:`<nv-card><nv-empty icon="palette" heading="Дизайнов пока нет" text="Создайте первый макет в редакторе."><nv-button data-act="studNew" icon="plus">Новый дизайн</nv-button></nv-empty></nv-card>`}}
 };
 let studioDrag=null;
+function studioSetPath(obj,path,val){const parts=path.split(".");let o=obj;for(let i=0;i<parts.length-1;i++)o=o[parts[i]];o[parts[parts.length-1]]=val}
+function studioPenRepaint(){
+  const old=document.querySelector(".stud-pen-overlay"),html=studioPenPreviewHtml();
+  if(old)old.outerHTML=html;
+  else if(html){const stage=document.querySelector(".stud-stage");if(stage)stage.insertAdjacentHTML("beforeend",html)}
+}
+function studioPenFinish(closed){
+  const draft=studioPenDraft;studioPenDraft=null;studioDrag=null;
+  if(!draft||draft.points.length<2){N.refresh();return}
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  draft.points.forEach(p=>{minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y)});
+  const bw=Math.max(1,maxX-minX),bh=Math.max(1,maxY-minY);
+  const pts=draft.points.map(p=>({
+    x:(p.x-minX)/bw*100,y:(p.y-minY)/bh*100,type:p.type,
+    out:p.out?{dx:p.out.dx/bw*100,dy:p.out.dy/bh*100}:null,
+    in:p.in?{dx:p.in.dx/bw*100,dy:p.in.dy/bh*100}:null,
+  }));
+  const l=studioLayerDefaults("path");
+  Object.assign(l,{x:minX,y:minY,w:bw,h:bh,points:pts,closed:!!closed});
+  studioDesign().layers.push(l);studioDesign().selectedId=l.id;
+  studioTool="select";
+  N.refresh();NEON.save();
+}
+function studioPointDelete(){
+  const d=studioDesign(),l=d.layers.find(x=>x.id===studioEditingPathId);if(!l||studioEditingPointIndex==null)return;
+  studioBeforeChange();
+  l.points.splice(studioEditingPointIndex,1);
+  studioEditingPointIndex=null;
+  if(l.points.length<2){
+    const i=d.layers.findIndex(x=>x.id===l.id);if(i>=0)d.layers.splice(i,1);
+    studioEditingPathId=null;if(d.selectedId===l.id)d.selectedId=null;
+  }
+  N.refresh();NEON.save();
+}
+function studioAlign(dir){
+  const d=studioDesign(),boxes=studioMultiSel.map(id=>d.layers.find(x=>x.id===id)).filter(Boolean);
+  if(boxes.length<2)return;
+  const minX=Math.min(...boxes.map(b=>b.x)),maxX=Math.max(...boxes.map(b=>b.x+b.w));
+  const minY=Math.min(...boxes.map(b=>b.y)),maxY=Math.max(...boxes.map(b=>b.y+b.h));
+  const cx=(minX+maxX)/2,cy=(minY+maxY)/2;
+  boxes.forEach(b=>{
+    if(dir==="left")b.x=minX;else if(dir==="right")b.x=maxX-b.w;else if(dir==="ch")b.x=cx-b.w/2;
+    else if(dir==="top")b.y=minY;else if(dir==="bottom")b.y=maxY-b.h;else if(dir==="cv")b.y=cy-b.h/2;
+  });
+  boxes.forEach(studioPatchLayerDom);
+}
+function studioDistribute(dir){
+  const d=studioDesign();let boxes=studioMultiSel.map(id=>d.layers.find(x=>x.id===id)).filter(Boolean);
+  if(boxes.length<3)return;
+  if(dir==="h"){
+    boxes=boxes.slice().sort((a,b)=>a.x-b.x);
+    const first=boxes[0],last=boxes[boxes.length-1],span=(last.x+last.w)-first.x,sumW=boxes.reduce((s,b)=>s+b.w,0),gap=(span-sumW)/(boxes.length-1);
+    let runX=first.x;
+    boxes.forEach((b,i)=>{if(i>0&&i<boxes.length-1)b.x=runX+gap;runX=b.x+b.w+gap});
+  }else{
+    boxes=boxes.slice().sort((a,b)=>a.y-b.y);
+    const first=boxes[0],last=boxes[boxes.length-1],span=(last.y+last.h)-first.y,sumH=boxes.reduce((s,b)=>s+b.h,0),gap=(span-sumH)/(boxes.length-1);
+    let runY=first.y;
+    boxes.forEach((b,i)=>{if(i>0&&i<boxes.length-1)b.y=runY+gap;runY=b.y+b.h+gap});
+  }
+  boxes.forEach(studioPatchLayerDom);
+}
 document.addEventListener("mousemove",e=>{
   if(!studioDrag)return;
+  if(studioDrag.mode==="pen"){
+    const dxPct=(e.clientX-studioDrag.startX)/studioDrag.rect.width*100,dyPct=(e.clientY-studioDrag.startY)/studioDrag.rect.height*100;
+    if(Math.hypot(dxPct,dyPct)>0.6){studioDrag.pt.type="smooth";studioDrag.pt.out={dx:dxPct,dy:dyPct};studioDrag.pt.in={dx:-dxPct,dy:-dyPct}}
+    studioPenRepaint();
+    return;
+  }
+  if(studioDrag.mode==="point"){
+    const d=S.studio&&S.studio.editor;if(!d)return;
+    const l=d.layers.find(x=>x.id===studioDrag.layerId);if(!l)return;
+    const p=l.points[studioDrag.ptIndex];if(!p)return;
+    const dxPct=(e.clientX-studioDrag.startX)/studioDrag.rect.width*100,dyPct=(e.clientY-studioDrag.startY)/studioDrag.rect.height*100;
+    const dxBox=studioToBoxPct(dxPct,studioDrag.boxW),dyBox=studioToBoxPct(dyPct,studioDrag.boxH);
+    if(studioDrag.side==="anchor"){p.x=studioDrag.startDx+dxBox;p.y=studioDrag.startDy+dyBox}
+    else{
+      const nd=studioDrag.startDx+dxBox,ndy=studioDrag.startDy+dyBox;
+      if(studioDrag.side==="out"){p.out={dx:nd,dy:ndy};if(p.type==="smooth")p.in={dx:-nd,dy:-ndy}}
+      else{p.in={dx:nd,dy:ndy};if(p.type==="smooth")p.out={dx:-nd,dy:-ndy}}
+    }
+    studioPatchLayerDom(l);
+    return;
+  }
   const d=S.studio&&S.studio.editor;if(!d)return;
   const l=d.layers.find(x=>x.id===studioDrag.id);if(!l)return;
   const dxPct=(e.clientX-studioDrag.startX)/studioDrag.rect.width*100,dyPct=(e.clientY-studioDrag.startY)/studioDrag.rect.height*100;
@@ -4101,18 +4453,35 @@ document.addEventListener("mousemove",e=>{
   if(el){el.style.left=l.x+"%";el.style.top=l.y+"%";el.style.width=l.w+"%";el.style.height=l.h+"%";if(l.type==="text")studioLayoutStage(document)}
 });
 document.addEventListener("mouseup",()=>{if(!studioDrag)return;studioDrag=null;NEON.save()});
+document.addEventListener("keydown",e=>{
+  const r=NEON.route();if(r.s!=="studio"||r.v!=="editor")return;
+  const typing=["INPUT","TEXTAREA"].includes((document.activeElement||{}).tagName);
+  if(e.key==="Escape"){
+    if(studioPenDraft){studioPenDraft=null;studioDrag=null;N.refresh();e.preventDefault()}
+    else if(studioEditingPathId){studioEditingPathId=null;studioEditingPointIndex=null;N.refresh();e.preventDefault()}
+    return;
+  }
+  if(e.key==="Enter"&&studioPenDraft&&!typing){studioPenFinish(false);e.preventDefault();return}
+  if((e.key==="Delete"||e.key==="Backspace")&&studioEditingPathId&&studioEditingPointIndex!=null&&!typing){studioPointDelete();e.preventDefault();return}
+  if((e.ctrlKey||e.metaKey)&&!typing&&e.key.toLowerCase()==="z"){e.preventDefault();if(e.shiftKey)studioRedo();else studioUndo();return}
+  if((e.ctrlKey||e.metaKey)&&!typing&&e.key.toLowerCase()==="y"){e.preventDefault();studioRedo();return}
+});
 Object.assign(N.chg,{
   studName(v){studioDesign().name=v;NEON.save()},
   studFormat(v){studioDesign().format=v;N.refresh();NEON.save()}
 });
 Object.assign(N.acts,{
-  studAdd(a,d){const l=studioLayerDefaults(d.type,d.shape);studioDesign().layers.push(l);studioDesign().selectedId=l.id;N.refresh();NEON.save()},
+  studAdd(a,d){studioBeforeChange();const l=studioLayerDefaults(d.type,d.shape);studioDesign().layers.push(l);studioDesign().selectedId=l.id;studioMultiSel=[];N.refresh();NEON.save()},
   studSave:studioSaveDesign,
   studExport:studioExportPng,
-  studNew(){S.studio.editor=studioNewDesign();N.go("studio-editor")},
-  studOpen(a,d){const x=S.studio.designs.find(y=>y.id===d.id);if(x){S.studio.editor=JSON.parse(JSON.stringify(x));S.studio.editor.selectedId=null;N.go("studio-editor")}},
+  studTool(a,d){studioPenDraft=null;studioEditingPathId=null;studioEditingPointIndex=null;studioTool=studioTool===d.tool?"select":d.tool;N.refresh()},
+  studUndo:studioUndo,
+  studRedo:studioRedo,
+  studEditPts(){const l=studioSelected();if(!l||l.type!=="path")return;studioEditingPathId=studioEditingPathId===l.id?null:l.id;studioEditingPointIndex=null;N.refresh()},
+  studNew(){studioResetEphemeral();S.studio.editor=studioNewDesign();N.go("studio-editor")},
+  studOpen(a,d){const x=S.studio.designs.find(y=>y.id===d.id);if(x){studioResetEphemeral();S.studio.editor=JSON.parse(JSON.stringify(x));S.studio.editor.selectedId=null;N.go("studio-editor")}},
   studDel(a,d){confirm({title:"Удалить дизайн?",text:"Это действие нельзя отменить.",confirm:"Удалить",danger:true,fn(){const i=S.studio.designs.findIndex(x=>x.id===d.id);if(i>=0)S.studio.designs.splice(i,1);N.refresh();NEON.save();toast("Дизайн удалён")}})},
-  studBgClear(){studioDesign().bg={type:"color",color:studioDesign().bg.color||"#ffffff"};N.refresh();NEON.save()},
+  studBgClear(){studioBeforeChange();studioDesign().bg={type:"color",color:studioDesign().bg.color||"#ffffff"};N.refresh();NEON.save()},
   async studFromCreative(a,d){
     const g=findGroup(d.id);
     if(!g){toast("Креатив не найден",{tone:"warning"});return}
@@ -4123,7 +4492,7 @@ Object.assign(N.acts,{
       catch(e){design.bg={type:"image",image:rep.image_url}}
     }
     if(rep.title){const l=studioLayerDefaults("text");Object.assign(l,{text:rep.title,y:72,h:16,fontSize:6,color:"#ffffff",weight:"800"});design.layers.push(l)}
-    S.studio.editor=design;N.go("studio-editor");NEON.save();
+    studioResetEphemeral();S.studio.editor=design;N.go("studio-editor");NEON.save();
     toast("Дизайн создан из креатива",{tone:"success"});
   }
 });
