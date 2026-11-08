@@ -233,8 +233,41 @@ nv-input,nv-select,nv-textarea,nv-switch,nv-checkbox,nv-segmented,nv-range{displ
 .seg button:hover{color:var(--ink)}
 .seg button[aria-checked="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:var(--shadow-1),0 0 0 1px var(--line)}
 .rng{display:flex;align-items:center;gap:10px}
-.rng input{flex:1;min-width:0;accent-color:var(--svc-ink)}
 .rng output{font-weight:600;min-width:58px;text-align:right;font-variant-numeric:tabular-nums}
+/* Полностью свой вид ползунка через псевдо-элементы — под нативным
+   <input type=range> ради бесплатной клавиатуры/touch/доступности, но
+   ни одного браузерного штриха на экране: свой трек с заливкой-прогрессом
+   и свой "бублик"-ручка вместо системного. */
+.rng input[type="range"]{flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:6px;border-radius:99px;background:linear-gradient(to right,var(--svc-ink) 0 var(--rng-p,50%),var(--line-2) var(--rng-p,50%) 100%);outline:0;cursor:pointer}
+.rng input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--svc-ink);box-shadow:var(--shadow-1);cursor:grab}
+.rng input[type="range"]::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.08)}
+.rng input[type="range"]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--svc-ink);box-shadow:var(--shadow-1);cursor:grab}
+.rng input[type="range"]::-moz-range-track{height:6px;border-radius:99px;background:var(--line-2)}
+.rng input[type="range"]::-moz-range-progress{height:6px;border-radius:99px;background:var(--svc-ink)}
+/* Свой числовой степпер (−/+ вокруг нативного input[type=number]) —
+   прячем системные стрелки инкремента, они через -webkit-appearance не
+   принимают наш фирменный стиль. */
+.stud-stepper{display:flex;align-items:stretch;border:1px solid var(--line-2);border-radius:7px;overflow:hidden;background:var(--surface)}
+.stud-stepper button{width:22px;flex:none;border:0;background:var(--surface-2);color:var(--ink-2);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.stud-stepper button:hover{background:var(--svc-soft);color:var(--svc-ink)}
+.stud-stepper input{flex:1;min-width:0;border:0;text-align:center;font-size:12.5px;background:none;padding:5px 2px;-moz-appearance:textfield}
+.stud-stepper input::-webkit-outer-spin-button,.stud-stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+/* Свой выбор цвета — кнопка-образец + hex, попап с палитрой/оттенком/hex. */
+.cpk-trig{display:flex;align-items:center;gap:8px;padding:5px 10px 5px 5px;border:1px solid var(--line-2);border-radius:99px;background:var(--surface);cursor:pointer;color:var(--ink-2);font-size:12px}
+.cpk-trig:hover{border-color:var(--svc-ink)}
+.cpk-sw{width:24px;height:24px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.08);box-shadow:inset 0 0 0 2px var(--surface)}
+.cpk-hex{font-variant-numeric:tabular-nums;color:var(--ink)}
+.cpk-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;padding:6px}
+.cpk-swb{width:22px;height:22px;border-radius:50%;background:var(--c);border:2px solid transparent;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.cpk-swb:hover{transform:scale(1.1)}
+.cpk-swb.on{border-color:var(--ink)}
+.cpk-hue{padding:4px 8px}
+.cpk-hue input[type="range"]{width:100%;height:12px;-webkit-appearance:none;appearance:none;border-radius:99px;background:linear-gradient(to right,red,#ff0,lime,cyan,blue,magenta,red);cursor:pointer}
+.cpk-hue input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--ink);box-shadow:var(--shadow-1)}
+.cpk-hue input[type="range"]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--ink)}
+.cpk-hex-row{display:flex;align-items:center;gap:8px;padding:6px 8px 3px;border-top:1px solid var(--line)}
+.cpk-hex-sw{width:20px;height:20px;border-radius:7px;flex:none;border:1px solid var(--line-2)}
+.cpk-hex-in{flex:1;min-width:0;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);padding:4px 7px;font-size:12.5px;font-variant-numeric:tabular-nums}
 
 /* ---------- Навигация: вкладки, шаги ---------- */
 nv-tabs{display:block}
@@ -1298,7 +1331,6 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stud-layer-row .row-ic button:hover{opacity:1;background:var(--surface-3)}
 .stud-layer-row .row-ic button:disabled{opacity:.25;cursor:default}
 .stud-color{display:flex;align-items:center;gap:9px}
-.stud-color input[type="color"]{width:36px;height:36px;border:1px solid var(--line-2);border-radius:9px;padding:2px;background:none;cursor:pointer}
 .stud-designs-grid .stud-thumb{aspect-ratio:1;background:var(--surface-2);border-radius:var(--r-l) var(--r-l) 0 0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--ink-3)}
 .stud-designs-grid .stud-thumb img{width:100%;height:100%;object-fit:contain}
 .stud-layer-shape{box-sizing:border-box}
@@ -1336,6 +1368,7 @@ const uid=(()=>{let n=0;return p=>(p||"nv")+"-"+(++n)})();
 const parseOpts=s=>String(s||"").split("|").filter(Boolean).map(x=>{const[v,l,c]=x.split(":");return{value:v,label:l==null?v:l,count:c}});
 const parseJSON=(s,d)=>{try{return s?JSON.parse(s):d}catch(e){return d}};
 const fmt=n=>Number(n).toLocaleString("ru-RU");
+const rngPct=(v,min,max)=>Math.max(0,Math.min(100,(+v-+min)/((+max-+min)||1)*100))+"%";
 const registry={};
 
 function iconSvg(name){
@@ -1463,9 +1496,42 @@ define("nv-segmented",class extends NvEl{
 
 define("nv-range",class extends NvEl{
   get value(){const c=this.querySelector("input");return c?+c.value:+this.a("value")}get name(){return this.getAttribute("name")}
-  html(){const id=this._id||(this._id=uid("r"));return `<div class="fld">${this.a("label")?`<label for="${id}">${esc(this.a("label"))}</label>`:""}<div class="rng"><input id="${id}" type="range" min="${esc(this.a("min"))}" max="${esc(this.a("max"))}" step="${esc(this.a("step"))}" value="${esc(this.a("value"))}"><output>${fmt(this.a("value"))} ${esc(this.a("unit"))}</output></div></div>`}
-  mounted(){const c=this.querySelector("input");c.oninput=x=>{x.stopPropagation();this.querySelector("output").textContent=fmt(c.value)+" "+this.a("unit");this.emit("nv-change",{value:+c.value,name:this.name})}}
+  html(){const id=this._id||(this._id=uid("r")),mi=this.a("min"),ma=this.a("max");return `<div class="fld">${this.a("label")?`<label for="${id}">${esc(this.a("label"))}</label>`:""}<div class="rng"><input id="${id}" type="range" min="${esc(mi)}" max="${esc(ma)}" step="${esc(this.a("step"))}" value="${esc(this.a("value"))}" style="--rng-p:${rngPct(this.a("value"),mi,ma)}"><output>${fmt(this.a("value"))} ${esc(this.a("unit"))}</output></div></div>`}
+  mounted(){const c=this.querySelector("input");c.oninput=x=>{x.stopPropagation();c.style.setProperty("--rng-p",rngPct(c.value,c.min,c.max));this.querySelector("output").textContent=fmt(c.value)+" "+this.a("unit");this.emit("nv-change",{value:+c.value,name:this.name})}}
 },"Формы",{desc:"Числовое значение ползунком: бюджет, порог.",events:["nv-change {value,name}"],attrs:{label:{type:"string",default:"Бюджет в день",desc:"Подпись"},min:{type:"number",default:0,desc:"Минимум"},max:{type:"number",default:10000,desc:"Максимум"},step:{type:"number",default:100,desc:"Шаг"},value:{type:"number",default:3000,desc:"Значение"},unit:{type:"string",default:"₽",desc:"Единица"},name:{type:"string",default:"",desc:"Ключ значения"}}});
+function hslToHex(h,s,l){
+  s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+  const r=Math.round(255*f(0)),g=Math.round(255*f(8)),b=Math.round(255*f(4));
+  return"#"+[r,g,b].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+function hexToHue(hex){
+  const m=/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex||"");if(!m)return 0;
+  const r=parseInt(m[1],16)/255,g=parseInt(m[2],16)/255,b=parseInt(m[3],16)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;
+  if(d===0)return 0;
+  let h=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4;h*=60;if(h<0)h+=360;return Math.round(h);
+}
+const CPK_PRESETS=["#16c784","#0ea5e9","#6366f1","#a855f7","#ec4899","#ef4444","#f97316","#eab308","#22c55e","#14b8a6","#3b82f6","#f59e0b","#f43f5e","#6b7280","#111827","#ffffff"];
+define("nv-color-picker",class extends NvEl{
+  get value(){return this.a("value")||"#000000"}get name(){return this.getAttribute("name")}
+  html(){const v=this.value;return `<button type="button" class="cpk-trig" aria-haspopup="dialog" aria-label="${esc(this.a("label")||"Цвет")}: ${esc(v)}"><span class="cpk-sw" style="background:${esc(v)}"></span><span class="cpk-hex">${esc(v)}</span>${ic("chevron-down",12)}</button>`}
+  mounted(){this.querySelector(".cpk-trig").onclick=()=>this.pop()}
+  pop(){
+    const cur=this.value,hue=hexToHue(cur);
+    openPop(this,`<div class="cpk-grid">${CPK_PRESETS.map(c=>`<button type="button" class="cpk-swb${c.toLowerCase()===cur.toLowerCase()?" on":""}" data-c="${c}" style="--c:${c}" aria-label="${c}"></button>`).join("")}</div>
+      <div class="cpk-hue"><input type="range" min="0" max="360" step="1" value="${hue}" aria-label="Оттенок"></div>
+      <div class="cpk-hex-row"><span class="cpk-hex-sw" style="background:${esc(cur)}"></span><input type="text" class="cpk-hex-in" value="${esc(cur)}" maxlength="7" spellcheck="false" aria-label="Цвет в hex"></div>`,
+      {width:224,mount:(p)=>{
+        const setVal=v=>{
+          this.setAttribute("value",v);this.emit("nv-change",{value:v,name:this.name});
+          p.querySelector(".cpk-hex-sw").style.background=v;p.querySelector(".cpk-hex-in").value=v;
+          p.querySelectorAll(".cpk-swb").forEach(b=>b.classList.toggle("on",b.dataset.c.toLowerCase()===v.toLowerCase()));
+        };
+        p.querySelector(".cpk-grid").addEventListener("click",e=>{const b=e.target.closest("[data-c]");if(b)setVal(b.dataset.c)});
+        p.querySelector(".cpk-hex-in").addEventListener("input",e=>{if(/^#[0-9a-fA-F]{6}$/.test(e.target.value))setVal(e.target.value)});
+        p.querySelector(".cpk-hue input").addEventListener("input",e=>setVal(hslToHex(+e.target.value,75,52)));
+      }});
+  }
+},"Формы",{desc:"Свой выбор цвета: палитра, ползунок оттенка и hex-поле — без системного диалога браузера.",events:["nv-change {value,name}"],previewW:160,attrs:{value:{type:"string",default:"#16c784",desc:"Цвет в hex"},label:{type:"string",default:"Цвет",desc:"Подпись для вспомогательных технологий"},name:{type:"string",default:"",desc:"Ключ значения"}}});
 
 /* ---------- Навигация ---------- */
 define("nv-tabs",class extends NvEl{
@@ -1936,7 +2002,7 @@ document.addEventListener("focusout",hideTip);document.addEventListener("click",
 
 function formVals(root){const o={};root.querySelectorAll("[name]").forEach(el=>{if(el.tagName.startsWith("NV-"))o[el.getAttribute("name")]=el.value});return o}
 
-window.NEONUI={esc,ic,fmt,uid,registry,overlay,toast,confirm:confirmDlg,formVals,artHtml,FORMAT,STATUS,parseOpts,rangeOf,iconSvg,ymd,favUrl};
+window.NEONUI={esc,ic,fmt,uid,registry,overlay,toast,confirm:confirmDlg,formVals,artHtml,FORMAT,STATUS,parseOpts,rangeOf,iconSvg,ymd,favUrl,rngPct};
 })();
 </script>
 <script>
@@ -2245,7 +2311,7 @@ NEON.start=render;
    /api/v1/advertisers, /api/v1/analytics/* и /api/v1/intents парсера. Бек не менялся —
    меняется только то, как это рисуется (дизайн-система NEON). */
 (function(){
-const {esc,ic,fmt,overlay,toast,confirm,formVals,FORMAT,favUrl,iconSvg}=NEONUI,N=NEON,S=N.state;
+const {esc,ic,fmt,overlay,toast,confirm,formVals,FORMAT,favUrl,iconSvg,rngPct}=NEONUI,N=NEON,S=N.state;
 
 const RUN_STATUS_MAP={queued:"queued",running:"running",succeeded:"done",failed:"failed"};
 
@@ -3925,32 +3991,35 @@ function studioLayersListHtml(){
   if(!d.layers.length)return'<p class="muted" style="font-size:12.5px">Выберите инструмент слева, чтобы добавить первый слой.</p>';
   return`<div class="stud-layers">${d.layers.map((l,i)=>`<div class="stud-layer-row${l.id===d.selectedId?" on":""}" data-sel="${esc(l.id)}">${ic(studioLayerIcon(l),14)}<span>${esc(studioLayerLabel(l))}</span><span class="row-ic"><button type="button" data-mv="${esc(l.id)}" data-dir="-1" aria-label="Выше" ${i===0?"disabled":""}>${ic("chevron-up",13)}</button><button type="button" data-mv="${esc(l.id)}" data-dir="1" aria-label="Ниже" ${i===d.layers.length-1?"disabled":""}>${ic("chevron-down",13)}</button><button type="button" data-del="${esc(l.id)}" aria-label="Удалить слой">${ic("trash-2",13)}</button></span></div>`).join("")}</div>`;
 }
+function studioStepperHtml(label,key,value,min){
+  return`<label class="fld"><span>${label}</span><div class="stud-stepper"><button type="button" tabindex="-1" data-step="${key}" data-dir="-1" aria-label="Уменьшить">${ic("minus",12)}</button><input type="number" step="1" ${min!=null?`min="${min}"`:""} value="${value}" data-prop="${key}"><button type="button" tabindex="-1" data-step="${key}" data-dir="1" aria-label="Увеличить">${ic("plus",12)}</button></div></label>`;
+}
 function studioPropsCommonHtml(l){
   return`<div class="stud-num-row">
-    <label class="fld"><span>X %</span><input type="number" step="1" value="${Math.round(l.x)}" data-prop="x"></label>
-    <label class="fld"><span>Y %</span><input type="number" step="1" value="${Math.round(l.y)}" data-prop="y"></label>
-    <label class="fld"><span>Ширина %</span><input type="number" step="1" min="1" value="${Math.round(l.w)}" data-prop="w"></label>
-    <label class="fld"><span>Высота %</span><input type="number" step="1" min="1" value="${Math.round(l.h)}" data-prop="h"></label>
+    ${studioStepperHtml("X %","x",Math.round(l.x))}
+    ${studioStepperHtml("Y %","y",Math.round(l.y))}
+    ${studioStepperHtml("Ширина %","w",Math.round(l.w),1)}
+    ${studioStepperHtml("Высота %","h",Math.round(l.h),1)}
   </div>
   <div class="stud-quick-row">
     <button type="button" class="nv-btn v-secondary s-sm" icon-only data-tip="По центру по горизонтали" data-act-center="h">${ic("align-horizontal-justify-center",14)}</button>
     <button type="button" class="nv-btn v-secondary s-sm" icon-only data-tip="По центру по вертикали" data-act-center="v">${ic("align-vertical-justify-center",14)}</button>
     <button type="button" class="nv-btn v-secondary s-sm" icon-only data-tip="Дублировать" data-act-dup>${ic("copy",14)}</button>
   </div>
-  <div class="fld"><span class="lbl">Поворот</span><div class="rng"><input type="range" min="0" max="360" step="1" value="${l.rotation||0}" data-prop="rotation"><output>${l.rotation||0}°</output></div></div>
-  <div class="fld"><span class="lbl">Прозрачность</span><div class="rng"><input type="range" min="0" max="100" step="1" value="${studioOpacityOf(l)}" data-prop="opacity"><output>${studioOpacityOf(l)}%</output></div></div>`;
+  <div class="fld"><span class="lbl">Поворот</span><div class="rng"><input type="range" min="0" max="360" step="1" value="${l.rotation||0}" style="--rng-p:${rngPct(l.rotation||0,0,360)}" data-prop="rotation"><output>${l.rotation||0}°</output></div></div>
+  <div class="fld"><span class="lbl">Прозрачность</span><div class="rng"><input type="range" min="0" max="100" step="1" value="${studioOpacityOf(l)}" style="--rng-p:${rngPct(studioOpacityOf(l),0,100)}" data-prop="opacity"><output>${studioOpacityOf(l)}%</output></div></div>`;
 }
 function studioFillStrokeHtml(l){
   const f=studioFillOf(l),s=studioStrokeOf(l);
   return`<div class="sect-t" style="margin-top:2px">Заливка</div>
   <div class="stud-seg2">${[["solid","Цвет"],["gradient","Градиент"],["none","Нет"]].map(([v,lb])=>`<button type="button" class="${f.type===v?"on":""}" data-prop-set="fill.type" data-val="${v}">${lb}</button>`).join("")}</div>
-  ${f.type!=="none"?`<div class="stud-color"><span class="lbl">Цвет${f.type==="gradient"?" 1":""}</span><input type="color" value="${esc(f.color)}" data-prop="fill.color"></div>`:""}
-  ${f.type==="gradient"?`<div class="stud-color"><span class="lbl">Цвет 2</span><input type="color" value="${esc(f.color2)}" data-prop="fill.color2"></div>
-  <div class="fld"><span class="lbl">Угол градиента</span><div class="rng"><input type="range" min="0" max="360" step="5" value="${f.angle||90}" data-prop="fill.angle"><output>${f.angle||90}°</output></div></div>`:""}
+  ${f.type!=="none"?`<div class="stud-color"><span class="lbl">Цвет${f.type==="gradient"?" 1":""}</span><nv-color-picker value="${esc(f.color)}" data-prop="fill.color"></nv-color-picker></div>`:""}
+  ${f.type==="gradient"?`<div class="stud-color"><span class="lbl">Цвет 2</span><nv-color-picker value="${esc(f.color2)}" data-prop="fill.color2"></nv-color-picker></div>
+  <div class="fld"><span class="lbl">Угол градиента</span><div class="rng"><input type="range" min="0" max="360" step="5" value="${f.angle||90}" style="--rng-p:${rngPct(f.angle||90,0,360)}" data-prop="fill.angle"><output>${f.angle||90}°</output></div></div>`:""}
   <div class="sect-t" style="margin-top:2px">Обводка</div>
   <div class="stud-seg2"><button type="button" class="${!s.enabled?"on":""}" data-prop-set="stroke.enabled" data-val="">Нет</button><button type="button" class="${s.enabled?"on":""}" data-prop-set="stroke.enabled" data-val="1">Есть</button></div>
-  ${s.enabled?`<div class="stud-color"><span class="lbl">Цвет обводки</span><input type="color" value="${esc(s.color)}" data-prop="stroke.color"></div>
-  <div class="fld"><span class="lbl">Толщина</span><div class="rng"><input type="range" min="1" max="20" step="1" value="${s.width}" data-prop="stroke.width"><output>${s.width}px</output></div></div>
+  ${s.enabled?`<div class="stud-color"><span class="lbl">Цвет обводки</span><nv-color-picker value="${esc(s.color)}" data-prop="stroke.color"></nv-color-picker></div>
+  <div class="fld"><span class="lbl">Толщина</span><div class="rng"><input type="range" min="1" max="20" step="1" value="${s.width}" style="--rng-p:${rngPct(s.width,1,20)}" data-prop="stroke.width"><output>${s.width}px</output></div></div>
   <div class="stud-seg2">${[["solid","Линия"],["dashed","Штрих"],["dotted","Точки"]].map(([v,lb])=>`<button type="button" class="${s.dash===v?"on":""}" data-prop-set="stroke.dash" data-val="${v}">${lb}</button>`).join("")}</div>`:""}`;
 }
 function studioAlignDistributeHtml(){
@@ -3979,8 +4048,8 @@ function studioPropsHtml(){
   if(!l)return'<p class="muted" style="font-size:12.5px">Выберите слой на холсте или в списке, чтобы изменить его.</p>';
   if(l.type==="text")return`<div class="stack" style="gap:10px">
     <nv-textarea label="Текст" rows="2" value="${esc(l.text)}" data-prop="text"></nv-textarea>
-    <div class="fld"><span class="lbl">Размер</span><div class="rng"><input type="range" min="2" max="18" step="0.5" value="${l.fontSize}" data-prop="fontSize"><output>${l.fontSize}</output></div></div>
-    <div class="stud-color"><span class="lbl">Цвет</span><input type="color" value="${esc(l.color)}" data-prop="color"></div>
+    <div class="fld"><span class="lbl">Размер</span><div class="rng"><input type="range" min="2" max="18" step="0.5" value="${l.fontSize}" style="--rng-p:${rngPct(l.fontSize,2,18)}" data-prop="fontSize"><output>${l.fontSize}</output></div></div>
+    <div class="stud-color"><span class="lbl">Цвет</span><nv-color-picker value="${esc(l.color)}" data-prop="color"></nv-color-picker></div>
     <div class="row" style="gap:6px"><button type="button" class="nv-btn ${l.weight==="700"?"v-primary":"v-secondary"} s-sm" data-prop-set="weight" data-val="700">Жирный</button><button type="button" class="nv-btn ${l.weight==="400"?"v-primary":"v-secondary"} s-sm" data-prop-set="weight" data-val="400">Обычный</button></div>
     <div class="row" style="gap:6px"><button type="button" class="nv-btn ${l.align==="left"?"v-primary":"v-secondary"} s-sm" icon-only data-prop-set="align" data-val="left">${ic("align-left",14)}</button><button type="button" class="nv-btn ${l.align==="center"?"v-primary":"v-secondary"} s-sm" icon-only data-prop-set="align" data-val="center">${ic("align-center",14)}</button><button type="button" class="nv-btn ${l.align==="right"?"v-primary":"v-secondary"} s-sm" icon-only data-prop-set="align" data-val="right">${ic("align-right",14)}</button></div>
     ${studioPropsCommonHtml(l)}
@@ -3988,7 +4057,7 @@ function studioPropsHtml(){
   if(l.type==="shape")return`<div class="stack" style="gap:10px">
     <div class="row" style="gap:6px;flex-wrap:wrap">${[["rect","Прямоугольник"],["ellipse","Эллипс"],["triangle","Треугольник"],["line","Линия"]].map(([v,lb])=>`<button type="button" class="nv-btn ${l.shape===v?"v-primary":"v-secondary"} s-sm" data-prop-set="shape" data-val="${v}">${lb}</button>`).join("")}</div>
     ${studioFillStrokeHtml(l)}
-    ${l.shape==="rect"?`<div class="fld"><span class="lbl">Скругление</span><div class="rng"><input type="range" min="0" max="80" step="2" value="${l.radius}" data-prop="radius"><output>${l.radius}</output></div></div>`:""}
+    ${l.shape==="rect"?`<div class="fld"><span class="lbl">Скругление</span><div class="rng"><input type="range" min="0" max="80" step="2" value="${l.radius}" style="--rng-p:${rngPct(l.radius,0,80)}" data-prop="radius"><output>${l.radius}</output></div></div>`:""}
     ${studioPropsCommonHtml(l)}
   </div>`;
   if(l.type==="path")return`<div class="stack" style="gap:10px">
@@ -3999,7 +4068,7 @@ function studioPropsHtml(){
     ${studioPropsCommonHtml(l)}
   </div>`;
   if(l.type==="icon")return`<div class="stack" style="gap:10px">
-    <div class="stud-color"><span class="lbl">Цвет</span><input type="color" value="${esc(l.color)}" data-prop="color"></div>
+    <div class="stud-color"><span class="lbl">Цвет</span><nv-color-picker value="${esc(l.color)}" data-prop="color"></nv-color-picker></div>
     <span class="lbl">Иконка</span>
     <div class="stud-icon-pick">${STUDIO_ICONS.map(n=>`<button type="button" class="${l.icon===n?"on":""}" data-prop-set="icon" data-val="${n}" aria-label="${n}">${ic(n,16)}</button>`).join("")}</div>
     ${studioPropsCommonHtml(l)}
@@ -4172,7 +4241,7 @@ editor(){
     <div class="stud-tools">
       <nv-input label="Название" value="${esc(d.name)}" data-chg="studName"></nv-input>
       <nv-segmented label="Формат" value="${d.format}" options="${Object.entries(STUDIO_FMT).map(([k,v])=>k+":"+v.label).join("|")}" data-chg="studFormat"></nv-segmented>
-      <div class="stud-color"><span class="lbl">Фон</span><input type="color" value="${esc(d.bg.color||"#ffffff")}" data-act-bg-color></div>
+      <div class="stud-color"><span class="lbl">Фон</span><nv-color-picker value="${esc(d.bg.color||"#ffffff")}" data-act-bg-color></nv-color-picker></div>
       <input type="file" id="stud-bg-file" accept="image/*" class="sr">
       <label class="nv-btn v-secondary s-sm" for="stud-bg-file" style="width:100%;justify-content:center">${ic("image",14)}Фон картинкой</label>
       ${d.bg.type==="image"?`<nv-button variant="ghost" size="sm" icon="x" data-act="studBgClear">Убрать фон-картинку</nv-button>`:""}
@@ -4293,21 +4362,33 @@ editor(){
     });
     const pp=root.querySelector("#stud-props");
     if(pp){
-      pp.addEventListener("mousedown",e=>{if(e.target.matches("input,[data-prop-set],[data-act-dup],[data-act-center],[data-act-align],[data-act-dist]"))studioBeforeChange()},true);
+      pp.addEventListener("mousedown",e=>{if(e.target.closest("input,[data-prop-set],[data-act-dup],[data-act-center],[data-act-align],[data-act-dist],.stud-color,.stud-stepper"))studioBeforeChange()},true);
       pp.addEventListener("input",e=>{
         const l=studioSelected();if(!l)return;const k=e.target.dataset.prop;if(!k)return;
         let v=e.target.value;if(e.target.type==="range"||e.target.type==="number")v=+v;
         studioSetPath(l,k,v);
+        if(e.target.type==="range")e.target.style.setProperty("--rng-p",rngPct(v,e.target.min,e.target.max));
         const out=e.target.closest(".rng");if(out)out.querySelector("output").textContent=v+(k==="rotation"||k==="fill.angle"?"°":k==="opacity"?"%":k==="stroke.width"?"px":"");
         studioPatchLayerDom(l);NEON.save();
       });
-      /* nv-textarea (FieldEl) stops its native "input" event from bubbling and emits
-         nv-change instead — a separate listener for that, data-prop lives on the
-         custom element itself here (unlike the raw <input> case above). */
+      /* nv-textarea/nv-color-picker (FieldEl-like) stop their native events from
+         bubbling and emit nv-change instead — data-prop lives on the custom
+         element itself here (unlike the raw <input> case above).
+         Deliberately SKIP studioRenderSidebar() for nv-color-picker: it rebuilds
+         #stud-props's whole innerHTML, which destroys and recreates the
+         <nv-color-picker> element — fine normally, but while ITS OWN popover is
+         still open, the popover's mount() closure keeps calling methods on the
+         now-detached original element, so dispatchEvent(..., {bubbles:true}) has
+         no parent chain to bubble through and silently does nothing (no error).
+         A color change never needs to refresh the layers-list label/sub-panel
+         anyway (only text content and shape-type do), so skipping it here is
+         both safe and necessary. */
       pp.addEventListener("nv-change",e=>{
         const l=studioSelected();if(!l)return;const k=e.target.dataset.prop;if(!k)return;
         studioSetPath(l,k,e.detail.value);
-        studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();
+        studioPatchLayerDom(l);
+        if(e.target.tagName!=="NV-COLOR-PICKER")studioRenderSidebar(root);
+        NEON.save();
       });
       pp.addEventListener("click",e=>{
         const alignBtn=e.target.closest("[data-act-align]"),distBtn=e.target.closest("[data-act-dist]");
@@ -4327,6 +4408,8 @@ editor(){
           studioSetPath(l,k,boolKeys.includes(k)?set.dataset.val==="1":set.dataset.val);
           studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return;
         }
+        const step=e.target.closest("[data-step]");
+        if(step){const k=step.dataset.step,inp=step.closest(".stud-stepper").querySelector("input"),min=inp.min!==""?+inp.min:-Infinity;l[k]=Math.max(min,(+l[k]||0)+(+step.dataset.dir));studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const center=e.target.closest("[data-act-center]");
         if(center){if(center.dataset.actCenter==="h")l.x=Math.max(0,(100-l.w)/2);else l.y=Math.max(0,(100-l.h)/2);studioPatchLayerDom(l);NEON.save();return}
         const dup=e.target.closest("[data-act-dup]");
@@ -4496,8 +4579,9 @@ Object.assign(N.acts,{
     toast("Дизайн создан из креатива",{tone:"success"});
   }
 });
-document.body.addEventListener("input",e=>{
-  if(e.target.matches("[data-act-bg-color]")){studioDesign().bg={type:"color",color:e.target.value};const stage=document.querySelector(".stud-stage");if(stage&&studioDesign().bg.type==="color")stage.style.background=e.target.value;NEON.save()}
+document.body.addEventListener("mousedown",e=>{if(e.target.closest("[data-act-bg-color]"))studioBeforeChange()},true);
+document.body.addEventListener("nv-change",e=>{
+  if(e.target.matches("[data-act-bg-color]")){studioDesign().bg={type:"color",color:e.detail.value};const stage=document.querySelector(".stud-stage");if(stage&&studioDesign().bg.type==="color")stage.style.background=e.detail.value;NEON.save()}
 });
 N.register({id:"studio",name:"Студия креативов",short:"Студия",tag:"Creative Studio",icon:"palette",rail:"main",status:"ready",
   desc:"Собирайте рекламные креативы на холсте: текст, картинки, фигуры",
