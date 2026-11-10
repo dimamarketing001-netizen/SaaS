@@ -2074,6 +2074,54 @@ async function apiPost(path,body){
 // то же окно уходит в Telegram (ozon-captcha.html?s=…).
 // Юрлицо Click.ru: «#1480787: Муфатыков Роман Маратович». У физлиц/ИП нет
 // name — ФИО собирает и addAvto (/api/payers), здесь подстраховка.
+// Картинки креативов (2026-11-10): Директ берёт только байты (AdImages.add),
+// поэтому всё, что можно, храним у себя — "local:<sha>.jpg" (фото Ozon,
+// скачанные Chrome на ПК, и файлы с компьютера). Файл уходит как есть, без
+// base64: nginx перед addAvto пропускает до 10 МБ.
+const CREATIVE_IMG_TYPES=["image/jpeg","image/png","image/gif"];
+const creativeImgCache=new Map();
+async function uploadCreativeImage(file){
+ if(!CREATIVE_IMG_TYPES.includes(file.type))throw new Error(file.name+": нужен JPG, PNG или GIF — Директ принимает только их");
+ if(file.size>10*1024*1024)throw new Error(file.name+": больше 10 МБ — Директ такую не примет");
+ const res=await fetch(API_BASE+"/api/v1/ads/creative-images",{method:"POST",headers:{Authorization:"Bearer "+session.token,"Content-Type":file.type},body:file});
+ if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
+ if(!res.ok){let d="Ошибка "+res.status;try{d=errDetail(await res.json(),d)}catch(e){}throw new Error(file.name+": "+d)}
+ const {ref}=await res.json();creativeImgCache.set(ref,URL.createObjectURL(file));return ref;
+}
+async function creativeImgSrc(ref){
+ if(!ref.startsWith("local:"))return ref;
+ if(creativeImgCache.has(ref))return creativeImgCache.get(ref);
+ const p=api("/api/v1/ads/creative-images/"+encodeURIComponent(ref.slice(6))).then(r=>r.data_url).catch(()=>"");
+ creativeImgCache.set(ref,p);return p;
+}
+// Галерея: миниатюры + «убрать» + загрузка с компьютера + добавить по ссылке.
+// getList/setList — где хранится список (строка через \n в визарде).
+function mountCreativeGallery(host,getList,setList,{single=false}={}){
+ const render=()=>{
+  const list=getList();
+  host.innerHTML=`<div class="row" style="flex-wrap:wrap;gap:8px">${list.map((u,i)=>`<div style="position:relative;width:92px;height:92px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg-2,#f3f4f6)">
+     <img data-i="${i}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+     <button type="button" data-rm="${i}" aria-label="Убрать картинку" style="position:absolute;top:3px;right:3px;border:0;border-radius:6px;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;width:22px;height:22px;line-height:20px">×</button>
+     ${u.startsWith("local:")?"":`<span title="Ссылка: сервер скачает при запуске" style="position:absolute;left:3px;bottom:3px;font-size:10px;background:rgba(0,0,0,.6);color:#fff;border-radius:4px;padding:0 4px">ссылка</span>`}</div>`).join("")}
+   ${single&&list.length?"":`<label class="nv-btn v-secondary s-sm" style="cursor:pointer;align-self:center"><nv-icon name="upload" size="14"></nv-icon>${single?"Загрузить":"Загрузить с компьютера"}<input type="file" class="sr" accept="image/jpeg,image/png,image/gif" ${single?"":"multiple"}></label>`}</div>
+   ${single?"":`<div class="row" style="gap:6px;margin-top:6px"><input type="url" placeholder="или вставьте ссылку на картинку" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:transparent;color:inherit"><button type="button" class="nv-btn v-ghost s-sm" data-add-url>Добавить</button></div>`}
+   <div class="muted" data-gal-msg style="font-size:12px;margin-top:4px">JPG, PNG или GIF до 10 МБ. Файлы хранятся на сервере и уходят в Директ через API, не ссылкой.</div>`;
+  host.querySelectorAll("img[data-i]").forEach(img=>creativeImgSrc(list[+img.dataset.i]).then(src=>{if(src)img.src=src}));
+  host.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{const l=getList();l.splice(+b.dataset.rm,1);setList(l);render()});
+  const inp=host.querySelector('input[type="file"]'),msg=host.querySelector("[data-gal-msg]");
+  if(inp)inp.onchange=async()=>{
+   const files=[...inp.files];if(!files.length)return;msg.style.color="";msg.textContent="Загружаю "+files.length+" шт.…";
+   const errs=[];let l=getList();
+   for(const f of files){try{const ref=await uploadCreativeImage(f);if(!l.includes(ref))l=single?[ref]:[...l,ref]}catch(e){errs.push(e.message)}}
+   setList(l);render();
+   if(errs.length){const m=host.querySelector("[data-gal-msg]");m.textContent=errs.join("; ");m.style.color="var(--bad)"}
+  };
+  const add=host.querySelector("[data-add-url]");
+  if(add)add.onclick=()=>{const f=add.previousElementSibling,u=(f.value||"").trim();if(!/^https?:\/\//.test(u)){msg.textContent="Ссылка должна начинаться с http(s)://";msg.style.color="var(--bad)";return}
+   const l=getList();if(!l.includes(u))l.push(u);setList(l);render()};
+ };
+ render();
+}
 function payerName(p){
  const fio=[p.lastName,p.firstName,p.middleName].filter(Boolean).join(" ");
  return (p.name||"").trim()||fio||p.fullName||p.description||"";
@@ -3490,7 +3538,7 @@ function projectWizard(existingProject){
               const gen=await ozonGenerate(saved.id,ozonUrl,s=>{msg.textContent=genLabel+" Прошло "+s+" с."},capHost);
               saved=gen.project;wiz.project=saved;
               msg.textContent="Готово: "+(saved.headlines||[]).length+" заголовков, "+(saved.ad_texts||[]).length+" текстов, "+
-                (saved.image_urls||[]).length+" картинок, "+(saved.keywords||"").split("\n").filter(Boolean).length+" ключевых фраз.";
+                (saved.image_urls||[]).length+" картинок, "+(saved.callouts_pool||[]).length+" уточнений, "+(saved.sitelinks_pool||[]).length+" быстрых ссылок, "+(saved.keywords||"").split("\n").filter(Boolean).length+" ключевых фраз.";
             }catch(genErr){
               msg.textContent="Проект создан, но генерация не удалась: "+(genErr.message||"")+" Можно нажать «Далее» ещё раз или заполнить шаг 5 вручную.";
               msg.style.color="var(--bad)";
@@ -3635,13 +3683,13 @@ function projectWizard(existingProject){
     const modeHtml=`<nv-select name="creative_mode" label="Откуда брать креативы для ${n} ${accountsWord(n)}" value="${wiz.creativeMode}" options="shuffle:Скрипт перемешает сам|duplicate_single:Один набор на все аккаунты|manual_per_account:Свой набор на каждый аккаунт"></nv-select>`;
     const poolHtml=`<nv-textarea name="headlines" label="Заголовки — по одному на строку (до 56 символов)" rows="3" value="${esc(wiz.headlines)}"></nv-textarea>
       <nv-textarea name="ad_texts" label="Тексты объявлений — по одному на строку (до 81 символа)" rows="3" value="${esc(wiz.adTexts)}"></nv-textarea>
-      <nv-textarea name="image_urls" label="Изображения — ссылки, по одной на строку (необязательно)" rows="2" value="${esc(wiz.imageUrls)}"></nv-textarea>
+      <div class="field field-wide"><div style="font-weight:600;font-size:13px;margin-bottom:6px">Изображения (необязательно)</div><div id="wiz-images"></div></div>
       <nv-textarea name="callouts_pool" label="Уточнения — по одному на строку, до 25 символов, до 5 шт. (необязательно)" rows="2" value="${esc(wiz.calloutsPool)}"></nv-textarea>
       <nv-textarea name="sitelinks_pool" label="Быстрые ссылки — «Заголовок|Ссылка|Описание» по одной на строку, до 4 шт. (необязательно)" rows="3" placeholder="Доставка|https://example.ru/delivery|Условия доставки" value="${esc(wiz.sitelinksPool)}"></nv-textarea>`;
     const manualHtml=wiz.manualSets.map((set,i)=>`<nv-card heading="Аккаунт ${i+1}" style="margin-top:8px">
       <nv-input data-manual-headline="${i}" label="Заголовок" value="${esc(set.headline)}"></nv-input>
       <nv-input data-manual-adtext="${i}" label="Текст объявления" value="${esc(set.ad_text)}"></nv-input>
-      <nv-input data-manual-image="${i}" label="Ссылка на изображение (необязательно)" value="${esc(set.image_url)}"></nv-input>
+      <div style="font-weight:600;font-size:13px;margin:6px 0">Изображение (необязательно)</div><div data-manual-image-gal="${i}"></div>
       </nv-card>`).join("");
     const isOzonProject=wiz.project&&wiz.project.launch_mode==="ozon";
     const ozonRegenHtml=isOzonProject?`<nv-callout tone="info" heading="Из Ozon">Заголовки/тексты/ключевые фразы/картинки сгенерировал Gemini по карточке <a href="${esc(wiz.project.ozon_url||"")}" target="_blank" rel="noopener">${esc(wiz.project.ozon_url||"")}</a>. Можно поправить вручную ниже или перегенерировать заново (старые значения заменятся).
@@ -3664,6 +3712,8 @@ function projectWizard(existingProject){
     body.querySelectorAll('input[name="wizStructure"]').forEach(inp=>inp.onchange=()=>{wiz.adsPerGroup=inp.value==="multi"?(wiz.adsPerGroup>1?wiz.adsPerGroup:5):1;drawStep5(body)});
     body.querySelector('nv-select[name="creative_mode"]').addEventListener("nv-change",e=>{wiz.creativeMode=e.detail.value;if(wiz.creativeMode!=="shuffle")wiz.adsPerGroup=1;drawStep5(body)});
     if(!manual){
+      const galHost=body.querySelector("#wiz-images");
+      if(galHost)mountCreativeGallery(galHost,()=>(wiz.imageUrls||"").split("\n").map(x=>x.trim()).filter(Boolean),l=>{wiz.imageUrls=l.join("\n")});
       ["headlines","ad_texts","image_urls","callouts_pool","sitelinks_pool"].forEach(n2=>{
         const el=body.querySelector(`nv-textarea[name="${n2}"]`);
         if(el)el.addEventListener("nv-change",e=>{wiz[n2==="ad_texts"?"adTexts":n2==="image_urls"?"imageUrls":n2==="callouts_pool"?"calloutsPool":n2==="sitelinks_pool"?"sitelinksPool":"headlines"]=e.detail.value});
@@ -3671,7 +3721,8 @@ function projectWizard(existingProject){
     }else{
       body.querySelectorAll("[data-manual-headline]").forEach(el=>el.addEventListener("nv-change",e=>{wiz.manualSets[+el.dataset.manualHeadline].headline=e.detail.value}));
       body.querySelectorAll("[data-manual-adtext]").forEach(el=>el.addEventListener("nv-change",e=>{wiz.manualSets[+el.dataset.manualAdtext].ad_text=e.detail.value}));
-      body.querySelectorAll("[data-manual-image]").forEach(el=>el.addEventListener("nv-change",e=>{wiz.manualSets[+el.dataset.manualImage].image_url=e.detail.value}));
+      body.querySelectorAll("[data-manual-image-gal]").forEach(el=>{const i=+el.dataset.manualImageGal;
+        mountCreativeGallery(el,()=>wiz.manualSets[i].image_url?[wiz.manualSets[i].image_url]:[],l=>{wiz.manualSets[i].image_url=l[0]||""},{single:true})});
     }
     body.querySelector("[data-wiz-back]").onclick=()=>setStep(4);
     body.querySelector("[data-wiz-launch]").onclick=()=>{
@@ -3693,7 +3744,7 @@ function projectWizard(existingProject){
         if(!headlines.length||!adTexts.length){msg.textContent="Нужен хотя бы один заголовок и один текст объявления";msg.style.color="var(--bad)";return}
       }
       msg.style.color="";msg.textContent="Запускаю…";
-      const imageUrls=(v.image_urls||"").split("\n").map(x=>x.trim()).filter(Boolean);
+      const imageUrls=(wiz.imageUrls||"").split("\n").map(x=>x.trim()).filter(Boolean);
       const calloutsPool=(v.callouts_pool||"").split("\n").map(x=>x.trim()).filter(Boolean);
       const sitelinksPool=parseSitelinksPool(v.sitelinks_pool);
       (async()=>{
