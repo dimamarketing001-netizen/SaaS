@@ -2076,13 +2076,20 @@ async function ozonGenerate(projectId,url,onTick,captchaHost){
  const path="/api/v1/ads/projects/"+projectId+"/ozon-generate";
  let st=await apiPost(path,{url});
  const t0=Date.now();
- const stopCaptcha=(captchaHost&&st.captcha_session)?ozonCaptchaWatch(st.captcha_session,captchaHost):()=>{};
+ const watch=s=>(captchaHost&&s.captcha_session)?ozonCaptchaWatch(s.captcha_session,captchaHost):()=>{};
+ let stopCaptcha=watch(st),restarts=0;
  try{
   while(st.status==="running"){
    if(Date.now()-t0>16*60*1000)throw new Error("Генерация идёт дольше 16 минут — обновите страницу позже.");
    if(onTick)onTick(Math.round((Date.now()-t0)/1000));
    await new Promise(r=>setTimeout(r,4000));
    try{st=await api(path)}catch(e){if(/session expired/.test(e.message||""))throw e}
+   // Задача живёт в памяти addAvto: после перезапуска сервиса (деплой) её
+   // нет — запускаем заново один раз сами, а не показываем ошибку.
+   if(st.status==="none"&&restarts<1){
+    restarts++;stopCaptcha();
+    st=await apiPost(path,{url});stopCaptcha=watch(st);
+   }
   }
  }finally{stopCaptcha()}
  if(st.status==="done"&&st.result)return st.result;
