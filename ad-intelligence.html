@@ -3231,13 +3231,18 @@ function projectWizard(existingProject){
     geoRegions:null,
     connectionId:null,payers:null,payerId:null,payerType:"BUSINESS",
     count:1,creativeMode:"shuffle",adsPerGroup:1,
-    headlines:existingProject&&existingProject.headlines?existingProject.headlines.join("\n"):"",
-    adTexts:existingProject&&existingProject.ad_texts?existingProject.ad_texts.join("\n"):"",
-    imageUrls:existingProject&&existingProject.image_urls?existingProject.image_urls.join("\n"):"",
-    calloutsPool:existingProject&&existingProject.callouts_pool?existingProject.callouts_pool.join("\n"):"",
-    sitelinksPool:existingProject&&existingProject.sitelinks_pool&&existingProject.sitelinks_pool.length?existingProject.sitelinks_pool.map(s=>[s.title,s.href,s.description].join("|")).join("\n"):"",
+    launchMode:(existingProject&&existingProject.launch_mode)||"direct",
+    headlines:"",adTexts:"",imageUrls:"",calloutsPool:"",sitelinksPool:"",
     manualSets:[]
   };
+  function reseedPools(p){
+    wiz.headlines=p&&p.headlines?p.headlines.join("\n"):"";
+    wiz.adTexts=p&&p.ad_texts?p.ad_texts.join("\n"):"";
+    wiz.imageUrls=p&&p.image_urls?p.image_urls.join("\n"):"";
+    wiz.calloutsPool=p&&p.callouts_pool?p.callouts_pool.join("\n"):"";
+    wiz.sitelinksPool=p&&p.sitelinks_pool&&p.sitelinks_pool.length?p.sitelinks_pool.map(s=>[s.title,s.href,s.description].join("|")).join("\n"):"";
+  }
+  reseedPools(existingProject);
   (async()=>{try{const data=await api("/api/v1/ads/geo-regions",{});wiz.geoRegions=data.items||[]}catch(e){wiz.geoRegions=[]}})();
   const STEP_ITEMS="1. Проект|2. Аккаунт Click.ru|3. Юрлицо|4. Количество|5. Креативы";
   let root;
@@ -3260,39 +3265,82 @@ function projectWizard(existingProject){
     const p=wiz.project||{};
     if(wiz.locked){
       body.innerHTML=`<nv-callout tone="info" heading="Проект уже запущен">Название, домен, ключевые фразы и регион менять нельзя — можно запустить ещё аккаунты с теми же настройками.</nv-callout>
-      <dl class="dl"><dt>Название</dt><dd>${esc(p.name)}</dd><dt>Домен</dt><dd>${esc(p.domain)}</dd><dt>Регион</dt><dd>${esc((p.region_ids||[]).join(", ")||"—")}</dd></dl>
+      <dl class="dl"><dt>Название</dt><dd>${esc(p.name)}</dd><dt>Домен</dt><dd>${esc(p.domain)}</dd>${p.launch_mode==="ozon"?`<dt>Источник креативов</dt><dd>Директ Озон — ${esc(p.ozon_url||"")}</dd>`:""}<dt>Регион</dt><dd>${esc((p.region_ids||[]).join(", ")||"—")}</dd></dl>
       ${stepHtml('<span></span><nv-button variant="primary" icon="arrow-right" data-wiz-next>Далее</nv-button>')}`;
       body.querySelector("[data-wiz-next]").onclick=()=>setStep(2);
       return;
     }
-    body.innerHTML=`<nv-input name="name" label="Название проекта" value="${esc(p.name||"")}" required></nv-input>
-    <nv-input name="domain" label="Сайт (домен)" value="${esc(p.domain||"")}" placeholder="example.ru" required></nv-input>
+    const mode=wiz.launchMode||"direct",isOzon=mode==="ozon";
+    body.innerHTML=`<nv-input name="name" label="Название проекта${isOzon?" (необязательно — подставим название товара)":""}" value="${esc(p.name||"")}" ${isOzon?"":"required"}></nv-input>
+    <nv-select name="launch_mode" label="Источник креативов" value="${mode}" options="direct:Обычный Директ|ozon:Директ Озон"></nv-select>
+    <div id="wiz-domain-block"${isOzon?" hidden":""}><nv-input name="domain" label="Сайт (домен)" value="${esc(isOzon?"":(p.domain||""))}" placeholder="example.ru" ${isOzon?"":"required"}></nv-input></div>
+    <div id="wiz-ozon-block"${isOzon?"":" hidden"}>
+      <nv-input name="ozon_url" label="Ссылка на карточку товара Ozon" value="${esc(p.ozon_url||"")}" placeholder="https://www.ozon.ru/product/..."></nv-input>
+      <nv-callout tone="info" heading="Заполнится автоматически">Домен, заголовки, тексты объявлений, ключевые и минус-фразы, картинки — сгенерирует Gemini после нажатия «Далее» (30–90 секунд). Можно поправить вручную на шаге 5 или перегенерировать позже.</nv-callout>
+    </div>
     <nv-select name="campaign_mode" label="Структура кампаний" value="${esc(p.campaign_mode||"separate")}" options="separate:Отдельные кампании (Поиск + РСЯ)|single_epk:Одна ЕПК"></nv-select>
     <nv-input name="target_drr" label="Целевой ДРР, %" type="number" value="${esc(p.target_drr??30)}"></nv-input>
     <nv-input name="mobile_bid_adjustment_percent" label="Корректировка ставки, моб. (необязательно)" type="number" value="${p.mobile_bid_adjustment_percent!=null?esc(p.mobile_bid_adjustment_percent):""}"></nv-input>
-    <nv-textarea name="keywords" label="Ключевые фразы" rows="3" placeholder="По одной на строку" value="${esc(p.keywords||"")}" required></nv-textarea>
-    <nv-textarea name="negative_keywords" label="Минус-фразы (необязательно)" rows="2" value="${esc(p.negative_keywords||"")}"></nv-textarea>
+    <div id="wiz-kw-block"${isOzon?" hidden":""}>
+      <nv-textarea name="keywords" label="Ключевые фразы" rows="3" placeholder="По одной на строку" value="${esc(p.keywords||"")}" ${isOzon?"":"required"}></nv-textarea>
+      <nv-textarea name="negative_keywords" label="Минус-фразы (необязательно)" rows="2" value="${esc(p.negative_keywords||"")}"></nv-textarea>
+    </div>
     <nv-tag-input name="regions" label="Город или регион показа" value="${esc(wiz.regionsRaw)}" placeholder="${wiz.geoRegions&&wiz.geoRegions.length?"Начните вводить название":"Справочник регионов недоступен — введите числовые ID (Яндекс.Директ)"}" required></nv-tag-input>
     ${stepHtml('<span></span><nv-button variant="primary" icon="arrow-right" data-wiz-next>'+(wiz.project?"Сохранить и далее":"Создать и далее")+'</nv-button>')}
     <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
+    body.querySelector('nv-select[name="launch_mode"]').addEventListener("nv-change",e=>{
+      wiz.launchMode=e.detail.value;
+      const on=wiz.launchMode==="ozon";
+      body.querySelector("#wiz-domain-block").hidden=on;
+      body.querySelector("#wiz-ozon-block").hidden=!on;
+      body.querySelector("#wiz-kw-block").hidden=on;
+    });
     body.querySelector("[data-wiz-next]").onclick=()=>{
       const v=formVals(body),msg=body.querySelector("#wiz-msg");
-      const name=(v.name||"").trim(),domain=normalizeDomain(v.domain);
-      if(!name){msg.textContent="Введите название проекта";msg.style.color="var(--bad)";return}
-      if(domain.length<8){msg.textContent="Введите корректный домен";msg.style.color="var(--bad)";return}
-      if(!(v.keywords||"").trim()){msg.textContent="Нужна хотя бы одна ключевая фраза";msg.style.color="var(--bad)";return}
+      const name=(v.name||"").trim();
+      const ozonMode=(v.launch_mode||mode)==="ozon";
       const{ids,unresolved}=resolveRegionIds(v.regions,wiz.geoRegions);
       if(!ids.length){msg.textContent="Выберите хотя бы один город или регион";msg.style.color="var(--bad)";return}
       if(unresolved.length){msg.textContent="Не распознаны регионы: "+unresolved.join(", ");msg.style.color="var(--bad)";return}
       wiz.regionsRaw=v.regions;
-      const payload={name,domain,campaign_mode:v.campaign_mode||"separate",target_drr:+v.target_drr||30,
-        mobile_bid_adjustment_percent:v.mobile_bid_adjustment_percent?+v.mobile_bid_adjustment_percent:null,
-        keywords:v.keywords||"",negative_keywords:v.negative_keywords||"",region_ids:ids};
+      let payload,ozonUrl="";
+      if(ozonMode){
+        ozonUrl=(v.ozon_url||"").trim();
+        if(!ozonUrl){msg.textContent="Укажите ссылку на карточку товара Ozon";msg.style.color="var(--bad)";return}
+        if(!/ozon\./i.test(ozonUrl)){msg.textContent="Это не похоже на ссылку Ozon";msg.style.color="var(--bad)";return}
+        payload={name:name||"Товар Ozon",domain:ozonUrl,campaign_mode:v.campaign_mode||"separate",target_drr:+v.target_drr||30,
+          mobile_bid_adjustment_percent:v.mobile_bid_adjustment_percent?+v.mobile_bid_adjustment_percent:null,
+          launch_mode:"ozon",ozon_url:ozonUrl,keywords:"",negative_keywords:"",region_ids:ids};
+      }else{
+        const domain=normalizeDomain(v.domain);
+        if(!name){msg.textContent="Введите название проекта";msg.style.color="var(--bad)";return}
+        if(domain.length<8){msg.textContent="Введите корректный домен";msg.style.color="var(--bad)";return}
+        if(!(v.keywords||"").trim()){msg.textContent="Нужна хотя бы одна ключевая фраза";msg.style.color="var(--bad)";return}
+        payload={name,domain,campaign_mode:v.campaign_mode||"separate",target_drr:+v.target_drr||30,
+          mobile_bid_adjustment_percent:v.mobile_bid_adjustment_percent?+v.mobile_bid_adjustment_percent:null,
+          launch_mode:"direct",ozon_url:"",keywords:v.keywords||"",negative_keywords:v.negative_keywords||"",region_ids:ids};
+      }
       msg.style.color="";msg.textContent=wiz.project?"Сохраняю…":"Создаю…";
       (async()=>{
         try{
-          const saved=wiz.project?await apiPut("/api/v1/ads/projects/"+wiz.project.id,{...wiz.project,...payload}):await apiPost("/api/v1/ads/projects",payload);
-          wiz.project=saved;loadProjects();setStep(2);
+          let saved=wiz.project?await apiPut("/api/v1/ads/projects/"+wiz.project.id,{...wiz.project,...payload}):await apiPost("/api/v1/ads/projects",payload);
+          wiz.project=saved;
+          if(ozonMode){
+            msg.textContent="Озон парсит карточку, Gemini пишет тексты… это может занять 30–90 секунд.";
+            try{
+              const gen=await apiPost("/api/v1/ads/projects/"+saved.id+"/ozon-generate",{url:ozonUrl});
+              saved=gen.project;wiz.project=saved;
+              msg.textContent="Готово: "+(saved.headlines||[]).length+" заголовков, "+(saved.ad_texts||[]).length+" текстов, "+
+                (saved.image_urls||[]).length+" картинок, "+(saved.keywords||"").split("\n").filter(Boolean).length+" ключевых фраз.";
+            }catch(genErr){
+              msg.textContent="Проект создан, но генерация не удалась: "+(genErr.message||"")+" Можно нажать «Далее» ещё раз или заполнить шаг 5 вручную.";
+              msg.style.color="var(--bad)";
+              loadProjects();
+              return;
+            }
+          }
+          reseedPools(saved);
+          loadProjects();setStep(2);
         }catch(err){msg.textContent=err.message||"Не удалось сохранить";msg.style.color="var(--bad)"}
       })();
     };
@@ -3432,9 +3480,22 @@ function projectWizard(existingProject){
       <nv-input data-manual-adtext="${i}" label="Текст объявления" value="${esc(set.ad_text)}"></nv-input>
       <nv-input data-manual-image="${i}" label="Ссылка на изображение (необязательно)" value="${esc(set.image_url)}"></nv-input>
       </nv-card>`).join("");
-    body.innerHTML=structureHtml+modeHtml+`<div id="wiz-creatives">${manual?manualHtml:poolHtml}</div>
+    const isOzonProject=wiz.project&&wiz.project.launch_mode==="ozon";
+    const ozonRegenHtml=isOzonProject?`<nv-callout tone="info" heading="Из Ozon">Заголовки/тексты/ключевые фразы/картинки сгенерировал Gemini по карточке <a href="${esc(wiz.project.ozon_url||"")}" target="_blank" rel="noopener">${esc(wiz.project.ozon_url||"")}</a>. Можно поправить вручную ниже или перегенерировать заново (старые значения заменятся).
+      <div style="margin-top:8px"><nv-button size="sm" variant="ghost" icon="refresh-cw" data-wiz-ozon-regen>Пересоздать через Gemini</nv-button></div>
+      <div id="wiz-ozon-regen-msg" class="muted" style="font-size:12.5px;margin-top:4px"></div></nv-callout>`:"";
+    body.innerHTML=ozonRegenHtml+structureHtml+modeHtml+`<div id="wiz-creatives">${manual?manualHtml:poolHtml}</div>
     ${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="rocket" data-wiz-launch>Запустить массовый запуск</nv-button>')}
     <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
+    if(isOzonProject)body.querySelector("[data-wiz-ozon-regen]").onclick=async()=>{
+      const regenMsg=body.querySelector("#wiz-ozon-regen-msg"),btn=body.querySelector("[data-wiz-ozon-regen]");
+      btn.setAttribute("disabled","");
+      regenMsg.style.color="";regenMsg.textContent="Озон парсит карточку, Gemini пишет тексты… 30–90 секунд.";
+      try{
+        const gen=await apiPost("/api/v1/ads/projects/"+wiz.project.id+"/ozon-generate",{url:wiz.project.ozon_url});
+        wiz.project=gen.project;reseedPools(wiz.project);drawStep5(body);
+      }catch(err){regenMsg.textContent=err.message||"Не удалось перегенерировать";regenMsg.style.color="var(--bad)";btn.removeAttribute("disabled")}
+    };
     body.querySelectorAll('input[name="wizStructure"]').forEach(inp=>inp.onchange=()=>{wiz.adsPerGroup=inp.value==="multi"?(wiz.adsPerGroup>1?wiz.adsPerGroup:5):1;drawStep5(body)});
     body.querySelector('nv-select[name="creative_mode"]').addEventListener("nv-change",e=>{wiz.creativeMode=e.detail.value;if(wiz.creativeMode!=="shuffle")wiz.adsPerGroup=1;drawStep5(body)});
     if(!manual){
