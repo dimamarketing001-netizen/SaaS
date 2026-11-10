@@ -2066,6 +2066,21 @@ async function apiPost(path,body){
  if(!res.ok){let detail="API error "+res.status;try{detail=errDetail(await res.json(),detail)}catch(e){}throw new Error(detail)}
  return res.json();
 }
+// Генерация Ozon→Gemini идёт 1–5 минут: POST только запускает фоновую
+// задачу (202), дальше опрашиваем статус, пока не done/failed.
+async function ozonGenerate(projectId,url,onTick){
+ const path="/api/v1/ads/projects/"+projectId+"/ozon-generate";
+ let st=await apiPost(path,{url});
+ const t0=Date.now();
+ while(st.status==="running"){
+  if(Date.now()-t0>12*60*1000)throw new Error("Генерация идёт дольше 12 минут — обновите страницу позже.");
+  if(onTick)onTick(Math.round((Date.now()-t0)/1000));
+  await new Promise(r=>setTimeout(r,4000));
+  try{st=await api(path)}catch(e){if(/session expired/.test(e.message||""))throw e}
+ }
+ if(st.status==="done"&&st.result)return st.result;
+ throw new Error(st.error||"Генерация прервалась (сервис перезапускался?) — запустите ещё раз.");
+}
 async function apiDelete(path){
  const res=await fetch(API_BASE+path,{method:"DELETE",headers:{Authorization:"Bearer "+session.token}});
  if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
@@ -3403,9 +3418,10 @@ function projectWizard(existingProject){
           let saved=wiz.project?await apiPut("/api/v1/ads/projects/"+wiz.project.id,{...wiz.project,...payload}):await apiPost("/api/v1/ads/projects",payload);
           wiz.project=saved;
           if(ozonMode){
-            msg.textContent="Озон парсит карточку, Gemini пишет тексты… это может занять 30–90 секунд.";
+            const genLabel="Озон парсит карточку, Gemini пишет тексты… обычно 1–5 минут, страницу можно не трогать.";
+            msg.textContent=genLabel;
             try{
-              const gen=await apiPost("/api/v1/ads/projects/"+saved.id+"/ozon-generate",{url:ozonUrl});
+              const gen=await ozonGenerate(saved.id,ozonUrl,s=>{msg.textContent=genLabel+" Прошло "+s+" с."});
               saved=gen.project;wiz.project=saved;
               msg.textContent="Готово: "+(saved.headlines||[]).length+" заголовков, "+(saved.ad_texts||[]).length+" текстов, "+
                 (saved.image_urls||[]).length+" картинок, "+(saved.keywords||"").split("\n").filter(Boolean).length+" ключевых фраз.";
@@ -3571,9 +3587,10 @@ function projectWizard(existingProject){
     if(isOzonProject)body.querySelector("[data-wiz-ozon-regen]").onclick=async()=>{
       const regenMsg=body.querySelector("#wiz-ozon-regen-msg"),btn=body.querySelector("[data-wiz-ozon-regen]");
       btn.setAttribute("disabled","");
-      regenMsg.style.color="";regenMsg.textContent="Озон парсит карточку, Gemini пишет тексты… 30–90 секунд.";
+      const regenLabel="Озон парсит карточку, Gemini пишет тексты… обычно 1–5 минут.";
+      regenMsg.style.color="";regenMsg.textContent=regenLabel;
       try{
-        const gen=await apiPost("/api/v1/ads/projects/"+wiz.project.id+"/ozon-generate",{url:wiz.project.ozon_url});
+        const gen=await ozonGenerate(wiz.project.id,wiz.project.ozon_url,s=>{regenMsg.textContent=regenLabel+" Прошло "+s+" с."});
         wiz.project=gen.project;reseedPools(wiz.project);drawStep5(body);
       }catch(err){regenMsg.textContent=err.message||"Не удалось перегенерировать";regenMsg.style.color="var(--bad)";btn.removeAttribute("disabled")}
     };
