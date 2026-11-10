@@ -1105,6 +1105,9 @@ nv-sparkline-cell,nv-avatar-group{display:inline-flex;vertical-align:middle}
 .tr-l .t{flex:1;min-width:0}
 .tr-l small{font:10.5px var(--font-mono);color:var(--ink-3)}
 .tr-l>nv-icon{color:var(--svc-ink)}
+.tr-l .box{width:16px;height:16px;border:1.5px solid var(--line-2);border-radius:4px;display:grid;place-items:center;color:transparent;flex:none}
+.tr.on .tr-l .box{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.tr-p{display:block;font-size:11px;color:var(--ink-3);font-weight:400}
 
 /* Список с раскрытием на странице */
 .el,.el ul{list-style:none;margin:0;padding:0}
@@ -1788,20 +1791,41 @@ define("nv-calendar",class extends NvEl{
 },"Формы",{desc:"Календарь: один день или период. Для периода выберите начало и конец. Стрелки на клавиатуре двигают по дням.",events:["nv-change {value,name}"],previewW:270,attrs:{mode:{type:"enum",values:["single","range"],default:"single",desc:"Один день или период"},value:{type:"string",default:"",desc:"ГГГГ-ММ-ДД или ГГГГ-ММ-ДД..ГГГГ-ММ-ДД"},min:{type:"string",default:"",desc:"Самая ранняя дата"},max:{type:"string",default:"",desc:"Самая поздняя дата"},marks:{type:"string",default:"",desc:"Дни с отметкой: JSON-массив дат"},name:{type:"string",default:"",desc:"Ключ значения"}}});
 
 /* ---------- Списки с раскрытием ---------- */
+const treeNorm=s=>String(s||"").toLowerCase().replace(/ё/g,"е");
 const treePath=(items,v,trail=[])=>{for(const n of items){const t=[...trail,n];if(n.value===v)return t;if(n.children){const r=treePath(n.children,v,t);if(r)return r}}return null};
 define("nv-tree-select",class extends NvEl{
   get name(){return this.getAttribute("name")}
   get value(){return this.a("value")}
   set value(v){this.setAttribute("value",v)}
-  tree(){return parseJSON(this.a("items"),[])}
-  html(){const id=this._id||(this._id=uid("ts")),l=this.a("label"),h=this.a("hint"),e=this.a("error"),path=treePath(this.tree(),this.a("value"));return `<div class="fld">${l?`<label for="${id}">${esc(l)}${this.b("required")?' <span class="req" aria-label="обязательно">*</span>':""}</label>`:""}<div class="ctl${e?" bad":""}"><button type="button" id="${id}" class="dd" aria-haspopup="tree" aria-expanded="${!!this._on}"><span class="${path?"":"ph"}">${esc(path?path.map(n=>n.label).join(" / "):this.a("placeholder")||"Выберите значение")}</span>${ic("chevron-down",14)}</button></div>${e?`<span class="err" role="alert">${esc(e)}</span>`:h?`<span class="hint">${esc(h)}</span>`:""}</div>`}
+  tree(){const s=this.a("items");if(s!==this._ts){this._ts=s;this._t=parseJSON(s,[]);this._f=null}return this._t}
+  flat(){if(!this._f){const f=[],walk=(L,trail)=>L.forEach(n=>{f.push({n,trail,k:treeNorm(n.label)});n.children&&walk(n.children,[...trail,n])});walk(this.tree(),[]);this._f=f}return this._f}
+  sel(){const v=this.a("value");return this.b("multiple")?v.split(",").map(x=>x.trim()).filter(Boolean):v?[v]:[]}
+  text(){const T=this.tree(),s=this.sel();if(!s.length)return"";
+    if(!this.b("multiple")){const p=treePath(T,s[0]);return p?p.map(n=>n.label).join(" / "):s[0]}
+    const L=s.map(v=>{const p=treePath(T,v);return p?p[p.length-1].label:v});return L.length>2?L.slice(0,2).join(", ")+" +"+(L.length-2):L.join(", ")}
+  html(){const id=this._id||(this._id=uid("ts")),l=this.a("label"),h=this.a("hint"),e=this.a("error"),t=this.text();return `<div class="fld">${l?`<label for="${id}">${esc(l)}${this.b("required")?' <span class="req" aria-label="обязательно">*</span>':""}</label>`:""}<div class="ctl${e?" bad":""}"><button type="button" id="${id}" class="dd" aria-haspopup="tree" aria-expanded="${!!this._on}"><span class="${t?"":"ph"}">${esc(t||this.a("placeholder")||"Выберите значение")}</span>${ic("chevron-down",14)}</button></div>${e?`<span class="err" role="alert">${esc(e)}</span>`:h?`<span class="hint">${esc(h)}</span>`:""}</div>`}
   mounted(){this.querySelector(".dd").onclick=()=>this._on?closePop():this.pop()}
-  pop(){const T=this.tree(),cur=this.a("value"),open=new Set((treePath(T,cur)||[]).slice(0,-1).map(n=>n.value)),branch=this.b("branch-select");this._on=true;
-    const rows=(L,d)=>L.map(n=>{const k=n.children&&n.children.length,o=open.has(n.value),sel=n.value===cur;return `<div role="treeitem" ${k?`aria-expanded="${o}"`:""} aria-selected="${sel}"><div class="tr${sel?" on":""}" style="--d:${d}">${k?`<button type="button" class="tr-x" data-x="${esc(n.value)}" aria-label="${o?"Свернуть":"Раскрыть"} ${esc(n.label)}">${ic(o?"chevron-down":"chevron-right",14)}</button>`:'<span class="tr-s"></span>'}<button type="button" class="tr-l" ${k&&!branch?`data-x="${esc(n.value)}"`:`data-v="${esc(n.value)}"`}><span class="t">${esc(n.label)}</span>${k?`<small>${n.children.length}</small>`:""}${sel?ic("check",14):""}</button></div>${k&&o?rows(n.children,d+1):""}</div>`}).join("");
-    openPop(this,`<div class="pop-l" role="tree">${rows(T,0)}</div>`,{width:Math.max(240,this.offsetWidth),onClose:()=>{this._on=false},mount:(p,close,place)=>{const list=p.querySelector(".pop-l");
-      list.onclick=e=>{const x=e.target.closest("[data-x]"),v=e.target.closest("[data-v]");if(x){const k=x.dataset.x;open.has(k)?open.delete(k):open.add(k);list.innerHTML=rows(T,0);place();const f=list.querySelector(`[data-x="${CSS.escape(k)}"]`);f&&f.focus();return}if(v){close(true);this.removeAttribute("error");this.setAttribute("value",v.dataset.v);this.emit("nv-change",{value:v.dataset.v,name:this.name})}};
-      const f=list.querySelector("button");f&&f.focus()}})}
-},"Формы",{desc:"Выпадающий список, в котором значения раскрываются: регион и город, категория и товар.",events:["nv-change {value,name}"],previewW:300,attrs:{label:{type:"string",default:"Город",desc:"Подпись"},items:{type:"string",default:'[{"value":"c","label":"Центральный округ","children":[{"value":"msk","label":"Москва"},{"value":"tula","label":"Тула"}]},{"value":"v","label":"Приволжский округ","children":[{"value":"kzn","label":"Казань"},{"value":"sam","label":"Самара"}]}]',desc:"Дерево JSON: value, label, children"},value:{type:"string",default:"kzn",desc:"Выбранное значение"},placeholder:{type:"string",default:"",desc:"Текст, когда ничего не выбрано"},hint:{type:"string",default:"",desc:"Подсказка"},error:{type:"string",default:"",desc:"Ошибка"},required:{type:"bool",desc:"Обязательное поле"},"branch-select":{type:"bool",desc:"Можно выбрать и раздел, а не только конечное значение"},name:{type:"string",default:"",desc:"Ключ значения"}}});
+  pop(){const T=this.tree(),multi=this.b("multiple"),branch=this.b("branch-select"),search=this.b("search")||this.flat().length>12;
+    const open=new Set();this.sel().forEach(v=>(treePath(T,v)||[]).slice(0,-1).forEach(n=>open.add(n.value)));this._on=true;
+    const box=multi?`<span class="box">${ic("check",12)}</span>`:"";
+    const lab=(n,on,k,path)=>`${box}<span class="t">${esc(n.label)}${path?`<span class="tr-p">${esc(path)}</span>`:""}</span>${k?`<small>${n.children.length}</small>`:""}${on&&!multi?ic("check",14):""}`;
+    const rows=(L,d,S)=>L.map(n=>{const k=n.children&&n.children.length,o=open.has(n.value),on=S.includes(n.value);return `<div role="treeitem" ${k?`aria-expanded="${o}"`:""} aria-selected="${on}"><div class="tr${on?" on":""}" style="--d:${d}">${k?`<button type="button" class="tr-x" data-x="${esc(n.value)}" aria-label="${o?"Свернуть":"Раскрыть"} ${esc(n.label)}">${ic(o?"chevron-down":"chevron-right",14)}</button>`:'<span class="tr-s"></span>'}<button type="button" class="tr-l" ${k&&!branch?`data-x="${esc(n.value)}"`:`data-v="${esc(n.value)}"`}>${lab(n,on,k)}</button></div>${k&&o?rows(n.children,d+1,S):""}</div>`}).join("");
+    const found=(q,S)=>{const L=this.flat().filter(x=>x.k.includes(q)&&(branch||!(x.n.children&&x.n.children.length)));if(!L.length)return'<p class="pop-e">Ничего не нашлось</p>';
+      return L.slice(0,150).map(({n,trail})=>{const on=S.includes(n.value);return `<div role="treeitem" aria-selected="${on}"><div class="tr${on?" on":""}"><span class="tr-s"></span><button type="button" class="tr-l" data-v="${esc(n.value)}">${lab(n,on,0,trail.map(t=>t.label).join(" / "))}</button></div></div>`}).join("")+(L.length>150?`<p class="pop-e">Показаны первые 150 из ${L.length} — уточните запрос</p>`:"")};
+    openPop(this,`${search?`<div class="pop-s">${ic("search",14)}<input type="search" placeholder="Найти" aria-label="Найти значение"></div>`:""}<div class="pop-l" role="tree"${multi?' aria-multiselectable="true"':""}></div>${multi?`<div class="pop-f"><button type="button" class="pop-x">Сбросить</button><span class="muted">Выбрано: <b class="pop-n num">${this.sel().length}</b></span></div>`:""}`,{width:Math.max(+this.a("min-width")||240,this.offsetWidth),onClose:()=>{this._on=false;const b=this.querySelector(".dd");b&&b.setAttribute("aria-expanded","false")},mount:(p,close,place)=>{
+      const list=p.querySelector(".pop-l"),inp=p.querySelector(".pop-s input");
+      const q=()=>inp?treeNorm(inp.value.trim()):"";
+      const draw=()=>{const y=list.scrollTop,S=this.sel(),s=q();list.innerHTML=s?found(s,S):rows(T,0,S);list.scrollTop=y;place()};
+      const set=v=>{this.removeAttribute("error");this.setAttribute("value",v.join(","));const b=this.querySelector(".dd");b&&b.setAttribute("aria-expanded","true");const n=p.querySelector(".pop-n");n&&(n.textContent=v.length);this.emit("nv-change",{value:v.join(","),name:this.name})};
+      list.onclick=e=>{const x=e.target.closest("[data-x]"),v=e.target.closest("[data-v]");
+        if(x){const k=x.dataset.x;open.has(k)?open.delete(k):open.add(k);draw();const f=list.querySelector(`[data-x="${CSS.escape(k)}"]`);f&&f.focus();return}
+        if(!v)return;const val=v.dataset.v;
+        if(multi){const S=this.sel(),i=S.indexOf(val);i<0?S.push(val):S.splice(i,1);set(S);draw();const f=list.querySelector(`[data-v="${CSS.escape(val)}"]`);f&&f.focus();return}
+        close(true);set([val])};
+      const x=p.querySelector(".pop-x");if(x)x.onclick=()=>{set([]);draw()};
+      draw();
+      if(inp){inp.oninput=()=>{list.scrollTop=0;draw()};inp.focus()}else{const f=list.querySelector("button");f&&f.focus()}}})}
+},"Формы",{desc:"Выпадающий список, в котором значения раскрываются: регион и город, категория и товар. Можно выбрать несколько значений; в большом дереве есть поиск.",events:["nv-change {value,name}"],previewW:300,attrs:{label:{type:"string",default:"Город",desc:"Подпись"},items:{type:"string",default:'[{"value":"c","label":"Центральный округ","children":[{"value":"msk","label":"Москва"},{"value":"tula","label":"Тула"}]},{"value":"v","label":"Приволжский округ","children":[{"value":"kzn","label":"Казань"},{"value":"sam","label":"Самара"}]}]',desc:"Дерево JSON: value, label, children"},value:{type:"string",default:"kzn",desc:"Выбранное значение (с multiple — несколько через запятую)"},placeholder:{type:"string",default:"",desc:"Текст, когда ничего не выбрано"},hint:{type:"string",default:"",desc:"Подсказка"},error:{type:"string",default:"",desc:"Ошибка"},required:{type:"bool",desc:"Обязательное поле"},"branch-select":{type:"bool",desc:"Можно выбрать и раздел, а не только конечное значение"},multiple:{type:"bool",desc:"Выбор нескольких значений, value — через запятую"},search:{type:"bool",desc:"Поиск по всему дереву (включается сам, если значений больше 12)"},"min-width":{type:"number",default:240,desc:"Минимальная ширина выпадающего списка, px"},name:{type:"string",default:"",desc:"Ключ значения"}}});
 
 define("nv-expand-list",class extends NvEl{
   html(){const L=parseJSON(this.a("items"),[]);if(!this._open)this._open=new Set(L.filter(n=>n.open).map(n=>n.value));const row=n=>`${n.badge?`<nv-badge tone="${esc(n.tone||"neutral")}">${esc(n.badge)}</nv-badge>`:""}<span class="t">${esc(n.label)}${n.meta?`<small>${esc(n.meta)}</small>`:""}</span>`;
@@ -3228,7 +3252,7 @@ function projectWizard(existingProject){
     locked:!!(existingProject&&existingProject.has_launched),
     step:1,
     regionsRaw:existingProject&&existingProject.region_ids&&existingProject.region_ids.length?existingProject.region_ids.join(", "):"",
-    geoRegions:null,
+    geoRegions:null,geoTree:null,
     connectionId:null,payers:null,payerId:null,payerType:"BUSINESS",
     count:1,creativeMode:"shuffle",adsPerGroup:1,
     launchMode:(existingProject&&existingProject.launch_mode)||"direct",
@@ -3243,7 +3267,26 @@ function projectWizard(existingProject){
     wiz.sitelinksPool=p&&p.sitelinks_pool&&p.sitelinks_pool.length?p.sitelinks_pool.map(s=>[s.title,s.href,s.description].join("|")).join("\n"):"";
   }
   reseedPools(existingProject);
-  (async()=>{try{const data=await api("/api/v1/ads/geo-regions",{});wiz.geoRegions=data.items||[]}catch(e){wiz.geoRegions=[]}})();
+  /* Справочник Яндекс.Директа (Dictionaries.get GeoRegions) — дерево
+     «регион → города» для nv-tree-select; в region_ids уходят id Яндекса.
+     Пока грузится или если недоступен — поле ввода числовых ID. */
+  (async()=>{
+    try{const data=await api("/api/v1/ads/geo-regions",{});wiz.geoRegions=data.items||[];wiz.geoTree=data.tree||[]}
+    catch(e){wiz.geoRegions=[];wiz.geoTree=[]}
+    if(!root||wiz.step!==1)return;
+    if(wiz.locked)return draw();
+    const box=root.querySelector("#wiz-geo");if(!box)return;
+    const cur=box.querySelector("[name=\"regions\"]");if(cur)wiz.regionsRaw=cur.value||"";
+    box.innerHTML=regionsField();
+  })();
+  function regionIdsOf(raw){return(raw||"").split(",").map(x=>x.trim()).filter(x=>/^d+$/.test(x))}
+  function regionNames(ids){const by=new Map((wiz.geoRegions||[]).map(r=>[String(r.id),r.name]));return ids.map(id=>by.get(String(id))||String(id))}
+  function regionsField(){
+    const label="Город или регион показа";
+    if(wiz.geoTree&&wiz.geoTree.length)return `<nv-tree-select name="regions" label="${label}" items="${esc(JSON.stringify(wiz.geoTree))}" value="${esc(regionIdsOf(wiz.regionsRaw).join(","))}" placeholder="Выберите регион или город" hint="Регион раскрывается — внутри его города. Можно выбрать несколько." multiple branch-select search min-width="340" required></nv-tree-select>`;
+    const loading=wiz.geoTree===null;
+    return `<nv-tag-input name="regions" label="${label}" value="${esc(wiz.regionsRaw)}" placeholder="${loading?"Загружаем справочник регионов…":"Справочник регионов недоступен — введите числовые ID (Яндекс.Директ)"}" required></nv-tag-input>`;
+  }
   const STEP_ITEMS="1. Проект|2. Аккаунт Click.ru|3. Юрлицо|4. Количество|5. Креативы";
   let root;
   const {close}=overlay("modal",{title:wiz.project?("Запустить «"+wiz.project.name+"»"):"Новый проект",
@@ -3265,7 +3308,7 @@ function projectWizard(existingProject){
     const p=wiz.project||{};
     if(wiz.locked){
       body.innerHTML=`<nv-callout tone="info" heading="Проект уже запущен">Название, домен, ключевые фразы и регион менять нельзя — можно запустить ещё аккаунты с теми же настройками.</nv-callout>
-      <dl class="dl"><dt>Название</dt><dd>${esc(p.name)}</dd><dt>Домен</dt><dd>${esc(p.domain)}</dd>${p.launch_mode==="ozon"?`<dt>Источник креативов</dt><dd>Директ Озон — ${esc(p.ozon_url||"")}</dd>`:""}<dt>Регион</dt><dd>${esc((p.region_ids||[]).join(", ")||"—")}</dd></dl>
+      <dl class="dl"><dt>Название</dt><dd>${esc(p.name)}</dd><dt>Домен</dt><dd>${esc(p.domain)}</dd>${p.launch_mode==="ozon"?`<dt>Источник креативов</dt><dd>Директ Озон — ${esc(p.ozon_url||"")}</dd>`:""}<dt>Регион</dt><dd>${esc(regionNames(p.region_ids||[]).join(", ")||"—")}</dd></dl>
       ${stepHtml('<span></span><nv-button variant="primary" icon="arrow-right" data-wiz-next>Далее</nv-button>')}`;
       body.querySelector("[data-wiz-next]").onclick=()=>setStep(2);
       return;
@@ -3285,7 +3328,7 @@ function projectWizard(existingProject){
       <nv-textarea name="keywords" label="Ключевые фразы" rows="3" placeholder="По одной на строку" value="${esc(p.keywords||"")}" ${isOzon?"":"required"}></nv-textarea>
       <nv-textarea name="negative_keywords" label="Минус-фразы (необязательно)" rows="2" value="${esc(p.negative_keywords||"")}"></nv-textarea>
     </div>
-    <nv-tag-input name="regions" label="Город или регион показа" value="${esc(wiz.regionsRaw)}" placeholder="${wiz.geoRegions&&wiz.geoRegions.length?"Начните вводить название":"Справочник регионов недоступен — введите числовые ID (Яндекс.Директ)"}" required></nv-tag-input>
+    <div id="wiz-geo">${regionsField()}</div>
     ${stepHtml('<span></span><nv-button variant="primary" icon="arrow-right" data-wiz-next>'+(wiz.project?"Сохранить и далее":"Создать и далее")+'</nv-button>')}
     <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
     body.querySelector('nv-select[name="launch_mode"]').addEventListener("nv-change",e=>{
