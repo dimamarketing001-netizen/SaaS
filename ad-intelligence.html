@@ -3785,21 +3785,99 @@ function openJobDrawer(project,jobId){
       poll();
     }});
 }
-function openProjectCampaigns(p){
-  overlay("drawer",{title:p.name,subtitle:p.domain,size:"md",
-    body:`<div id="proj-camps"><nv-skeleton count="3"></nv-skeleton></div>`,
+// ---- Проекты: статус, фильтры, панель проекта (2026-11-10) ----
+const PROJ_STATUS={draft:["Черновик",""],generating:["Генерация","info"],running:["Идёт запуск","info"],launched:["Запущен","success"],failed:["Ошибка запуска","danger"]};
+function projStatus(p){
+  const s=p.stats||{};
+  if(s.running_job_id)return"running";
+  if(s.ozon_running)return"generating";
+  if(!s.jobs_count)return"draft";
+  return s.last_job_status==="failed"?"failed":"launched";
+}
+function projPayerNames(p){
+  const by=new Map((S.ads.payers||[]).map(x=>[x.id,x]));
+  return ((p.stats||{}).payer_ids||[]).map(id=>by.has(id)?payerLabel(by.get(id)):"#"+id);
+}
+const PROJ_F_KEY="parsya_ads_proj_filter";
+function projFilter(){
+  if(!S.ads.projF){let f={};try{f=JSON.parse(localStorage.getItem(PROJ_F_KEY)||"{}")}catch(e){}S.ads.projF={q:"",mode:"",status:"",payer:"",sort:"recent",...f}}
+  return S.ads.projF;
+}
+function filteredProjects(){
+  const f=projFilter(),q=(f.q||"").trim().toLowerCase();
+  const modes=(f.mode||"").split(",").filter(Boolean),stats=(f.status||"").split(",").filter(Boolean),payers=(f.payer||"").split(",").filter(Boolean);
+  const rows=(S.ads.projects||[]).filter(p=>{
+    if(q&&!((p.name||"")+" "+(p.domain||"")+" "+(p.ozon_url||"")).toLowerCase().includes(q))return false;
+    if(modes.length&&!modes.includes(p.launch_mode==="ozon"?"ozon":"direct"))return false;
+    if(stats.length&&!stats.includes(projStatus(p)))return false;
+    if(payers.length&&!((p.stats||{}).payer_ids||[]).some(id=>payers.includes(String(id))))return false;
+    return true;
+  });
+  const t=p=>(p.stats&&p.stats.last_job_at)||p.updated_at||p.created_at||"";
+  const sorters={recent:(a,b)=>t(b).localeCompare(t(a)),created:(a,b)=>(b.created_at||"").localeCompare(a.created_at||""),
+    name:(a,b)=>(a.name||"").localeCompare(b.name||"","ru"),campaigns:(a,b)=>((b.stats||{}).campaigns_count||0)-((a.stats||{}).campaigns_count||0)};
+  return rows.sort(sorters[f.sort]||sorters.recent);
+}
+N.chg.adsProjF=(v,d)=>{const f=projFilter();f[d.key]=v;try{localStorage.setItem(PROJ_F_KEY,JSON.stringify(f))}catch(e){}N.refresh()};
+N.acts.adsProjReset=()=>{S.ads.projF={q:"",mode:"",status:"",payer:"",sort:"recent"};try{localStorage.removeItem(PROJ_F_KEY)}catch(e){}N.refresh()};
+
+const TL_ICON={created:["plus",""],ozon_started:["sparkles","info"],ozon_done:["check","success"],ozon_failed:["alert-triangle","danger"],
+  launch_started:["rocket","info"],launch_done:["check-circle-2","success"],launch_failed:["alert-triangle","danger"],launch_running:["loader","info"],browser_opened:["external-link",""]};
+function projectTimeline(events){
+  return JSON.stringify(events.map(e=>{const [icon,tone]=TL_ICON[e.kind]||["circle",""];
+    return{title:e.title,text:e.detail||"",time:e.at?fmtDateTime(e.at):"",icon,tone}}));
+}
+function accountCheckHtml(r){
+  if(!r.campaigns||!r.campaigns.length)return `<p class="muted">Кампания в Директе не найдена (логин ${esc(r.client_login||"—")}).</p>`;
+  return r.campaigns.map(c=>`<div style="font-size:13px"><b>${esc(c.Name||"Кампания "+c.Id)}</b> · ${esc(c.Status||"")} / ${esc(c.State||"")}${c.StatusClarification?` <span class="muted">— ${esc(c.StatusClarification)}</span>`:""}
+    <div class="muted">Логин Директа ${esc(r.client_login)} · групп ${c.ad_groups} · ключевых фраз ${c.keywords}</div>
+    ${(c.ads||[]).map(a=>`<div style="border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin-top:6px"><b>${esc(a.title||"")}</b>${a.title2?" · "+esc(a.title2):""}<div>${esc(a.text||"")}</div>
+      <div class="muted" style="font-size:12px">${esc(a.status||"")} / ${esc(a.state||"")}${a.clarification?" — "+esc(a.clarification):""} · картинка: ${a.has_image?"есть":"нет"} · быстрые ссылки: ${a.has_sitelinks?"есть":"нет"} · уточнений: ${a.callouts}</div></div>`).join("")}</div>`).join("");
+}
+function openProjectPanel(p){
+  overlay("drawer",{title:p.name,subtitle:(p.launch_mode==="ozon"?"Директ Озон · ":"Директ · ")+(p.domain||""),size:"lg",
+    body:`<div id="proj-panel"><nv-skeleton count="4"></nv-skeleton></div>`,
     mount(root){
-      (async()=>{
-        try{
-          const data=await api("/api/v1/ads/projects/"+p.id+"/campaigns",{});
-          const items=data.items||[];
-          const host=root.querySelector("#proj-camps");
-          host.innerHTML=items.length?`<nv-table id="proj-camps-t"></nv-table>`:
-            `<nv-empty icon="megaphone" heading="Кампаний пока нет" text="Запуск выполняется визардом массового запуска."></nv-empty>`;
-          if(items.length)wireTable(root,"proj-camps-t",items.map((c,i)=>({id:c.id!=null?c.id:"c"+i,...c})),
-            [{key:"account_id",label:"Аккаунт"},{key:"campaign_id",label:"Campaign ID"},{key:"status",label:"Статус"}]);
-        }catch(err){root.querySelector("#proj-camps").innerHTML=`<nv-empty icon="alert-triangle" heading="Не удалось загрузить" text="${esc(err.message||"")}"></nv-empty>`}
-      })();
+      let timer=null;
+      const draw=async()=>{
+        if(!root.isConnected)return;
+        let h;
+        try{h=await api("/api/v1/ads/projects/"+p.id+"/history",{})}
+        catch(err){const el=root.querySelector("#proj-panel");if(el)el.innerHTML=`<nv-empty icon="alert-triangle" heading="Не удалось загрузить" text="${esc(err.message||"")}"></nv-empty>`;return}
+        const el=root.querySelector("#proj-panel");if(!el)return;
+        const launches=h.events.filter(e=>e.kind==="launch_started").length,acc=h.accounts||[];
+        const busy=h.running_job_id||h.ozon_status==="running";
+        el.innerHTML=`<div class="grid g3">${stat("Кампаний создано",acc.length)}${stat("Запусков",launches)}${stat("Статус",busy?(h.running_job_id?"Идёт запуск":"Идёт генерация"):(PROJ_STATUS[projStatus(p)]||[""])[0])}</div>
+          <div class="row" style="gap:8px;margin:10px 0;flex-wrap:wrap"><nv-button size="sm" icon="rocket" data-proj-launch>${acc.length?"Запустить ещё":"Открыть визард запуска"}</nv-button>
+          ${h.running_job_id?`<nv-button size="sm" variant="secondary" icon="activity" data-proj-job="${h.running_job_id}">Прогресс запуска</nv-button>`:""}
+          ${p.ozon_url?`<a href="${esc(p.ozon_url)}" target="_blank" rel="noopener" style="font-size:13px;align-self:center">Карточка Ozon</a>`:""}</div>
+          <nv-card heading="Аккаунты Директа" subtitle="Где скрипт создал кампании. «Проверить» — живой запрос к API Директа; «Метрика» — Chrome на ПК с сессией аккаунта.">
+          ${acc.length?acc.map((a,i)=>`<div style="border-bottom:1px solid var(--line);padding:8px 0">
+            <div class="row between" style="gap:8px;flex-wrap:wrap"><div><b>${esc(a.pool_login||"—")}</b> <span class="muted" style="font-size:12.5px">аккаунт Click.ru ${esc(String(a.account_id||"—"))} · кампания ${esc(String(a.campaign_id||"—"))} · ${esc(fmtDateTime(a.created_at))}</span>
+              <div class="muted" style="font-size:12.5px">${a.headline?esc(a.headline)+" · ":""}объявлений ${a.ads_created??"—"} · картинка ${a.image_used?"да":"нет"} · быстрых ссылок ${a.sitelinks_used??0} · уточнений ${a.callouts_used??0}${a.note?" · "+esc(a.note):""}</div></div>
+              <div class="row" style="gap:6px"><nv-button size="sm" variant="secondary" icon="search-check" data-acc-check="${i}">Проверить</nv-button><nv-button size="sm" variant="ghost" icon="external-link" data-acc-metrika="${i}">Метрика в браузере</nv-button></div></div>
+            <div data-acc-out="${i}" style="margin-top:6px"></div></div>`).join(""):`<nv-empty icon="megaphone" heading="Кампаний пока нет" text="Запуск выполняется визардом массового запуска."></nv-empty>`}
+          </nv-card>
+          <nv-card heading="История" style="margin-top:12px"><nv-timeline items="${esc(projectTimeline(h.events))}"></nv-timeline></nv-card>`;
+        el.querySelector("[data-proj-launch]").onclick=()=>{const full=(S.ads.projects||[]).find(x=>x.id===p.id)||p;projectWizard(full)};
+        const jb=el.querySelector("[data-proj-job]");if(jb)jb.onclick=()=>openJobDrawer(p,+jb.dataset.projJob);
+        el.querySelectorAll("[data-acc-check]").forEach(b=>b.onclick=async()=>{
+          const a=acc[+b.dataset.accCheck],out=el.querySelector(`[data-acc-out="${b.dataset.accCheck}"]`);
+          out.innerHTML='<span class="muted">Спрашиваю Директ…</span>';
+          try{out.innerHTML=accountCheckHtml(await api("/api/v1/ads/projects/"+p.id+"/accounts/"+a.account_id+"/check",{}))}
+          catch(err){out.innerHTML=`<span style="color:var(--bad)">${esc(err.message||"Не удалось проверить")}</span>`}
+        });
+        el.querySelectorAll("[data-acc-metrika]").forEach(b=>b.onclick=async()=>{
+          const a=acc[+b.dataset.accMetrika],out=el.querySelector(`[data-acc-out="${b.dataset.accMetrika}"]`);
+          b.setAttribute("loading","");out.innerHTML='<span class="muted">Открываю Chrome на ПК…</span>';
+          try{const r=await apiPost("/api/v1/ads/projects/"+p.id+"/accounts/"+a.account_id+"/open-metrika",{});
+            out.innerHTML=r.logged_in?'<span style="color:var(--ok,#15803d)">Метрика открыта в Chrome на ПК с WSL — вход выполнен.</span>':'<span style="color:var(--bad)">Chrome открыт, но сессия Яндекса устарела — войдите вручную.</span>'}
+          catch(err){out.innerHTML=`<span style="color:var(--bad)">${esc(err.message||"Не удалось открыть")}</span>`}
+          finally{b.removeAttribute("loading")}
+        });
+        if(busy){clearTimeout(timer);timer=setTimeout(draw,6000)}
+      };
+      draw();
     }});
 }
 const views_ads={
@@ -3807,21 +3885,31 @@ projects(){
   const A=S.ads;
   return{title:"Проекты",sub:"Проекты массового запуска кампаний Яндекс.Директа через Click.ru.",
   actions:`<nv-button icon="plus" data-act="adsNewProject">Новый проект</nv-button>`,
-  body:`<div id="ads-proj-res">${!A.projectsLoaded?'<nv-skeleton count="4"></nv-skeleton>':""}</div>`,
+  body:(()=>{const f=projFilter(),payerIds=[...new Set((A.projects||[]).flatMap(p=>(p.stats||{}).payer_ids||[]))],by=new Map((A.payers||[]).map(x=>[x.id,x]));
+    return `<div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Название, сайт, ссылка Ozon" value="${esc(f.q)}" data-chg="adsProjF" data-key="q"></nv-input>
+    <nv-filter-select label="Режим" value="${esc(f.mode)}" options="direct:Директ|ozon:Директ Озон" placeholder="Все" data-chg="adsProjF" data-key="mode"></nv-filter-select>
+    <nv-filter-select label="Статус" value="${esc(f.status)}" options="${Object.entries(PROJ_STATUS).map(([k,v])=>k+":"+v[0]).join("|")}" placeholder="Все" data-chg="adsProjF" data-key="status"></nv-filter-select>
+    <nv-filter-select label="Юрлицо" value="${esc(f.payer)}" options="${payerIds.length?payerIds.map(id=>id+":"+esc((by.has(id)?payerLabel(by.get(id)):"#"+id).replace(/[|:]/g," "))).join("|"):"_:Пока нет запусков с юрлицом"}" placeholder="Все" data-chg="adsProjF" data-key="payer"></nv-filter-select>
+    <nv-select label="Сортировка" value="${esc(f.sort)}" options="recent:Последняя активность|created:Дата создания|name:Название А–Я|campaigns:Больше кампаний" data-chg="adsProjF" data-key="sort"></nv-select>
+    ${f.q||f.mode||f.status||f.payer?'<nv-button variant="ghost" size="sm" icon="x" data-act="adsProjReset">Сбросить</nv-button>':""}</div>
+    <div id="ads-proj-res" style="margin-top:10px">${!A.projectsLoaded?'<nv-skeleton count="4"></nv-skeleton>':""}</div>`})(),
   after(root){
     if(!A.clickruLoaded)loadClickru();
     if(!A.payersLoaded)loadPayers();
     if(!A.projectsLoaded){loadProjects();return}
-    const el=root.querySelector("#ads-proj-res");
-    el.innerHTML=A.projects.length?`<nv-table id="ads-proj-t"></nv-table>`:
-      `<nv-card><nv-empty icon="rocket" heading="Проектов пока нет" text="Создайте проект, чтобы запускать кампании пачками."><nv-button icon="plus" data-act="adsNewProject">Новый проект</nv-button></nv-empty></nv-card>`;
-    if(A.projects.length)wireTable(root,"ads-proj-t",A.projects,
-      [{key:"name",label:"Проект"},{key:"domain",label:"Сайт"},
-       {key:"campaign_mode",label:"Режим",render:p=>p.campaign_mode==="single_epk"?"Одна ЕПК":"Отдельные"},
-       {key:"target_drr",label:"ДРР",align:"right",render:p=>p.target_drr+"%"},
-       {key:"has_launched",label:"Запущен",render:p=>p.has_launched?'<nv-badge tone="success">Да</nv-badge>':'<nv-badge>Нет</nv-badge>'},
+    const el=root.querySelector("#ads-proj-res"),rows=filteredProjects();
+    if(!A.projects.length){el.innerHTML=`<nv-card><nv-empty icon="rocket" heading="Проектов пока нет" text="Создайте проект, чтобы запускать кампании пачками."><nv-button icon="plus" data-act="adsNewProject">Новый проект</nv-button></nv-empty></nv-card>`;return}
+    el.innerHTML=`<div class="muted" style="font-size:12.5px;margin-bottom:8px">Показано ${rows.length} из ${A.projects.length}. Нажмите на проект — откроется история, аккаунты и проверка кампаний.</div>`+
+      (rows.length?`<nv-table id="ads-proj-t" page-size="25"></nv-table>`:`<nv-empty icon="filter" heading="Ничего не найдено" text="Измените фильтры или сбросьте их."></nv-empty>`);
+    if(rows.length)wireTable(root,"ads-proj-t",rows,
+      [{key:"name",label:"Проект",render:p=>`<div class="cell-t">${esc(p.name)}</div><div class="cell-s">${esc(p.domain||"")}</div>`},
+       {key:"launch_mode",label:"Режим",render:p=>p.launch_mode==="ozon"?'<nv-badge tone="info">Директ Озон</nv-badge>':'<nv-badge>Директ</nv-badge>'},
+       {key:"_status",label:"Статус",render:p=>{const [l,t]=PROJ_STATUS[projStatus(p)];return `<nv-badge${t?` tone="${t}"`:""}>${l}</nv-badge>`}},
+       {key:"_camps",label:"Кампаний",align:"right",render:p=>String((p.stats||{}).campaigns_count||0)},
+       {key:"_last",label:"Последний запуск",render:p=>(p.stats||{}).last_job_at?esc(fmtDateTime(p.stats.last_job_at)):"—"},
+       {key:"_payer",label:"Юрлицо",render:p=>esc(projPayerNames(p).join(", ")||"—")},
        {key:"_launch",label:"",align:"right",render:p=>`<nv-button size="sm" variant="${p.has_launched?"secondary":"primary"}" icon="rocket" data-act="adsLaunch" data-id="${p.id}">${p.has_launched?"Запустить ещё":"Запустить"}</nv-button>`}],
-      p=>openProjectCampaigns(p));
+      p=>openProjectPanel(p));
   }}
 },
 clickru(){
