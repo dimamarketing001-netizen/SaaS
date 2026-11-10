@@ -3212,19 +3212,53 @@ async function loadReport(){
   }catch(err){toast("Не удалось загрузить отчёт: "+(err.message||""),{tone:"danger"})}
   r.loading=false;N.refreshIf("ads-report");
 }
-function clickruDlg(){
-  overlay("modal",{title:"Подключить Click.ru",subtitle:"Токен API из личного кабинета Click.ru",size:"md",
-    body:`<nv-input name="label" label="Название подключения" required></nv-input>
+/* Подключение Click.ru = API-токен + вход в веб-кабинет (логин/пароль).
+   Кабинет нужен для шага, которого нет в API Click.ru: подключение Яндекс ID
+   из пула как Директ-интеграции. Вход выполняет Chrome на стороне ParsYa,
+   cookies сессии хранятся зашифрованными у подключения (addAvto). Пароль и
+   cookies в ЛК никогда не возвращаются. */
+const CLICKRU_WEB={ok:["connected","Вход в кабинет выполнен","success"],relogin_required:["attention","Нужен повторный вход","warning"],failed:["failed","Вход в кабинет не удался","danger"],none:["attention","Нет входа в кабинет","warning"]};
+function clickruWeb(c){return CLICKRU_WEB[c&&c.web_status]||CLICKRU_WEB.none}
+function clickruToast(c){
+  if(!c)return;
+  if(c.web_status==="ok")toast("Click.ru «"+c.label+"»: вход в кабинет выполнен",{tone:"success"});
+  else if(c.web_status==="failed")toast("Вход в кабинет «"+c.label+"» не удался: "+(c.web_status_message||"проверьте логин и пароль"),{tone:"danger"});
+  else if(c.web_status_message)toast("«"+c.label+"»: "+c.web_status_message,{tone:"warning"});
+  else toast("Подключение «"+c.label+"» добавлено. Укажите логин и пароль кабинета — без них нельзя создавать аккаунты.",{tone:"warning"});
+}
+/* existing — сменить логин/пароль кабинета у уже созданного подключения. */
+function clickruDlg(existing,onDone){
+  const edit=!!existing;
+  const web=`<nv-input name="web_username" label="Логин кабинета Click.ru" value="${esc(edit?existing.web_username||"":"")}" autocomplete="username" ${edit?"required":""}></nv-input>
+    <nv-password-input name="web_password" label="Пароль кабинета Click.ru" ${edit?"required":""}></nv-password-input>
+    <p class="muted" style="font-size:12px;margin:2px 0 0">Нужны, чтобы подключать аккаунты из пула к Click.ru — в API этого нет. Вход выполнит браузер на сервере ParsYa, сессия сохранится зашифрованной. Займёт до минуты.</p>`;
+  overlay("modal",{title:edit?"Вход в кабинет «"+existing.label+"»":"Подключить Click.ru",
+    subtitle:edit?"Новые логин и пароль заменят сохранённые":"API-токен и вход в веб-кабинет Click.ru",size:"md",
+    body:edit?web:`<nv-input name="label" label="Название подключения" required></nv-input>
     <nv-input name="token" label="API-токен Click.ru" required></nv-input>
-    <nv-input name="user_id" label="User ID (необязательно)"></nv-input>`,
-    actions:[{label:"Отмена"},{label:"Подключить",variant:"primary",icon:"link",fn(r,close){
-      const v=formVals(r),label=(v.label||"").trim(),token=(v.token||"").trim();
-      if(!label){r.querySelector('[name="label"]').setAttribute("error","Введите название");return false}
-      if(!token){r.querySelector('[name="token"]').setAttribute("error","Введите токен");return false}
+    <nv-input name="user_id" label="User ID (необязательно)"></nv-input>${web}`,
+    actions:[{label:"Отмена"},{label:edit?"Сохранить и войти":"Подключить",variant:"primary",icon:"link",fn(r,close){
+      const v=formVals(r),btn=r.querySelector(".dlg-f nv-button:last-child");
+      const user=(v.web_username||"").trim(),pass=v.web_password||"";
+      const bad=(n,t)=>{r.querySelector(`[name="${n}"]`).setAttribute("error",t);return false};
+      if(!edit){
+        if(!(v.label||"").trim())return bad("label","Введите название");
+        if(!(v.token||"").trim())return bad("token","Введите токен");
+      }
+      if(edit||user||pass){
+        if(!user)return bad("web_username","Введите логин кабинета");
+        if(!pass)return bad("web_password","Введите пароль кабинета");
+      }
+      btn.setAttribute("loading","");
       (async()=>{
-        try{await apiPost("/api/v1/ads/clickru-connections",{label,token,user_id:v.user_id||""});await loadClickru();close();toast("Подключение добавлено",{tone:"success"})}
-        catch(err){toast("Не удалось подключить: "+(err.message||""),{tone:"danger"})}
+        try{
+          const c=edit
+            ?await apiPut("/api/v1/ads/clickru-connections/"+existing.id+"/web-credentials",{web_username:user,web_password:pass})
+            :await apiPost("/api/v1/ads/clickru-connections",{label:v.label.trim(),token:v.token.trim(),user_id:(v.user_id||"").trim(),web_username:user,web_password:pass});
+          await loadClickru();close();clickruToast(c);onDone&&onDone(c);
+        }catch(err){btn.removeAttribute("loading");toast((edit?"Не удалось сохранить: ":"Не удалось подключить: ")+(err.message||""),{tone:"danger"})}
       })();
+      return false;
     }}]});
 }
 /* Визард массового запуска: 5 шагов, как в собственном ЛК addAvto
@@ -3393,22 +3427,26 @@ function projectWizard(existingProject){
     (async()=>{
       if(!S.ads.clickruLoaded)await loadClickru();
       const list=S.ads.clickru;
-      body.innerHTML=(list.length?`<div class="stack">${list.map(c=>`<label class="row" style="gap:9px;padding:10px;border:1px solid var(--line);border-radius:10px;cursor:pointer"><input type="radio" name="wizConn" value="${c.id}" ${wiz.connectionId===c.id?"checked":""}><span><b>${esc(c.label)}</b><br><span class="muted" style="font-size:12px">${esc(c.token_preview)}${c.user_id?" · User ID "+esc(c.user_id):""}</span></span></label>`).join("")}</div>`:
+      body.innerHTML=(list.length?`<div class="stack">${list.map(c=>`<label class="row" style="gap:9px;padding:10px;border:1px solid var(--line);border-radius:10px;cursor:pointer"><input type="radio" name="wizConn" value="${c.id}" ${wiz.connectionId===c.id?"checked":""}><span style="flex:1"><b>${esc(c.label)}</b><br><span class="muted" style="font-size:12px">${esc(c.token_preview)}${c.user_id?" · User ID "+esc(c.user_id):""}${c.web_username?" · кабинет "+esc(c.web_username):""}</span></span><nv-status value="${clickruWeb(c)[0]}" label="${esc(clickruWeb(c)[1])}"></nv-status></label>`).join("")}</div>`:
         `<nv-empty icon="link" heading="Подключений ещё нет" text="Добавьте токен Click.ru ниже."></nv-empty>`)+
         `<nv-button variant="ghost" size="sm" icon="plus" data-wiz-addconn style="margin-top:10px">Добавить подключение</nv-button>
-         <div id="wiz-conn-form" hidden style="margin-top:10px"><nv-input name="cl_label" label="Название"></nv-input><nv-input name="cl_token" label="API-токен"></nv-input><nv-button size="sm" variant="primary" data-wiz-addconn-save style="margin-top:6px">Добавить и проверить</nv-button></div>
+         <div id="wiz-conn-form" hidden style="margin-top:10px"><nv-input name="cl_label" label="Название"></nv-input><nv-input name="cl_token" label="API-токен"></nv-input><nv-input name="cl_web_username" label="Логин кабинета Click.ru"></nv-input><nv-password-input name="cl_web_password" label="Пароль кабинета Click.ru"></nv-password-input><nv-button size="sm" variant="primary" data-wiz-addconn-save style="margin-top:6px">Добавить и войти</nv-button></div>
         ${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="arrow-right" data-wiz-next>Далее</nv-button>')}
         <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
       body.querySelectorAll('input[name="wizConn"]').forEach(inp=>inp.onchange=()=>{wiz.connectionId=+inp.value});
       body.querySelector("[data-wiz-addconn]").onclick=()=>{body.querySelector("#wiz-conn-form").hidden=false};
       body.querySelector("[data-wiz-addconn-save]").onclick=()=>{
         const v=formVals(body),msg=body.querySelector("#wiz-msg");
-        if(!(v.cl_label||"").trim()||!(v.cl_token||"").trim()){msg.textContent="Укажите название и токен";msg.style.color="var(--bad)";return}
-        (async()=>{try{const c=await apiPost("/api/v1/ads/clickru-connections",{label:v.cl_label.trim(),token:v.cl_token.trim(),user_id:""});wiz.connectionId=c.id;await loadClickru();drawStep2(body)}catch(err){msg.textContent=err.message;msg.style.color="var(--bad)"}})();
+        const wu=(v.cl_web_username||"").trim(),wp=v.cl_web_password||"";
+        if(!(v.cl_label||"").trim()||!(v.cl_token||"").trim()||!wu||!wp){msg.textContent="Укажите название, токен, логин и пароль кабинета";msg.style.color="var(--bad)";return}
+        const sb=body.querySelector("[data-wiz-addconn-save]");sb.setAttribute("loading","");msg.style.color="";msg.textContent="Проверяю токен и вхожу в кабинет Click.ru… до минуты.";
+        (async()=>{try{const c=await apiPost("/api/v1/ads/clickru-connections",{label:v.cl_label.trim(),token:v.cl_token.trim(),user_id:"",web_username:wu,web_password:wp});wiz.connectionId=c.id;await loadClickru();clickruToast(c);drawStep2(body)}catch(err){sb.removeAttribute("loading");msg.textContent=err.message;msg.style.color="var(--bad)"}})();
       };
       body.querySelector("[data-wiz-back]").onclick=()=>setStep(1);
       body.querySelector("[data-wiz-next]").onclick=()=>{
         if(!wiz.connectionId){body.querySelector("#wiz-msg").textContent="Выберите аккаунт Click.ru";body.querySelector("#wiz-msg").style.color="var(--bad)";return}
+        const sel=list.find(c=>c.id===wiz.connectionId);
+        if(sel&&sel.web_status!=="ok")toast("У «"+sel.label+"» нет рабочего входа в кабинет Click.ru — запуск может не пройти. Проверьте вход в разделе «Клик.ру».",{tone:"warning"});
         setStep(3);
       };
     })();
@@ -3659,7 +3697,7 @@ clickru(){
   after(root){
     if(!A.clickruLoaded){loadClickru();return}
     const el=root.querySelector("#ads-cr-res");
-    el.innerHTML=A.clickru.length?`<div class="grid g3">${A.clickru.map(c=>`<nv-integration-card logo="${esc((c.label||"??").slice(0,2).toUpperCase())}" name="${esc(c.label)}" category="${c.user_id?"User ID "+esc(c.user_id):"Добавлено "+esc(fmtDateTime(c.created_at))}" description="Токен: ${esc(c.token_preview)}" status="connected" status-label="Подключено"><span class="int-actions"><nv-button size="sm" variant="danger" icon="trash-2" icon-only hint="Удалить" data-act="adsDelClickru" data-id="${c.id}">Удалить</nv-button></span></nv-integration-card>`).join("")}</div>`:
+    el.innerHTML=A.clickru.length?`<div class="grid g3">${A.clickru.map(c=>`<nv-integration-card logo="${esc((c.label||"??").slice(0,2).toUpperCase())}" name="${esc(c.label)}" category="${c.user_id?"User ID "+esc(c.user_id):"Добавлено "+esc(fmtDateTime(c.created_at))}" description="${esc("Токен: "+c.token_preview+(c.web_username?" · кабинет: "+c.web_username:"")+(c.web_status_message?" · "+c.web_status_message:"")+(c.web_checked_at?" ("+fmtDateTime(c.web_checked_at)+")":""))}" status="${clickruWeb(c)[0]}" status-label="${esc(clickruWeb(c)[1])}"><span class="int-actions">${c.has_web_password?`<nv-button size="sm" variant="secondary" icon="refresh-cw" hint="Проверить сохранённую сессию, при необходимости войти заново" data-act="adsCheckClickru" data-id="${c.id}">Проверить вход</nv-button>`:""}<nv-button size="sm" variant="${c.has_web_password?"ghost":"primary"}" icon="key-round" hint="Логин и пароль веб-кабинета Click.ru" data-act="adsCredsClickru" data-id="${c.id}">${c.has_web_password?"Логин и пароль":"Указать вход"}</nv-button><nv-button size="sm" variant="danger" icon="trash-2" icon-only hint="Удалить" data-act="adsDelClickru" data-id="${c.id}">Удалить</nv-button></span></nv-integration-card>`).join("")}</div>`:
       `<nv-card><nv-empty icon="link" heading="Подключений нет" text="Добавьте токен Click.ru, чтобы запускать кампании."><nv-button icon="link" data-act="adsNewClickru">Подключить</nv-button></nv-empty></nv-card>`;
   }}
 },
@@ -3724,6 +3762,13 @@ report(){
 }};
 N.acts.adsNewProject=()=>projectWizard(null);
 N.acts.adsNewClickru=()=>clickruDlg();
+N.acts.adsCredsClickru=(a,d)=>{const c=S.ads.clickru.find(x=>String(x.id)===String(d.id));if(c)clickruDlg(c)};
+N.acts.adsCheckClickru=(a,d)=>{
+  const c=S.ads.clickru.find(x=>String(x.id)===String(d.id));if(!c)return;
+  const b=a&&a.closest?a.closest("nv-button"):null;b&&b.setAttribute("loading","");
+  toast("Проверяю вход в кабинет «"+c.label+"»…");
+  (async()=>{try{const r=await apiPost("/api/v1/ads/clickru-connections/"+c.id+"/web-check",{});await loadClickru();clickruToast(r)}catch(err){b&&b.removeAttribute("loading");toast("Не удалось проверить вход: "+(err.message||""),{tone:"danger"})}})();
+};
 N.acts.adsLaunch=(a,d)=>{const p=S.ads.projects.find(x=>String(x.id)===String(d.id));if(p)projectWizard(p)};
 N.acts.adsDelClickru=(a,d)=>{
   confirm({title:"Удалить подключение?",text:"Кампании, уже созданные через него, не удаляются.",confirm:"Удалить",danger:true,fn(){
