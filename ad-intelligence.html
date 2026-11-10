@@ -3900,9 +3900,9 @@ projects(){
     const el=root.querySelector("#ads-proj-res"),rows=filteredProjects();
     if(!A.projects.length){el.innerHTML=`<nv-card><nv-empty icon="rocket" heading="Проектов пока нет" text="Создайте проект, чтобы запускать кампании пачками."><nv-button icon="plus" data-act="adsNewProject">Новый проект</nv-button></nv-empty></nv-card>`;return}
     el.innerHTML=`<div class="muted" style="font-size:12.5px;margin-bottom:8px">Показано ${rows.length} из ${A.projects.length}. Нажмите на проект — откроется история, аккаунты и проверка кампаний.</div>`+
-      (rows.length?`<nv-table id="ads-proj-t" page-size="25"></nv-table>`:`<nv-empty icon="filter" heading="Ничего не найдено" text="Измените фильтры или сбросьте их."></nv-empty>`);
+      (rows.length?`<nv-table id="ads-proj-t" page-size="25" clickable></nv-table>`:`<nv-empty icon="filter" heading="Ничего не найдено" text="Измените фильтры или сбросьте их."></nv-empty>`);
     if(rows.length)wireTable(root,"ads-proj-t",rows,
-      [{key:"name",label:"Проект",render:p=>`<div class="cell-t">${esc(p.name)}</div><div class="cell-s">${esc(p.domain||"")}</div>`},
+      [{key:"name",label:"Проект",render:p=>`<div class="cell-t" style="color:var(--accent,#2563eb);text-decoration:underline;text-underline-offset:2px">${esc(p.name)}</div><div class="cell-s">${esc(p.domain||"")}</div>`},
        {key:"launch_mode",label:"Режим",render:p=>p.launch_mode==="ozon"?'<nv-badge tone="info">Директ Озон</nv-badge>':'<nv-badge>Директ</nv-badge>'},
        {key:"_status",label:"Статус",render:p=>{const [l,t]=PROJ_STATUS[projStatus(p)];return `<nv-badge${t?` tone="${t}"`:""}>${l}</nv-badge>`}},
        {key:"_camps",label:"Кампаний",align:"right",render:p=>String((p.stats||{}).campaigns_count||0)},
