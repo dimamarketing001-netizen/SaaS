@@ -2072,6 +2072,18 @@ async function apiPost(path,body){
 // капчу, её проходит человек: captchaHost получает живой скриншот, клик
 // мышкой = клик, зажать и протянуть = перетаскивание слайдера. Ссылка на
 // то же окно уходит в Telegram (ozon-captcha.html?s=…).
+// Юрлицо Click.ru: «#1480787: Муфатыков Роман Маратович». У физлиц/ИП нет
+// name — ФИО собирает и addAvto (/api/payers), здесь подстраховка.
+function payerName(p){
+ const fio=[p.lastName,p.firstName,p.middleName].filter(Boolean).join(" ");
+ return (p.name||"").trim()||fio||p.fullName||p.description||"";
+}
+function payerLabel(p){const n=payerName(p);return "#"+p.id+(n?": "+n:"")}
+function payerMeta(p){
+ const t={BUSINESS:"ООО",INDIVIDUAL:"ИП",PERSON:"Физлицо"}[p.type]||"";
+ const bal=typeof p.balance==="number"?"баланс "+p.balance.toLocaleString("ru-RU",{maximumFractionDigits:2})+" ₽":"";
+ return [t,p.inn?"ИНН "+p.inn:"",bal].filter(Boolean).join(" · ");
+}
 async function ozonGenerate(projectId,url,onTick,captchaHost){
  const path="/api/v1/ads/projects/"+projectId+"/ozon-generate";
  let st=await apiPost(path,{url});
@@ -3553,7 +3565,7 @@ function projectWizard(existingProject){
       renderStep3Body();
       function renderStep3Body(){
         body.innerHTML=`<nv-callout tone="info" heading="Для маркировки рекламы">Юрлицо нужно по закону (ОРД/ERID) перед включением показов — для черновика можно пропустить.</nv-callout>`+
-          (items.length?`<div class="stack" style="margin-top:10px">${items.map(p=>`<label class="row" style="gap:9px;padding:10px;border:1px solid var(--line);border-radius:10px;cursor:pointer"><input type="radio" name="wizPayer" value="${p.id}" ${wiz.payerId===p.id?"checked":""}><span><b>${esc(p.name||p.fullName||("Юрлицо "+p.id))}</b></span></label>`).join("")}</div>`:
+          (items.length?`<div class="stack" style="margin-top:10px">${items.map(p=>`<label class="row" style="gap:9px;padding:10px;border:1px solid var(--line);border-radius:10px;cursor:pointer"><input type="radio" name="wizPayer" value="${p.id}" ${wiz.payerId===p.id?"checked":""}><span><b>${esc(payerLabel(p))}</b>${payerMeta(p)?`<br><span class="muted" style="font-size:12.5px">${esc(payerMeta(p))}</span>`:""}</span></label>`).join("")}</div>`:
             `<nv-empty icon="building-2" heading="Юрлиц пока нет" text="Добавьте первое ниже, либо пропустите этот шаг для черновика."></nv-empty>`)+
           `<nv-button variant="ghost" size="sm" icon="plus" data-wiz-addpayer style="margin-top:10px">Добавить юрлицо</nv-button>
           <div id="wiz-payer-form" hidden style="margin-top:10px">
