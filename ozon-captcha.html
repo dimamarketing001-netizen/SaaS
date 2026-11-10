@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Капча Ozon</title>
+<!-- Ручное прохождение капчи Ozon для «Директ Озон» (2026-11-10). Сюда ведёт
+     ссылка из Telegram: ozon-captcha.html?s=<session>. Живой скриншот Chrome
+     на ПК в WSL (ozon_fetch.py), клики/перетаскивания уходят обратно через
+     parsya-control /api/v1/ozon-captcha/<session>. Тот же сеанс ЛК, что у
+     ad-intelligence.html (localStorage parsya_session). -->
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#16181d;--muted:#667085;--line:#e4e7ec;--accent:#2563eb;--bad:#c0392b;--ok:#15803d}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#171a21;--text:#e7e9ee;--muted:#9aa3b2;--line:#2a2f3a;--accent:#60a5fa;--bad:#f87171;--ok:#4ade80}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:20px 16px}
+h1{font-size:20px;margin:0 0 6px}
+.muted{color:var(--muted);font-size:13.5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px}
+img{max-width:100%;display:block;border-radius:8px;cursor:crosshair;user-select:none;-webkit-user-drag:none;touch-action:none}
+button{font:inherit;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.status{font-weight:600}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Капча Ozon</h1>
+  <div class="muted" id="label">Генерация объявлений «Директ Озон»: Chrome на ПК открыл карточку, а Ozon попросил проверку.</div>
+  <div class="card">
+    <div class="status" id="status">Загружаю…</div>
+    <div class="muted" id="howto" hidden>Клик по картинке — нажатие. Зажмите и протяните — перетаскивание (слайдер). Картинка обновляется раз в секунду.</div>
+    <div style="margin-top:10px"><img id="shot" alt="Экран Chrome с капчей Ozon" draggable="false" hidden></div>
+    <div class="row">
+      <button id="refresh" hidden>Обновить страницу Ozon</button>
+      <span class="muted" id="hint"></span>
+    </div>
+  </div>
+</main>
+<script>
+(function(){
+  const DEFAULT_API_BASE="https://xn--80ak2afbe.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai";
+  let apiBase=DEFAULT_API_BASE,session=null;
+  try{apiBase=(localStorage.getItem("parsya_api_base")||DEFAULT_API_BASE).replace(/\/+$/,"");session=JSON.parse(localStorage.getItem("parsya_session")||"null")}catch(e){}
+  const sid=new URLSearchParams(location.search).get("s")||"";
+  const $=id=>document.getElementById(id);
+  const status=$("status"),img=$("shot"),hint=$("hint");
+  if(!sid){status.textContent="В ссылке нет id сессии.";status.className="status bad";return}
+  if(!session||!session.token){status.innerHTML='Сначала войдите в ЛК: <a href="index.html">вход</a>, затем откройте ссылку ещё раз.';status.className="status bad";return}
+  const base=apiBase+"/api/v1/ozon-captcha/"+encodeURIComponent(sid);
+  const headers={Authorization:"Bearer "+session.token,"Content-Type":"application/json"};
+  let sending=false,start=null,wasActive=false;
+  async function send(cmd){
+    if(sending)return;sending=true;
+    try{
+      const r=await fetch(base+"/command",{method:"POST",headers,body:JSON.stringify(cmd)});
+      if(!r.ok){let d="Ошибка "+r.status;try{d=(await r.json()).detail||d}catch(e){}throw new Error(d)}
+      hint.textContent="Отправлено — картинка обновится через секунду.";
+    }catch(e){hint.textContent=e.message}finally{sending=false}
+  }
+  const ratio=e=>{const r=img.getBoundingClientRect();return[Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))]};
+  img.addEventListener("pointerdown",e=>{e.preventDefault();try{img.setPointerCapture(e.pointerId)}catch(_){}start=ratio(e)});
+  img.addEventListener("pointerup",e=>{
+    if(!start)return;const end=ratio(e),r=img.getBoundingClientRect();
+    const moved=Math.hypot((end[0]-start[0])*r.width,(end[1]-start[1])*r.height);
+    send(moved<6?{action:"click",x_ratio:start[0],y_ratio:start[1]}:{action:"drag",x_ratio:start[0],y_ratio:start[1],to_x_ratio:end[0],to_y_ratio:end[1]});
+    start=null;
+  });
+  $("refresh").addEventListener("click",()=>send({action:"refresh"}));
+  async function tick(){
+    try{
+      const r=await fetch(base,{headers});
+      if(r.status===401){status.innerHTML='Сеанс ЛК истёк: <a href="index.html">войдите</a> и откройте ссылку снова.';status.className="status bad";return}
+      const s=await r.json();
+      if(s.label)$("label").textContent="Генерация объявлений «Директ Озон»: "+s.label;
+      const show=!!(s.captcha_required&&s.screenshot_b64);
+      img.hidden=$("howto").hidden=$("refresh").hidden=!show;
+      if(show){img.src="data:image/jpeg;base64,"+s.screenshot_b64;status.textContent="Нужно пройти проверку";status.className="status";wasActive=true}
+      else if(s.active){status.textContent="Chrome открывает карточку… капчи сейчас нет.";status.className="status"}
+      else if(s.known||wasActive){status.textContent="Готово — проверка больше не нужна, окно можно закрыть.";status.className="status ok"}
+      else{status.textContent="Сессия не найдена или уже завершилась.";status.className="status"}
+    }catch(e){hint.textContent="Нет связи с сервером, пробую ещё…"}
+    setTimeout(tick,1000);
+  }
+  tick();
+})();
+</script>
+</body>
+</html>

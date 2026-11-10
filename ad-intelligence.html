@@ -2068,18 +2068,64 @@ async function apiPost(path,body){
 }
 // Генерация Ozon→Gemini идёт 1–5 минут: POST только запускает фоновую
 // задачу (202), дальше опрашиваем статус, пока не done/failed.
-async function ozonGenerate(projectId,url,onTick){
+// Карточку Ozon открывает настоящий Chrome на ПК в WSL. Если Ozon показал
+// капчу, её проходит человек: captchaHost получает живой скриншот, клик
+// мышкой = клик, зажать и протянуть = перетаскивание слайдера. Ссылка на
+// то же окно уходит в Telegram (ozon-captcha.html?s=…).
+async function ozonGenerate(projectId,url,onTick,captchaHost){
  const path="/api/v1/ads/projects/"+projectId+"/ozon-generate";
  let st=await apiPost(path,{url});
  const t0=Date.now();
- while(st.status==="running"){
-  if(Date.now()-t0>12*60*1000)throw new Error("Генерация идёт дольше 12 минут — обновите страницу позже.");
-  if(onTick)onTick(Math.round((Date.now()-t0)/1000));
-  await new Promise(r=>setTimeout(r,4000));
-  try{st=await api(path)}catch(e){if(/session expired/.test(e.message||""))throw e}
- }
+ const stopCaptcha=(captchaHost&&st.captcha_session)?ozonCaptchaWatch(st.captcha_session,captchaHost):()=>{};
+ try{
+  while(st.status==="running"){
+   if(Date.now()-t0>16*60*1000)throw new Error("Генерация идёт дольше 16 минут — обновите страницу позже.");
+   if(onTick)onTick(Math.round((Date.now()-t0)/1000));
+   await new Promise(r=>setTimeout(r,4000));
+   try{st=await api(path)}catch(e){if(/session expired/.test(e.message||""))throw e}
+  }
+ }finally{stopCaptcha()}
  if(st.status==="done"&&st.result)return st.result;
  throw new Error(st.error||"Генерация прервалась (сервис перезапускался?) — запустите ещё раз.");
+}
+function ozonCaptchaWatch(sid,host){
+ let stopped=false,timer=null,sending=false;
+ const base="/api/v1/ozon-captcha/"+encodeURIComponent(sid);
+ const send=async cmd=>{
+  if(sending)return;sending=true;
+  try{await apiPost(base+"/command",cmd);hint.textContent="Отправлено — картинка обновится через секунду."}
+  catch(e){hint.textContent=e.message||"Не отправилось"}finally{sending=false}
+ };
+ host.innerHTML=`<div class="ozc" hidden style="margin-top:10px;border:1px solid var(--line,#ddd);border-radius:10px;padding:10px">
+   <div style="font-weight:600;margin-bottom:4px">Ozon просит пройти проверку</div>
+   <div class="muted" style="font-size:12.5px;margin-bottom:8px">Пройдите её прямо на картинке: клик — нажатие, зажать и протянуть — перетащить слайдер. Это живой экран Chrome на ПК (обновляется раз в секунду). Ссылка отправлена и в Telegram.</div>
+   <div style="position:relative;display:inline-block;max-width:100%"><img class="ozc-img" draggable="false" alt="Капча Ozon" style="max-width:100%;cursor:crosshair;user-select:none;display:block;border-radius:6px"></div>
+   <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><nv-button size="sm" variant="ghost" icon="refresh-cw" class="ozc-refresh">Обновить страницу Ozon</nv-button>
+   <a class="ozc-open" target="_blank" rel="noopener" style="font-size:12.5px">Открыть в отдельном окне</a><span class="ozc-hint muted" style="font-size:12.5px"></span></div></div>`;
+ const box=host.querySelector(".ozc"),img=host.querySelector(".ozc-img"),hint=host.querySelector(".ozc-hint");
+ host.querySelector(".ozc-open").href="ozon-captcha.html?s="+encodeURIComponent(sid);
+ host.querySelector(".ozc-refresh").addEventListener("click",()=>send({action:"refresh"}));
+ let start=null;
+ const ratio=e=>{const r=img.getBoundingClientRect();return[Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))]};
+ img.addEventListener("pointerdown",e=>{e.preventDefault();try{img.setPointerCapture(e.pointerId)}catch(_){}start=ratio(e)});
+ img.addEventListener("pointerup",e=>{
+  if(!start)return;const end=ratio(e),r=img.getBoundingClientRect();
+  const moved=Math.hypot((end[0]-start[0])*r.width,(end[1]-start[1])*r.height);
+  send(moved<6?{action:"click",x_ratio:start[0],y_ratio:start[1]}
+    :{action:"drag",x_ratio:start[0],y_ratio:start[1],to_x_ratio:end[0],to_y_ratio:end[1]});
+  start=null;
+ });
+ const tick=async()=>{
+  if(stopped)return;
+  try{
+   const s=await api(base);
+   if(s.captcha_required&&s.screenshot_b64){box.hidden=false;img.src="data:image/jpeg;base64,"+s.screenshot_b64}
+   else box.hidden=true;
+  }catch(e){}
+  if(!stopped)timer=setTimeout(tick,1200);
+ };
+ tick();
+ return()=>{stopped=true;clearTimeout(timer);host.innerHTML=""};
 }
 async function apiDelete(path){
  const res=await fetch(API_BASE+path,{method:"DELETE",headers:{Authorization:"Bearer "+session.token}});
@@ -3421,7 +3467,8 @@ function projectWizard(existingProject){
             const genLabel="Озон парсит карточку, Gemini пишет тексты… обычно 1–5 минут, страницу можно не трогать.";
             msg.textContent=genLabel;
             try{
-              const gen=await ozonGenerate(saved.id,ozonUrl,s=>{msg.textContent=genLabel+" Прошло "+s+" с."});
+              let capHost=body.querySelector("#wiz-ozon-captcha");if(!capHost){capHost=document.createElement("div");capHost.id="wiz-ozon-captcha";msg.after(capHost)}
+              const gen=await ozonGenerate(saved.id,ozonUrl,s=>{msg.textContent=genLabel+" Прошло "+s+" с."},capHost);
               saved=gen.project;wiz.project=saved;
               msg.textContent="Готово: "+(saved.headlines||[]).length+" заголовков, "+(saved.ad_texts||[]).length+" текстов, "+
                 (saved.image_urls||[]).length+" картинок, "+(saved.keywords||"").split("\n").filter(Boolean).length+" ключевых фраз.";
@@ -3590,7 +3637,8 @@ function projectWizard(existingProject){
       const regenLabel="Озон парсит карточку, Gemini пишет тексты… обычно 1–5 минут.";
       regenMsg.style.color="";regenMsg.textContent=regenLabel;
       try{
-        const gen=await ozonGenerate(wiz.project.id,wiz.project.ozon_url,s=>{regenMsg.textContent=regenLabel+" Прошло "+s+" с."});
+        let capHost=body.querySelector("#wiz-ozon-captcha-regen");if(!capHost){capHost=document.createElement("div");capHost.id="wiz-ozon-captcha-regen";regenMsg.after(capHost)}
+        const gen=await ozonGenerate(wiz.project.id,wiz.project.ozon_url,s=>{regenMsg.textContent=regenLabel+" Прошло "+s+" с."},capHost);
         wiz.project=gen.project;reseedPools(wiz.project);drawStep5(body);
       }catch(err){regenMsg.textContent=err.message||"Не удалось перегенерировать";regenMsg.style.color="var(--bad)";btn.removeAttribute("disabled")}
     };
