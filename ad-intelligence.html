@@ -3695,10 +3695,20 @@ function projectWizard(existingProject){
     const ozonRegenHtml=isOzonProject?`<nv-callout tone="info" heading="Из Ozon">Заголовки/тексты/ключевые фразы/картинки сгенерировал Gemini по карточке <a href="${esc(wiz.project.ozon_url||"")}" target="_blank" rel="noopener">${esc(wiz.project.ozon_url||"")}</a>. Можно поправить вручную ниже или перегенерировать заново (старые значения заменятся).
       <div style="margin-top:8px"><nv-button size="sm" variant="ghost" icon="refresh-cw" data-wiz-ozon-regen>Пересоздать через Gemini</nv-button></div>
       <div id="wiz-ozon-regen-msg" class="muted" style="font-size:12.5px;margin-top:4px"></div></nv-callout>`:"";
-    body.innerHTML=ozonRegenHtml+structureHtml+modeHtml+`<div id="wiz-creatives">${manual?manualHtml:poolHtml}</div>
+    // Проект уже запускался (2026-11-11): его настройки и креативы менять
+    // нельзя (сервер отвечает 409 — иначе разойдутся с созданными кампаниями).
+    // «Запустить ещё» берёт креативы проекта как есть; правки — в копии.
+    const lockedHtml=wiz.locked&&!manual?`<nv-callout tone="info" heading="Креативы проекта зафиксированы">Проект уже запускался — новые аккаунты получат те же заголовки, тексты, картинки, быстрые ссылки и уточнения. Нужно что-то поменять — сделайте копию проекта: все настройки перенесутся, их можно будет редактировать.
+      <div style="margin-top:8px"><nv-button size="sm" variant="secondary" icon="copy" data-wiz-dup>Дублировать для правок</nv-button></div></nv-callout>`:"";
+    body.innerHTML=(wiz.locked?lockedHtml:ozonRegenHtml)+structureHtml+modeHtml+`<div id="wiz-creatives">${manual?manualHtml:poolHtml}</div>
     ${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="rocket" data-wiz-launch>Запустить массовый запуск</nv-button>')}
     <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
-    if(isOzonProject)body.querySelector("[data-wiz-ozon-regen]").onclick=async()=>{
+    if(wiz.locked&&!manual){
+      body.querySelectorAll("#wiz-creatives nv-textarea").forEach(t=>t.setAttribute("disabled",""));
+      const g=body.querySelector("#wiz-images");if(g){g.style.pointerEvents="none";g.style.opacity=".75"}
+      const dup=body.querySelector("[data-wiz-dup]");if(dup)dup.onclick=()=>{close();duplicateProject(wiz.project)};
+    }
+    if(isOzonProject&&!wiz.locked)body.querySelector("[data-wiz-ozon-regen]").onclick=async()=>{
       const regenMsg=body.querySelector("#wiz-ozon-regen-msg"),btn=body.querySelector("[data-wiz-ozon-regen]");
       btn.setAttribute("disabled","");
       const regenLabel="Озон парсит карточку, Gemini пишет тексты… обычно 1–5 минут.";
@@ -3739,8 +3749,8 @@ function projectWizard(existingProject){
         if(sets.some(s=>!s.headline||!s.ad_text)){msg.textContent="Заполните заголовок и текст для каждого аккаунта";msg.style.color="var(--bad)";return}
         payload.creative_sets=sets;
       }else{
-        headlines=(v.headlines||"").split("\n").map(x=>x.trim()).filter(Boolean);
-        adTexts=(v.ad_texts||"").split("\n").map(x=>x.trim()).filter(Boolean);
+        headlines=wiz.locked?(wiz.project.headlines||[]):(v.headlines||"").split("\n").map(x=>x.trim()).filter(Boolean);
+        adTexts=wiz.locked?(wiz.project.ad_texts||[]):(v.ad_texts||"").split("\n").map(x=>x.trim()).filter(Boolean);
         if(!headlines.length||!adTexts.length){msg.textContent="Нужен хотя бы один заголовок и один текст объявления";msg.style.color="var(--bad)";return}
       }
       msg.style.color="";msg.textContent="Запускаю…";
@@ -3749,7 +3759,8 @@ function projectWizard(existingProject){
       const sitelinksPool=parseSitelinksPool(v.sitelinks_pool);
       (async()=>{
         try{
-          await apiPut("/api/v1/ads/projects/"+wiz.project.id,{...wiz.project,headlines,ad_texts:adTexts,image_urls:imageUrls,callouts_pool:calloutsPool,sitelinks_pool:sitelinksPool});
+          // Запущенный проект не сохраняем (сервер 409) — креативы уже в нём.
+          if(!wiz.locked)await apiPut("/api/v1/ads/projects/"+wiz.project.id,{...wiz.project,headlines,ad_texts:adTexts,image_urls:imageUrls,callouts_pool:calloutsPool,sitelinks_pool:sitelinksPool});
           const job=await apiPost("/api/v1/ads/projects/"+wiz.project.id+"/campaigns/bulk-create",payload);
           close();toast("Запуск начат — отслеживаем прогресс",{tone:"success"});openJobDrawer(wiz.project,job.job_id);
         }catch(err){msg.textContent=err.message||"Не удалось запустить";msg.style.color="var(--bad)"}
@@ -3758,6 +3769,18 @@ function projectWizard(existingProject){
   }
 }
 const BULK_JOB_STATUS={running:"Выполняется",done:"Готово",failed:"Ошибка"};
+// «Дублировать» (2026-11-11): копия проекта со всеми настройками и
+// креативами (ключи, регионы, заголовки, тексты, картинки, быстрые ссылки,
+// уточнения, режим Ozon) — новый, ни разу не запущенный, его можно править.
+async function duplicateProject(p){
+  try{
+    const copy=await apiPost("/api/v1/ads/projects/"+p.id+"/duplicate",{});
+    toast("Создана копия «"+copy.name+"» — можно править и запускать",{tone:"success"});
+    await loadProjects();
+    projectWizard((S.ads.projects||[]).find(x=>x.id===copy.id)||copy);
+  }catch(err){toast(err.message||"Не удалось сделать копию",{tone:"danger"})}
+}
+N.acts.adsDup=(a,d)=>{const p=(S.ads.projects||[]).find(x=>String(x.id)===String(d.id));if(p)duplicateProject(p)};
 // «Продолжить запуск» (2026-11-10): досоздаёт недостающие кампании с теми же
 // параметрами; сначала — аккаунты, уже созданные прошлым запуском.
 async function resumeLaunch(project,jobId,btn){
@@ -3864,7 +3887,7 @@ function openProjectPanel(p){
         const launches=h.events.filter(e=>e.kind==="launch_started").length,acc=h.accounts||[];
         const busy=h.running_job_id||h.ozon_status==="running";
         el.innerHTML=`<div class="grid g3">${stat("Кампаний создано",acc.length)}${stat("Запусков",launches)}${stat("Статус",busy?(h.running_job_id?"Идёт запуск":"Идёт генерация"):(PROJ_STATUS[projStatus(p)]||[""])[0])}</div>
-          <div class="row" style="gap:8px;margin:10px 0;flex-wrap:wrap"><nv-button size="sm" icon="rocket" data-proj-launch>${acc.length?"Запустить ещё":"Открыть визард запуска"}</nv-button>
+          <div class="row" style="gap:8px;margin:10px 0;flex-wrap:wrap"><nv-button size="sm" icon="rocket" data-proj-launch>${acc.length||p.has_launched?"Запустить ещё (те же настройки)":"Открыть визард запуска"}</nv-button><nv-button size="sm" variant="secondary" icon="copy" data-proj-dup hint="Копия со всеми настройками и креативами — её можно редактировать">Дублировать</nv-button>
           ${h.running_job_id?`<nv-button size="sm" variant="secondary" icon="activity" data-proj-job="${h.running_job_id}">Прогресс запуска</nv-button>`:""}
           ${!h.running_job_id&&h.resume?`<nv-button size="sm" variant="primary" icon="play" data-proj-resume="${h.resume.job_id}" hint="Досоздать недостающие кампании с теми же настройками">Продолжить запуск #${h.resume.job_id} (не хватает ${h.resume.remaining}${h.resume.reuse_accounts?", готовых аккаунтов "+h.resume.reuse_accounts:""})</nv-button>`:""}
           ${p.ozon_url?`<a href="${esc(p.ozon_url)}" target="_blank" rel="noopener" style="font-size:13px;align-self:center">Карточка Ozon</a>`:""}</div>
@@ -3878,6 +3901,7 @@ function openProjectPanel(p){
           <nv-card heading="История" style="margin-top:12px"><nv-timeline items="${esc(projectTimeline(h.events))}"></nv-timeline></nv-card>`;
         el.querySelector("[data-proj-launch]").onclick=()=>{const full=(S.ads.projects||[]).find(x=>x.id===p.id)||p;projectWizard(full)};
         const rs=el.querySelector("[data-proj-resume]");if(rs)rs.onclick=()=>resumeLaunch(p,+rs.dataset.projResume,rs);
+        el.querySelector("[data-proj-dup]").onclick=()=>duplicateProject(p);
         const jb=el.querySelector("[data-proj-job]");if(jb)jb.onclick=()=>openJobDrawer(p,+jb.dataset.projJob);
         el.querySelectorAll("[data-acc-check]").forEach(b=>b.onclick=async()=>{
           const a=acc[+b.dataset.accCheck],out=el.querySelector(`[data-acc-out="${b.dataset.accCheck}"]`);
@@ -3938,7 +3962,7 @@ projects(){
        {key:"_last",label:"Последний запуск",render:p=>(p.stats||{}).last_job_at?esc(fmtDateTime(p.stats.last_job_at)):"—"},
        {key:"_payer",label:"Юрлицо",render:p=>esc(projPayerNames(p).join(", ")||"—")},
        {key:"_conn",label:"Click.ru",render:p=>esc(((p.stats||{}).connection_ids||[]).map(id=>{const c=(S.ads.clickru||[]).find(x=>x.id===id);return c?c.label:"#"+id}).join(", ")||"—")},
-       {key:"_launch",label:"",align:"right",render:p=>`<nv-button size="sm" variant="${p.has_launched?"secondary":"primary"}" icon="rocket" data-act="adsLaunch" data-id="${p.id}">${p.has_launched?"Запустить ещё":"Запустить"}</nv-button>`}],
+       {key:"_launch",label:"",align:"right",render:p=>`<nv-button size="sm" variant="${p.has_launched?"secondary":"primary"}" icon="rocket" data-act="adsLaunch" data-id="${p.id}">${p.has_launched?"Запустить ещё":"Запустить"}</nv-button> <nv-button size="sm" variant="ghost" icon="copy" icon-only hint="Дублировать: копия со всеми настройками для правок" data-act="adsDup" data-id="${p.id}">Дублировать</nv-button>`}],
       p=>openProjectPanel(p));
   }}
 },
