@@ -1648,8 +1648,12 @@ define("nv-chart",class extends NvEl{
     let grid="";if(!bare)for(let t=bot;t<=top+1e-9;t+=st)grid+=`<line x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)"/><text x="${W}" y="${y(t)+4}" text-anchor="end">${fmt(t)}</text>`;
     const lw2=Math.max(...labels.map(l=>String(l).length))*6.4+26,every=Math.max(1,Math.ceil(lw2/(iw/labels.length)));
     if(type==="bar"){
-      const v=series[0].values,sl=iw/v.length,bw=Math.min(sl*.5,24);
-      box.innerHTML=`${legend}<svg height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(this.a("label"))}">${grid}${v.map((x,i)=>{const cx=L+sl*i+sl/2,hh=Math.max(1,T+ih-y(x)),yy=y(x),r=Math.min(bw/2,hh);return `<g data-t="${esc(labels[i])}: ${esc(f(x))}"><rect x="${L+sl*i}" y="${T}" width="${sl}" height="${ih}" fill="transparent"/><line x1="${cx}" x2="${cx}" y1="${T}" y2="${T+ih}" stroke="var(--line-2)"/><rect x="${cx-bw/2}" y="${yy}" width="${bw}" height="${hh}" rx="${r}" fill="${col(0)}"/>${i%every===0?`<text x="${cx}" y="${H-6}" text-anchor="middle">${esc(labels[i])}</text>`:""}</g>`}).join("")}</svg>${table}`;
+      // Несколько серий — сгруппированные столбики (2026-11-12); одна — как раньше.
+      const v=series[0].values,ns=series.length,sl=iw/v.length,bw=Math.max(2,Math.min(sl*(ns>1?.8:.5)/ns,24)),gap=ns>1?Math.min(2,bw*.2):0;
+      box.innerHTML=`${legend}<svg height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(this.a("label"))}">${grid}${v.map((_,i)=>{const cx=L+sl*i+sl/2,x0=cx-(ns*bw+(ns-1)*gap)/2;
+        const bars=series.map((s,k)=>{const x=s.values[i]||0,hh=Math.max(1,T+ih-y(x)),yy=y(x),r=Math.min(bw/2,hh);return `<rect x="${x0+k*(bw+gap)}" y="${yy}" width="${bw}" height="${hh}" rx="${r}" fill="${col(k)}"/>`}).join("");
+        const tip=ns>1?labels[i]+": "+series.map(s=>s.name+" "+f(s.values[i]||0)).join(", "):labels[i]+": "+f(v[i]);
+        return `<g data-t="${esc(tip)}"><rect x="${L+sl*i}" y="${T}" width="${sl}" height="${ih}" fill="transparent"/><line x1="${cx}" x2="${cx}" y1="${T}" y2="${T+ih}" stroke="var(--line-2)"/>${bars}${i%every===0?`<text x="${cx}" y="${H-6}" text-anchor="middle">${esc(labels[i])}</text>`:""}</g>`}).join("")}</svg>${table}`;
       return this.hov(box)}
     const xp=i=>L+(labels.length>1?i*iw/(labels.length-1):0);
     const lines=series.map((s,si)=>{const p=s.values.map((v,i)=>[xp(i),y(v)]),path=p.map((q,i)=>(i?"L":"M")+q[0].toFixed(1)+" "+q[1].toFixed(1)).join(" "),e=p[p.length-1];
@@ -3365,11 +3369,12 @@ async function loadPayers(){
   catch(err){toast("Не удалось загрузить юрлица Click.ru: "+(err.message||""),{tone:"danger"})}
   A.payersLoaded=true;N.refreshIf("ads-projects");
 }
+// Дашборд пула ParsYa (2026-11-12): GET /parsya-pool/dashboard.
 async function loadPool(){
-  const A=S.ads;
-  try{A.pool=await api("/api/v1/ads/parsya-pool/accounts",{})}
-  catch(err){A.pool={configured:false,items:[]};toast("Не удалось загрузить пул аккаунтов: "+(err.message||""),{tone:"danger"})}
-  A.poolLoaded=true;N.refreshIf("ads-accounts");
+  const A=S.ads;A.poolLoading=true;N.refreshIf("ads-accounts");
+  try{A.pool=await api("/api/v1/ads/parsya-pool/dashboard",{days:A.poolDays||30})}
+  catch(err){A.pool={configured:false,items:[],summary:{},daily:{labels:[]}};toast("Не удалось загрузить пул аккаунтов: "+(err.message||""),{tone:"danger"})}
+  A.poolLoaded=true;A.poolLoading=false;N.refreshIf("ads-accounts");
 }
 async function loadConnection(){
   const A=S.ads;
@@ -3705,7 +3710,7 @@ function projectWizard(existingProject){
     body.innerHTML=`<p class="muted">Проверяю пул ParsYa…</p>`;
     (async()=>{
       if(!S.ads.poolLoaded)await loadPool();
-      const pool=S.ads.pool,free=pool.configured?pool.items.filter(a=>a.is_free).length:null;
+      const pool=S.ads.pool,free=pool.configured?pool.items.filter(a=>a.state?a.state==="free":a.is_free).length:null;
       const hint=free==null?"Не удалось получить статус пула ParsYa.":`Свободно в пуле: ${free} из ${pool.items.length}.`;
       body.innerHTML=`<nv-callout tone="info" heading="Сколько аккаунтов">${esc(hint)} Каждый — новый аккаунт Директа из пула, со своей кампанией.</nv-callout>
       <nv-input name="count" label="Сколько аккаунтов запустить (1–20)" type="number" value="${wiz.count}" style="margin-top:10px"></nv-input>
@@ -4198,40 +4203,47 @@ clickru(){
   }}
 },
 accounts(){
-  const A=S.ads,q=(A.accQuery||"").toLowerCase();
-  return{title:"Аккаунты",sub:"Рекламные аккаунты, подключённые через Click.ru, и пул ParsYa для автозапуска.",
-  body:`<div class="stack">
-  <nv-card heading="Рекламные аккаунты Click.ru" subtitle="Подключённые интеграции (Яндекс.Директ, Google Ads и другие)">
-    <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Название, логин" value="${esc(A.accQuery||"")}" data-chg="adsAccQuery"></nv-input></div>
-    <div id="ads-conn-res" style="margin-top:10px">${!A.connLoaded?'<nv-skeleton count="4"></nv-skeleton>':""}</div>
-  </nv-card>
-  <nv-card heading="Пул ParsYa" subtitle="Запасные Яндекс-аккаунты для автоматического провижининга новых кампаний">
-    <div id="ads-pool-res">${!A.poolLoaded?'<nv-skeleton count="3"></nv-skeleton>':""}</div>
-  </nv-card></div>`,
+  const A=S.ads,q=(A.accQuery||"").toLowerCase(),f=A.poolState||"all";
+  return{title:"Аккаунты",sub:"Пул Яндекс-аккаунтов ParsYa: сколько добавляется, сколько занято рекламой, где используется каждый.",
+  body:`<div class="toolbar"><nv-segmented value="${esc(String(A.poolDays||30))}" options="7:7 дней|30:30 дней|90:90 дней" data-chg="adsPoolDays"></nv-segmented><nv-button icon="refresh-cw" data-act="adsPoolLoad">Обновить</nv-button></div>
+  <div id="ads-pool-res">${!A.poolLoaded?'<nv-skeleton count="6"></nv-skeleton>':""}</div>`,
   after(root){
-    if(!A.connLoaded)loadConnection();
-    if(!A.poolLoaded)loadPool();
-    if(A.connLoaded){
-      const connEl=root.querySelector("#ads-conn-res");
-      if(!A.conn.configured){connEl.innerHTML=`<nv-callout tone="warning" heading="Click.ru не настроен">${esc(A.conn.message||"Интеграция addAvto с Click.ru ещё не сконфигурирована на сервере.")}</nv-callout>`}
-      else{
-        const rows=A.conn.accounts.filter(a=>!q||(a.name||"").toLowerCase().includes(q)||(a.serviceLogin||"").toLowerCase().includes(q));
-        connEl.innerHTML=`<div class="muted" style="font-size:12.5px;margin-bottom:8px">Показано ${rows.length} из ${A.conn.accounts.length}</div>${rows.length?`<nv-table id="ads-conn-t" page-size="25"></nv-table>`:`<nv-empty icon="link" heading="Аккаунтов не найдено" text=""></nv-empty>`}`;
-        if(rows.length)wireTable(root,"ads-conn-t",rows.map((a,i)=>({id:a.id!=null?a.id:"c"+i,...a})),
-          [{key:"name",label:"Название"},{key:"service",label:"Сервис"},
-           {key:"status",label:"Статус",render:a=>a.status==="ACTIVE"?'<nv-badge tone="success">Активен</nv-badge>':`<nv-badge tone="danger">${esc(a.status||"—")}</nv-badge>`},
-           {key:"serviceLogin",label:"Логин"},{key:"currency",label:"Валюта"}]);
-      }
-    }
-    if(A.poolLoaded){
-      const poolEl=root.querySelector("#ads-pool-res");
-      poolEl.innerHTML=A.pool.configured?(A.pool.items.length?`<nv-table id="ads-pool-t"></nv-table>`:`<nv-empty icon="users" heading="В пуле пока нет аккаунтов" text=""></nv-empty>`):`<nv-callout tone="warning" heading="Пул не настроен">Интеграция addAvto с пулом ParsYa ещё не сконфигурирована на сервере.</nv-callout>`;
-      if(A.pool.configured&&A.pool.items.length)wireTable(root,"ads-pool-t",A.pool.items.map((a,i)=>({id:a.login||("a"+i),...a})),
-        [{key:"login",label:"Логин"},
-         {key:"is_free",label:"Статус",render:a=>a.is_free?'<nv-badge tone="success">Свободен</nv-badge>':'<nv-badge>Занят</nv-badge>'},
-         {key:"has_metrika_token",label:"Метрика",render:a=>a.has_metrika_token?'<nv-badge tone="success">Подключена</nv-badge>':'<nv-badge tone="warning">Нет токена</nv-badge>'},
-         {key:"metrika_connected_at",label:"Метрика подключена",render:a=>a.metrika_connected_at?fmtDateTime(a.metrika_connected_at):"—"}]);
-    }
+    if(!A.poolLoaded&&!A.poolLoading){loadPool();return}
+    const el=root.querySelector("#ads-pool-res");if(!el||!A.poolLoaded)return;
+    const P=A.pool||{};
+    if(!P.configured){el.innerHTML=`<nv-callout tone="warning" heading="Пул не настроен">Интеграция addAvto с пулом ParsYa ещё не сконфигурирована на сервере.</nv-callout>`;return}
+    const sm=P.summary||{},dl=P.daily||{labels:[]},items=P.items||[];
+    const chart=esc(JSON.stringify({labels:dl.labels.map(x=>x.slice(8,10)+"."+x.slice(5,7)),series:[{name:"Добавлено в пул",values:dl.added||[]},{name:"Задействовано в рекламе",values:dl.used||[]}]}));
+    const rows=items.filter(a=>(f==="all"||a.state===f||(f==="expiring"&&a.token_days_left!=null&&a.token_days_left<30))
+      &&(!q||(a.login+" "+(a.uses||[]).map(u=>u.project_name+" "+u.account_id).join(" ")).toLowerCase().includes(q)));
+    el.innerHTML=`${A.poolLoading?'<nv-progress value="60" label="Обновляю…"></nv-progress>':""}
+      <div class="dash-g4">
+        ${stat("Всего в пуле",fmt(sm.total||0),`note="активных ${fmt(sm.active||0)}"`)}
+        ${stat("Добавлено сегодня",fmt(sm.added_today||0),`note="за 7 дней ${fmt(sm.added_7d||0)} · в среднем ${sm.avg_added_per_day||0}/день" spark="${esc(JSON.stringify(dl.added||[]))}"`)}
+        <nv-share-stat label="Занято рекламой" value="${sm.used||0}" total="${sm.total||0}" tone="accent" note="кампаний ${fmt(sm.campaigns||0)}" hint="Логин уже использован для кампании addAvto (по кампаниям, а не по флагу is_free пула)"></nv-share-stat>
+        <nv-share-stat label="Свободно для запуска" value="${sm.free||0}" total="${sm.total||0}" tone="ok" hint="Активные и ещё не использованные в рекламе"></nv-share-stat>
+      </div>
+      <div class="dash-g4" style="margin-top:12px">
+        <nv-share-stat label="С токеном Метрики" value="${sm.with_metrika||0}" total="${sm.total||0}" tone="ok" hint="Без токена Метрики скрипт не создаст счётчик и цель lead"></nv-share-stat>
+        <nv-share-stat label="Токен истекает < 30 дней" value="${sm.token_expiring_30d||0}" total="${sm.total||0}" tone="${sm.token_expiring_30d?"warn":"ok"}"></nv-share-stat>
+        <nv-share-stat label="Проблемные" value="${sm.problem||0}" total="${sm.total||0}" tone="${sm.problem?"bad":"ok"}" hint="Статус в пуле не active — например, протухли cookies"></nv-share-stat>
+        <nv-card heading="Статусы в пуле"><div class="st-chips">${Object.entries(sm.by_status||{}).map(([k,v])=>`<nv-badge tone="${k==="active"?"success":"warning"}">${esc(POOL_ST[k]||k)}: ${v}</nv-badge>`).join("")}</div></nv-card>
+      </div>
+      <nv-card heading="Добавление и использование по дням" style="margin-top:12px"><nv-chart type="bar" height="230" label="Аккаунтов в день" data="${chart}"></nv-chart></nv-card>
+      <nv-card heading="Аккаунты пула" subtitle="Где используется каждый аккаунт. Клик по строке с рекламой открывает проект." style="margin-top:12px">
+        <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Логин, проект, аккаунт Click.ru" value="${esc(A.accQuery||"")}" data-chg="adsAccQuery"></nv-input>
+          <nv-segmented value="${esc(f)}" options="all:Все ${items.length}|used:В рекламе ${sm.used||0}|free:Свободные ${sm.free||0}|problem:Проблемные ${sm.problem||0}|expiring:Токен истекает ${sm.token_expiring_30d||0}" data-chg="adsPoolState"></nv-segmented></div>
+        <div class="muted" style="font-size:12.5px;margin:6px 0">Показано ${rows.length} из ${items.length}</div>
+        ${rows.length?`<nv-table id="ads-pool-t" page-size="25" clickable></nv-table>`:`<nv-empty icon="users" heading="Аккаунтов не найдено" text="Измените фильтр или поиск."></nv-empty>`}
+      </nv-card>`;
+    if(rows.length)wireTable(root,"ads-pool-t",rows.map(a=>({id:a.login,...a,_uses:(a.uses||[]).length})),
+      [{key:"login",label:"Логин",sort:true,render:a=>`<b>${esc(a.login)}</b>${a.last_error?`<br><span style="font-size:12px;color:var(--bad)">${esc(a.last_error.slice(0,80))}</span>`:""}`},
+       {key:"state",label:"Состояние",sort:true,render:a=>a.state==="used"?'<nv-status value="live" label="В рекламе"></nv-status>':a.state==="free"?'<nv-status value="ready" label="Свободен"></nv-status>':`<nv-status value="failed" label="${esc(POOL_ST[a.status]||a.status||"Проблема")}"></nv-status>`},
+       {key:"_uses",label:"Где используется",sort:true,render:a=>(a.uses||[]).length?(a.uses||[]).map(u=>`<div style="font-size:12.5px"><b>${esc(u.project_name||("Проект "+u.project_id))}</b> <span class="muted">· Click.ru ${esc(String(u.account_id||"—"))} · кампания ${esc(String(u.campaign_id||"—"))}</span></div>`).join(""):'<span class="muted">—</span>'},
+       {key:"created_at",label:"Добавлен",sort:true,render:a=>a.created_at?fmtDateTime(a.created_at):"—"},
+       {key:"has_metrika_token",label:"Метрика",sort:true,render:a=>a.has_metrika_token?(a.token_days_left!=null&&a.token_days_left<30?`<nv-badge tone="warning">Токен: ${a.token_days_left} дн.</nv-badge>`:'<nv-badge tone="success">Подключена</nv-badge>'):'<nv-badge tone="warning">Нет токена</nv-badge>'},
+       {key:"has_cookies",label:"Сессия",sort:true,render:a=>a.has_cookies?'<nv-badge tone="success">Есть cookies</nv-badge>':'<nv-badge tone="danger">Нет cookies</nv-badge>'}],
+      row=>{const u=(row.uses||[])[0];if(!u)return;const pr=(A.projects||[]).find(x=>x.id===u.project_id)||{id:u.project_id,name:u.project_name};openProjectPanel(pr)});
   }}
 },
 report(){
@@ -4305,7 +4317,11 @@ N.acts.adsDelClickru=(a,d)=>{
     (async()=>{try{await apiDelete("/api/v1/ads/clickru-connections/"+d.id);await loadClickru();toast("Подключение удалено")}catch(err){toast("Не удалось удалить: "+(err.message||""),{tone:"danger"})}})();
   }});
 };
-N.chg.adsAccQuery=v=>{S.ads.accQuery=v;N.refresh()};
+N.chg.adsAccQuery=v=>{S.ads.accQuery=v;clearTimeout(N._accQ);N._accQ=setTimeout(()=>N.refreshIf("ads-accounts"),250)};
+N.chg.adsPoolState=v=>{S.ads.poolState=v;N.refreshIf("ads-accounts")};
+N.chg.adsPoolDays=v=>{S.ads.poolDays=+v||30;loadPool()};
+N.acts.adsPoolLoad=()=>loadPool();
+const POOL_ST={active:"Активен",invalid_cookies:"Протухли cookies",banned:"Забанен",blocked:"Заблокирован",error:"Ошибка"};
 N.chg.adsRepPeriod=v=>{
   const rg=NEONUI.rangeOf(v)||NEONUI.rangeOf("30");S.ads.rep.period=v;
   S.ads.rep.dateFrom=new Date(rg[0]).toISOString().slice(0,10);S.ads.rep.dateTo=new Date(rg[1]).toISOString().slice(0,10);
