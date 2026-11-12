@@ -3975,7 +3975,7 @@ function openProjectPanel(p){
         const launches=h.events.filter(e=>e.kind==="launch_started").length,acc=h.accounts||[];
         const busy=h.running_job_id||h.ozon_status==="running";
         el.innerHTML=`<div class="grid g3">${stat("Кампаний создано",acc.length)}${stat("Запусков",launches)}${stat("Статус",busy?(h.running_job_id?"Идёт запуск":"Идёт генерация"):(PROJ_STATUS[projStatus(p)]||[""])[0])}</div>
-          <div class="row" style="gap:8px;margin:10px 0;flex-wrap:wrap"><nv-button size="sm" icon="rocket" data-proj-launch>${acc.length||p.has_launched?"Запустить ещё (те же настройки)":"Открыть визард запуска"}</nv-button><nv-button size="sm" variant="secondary" icon="copy" data-proj-dup hint="Копия со всеми настройками и креативами — её можно редактировать">Дублировать</nv-button>${acc.length?`<nv-button size="sm" variant="secondary" icon="wallet" data-proj-fund hint="Пополнить аккаунты с Click.ru и/или запустить показы">Пополнить и запустить</nv-button><nv-button size="sm" variant="secondary" icon="settings" data-proj-adset hint="Кнопка в объявлениях и выключение Яндекс Карт">Кнопка и Карты</nv-button>`:""}
+          <div class="row" style="gap:8px;margin:10px 0;flex-wrap:wrap"><nv-button size="sm" icon="rocket" data-proj-launch>${acc.length||p.has_launched?"Запустить ещё (те же настройки)":"Открыть визард запуска"}</nv-button><nv-button size="sm" variant="secondary" icon="copy" data-proj-dup hint="Копия со всеми настройками и креативами — её можно редактировать">Дублировать</nv-button>${acc.length?`<nv-button size="sm" variant="secondary" icon="wallet" data-proj-fund hint="Пополнить аккаунты с Click.ru и/или запустить показы">Пополнить и запустить</nv-button><nv-button size="sm" variant="secondary" icon="settings" data-proj-adset hint="Кнопка в объявлениях и выключение Яндекс Карт">Кнопка и Карты</nv-button><nv-button size="sm" variant="secondary" icon="link" data-proj-href hint="Проставить во всех объявлениях полную ссылку запуска с UTM">Обновить ссылки</nv-button><nv-button size="sm" variant="secondary" icon="key-round" data-proj-grants hint="Выдать организациям Директа доступ к счётчикам Метрики (повторно — безопасно)">Доступ к Метрике</nv-button>`:""}
           ${h.running_job_id?`<nv-button size="sm" variant="secondary" icon="activity" data-proj-job="${h.running_job_id}">Прогресс запуска</nv-button>`:""}
           ${!h.running_job_id&&h.resume?`<nv-button size="sm" variant="primary" icon="play" data-proj-resume="${h.resume.job_id}" hint="Досоздать недостающие кампании с теми же настройками">Продолжить запуск #${h.resume.job_id} (не хватает ${h.resume.remaining}${h.resume.reuse_accounts?", готовых аккаунтов "+h.resume.reuse_accounts:""})</nv-button>`:""}
           ${p.ozon_url?`<a href="${esc(p.ozon_url)}" target="_blank" rel="noopener" style="font-size:13px;align-self:center">Карточка Ozon</a>`:""}</div>
@@ -3992,6 +3992,15 @@ function openProjectPanel(p){
         el.querySelector("[data-proj-dup]").onclick=()=>duplicateProject(p);
         const fb=el.querySelector("[data-proj-fund]");if(fb)fb.onclick=()=>fundAndStartDialog(p,acc,draw);
         const asb=el.querySelector("[data-proj-adset]");if(asb)asb.onclick=()=>adSettingsDialog(p,acc,draw);
+        // Служебные действия — ручной запуск эндпоинтов (2026-11-12).
+        const svc=(sel,path,msg)=>{const b=el.querySelector(sel);if(!b)return;b.onclick=async()=>{
+          b.setAttribute("loading","");
+          try{const r=await apiPost("/api/v1/ads/projects/"+p.id+path,{});const errs=(r.items||[]).filter(x=>x.error);
+            toast(msg(r)+(errs.length?`; ошибок: ${errs.length} (${errs[0].error})`:""),{tone:errs.length?"warning":"success"});draw()}
+          catch(err){toast(err.message||"Не удалось",{tone:"danger"})}
+          finally{b.removeAttribute("loading")}}};
+        svc("[data-proj-href]","/sync-href",r=>`Ссылки обновлены в объявлениях: ${r.updated}`);
+        svc("[data-proj-grants]","/metrika-grants",r=>`Доступ к Метрике: ${r.ok} из ${r.total}`);
         const jb=el.querySelector("[data-proj-job]");if(jb)jb.onclick=()=>openJobDrawer(p,+jb.dataset.projJob);
         el.querySelectorAll("[data-acc-check]").forEach(b=>b.onclick=async()=>{
           const a=acc[+b.dataset.accCheck],out=el.querySelector(`[data-acc-out="${b.dataset.accCheck}"]`);
