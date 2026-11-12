@@ -3419,6 +3419,7 @@ function projectWizard(existingProject){
     count:1,creativeMode:"shuffle",adsPerGroup:1,
     // после создания: пополнение с Click.ru (₽ с НДС) и автозапуск (2026-11-12)
     topupRub:1220,autoStart:true,
+    buttonAction:"NONE",
     launchMode:(existingProject&&existingProject.launch_mode)||"direct",
     headlines:"",adTexts:"",imageUrls:"",calloutsPool:"",sitelinksPool:"",
     manualSets:[]
@@ -3705,6 +3706,7 @@ function projectWizard(existingProject){
     // Пополнение и запуск после создания (2026-11-12): реальные деньги с баланса Click.ru.
     const fundHtml=`<nv-card heading="После создания кампаний" style="margin-top:10px">
       <nv-input name="topup_rub" label="Пополнить каждый аккаунт, ₽ с НДС (0 — не пополнять)" type="number" value="${esc(String(wiz.topupRub??0))}"></nv-input>
+      <nv-select name="button_action" searchable label="Кнопка в объявлении — для всех кампаний (варианты Директа)" value="${esc(wiz.buttonAction||"NONE")}" options="${esc(buttonActionOptions())}" style="margin-top:8px"></nv-select>
       <label class="row" style="gap:8px;margin-top:8px"><input type="checkbox" name="wizAutoStart" ${wiz.autoStart?"checked":""}><span><b>Сразу запустить показы</b> — объявления на модерацию и включение кампании (нужна маркировка ОРД/ERID в Click.ru)</span></label>
       <div class="muted" id="wiz-fund-total" style="font-size:12.5px;margin-top:6px"></div></nv-card>`;
     body.innerHTML=(wiz.locked?lockedHtml:ozonRegenHtml)+structureHtml+modeHtml+`<div id="wiz-creatives">${manual?manualHtml:poolHtml}</div>`+fundHtml+`
@@ -3746,6 +3748,7 @@ function projectWizard(existingProject){
     fundTotal();
     const tr=body.querySelector('nv-input[name="topup_rub"]');if(tr)tr.addEventListener("nv-change",e=>{wiz.topupRub=Math.max(0,+e.detail.value||0);fundTotal()});
     const as=body.querySelector('input[name="wizAutoStart"]');if(as)as.onchange=()=>{wiz.autoStart=as.checked};
+    const ba=body.querySelector('nv-select[name="button_action"]');if(ba)ba.addEventListener("nv-change",e=>{wiz.buttonAction=e.detail.value});
     body.querySelector("[data-wiz-back]").onclick=()=>setStep(4);
     body.querySelector("[data-wiz-launch]").onclick=()=>{
       const v=formVals(body),msg=body.querySelector("#wiz-msg");
@@ -3755,6 +3758,7 @@ function projectWizard(existingProject){
       const topup=Math.max(0,+wiz.topupRub||0);
       if(topup>0)payload.topup_amount_rub=topup;
       payload.auto_start=!!wiz.autoStart;
+      if(wiz.buttonAction&&wiz.buttonAction!=="NONE")payload.button_action=wiz.buttonAction;
       let headlines=[],adTexts=[];
       if(manual){
         const sets=wiz.manualSets.map((s,i)=>{
@@ -3803,6 +3807,41 @@ async function duplicateProject(p){
   }catch(err){toast(err.message||"Не удалось сделать копию",{tone:"danger"})}
 }
 N.acts.adsDup=(a,d)=>{const p=(S.ads.projects||[]).find(x=>String(x.id)===String(d.id));if(p)duplicateProject(p)};
+// Кнопки объявлений — только варианты Директа, своего текста нет (2026-11-12).
+// Тот же список, что BUTTON_ACTIONS в addAvto (app/schemas.py).
+const BUTTON_ACTIONS=[["MORE","Подробнее"],["GO_TO_WEBSITE","Перейти на сайт"],["BUY","Купить"],["ORDER","Заказать"],
+  ["VIEW_PRODUCT","Посмотреть товар"],["VIEW_CATALOG","Смотреть каталог"],["CHOOSE","Выбрать"],["GET_PRICE","Узнать цену"],
+  ["GET_DISCOUNT","Получить скидку"],["GET_OFFER","Получить предложение"],["GET_CONSULTATION","Получить консультацию"],
+  ["APPLY","Оставить заявку"],["REQUEST_CALLBACK","Заказать звонок"],["CALL_SPECIALIST","Вызвать специалиста"],
+  ["SIGN_UP","Записаться"],["SIGN_UP_ONLINE","Записаться онлайн"],["BOOK","Забронировать"],["REGISTER","Зарегистрироваться"],
+  ["SUBSCRIBE","Подписаться"],["TRY","Попробовать"],["START","Начать"],["WATCH","Смотреть"],["LISTEN","Слушать"],
+  ["PLAY","Играть"],["TURN_ON","Включить"],["READ_POST","Читать пост"],["WRITE_WHATSAPP","Написать в WhatsApp"],
+  ["WRITE_TELEGRAM","Написать в Telegram"],["GO_TO_CHANNEL","Перейти в канал"],["GO_TO_BOT","Перейти в бот"],
+  ["INSTALL","Установить"],["DOWNLOAD","Скачать"],["OPEN_APP","Открыть приложение"],["ARROW","Стрелка →"]];
+function buttonActionOptions(none="Без кнопки"){return ["NONE:"+none,...BUTTON_ACTIONS.map(([v,l])=>v+":"+l)].join("|")}
+// Кнопка и площадки для уже созданных кампаний проекта.
+function adSettingsDialog(p,acc,redraw){
+  const epk=p.campaign_mode==="single_epk";
+  overlay("modal",{title:"Кнопка и площадки",
+    body:`<p class="muted" style="font-size:13px">Применится ко всем кампаниям проекта (${acc.length}). Изменённые объявления Директ отправит на перемодерацию.</p>
+      <nv-select name="button_action" searchable label="Кнопка в объявлениях" value="NONE" options="${esc(buttonActionOptions("Не менять"))}"></nv-select>
+      ${epk?`<label class="row" style="gap:8px;margin-top:10px"><input type="checkbox" name="maps_off" checked><span>Выключить показы на Яндекс Картах</span></label>`:`<p class="muted" style="font-size:12.5px;margin-top:8px">Карты есть только в ЕПК (Поиск + РСЯ).</p>`}`,
+    actions:[{label:"Отмена"},{label:"Применить",variant:"primary",fn(r,close){
+      const sel=r.querySelector('nv-select[name="button_action"]'),btn=sel&&sel.value!=="NONE"?sel.value:null;
+      const mapsOff=!!(r.querySelector('input[name="maps_off"]')||{}).checked;
+      if(!btn&&!mapsOff){toast("Выберите кнопку или выключение Карт",{tone:"warning"});return false}
+      (async()=>{
+        try{
+          const res=await apiPost("/api/v1/ads/projects/"+p.id+"/apply-ad-settings",{button_action:btn,maps_off:mapsOff});
+          const errs=res.items.filter(x=>x.error);
+          const ads=res.items.reduce((a,x)=>a+(x.ads_updated||0),0),maps=res.items.filter(x=>x.maps_off).length;
+          toast(`Готово${btn?": объявлений с кнопкой — "+ads:""}${res.maps_off?", Карты выключены в "+maps:""}${errs.length?"; ошибок: "+errs.length+" ("+errs[0].error+")":""}`,{tone:errs.length?"warning":"success"});
+          close();redraw&&redraw();
+        }catch(err){toast(err.message||"Не удалось",{tone:"danger"})}
+      })();
+      return false;
+    }}]});
+}
 // «Пополнить и запустить» для уже созданных кампаний (2026-11-12). Реальные
 // деньги: сумма и количество аккаунтов показываются до нажатия.
 function fundAndStartDialog(p,acc,redraw){
@@ -3936,7 +3975,7 @@ function openProjectPanel(p){
         const launches=h.events.filter(e=>e.kind==="launch_started").length,acc=h.accounts||[];
         const busy=h.running_job_id||h.ozon_status==="running";
         el.innerHTML=`<div class="grid g3">${stat("Кампаний создано",acc.length)}${stat("Запусков",launches)}${stat("Статус",busy?(h.running_job_id?"Идёт запуск":"Идёт генерация"):(PROJ_STATUS[projStatus(p)]||[""])[0])}</div>
-          <div class="row" style="gap:8px;margin:10px 0;flex-wrap:wrap"><nv-button size="sm" icon="rocket" data-proj-launch>${acc.length||p.has_launched?"Запустить ещё (те же настройки)":"Открыть визард запуска"}</nv-button><nv-button size="sm" variant="secondary" icon="copy" data-proj-dup hint="Копия со всеми настройками и креативами — её можно редактировать">Дублировать</nv-button>${acc.length?`<nv-button size="sm" variant="secondary" icon="wallet" data-proj-fund hint="Пополнить аккаунты с Click.ru и/или запустить показы">Пополнить и запустить</nv-button>`:""}
+          <div class="row" style="gap:8px;margin:10px 0;flex-wrap:wrap"><nv-button size="sm" icon="rocket" data-proj-launch>${acc.length||p.has_launched?"Запустить ещё (те же настройки)":"Открыть визард запуска"}</nv-button><nv-button size="sm" variant="secondary" icon="copy" data-proj-dup hint="Копия со всеми настройками и креативами — её можно редактировать">Дублировать</nv-button>${acc.length?`<nv-button size="sm" variant="secondary" icon="wallet" data-proj-fund hint="Пополнить аккаунты с Click.ru и/или запустить показы">Пополнить и запустить</nv-button><nv-button size="sm" variant="secondary" icon="settings" data-proj-adset hint="Кнопка в объявлениях и выключение Яндекс Карт">Кнопка и Карты</nv-button>`:""}
           ${h.running_job_id?`<nv-button size="sm" variant="secondary" icon="activity" data-proj-job="${h.running_job_id}">Прогресс запуска</nv-button>`:""}
           ${!h.running_job_id&&h.resume?`<nv-button size="sm" variant="primary" icon="play" data-proj-resume="${h.resume.job_id}" hint="Досоздать недостающие кампании с теми же настройками">Продолжить запуск #${h.resume.job_id} (не хватает ${h.resume.remaining}${h.resume.reuse_accounts?", готовых аккаунтов "+h.resume.reuse_accounts:""})</nv-button>`:""}
           ${p.ozon_url?`<a href="${esc(p.ozon_url)}" target="_blank" rel="noopener" style="font-size:13px;align-self:center">Карточка Ozon</a>`:""}</div>
@@ -3952,6 +3991,7 @@ function openProjectPanel(p){
         const rs=el.querySelector("[data-proj-resume]");if(rs)rs.onclick=()=>resumeLaunch(p,+rs.dataset.projResume,rs);
         el.querySelector("[data-proj-dup]").onclick=()=>duplicateProject(p);
         const fb=el.querySelector("[data-proj-fund]");if(fb)fb.onclick=()=>fundAndStartDialog(p,acc,draw);
+        const asb=el.querySelector("[data-proj-adset]");if(asb)asb.onclick=()=>adSettingsDialog(p,acc,draw);
         const jb=el.querySelector("[data-proj-job]");if(jb)jb.onclick=()=>openJobDrawer(p,+jb.dataset.projJob);
         el.querySelectorAll("[data-acc-check]").forEach(b=>b.onclick=async()=>{
           const a=acc[+b.dataset.accCheck],out=el.querySelector(`[data-acc-out="${b.dataset.accCheck}"]`);
