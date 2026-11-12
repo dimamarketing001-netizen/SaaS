@@ -165,6 +165,11 @@ nv-button[full]{display:flex;width:100%}
 .v-link{background:none;color:var(--svc-ink);padding:0!important;height:auto!important;text-decoration:underline;text-underline-offset:3px}
 .nv-spin{width:1em;height:1em;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:nvspin .7s linear infinite;flex:none}
 @keyframes nvspin{to{transform:rotate(360deg)}}
+/* Индикатор сетевых запросов (2026-11-12): полоска сверху, пока идёт любой запрос */
+#nv-net{position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483000;pointer-events:none;overflow:hidden;opacity:0;transition:opacity .2s}
+#nv-net.on{opacity:1}
+#nv-net::before{content:"";position:absolute;top:0;bottom:0;width:40%;left:-40%;background:var(--accent,#3b6cff);animation:nvnet 1.1s ease-in-out infinite}
+@keyframes nvnet{0%{left:-40%}100%{left:100%}}
 
 /* ---------- Значки, статусы, чипы ---------- */
 nv-badge,nv-status,nv-chip{display:inline-flex;vertical-align:middle}
@@ -2043,12 +2048,40 @@ const INTENT_SCOPED_PATHS=new Set(["/api/v1/creatives","/api/v1/advertisers","/a
 function getActiveIntents(){try{return JSON.parse(localStorage.getItem("parsya_active_intents")||"[]")}catch(e){return[]}}
 function setActiveIntents(list){try{localStorage.setItem("parsya_active_intents",JSON.stringify(list||[]))}catch(e){}}
 function activeIntentParam(){const list=getActiveIntents();return list.length?list.join(","):""}
+// Все запросы ЛК идут через netFetch (2026-11-12, Dima: «два раза нажал
+// Применить»): пока запрос в работе — полоска вверху страницы, а кнопка,
+// нажатая перед запросом (в т.ч. в диалогах), крутит спиннер и не
+// принимает повторные нажатия. Отдельно в кнопках ничего делать не нужно.
+const NET={pending:0,btn:null,at:0,el:null};
+document.addEventListener("click",e=>{
+  const b=e.target.closest&&e.target.closest("nv-button");if(!b)return;
+  if(b.hasAttribute("loading")||b.hasAttribute("data-net-busy")){e.preventDefault();e.stopImmediatePropagation();return}
+  NET.btn=b;NET.at=Date.now();
+},true);
+function netBar(on){
+  if(!NET.el){NET.el=document.createElement("div");NET.el.id="nv-net";NET.el.setAttribute("aria-hidden","true");document.body.append(NET.el)}
+  NET.el.classList.toggle("on",on);document.documentElement.toggleAttribute("aria-busy",on);
+}
+async function netFetch(url,opts){
+  NET.pending++;netBar(true);
+  // кнопка «владеет» запросами, начатыми в течение 1,5 с после нажатия
+  let b=NET.btn&&Date.now()-NET.at<1500&&NET.btn.isConnected?NET.btn:null;
+  if(b){
+    if(b.hasAttribute("loading")&&!b.hasAttribute("data-net-busy"))b=null; // спиннером управляет сам код кнопки
+    else{b._net=(b._net||0)+1;b.setAttribute("data-net-busy","");b.setAttribute("loading","")}
+  }
+  try{return await fetch(url,opts)}
+  finally{
+    NET.pending--;if(!NET.pending)netBar(false);
+    if(b&&!--b._net){b.removeAttribute("loading");b.removeAttribute("data-net-busy")}
+  }
+}
 async function api(path,params){
  const url=new URL(API_BASE+path);
  const finalParams={...(params||{})};
  if(INTENT_SCOPED_PATHS.has(path)&&finalParams.intent===undefined){const intent=activeIntentParam();if(intent)finalParams.intent=intent}
  Object.entries(finalParams).forEach(([k,v])=>{if(v!==undefined&&v!==""&&v!==null)url.searchParams.set(k,v)});
- const res=await fetch(url,{headers:{Authorization:"Bearer "+session.token}});
+ const res=await netFetch(url,{headers:{Authorization:"Bearer "+session.token}});
  if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
  if(!res.ok)throw new Error("API error "+res.status);
  return res.json();
@@ -2061,7 +2094,7 @@ function errDetail(json,fallback){
  return fallback;
 }
 async function apiPost(path,body){
- const res=await fetch(API_BASE+path,{method:"POST",headers:{Authorization:"Bearer "+session.token,"Content-Type":"application/json"},body:JSON.stringify(body||{})});
+ const res=await netFetch(API_BASE+path,{method:"POST",headers:{Authorization:"Bearer "+session.token,"Content-Type":"application/json"},body:JSON.stringify(body||{})});
  if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
  if(!res.ok){let detail="API error "+res.status;try{detail=errDetail(await res.json(),detail)}catch(e){}throw new Error(detail)}
  return res.json();
@@ -2083,7 +2116,7 @@ const creativeImgCache=new Map();
 async function uploadCreativeImage(file){
  if(!CREATIVE_IMG_TYPES.includes(file.type))throw new Error(file.name+": нужен JPG, PNG или GIF — Директ принимает только их");
  if(file.size>10*1024*1024)throw new Error(file.name+": больше 10 МБ — Директ такую не примет");
- const res=await fetch(API_BASE+"/api/v1/ads/creative-images",{method:"POST",headers:{Authorization:"Bearer "+session.token,"Content-Type":file.type},body:file});
+ const res=await netFetch(API_BASE+"/api/v1/ads/creative-images",{method:"POST",headers:{Authorization:"Bearer "+session.token,"Content-Type":file.type},body:file});
  if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
  if(!res.ok){let d="Ошибка "+res.status;try{d=errDetail(await res.json(),d)}catch(e){}throw new Error(file.name+": "+d)}
  const {ref}=await res.json();creativeImgCache.set(ref,URL.createObjectURL(file));return ref;
@@ -2195,19 +2228,19 @@ function ozonCaptchaWatch(sid,host){
  return()=>{stopped=true;clearTimeout(timer);host.innerHTML=""};
 }
 async function apiDelete(path){
- const res=await fetch(API_BASE+path,{method:"DELETE",headers:{Authorization:"Bearer "+session.token}});
+ const res=await netFetch(API_BASE+path,{method:"DELETE",headers:{Authorization:"Bearer "+session.token}});
  if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
  if(!res.ok){let detail="API error "+res.status;try{detail=errDetail(await res.json(),detail)}catch(e){}throw new Error(detail)}
  return res.status===204?null:res.json();
 }
 async function apiPut(path,body){
- const res=await fetch(API_BASE+path,{method:"PUT",headers:{Authorization:"Bearer "+session.token,"Content-Type":"application/json"},body:JSON.stringify(body||{})});
+ const res=await netFetch(API_BASE+path,{method:"PUT",headers:{Authorization:"Bearer "+session.token,"Content-Type":"application/json"},body:JSON.stringify(body||{})});
  if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
  if(!res.ok){let detail="API error "+res.status;try{detail=errDetail(await res.json(),detail)}catch(e){}throw new Error(detail)}
  return res.json();
 }
 async function apiPatch(path,body){
- const res=await fetch(API_BASE+path,{method:"PATCH",headers:{Authorization:"Bearer "+session.token,"Content-Type":"application/json"},body:JSON.stringify(body||{})});
+ const res=await netFetch(API_BASE+path,{method:"PATCH",headers:{Authorization:"Bearer "+session.token,"Content-Type":"application/json"},body:JSON.stringify(body||{})});
  if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
  if(!res.ok){let detail="API error "+res.status;try{detail=errDetail(await res.json(),detail)}catch(e){}throw new Error(detail)}
  return res.json();
@@ -3420,6 +3453,7 @@ function projectWizard(existingProject){
     // после создания: пополнение с Click.ru (₽ с НДС) и автозапуск (2026-11-12)
     topupRub:1220,autoStart:true,
     buttonAction:"NONE",
+    displayUrl:"",
     launchMode:(existingProject&&existingProject.launch_mode)||"direct",
     headlines:"",adTexts:"",imageUrls:"",calloutsPool:"",sitelinksPool:"",
     manualSets:[]
@@ -3707,6 +3741,7 @@ function projectWizard(existingProject){
     const fundHtml=`<nv-card heading="После создания кампаний" style="margin-top:10px">
       <nv-input name="topup_rub" label="Пополнить каждый аккаунт, ₽ с НДС (0 — не пополнять)" type="number" value="${esc(String(wiz.topupRub??0))}"></nv-input>
       <nv-select name="button_action" searchable label="Кнопка в объявлении — для всех кампаний (варианты Директа)" value="${esc(wiz.buttonAction||"NONE")}" options="${esc(buttonActionOptions())}" style="margin-top:8px"></nv-select>
+      ${displayUrlField(wiz.displayUrl,"Отображаемая ссылка — для всех объявлений (необязательно)")}
       <label class="row" style="gap:8px;margin-top:8px"><input type="checkbox" name="wizAutoStart" ${wiz.autoStart?"checked":""}><span><b>Сразу запустить показы</b> — объявления на модерацию и включение кампании (нужна маркировка ОРД/ERID в Click.ru)</span></label>
       <div class="muted" id="wiz-fund-total" style="font-size:12.5px;margin-top:6px"></div></nv-card>`;
     body.innerHTML=(wiz.locked?lockedHtml:ozonRegenHtml)+structureHtml+modeHtml+`<div id="wiz-creatives">${manual?manualHtml:poolHtml}</div>`+fundHtml+`
@@ -3749,6 +3784,7 @@ function projectWizard(existingProject){
     const tr=body.querySelector('nv-input[name="topup_rub"]');if(tr)tr.addEventListener("nv-change",e=>{wiz.topupRub=Math.max(0,+e.detail.value||0);fundTotal()});
     const as=body.querySelector('input[name="wizAutoStart"]');if(as)as.onchange=()=>{wiz.autoStart=as.checked};
     const ba=body.querySelector('nv-select[name="button_action"]');if(ba)ba.addEventListener("nv-change",e=>{wiz.buttonAction=e.detail.value});
+    mountDisplayUrl(body,v=>{wiz.displayUrl=(v||"").trim()});
     body.querySelector("[data-wiz-back]").onclick=()=>setStep(4);
     body.querySelector("[data-wiz-launch]").onclick=()=>{
       const v=formVals(body),msg=body.querySelector("#wiz-msg");
@@ -3759,6 +3795,7 @@ function projectWizard(existingProject){
       if(topup>0)payload.topup_amount_rub=topup;
       payload.auto_start=!!wiz.autoStart;
       if(wiz.buttonAction&&wiz.buttonAction!=="NONE")payload.button_action=wiz.buttonAction;
+      if(wiz.displayUrl){const de=displayUrlError(wiz.displayUrl);if(de){msg.textContent="Отображаемая ссылка: "+de;msg.style.color="var(--bad)";return}payload.display_url_path=wiz.displayUrl}
       let headlines=[],adTexts=[];
       if(manual){
         const sets=wiz.manualSets.map((s,i)=>{
@@ -3818,24 +3855,40 @@ const BUTTON_ACTIONS=[["MORE","Подробнее"],["GO_TO_WEBSITE","Перей
   ["PLAY","Играть"],["TURN_ON","Включить"],["READ_POST","Читать пост"],["WRITE_WHATSAPP","Написать в WhatsApp"],
   ["WRITE_TELEGRAM","Написать в Telegram"],["GO_TO_CHANNEL","Перейти в канал"],["GO_TO_BOT","Перейти в бот"],
   ["INSTALL","Установить"],["DOWNLOAD","Скачать"],["OPEN_APP","Открыть приложение"],["ARROW","Стрелка →"]];
+// Отображаемая ссылка (TextAd.DisplayUrlPath): до 20 символов (# шаблона не
+// считается), буквы, цифры и - № / % #; нельзя пробел, _, -- и //.
+function displayUrlError(v){v=(v||"").trim();if(!v)return "";
+  if(v.replace(/#/g,"").length>20)return "Не больше 20 символов";
+  if(/[\s_]/.test(v))return "Нельзя пробел и _";
+  if(/--|\/\//.test(v))return "Нельзя -- и //";
+  if(!/^[\p{L}\p{N}\-№\/%#]+$/u.test(v))return "Только буквы, цифры и - № / % #";
+  return ""}
+function displayUrlField(value,label){return `<nv-input name="display_url" label="${esc(label)}" value="${esc(value||"")}" placeholder="например: santa-klaus/kupit" style="margin-top:8px"></nv-input><div class="muted" data-durl-msg style="font-size:12px;margin-top:2px"></div>`}
+function mountDisplayUrl(root,onChange){const i=root.querySelector('nv-input[name="display_url"]'),m=root.querySelector("[data-durl-msg]");if(!i)return;
+  const upd=v=>{const e=displayUrlError(v),n=(v||"").replace(/#/g,"").trim().length;m.textContent=e||`${n}/20 — пусто: Директ покажет домен`;m.style.color=e?"var(--bad)":"";onChange&&onChange(v)};
+  upd(i.getAttribute("value")||"");i.addEventListener("nv-change",e=>upd(e.detail.value))}
 function buttonActionOptions(none="Без кнопки"){return ["NONE:"+none,...BUTTON_ACTIONS.map(([v,l])=>v+":"+l)].join("|")}
 // Кнопка и площадки для уже созданных кампаний проекта.
 function adSettingsDialog(p,acc,redraw){
   const epk=p.campaign_mode==="single_epk";
-  overlay("modal",{title:"Кнопка и площадки",
+  overlay("modal",{title:"Кнопка, ссылка и площадки",
     body:`<p class="muted" style="font-size:13px">Применится ко всем кампаниям проекта (${acc.length}). Изменённые объявления Директ отправит на перемодерацию.</p>
       <nv-select name="button_action" searchable label="Кнопка в объявлениях" value="NONE" options="${esc(buttonActionOptions("Не менять"))}"></nv-select>
+      ${displayUrlField("","Отображаемая ссылка (пусто — не менять)")}
       ${epk?`<label class="row" style="gap:8px;margin-top:10px"><input type="checkbox" name="maps_off" checked><span>Выключить показы на Яндекс Картах</span></label>`:`<p class="muted" style="font-size:12.5px;margin-top:8px">Карты есть только в ЕПК (Поиск + РСЯ).</p>`}`,
+    mount(r){mountDisplayUrl(r)},
     actions:[{label:"Отмена"},{label:"Применить",variant:"primary",fn(r,close){
       const sel=r.querySelector('nv-select[name="button_action"]'),btn=sel&&sel.value!=="NONE"?sel.value:null;
       const mapsOff=!!(r.querySelector('input[name="maps_off"]')||{}).checked;
-      if(!btn&&!mapsOff){toast("Выберите кнопку или выключение Карт",{tone:"warning"});return false}
+      const durl=(formVals(r).display_url||"").trim(),de=displayUrlError(durl);
+      if(de){toast("Отображаемая ссылка: "+de,{tone:"warning"});return false}
+      if(!btn&&!mapsOff&&!durl){toast("Выберите кнопку, отображаемую ссылку или выключение Карт",{tone:"warning"});return false}
       (async()=>{
         try{
-          const res=await apiPost("/api/v1/ads/projects/"+p.id+"/apply-ad-settings",{button_action:btn,maps_off:mapsOff});
+          const res=await apiPost("/api/v1/ads/projects/"+p.id+"/apply-ad-settings",{button_action:btn,maps_off:mapsOff,display_url_path:durl||null});
           const errs=res.items.filter(x=>x.error);
           const ads=res.items.reduce((a,x)=>a+(x.ads_updated||0),0),maps=res.items.filter(x=>x.maps_off).length;
-          toast(`Готово${btn?": объявлений с кнопкой — "+ads:""}${res.maps_off?", Карты выключены в "+maps:""}${errs.length?"; ошибок: "+errs.length+" ("+errs[0].error+")":""}`,{tone:errs.length?"warning":"success"});
+          toast(`Готово${btn||durl?": обновлено объявлений — "+ads:""}${res.maps_off?", Карты выключены в "+maps:""}${errs.length?"; ошибок: "+errs.length+" ("+errs[0].error+")":""}`,{tone:errs.length?"warning":"success"});
           close();redraw&&redraw();
         }catch(err){toast(err.message||"Не удалось",{tone:"danger"})}
       })();
@@ -3975,7 +4028,7 @@ function openProjectPanel(p){
         const launches=h.events.filter(e=>e.kind==="launch_started").length,acc=h.accounts||[];
         const busy=h.running_job_id||h.ozon_status==="running";
         el.innerHTML=`<div class="grid g3">${stat("Кампаний создано",acc.length)}${stat("Запусков",launches)}${stat("Статус",busy?(h.running_job_id?"Идёт запуск":"Идёт генерация"):(PROJ_STATUS[projStatus(p)]||[""])[0])}</div>
-          <div class="row" style="gap:8px;margin:10px 0;flex-wrap:wrap"><nv-button size="sm" icon="rocket" data-proj-launch>${acc.length||p.has_launched?"Запустить ещё (те же настройки)":"Открыть визард запуска"}</nv-button><nv-button size="sm" variant="secondary" icon="copy" data-proj-dup hint="Копия со всеми настройками и креативами — её можно редактировать">Дублировать</nv-button>${acc.length?`<nv-button size="sm" variant="secondary" icon="wallet" data-proj-fund hint="Пополнить аккаунты с Click.ru и/или запустить показы">Пополнить и запустить</nv-button><nv-button size="sm" variant="secondary" icon="settings" data-proj-adset hint="Кнопка в объявлениях и выключение Яндекс Карт">Кнопка и Карты</nv-button><nv-button size="sm" variant="secondary" icon="link" data-proj-href hint="Проставить во всех объявлениях полную ссылку запуска с UTM">Обновить ссылки</nv-button><nv-button size="sm" variant="secondary" icon="key-round" data-proj-grants hint="Выдать организациям Директа доступ к счётчикам Метрики (повторно — безопасно)">Доступ к Метрике</nv-button>`:""}
+          <div class="row" style="gap:8px;margin:10px 0;flex-wrap:wrap"><nv-button size="sm" icon="rocket" data-proj-launch>${acc.length||p.has_launched?"Запустить ещё (те же настройки)":"Открыть визард запуска"}</nv-button><nv-button size="sm" variant="secondary" icon="copy" data-proj-dup hint="Копия со всеми настройками и креативами — её можно редактировать">Дублировать</nv-button>${acc.length?`<nv-button size="sm" variant="secondary" icon="wallet" data-proj-fund hint="Пополнить аккаунты с Click.ru и/или запустить показы">Пополнить и запустить</nv-button><nv-button size="sm" variant="secondary" icon="settings" data-proj-adset hint="Кнопка, отображаемая ссылка в объявлениях и выключение Яндекс Карт">Кнопка и Карты</nv-button><nv-button size="sm" variant="secondary" icon="link" data-proj-href hint="Полная ссылка запуска с UTM — в объявлениях, кнопке и быстрых ссылках">Обновить ссылки</nv-button><nv-button size="sm" variant="secondary" icon="key-round" data-proj-grants hint="Выдать организациям Директа доступ к счётчикам Метрики (повторно — безопасно)">Доступ к Метрике</nv-button>`:""}
           ${h.running_job_id?`<nv-button size="sm" variant="secondary" icon="activity" data-proj-job="${h.running_job_id}">Прогресс запуска</nv-button>`:""}
           ${!h.running_job_id&&h.resume?`<nv-button size="sm" variant="primary" icon="play" data-proj-resume="${h.resume.job_id}" hint="Досоздать недостающие кампании с теми же настройками">Продолжить запуск #${h.resume.job_id} (не хватает ${h.resume.remaining}${h.resume.reuse_accounts?", готовых аккаунтов "+h.resume.reuse_accounts:""})</nv-button>`:""}
           ${p.ozon_url?`<a href="${esc(p.ozon_url)}" target="_blank" rel="noopener" style="font-size:13px;align-self:center">Карточка Ozon</a>`:""}</div>
@@ -3999,7 +4052,7 @@ function openProjectPanel(p){
             toast(msg(r)+(errs.length?`; ошибок: ${errs.length} (${errs[0].error})`:""),{tone:errs.length?"warning":"success"});draw()}
           catch(err){toast(err.message||"Не удалось",{tone:"danger"})}
           finally{b.removeAttribute("loading")}}};
-        svc("[data-proj-href]","/sync-href",r=>`Ссылки обновлены в объявлениях: ${r.updated}`);
+        svc("[data-proj-href]","/sync-href",r=>`Ссылки обновлены в объявлениях: ${r.updated}`+((r.items||[]).reduce((a,x)=>a+(x.sitelink_sets||0),0)?`, наборов быстрых ссылок: ${r.items.reduce((a,x)=>a+(x.sitelink_sets||0),0)}`:""));
         svc("[data-proj-grants]","/metrika-grants",r=>`Доступ к Метрике: ${r.ok} из ${r.total}`);
         const jb=el.querySelector("[data-proj-job]");if(jb)jb.onclick=()=>openJobDrawer(p,+jb.dataset.projJob);
         el.querySelectorAll("[data-acc-check]").forEach(b=>b.onclick=async()=>{
