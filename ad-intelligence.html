@@ -3417,6 +3417,8 @@ function projectWizard(existingProject){
     geoRegions:null,geoTree:null,
     connectionId:null,payers:null,payerId:null,payerType:"BUSINESS",
     count:1,creativeMode:"shuffle",adsPerGroup:1,
+    // после создания: пополнение с Click.ru (₽ с НДС) и автозапуск (2026-11-12)
+    topupRub:1220,autoStart:true,
     launchMode:(existingProject&&existingProject.launch_mode)||"direct",
     headlines:"",adTexts:"",imageUrls:"",calloutsPool:"",sitelinksPool:"",
     manualSets:[]
@@ -3700,7 +3702,12 @@ function projectWizard(existingProject){
     // «Запустить ещё» берёт креативы проекта как есть; правки — в копии.
     const lockedHtml=wiz.locked&&!manual?`<nv-callout tone="info" heading="Креативы проекта зафиксированы">Проект уже запускался — новые аккаунты получат те же заголовки, тексты, картинки, быстрые ссылки и уточнения. Нужно что-то поменять — сделайте копию проекта: все настройки перенесутся, их можно будет редактировать.
       <div style="margin-top:8px"><nv-button size="sm" variant="secondary" icon="copy" data-wiz-dup>Дублировать для правок</nv-button></div></nv-callout>`:"";
-    body.innerHTML=(wiz.locked?lockedHtml:ozonRegenHtml)+structureHtml+modeHtml+`<div id="wiz-creatives">${manual?manualHtml:poolHtml}</div>
+    // Пополнение и запуск после создания (2026-11-12): реальные деньги с баланса Click.ru.
+    const fundHtml=`<nv-card heading="После создания кампаний" style="margin-top:10px">
+      <nv-input name="topup_rub" label="Пополнить каждый аккаунт, ₽ с НДС (0 — не пополнять)" type="number" value="${esc(String(wiz.topupRub??0))}"></nv-input>
+      <label class="row" style="gap:8px;margin-top:8px"><input type="checkbox" name="wizAutoStart" ${wiz.autoStart?"checked":""}><span><b>Сразу запустить показы</b> — объявления на модерацию и включение кампании (нужна маркировка ОРД/ERID в Click.ru)</span></label>
+      <div class="muted" id="wiz-fund-total" style="font-size:12.5px;margin-top:6px"></div></nv-card>`;
+    body.innerHTML=(wiz.locked?lockedHtml:ozonRegenHtml)+structureHtml+modeHtml+`<div id="wiz-creatives">${manual?manualHtml:poolHtml}</div>`+fundHtml+`
     ${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="rocket" data-wiz-launch>Запустить массовый запуск</nv-button>')}
     <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
     if(wiz.locked&&!manual){
@@ -3734,12 +3741,20 @@ function projectWizard(existingProject){
       body.querySelectorAll("[data-manual-image-gal]").forEach(el=>{const i=+el.dataset.manualImageGal;
         mountCreativeGallery(el,()=>wiz.manualSets[i].image_url?[wiz.manualSets[i].image_url]:[],l=>{wiz.manualSets[i].image_url=l[0]||""},{single:true})});
     }
+    const fundTotal=()=>{const t=body.querySelector("#wiz-fund-total");if(!t)return;const a=+wiz.topupRub||0;
+      t.textContent=a>0?`Итого спишется с баланса Click.ru: ${wiz.count} × ${a.toLocaleString("ru-RU")} ₽ = ${(wiz.count*a).toLocaleString("ru-RU")} ₽ с НДС${wiz.payerId?" (с юрлица, выбранного на шаге 3)":""}.`:"Пополнение выключено — кампании останутся без бюджета."};
+    fundTotal();
+    const tr=body.querySelector('nv-input[name="topup_rub"]');if(tr)tr.addEventListener("nv-change",e=>{wiz.topupRub=Math.max(0,+e.detail.value||0);fundTotal()});
+    const as=body.querySelector('input[name="wizAutoStart"]');if(as)as.onchange=()=>{wiz.autoStart=as.checked};
     body.querySelector("[data-wiz-back]").onclick=()=>setStep(4);
     body.querySelector("[data-wiz-launch]").onclick=()=>{
       const v=formVals(body),msg=body.querySelector("#wiz-msg");
       if(v.ads_per_group)wiz.adsPerGroup=Math.max(2,Math.min(50,+v.ads_per_group));
       const payload={count:wiz.count,connection_id:wiz.connectionId,creative_mode:wiz.creativeMode,ads_per_group:wiz.adsPerGroup,creative_sets:[]};
       if(wiz.payerId)payload.payer_id=wiz.payerId;
+      const topup=Math.max(0,+wiz.topupRub||0);
+      if(topup>0)payload.topup_amount_rub=topup;
+      payload.auto_start=!!wiz.autoStart;
       let headlines=[],adTexts=[];
       if(manual){
         const sets=wiz.manualSets.map((s,i)=>{
@@ -3757,7 +3772,7 @@ function projectWizard(existingProject){
       const imageUrls=(wiz.imageUrls||"").split("\n").map(x=>x.trim()).filter(Boolean);
       const calloutsPool=(v.callouts_pool||"").split("\n").map(x=>x.trim()).filter(Boolean);
       const sitelinksPool=parseSitelinksPool(v.sitelinks_pool);
-      (async()=>{
+      const go=()=>(async()=>{
         try{
           // Запущенный проект не сохраняем (сервер 409) — креативы уже в нём.
           if(!wiz.locked)await apiPut("/api/v1/ads/projects/"+wiz.project.id,{...wiz.project,headlines,ad_texts:adTexts,image_urls:imageUrls,callouts_pool:calloutsPool,sitelinks_pool:sitelinksPool});
@@ -3765,6 +3780,13 @@ function projectWizard(existingProject){
           close();toast("Запуск начат — отслеживаем прогресс",{tone:"success"});openJobDrawer(wiz.project,job.job_id);
         }catch(err){msg.textContent=err.message||"Не удалось запустить";msg.style.color="var(--bad)"}
       })();
+      // Реальные деньги — только после явного подтверждения суммы.
+      if(topup>0){
+        msg.textContent="";
+        confirm({title:"Пополнить аккаунты с Click.ru?",
+          text:`После создания каждой кампании аккаунт пополнится на ${topup.toLocaleString("ru-RU")} ₽ с НДС — всего до ${(wiz.count*topup).toLocaleString("ru-RU")} ₽ за ${wiz.count} ${accountsWord(wiz.count)}${wiz.autoStart?", и кампании сразу уйдут на модерацию и включатся":""}.`,
+          confirm:"Запустить и пополнить",fn(){msg.textContent="Запускаю…";go()}});
+      }else go();
     };
   }
 }
@@ -3781,6 +3803,29 @@ async function duplicateProject(p){
   }catch(err){toast(err.message||"Не удалось сделать копию",{tone:"danger"})}
 }
 N.acts.adsDup=(a,d)=>{const p=(S.ads.projects||[]).find(x=>String(x.id)===String(d.id));if(p)duplicateProject(p)};
+// «Пополнить и запустить» для уже созданных кампаний (2026-11-12). Реальные
+// деньги: сумма и количество аккаунтов показываются до нажатия.
+function fundAndStartDialog(p,acc,redraw){
+  overlay("modal",{title:"Пополнить и запустить",
+    body:`<p class="muted" style="font-size:13px">Кампаний в проекте: ${acc.length}. Пополнение идёт с баланса Click.ru (юрлицо запуска), сумма с НДС — на КАЖДЫЙ аккаунт; повторное нажатие пополнит ещё раз.</p>
+      <nv-input name="amount" label="Пополнить каждый аккаунт, ₽ с НДС (0 — без пополнения)" type="number" value="1220"></nv-input>
+      <label class="row" style="gap:8px;margin-top:8px"><input type="checkbox" name="start" checked><span>Запустить показы: модерация объявлений и включение кампаний</span></label>
+      <div class="muted" data-fund-total style="font-size:12.5px;margin-top:6px"></div>`,
+    mount(r){const upd=()=>{const a=Math.max(0,+(formVals(r).amount||0));r.querySelector("[data-fund-total]").textContent=a>0?`Всего спишется: ${acc.length} × ${a.toLocaleString("ru-RU")} = ${(acc.length*a).toLocaleString("ru-RU")} ₽ с НДС.`:"Без пополнения."};
+      upd();const i=r.querySelector('nv-input[name="amount"]');if(i)i.addEventListener("nv-change",upd)},
+    actions:[{label:"Отмена"},{label:"Выполнить",variant:"primary",fn(r,close){
+      const amount=Math.max(0,+(formVals(r).amount||0)),start=!!(r.querySelector('input[name="start"]')||{}).checked;
+      if(!amount&&!start){toast("Укажите сумму или отметьте запуск",{tone:"warning"});return false}
+      (async()=>{
+        try{
+          const res=await apiPost("/api/v1/ads/projects/"+p.id+"/fund-and-start",{amount_rub:amount,start});
+          toast(`Готово: пополнено ${res.funded} из ${res.total}${start?", запущено "+res.started:""}`,{tone:res.funded===res.total||!amount?"success":"warning"});
+          close();redraw&&redraw();loadProjects();
+        }catch(err){toast(err.message||"Не удалось",{tone:"danger"})}
+      })();
+      return false;
+    }}]});
+}
 // «Продолжить запуск» (2026-11-10): досоздаёт недостающие кампании с теми же
 // параметрами; сначала — аккаунты, уже созданные прошлым запуском.
 async function resumeLaunch(project,jobId,btn){
@@ -3812,7 +3857,10 @@ function openJobDrawer(project,jobId){
         const rb=host.querySelector("[data-job-resume]");if(rb)rb.onclick=()=>resumeLaunch(project,jobId,rb);
         if(job.items&&job.items.length)wireTable(root,"job-items-t",job.items.map((it,i)=>({id:i,...it})),
           [{key:"pool_login",label:"Аккаунт"},{key:"campaign_id",label:"Campaign ID"},
-           {key:"status",label:"Статус",render:x=>x.status==="created"?'<nv-badge tone="success">Создано</nv-badge>':`<nv-badge tone="danger">${esc(x.error||"Ошибка")}</nv-badge>`}]);
+           {key:"status",label:"Статус",render:x=>x.status==="created"?'<nv-badge tone="success">Создано</nv-badge>':`<nv-badge tone="danger">${esc(x.error||"Ошибка")}</nv-badge>`},
+           {key:"topup_status",label:"Пополнение",render:x=>!x.topup_rub?"—":x.topup_status==="SUCCESS"?`<nv-badge tone="success">${x.topup_rub} ₽</nv-badge>`:`<nv-badge tone="warning">${esc(x.topup_status||"—")}</nv-badge>`},
+           {key:"started",label:"Показы",render:x=>x.started?'<nv-badge tone="success">Запущено</nv-badge>':"—"},
+           {key:"note",label:"Примечание",render:x=>esc(x.note||"")}]);
         if(job.status==="running")setTimeout(poll,4000);
         else loadProjects();
       };
@@ -3861,7 +3909,8 @@ N.chg.adsProjF=(v,d)=>{const f=projFilter();f[d.key]=v;try{localStorage.setItem(
 N.acts.adsProjReset=()=>{S.ads.projF={q:"",mode:"",status:"",payer:"",conn:"",camps:"",period:"",sort:"recent"};try{localStorage.removeItem(PROJ_F_KEY)}catch(e){}N.refresh()};
 
 const TL_ICON={created:["plus",""],ozon_started:["sparkles","info"],ozon_done:["check","success"],ozon_failed:["alert-triangle","danger"],
-  launch_started:["rocket","info"],launch_done:["check-circle-2","success"],launch_failed:["alert-triangle","danger"],launch_running:["loader","info"],browser_opened:["external-link",""]};
+  launch_started:["rocket","info"],launch_done:["check-circle-2","success"],launch_failed:["alert-triangle","danger"],launch_running:["loader","info"],browser_opened:["external-link",""],
+  launch_resumed:["play","info"],fund_start:["wallet","success"],metrika_grants:["key-round",""]};
 function projectTimeline(events){
   return JSON.stringify(events.map(e=>{const [icon,tone]=TL_ICON[e.kind]||["circle",""];
     return{title:e.title,text:e.detail||"",time:e.at?fmtDateTime(e.at):"",icon,tone}}));
@@ -3887,7 +3936,7 @@ function openProjectPanel(p){
         const launches=h.events.filter(e=>e.kind==="launch_started").length,acc=h.accounts||[];
         const busy=h.running_job_id||h.ozon_status==="running";
         el.innerHTML=`<div class="grid g3">${stat("Кампаний создано",acc.length)}${stat("Запусков",launches)}${stat("Статус",busy?(h.running_job_id?"Идёт запуск":"Идёт генерация"):(PROJ_STATUS[projStatus(p)]||[""])[0])}</div>
-          <div class="row" style="gap:8px;margin:10px 0;flex-wrap:wrap"><nv-button size="sm" icon="rocket" data-proj-launch>${acc.length||p.has_launched?"Запустить ещё (те же настройки)":"Открыть визард запуска"}</nv-button><nv-button size="sm" variant="secondary" icon="copy" data-proj-dup hint="Копия со всеми настройками и креативами — её можно редактировать">Дублировать</nv-button>
+          <div class="row" style="gap:8px;margin:10px 0;flex-wrap:wrap"><nv-button size="sm" icon="rocket" data-proj-launch>${acc.length||p.has_launched?"Запустить ещё (те же настройки)":"Открыть визард запуска"}</nv-button><nv-button size="sm" variant="secondary" icon="copy" data-proj-dup hint="Копия со всеми настройками и креативами — её можно редактировать">Дублировать</nv-button>${acc.length?`<nv-button size="sm" variant="secondary" icon="wallet" data-proj-fund hint="Пополнить аккаунты с Click.ru и/или запустить показы">Пополнить и запустить</nv-button>`:""}
           ${h.running_job_id?`<nv-button size="sm" variant="secondary" icon="activity" data-proj-job="${h.running_job_id}">Прогресс запуска</nv-button>`:""}
           ${!h.running_job_id&&h.resume?`<nv-button size="sm" variant="primary" icon="play" data-proj-resume="${h.resume.job_id}" hint="Досоздать недостающие кампании с теми же настройками">Продолжить запуск #${h.resume.job_id} (не хватает ${h.resume.remaining}${h.resume.reuse_accounts?", готовых аккаунтов "+h.resume.reuse_accounts:""})</nv-button>`:""}
           ${p.ozon_url?`<a href="${esc(p.ozon_url)}" target="_blank" rel="noopener" style="font-size:13px;align-self:center">Карточка Ozon</a>`:""}</div>
@@ -3902,6 +3951,7 @@ function openProjectPanel(p){
         el.querySelector("[data-proj-launch]").onclick=()=>{const full=(S.ads.projects||[]).find(x=>x.id===p.id)||p;projectWizard(full)};
         const rs=el.querySelector("[data-proj-resume]");if(rs)rs.onclick=()=>resumeLaunch(p,+rs.dataset.projResume,rs);
         el.querySelector("[data-proj-dup]").onclick=()=>duplicateProject(p);
+        const fb=el.querySelector("[data-proj-fund]");if(fb)fb.onclick=()=>fundAndStartDialog(p,acc,draw);
         const jb=el.querySelector("[data-proj-job]");if(jb)jb.onclick=()=>openJobDrawer(p,+jb.dataset.projJob);
         el.querySelectorAll("[data-acc-check]").forEach(b=>b.onclick=async()=>{
           const a=acc[+b.dataset.accCheck],out=el.querySelector(`[data-acc-out="${b.dataset.accCheck}"]`);
