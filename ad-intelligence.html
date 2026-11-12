@@ -3902,9 +3902,36 @@ function fundAndStartDialog(p,acc,redraw){
     body:`<p class="muted" style="font-size:13px">Кампаний в проекте: ${acc.length}. Пополнение идёт с баланса Click.ru (юрлицо запуска), сумма с НДС — на КАЖДЫЙ аккаунт; повторное нажатие пополнит ещё раз.</p>
       <nv-input name="amount" label="Пополнить каждый аккаунт, ₽ с НДС (0 — без пополнения)" type="number" value="1220"></nv-input>
       <label class="row" style="gap:8px;margin-top:8px"><input type="checkbox" name="start" checked><span>Запустить показы: модерация объявлений и включение кампаний</span></label>
-      <div class="muted" data-fund-total style="font-size:12.5px;margin-top:6px"></div>`,
-    mount(r){const upd=()=>{const a=Math.max(0,+(formVals(r).amount||0));r.querySelector("[data-fund-total]").textContent=a>0?`Всего спишется: ${acc.length} × ${a.toLocaleString("ru-RU")} = ${(acc.length*a).toLocaleString("ru-RU")} ₽ с НДС.`:"Без пополнения."};
-      upd();const i=r.querySelector('nv-input[name="amount"]');if(i)i.addEventListener("nv-change",upd)},
+      <div class="muted" data-fund-total style="font-size:12.5px;margin-top:6px"></div>
+      <div data-fund-payers style="margin-top:12px"><p class="muted" style="font-size:12.5px">Загружаю балансы юрлиц Click.ru…</p></div>`,
+    mount(r){
+      // Балансы юрлиц Click.ru (2026-11-12): все юрлица подключений проекта,
+      // юрлицо запуска (с него и спишется) — выделено.
+      const used=new Set(acc.map(a=>a.payer_id).filter(Boolean));
+      const conns=[...new Set(acc.map(a=>a.connection_id).filter(Boolean))];
+      let payers=[];
+      const fmt=n=>(+n||0).toLocaleString("ru-RU",{maximumFractionDigits:2});
+      const upd=()=>{const a=Math.max(0,+(formVals(r).amount||0)),need=acc.length*a;
+        r.querySelector("[data-fund-total]").textContent=a>0?`Всего спишется: ${acc.length} × ${a.toLocaleString("ru-RU")} = ${need.toLocaleString("ru-RU")} ₽ с НДС.`:"Без пополнения.";
+        const host=r.querySelector("[data-fund-payers]");if(!payers.length)return;
+        host.innerHTML=`<div style="font-size:12.5px;font-weight:600;margin-bottom:6px">Балансы юрлиц Click.ru</div><div class="stack">${payers.map(p=>{
+          const sel=used.has(p.id),bal=typeof p.balance==="number"?p.balance:null,low=sel&&a>0&&bal!==null&&bal<need;
+          return `<div class="row" style="gap:10px;justify-content:space-between;padding:9px 11px;border-radius:10px;border:${sel?"2px solid var(--accent,#3b6cff)":"1px solid var(--line)"};${sel?"background:color-mix(in srgb,var(--accent,#3b6cff) 8%,transparent)":""}">
+            <span style="min-width:0"><b>${esc(payerLabel(p))}</b>${sel?' <span style="font-size:11.5px;color:var(--accent,#3b6cff);font-weight:600">· юрлицо запуска, спишется с него</span>':""}${p._conn&&conns.length>1?`<br><span class="muted" style="font-size:12px">подключение #${p._conn}</span>`:""}</span>
+            <span style="white-space:nowrap;font-weight:${sel?700:500};${low?"color:var(--bad)":""}">${bal===null?"—":fmt(bal)+" ₽"}</span></div>${low?`<div style="font-size:12px;color:var(--bad);margin:-2px 0 4px">Не хватает ${fmt(need-bal)} ₽ — часть аккаунтов не пополнится</div>`:""}`}).join("")}</div>
+          ${used.size?"":`<p class="muted" style="font-size:12px;margin-top:6px">У кампаний проекта не записано юрлицо — пополнение пойдёт с физлица (payerId 0).</p>`}`};
+      upd();const i=r.querySelector('nv-input[name="amount"]');if(i)i.addEventListener("nv-change",upd);
+      (async()=>{
+        const seen=new Set();
+        for(const c of (conns.length?conns:[null])){
+          try{const d=await api("/api/v1/ads/payers",c?{connection_id:c}:{});
+            (d.items||[]).forEach(p=>{if(!seen.has(p.id)){seen.add(p.id);payers.push({...p,_conn:c})}})}catch(e){}
+        }
+        payers.sort((x,y)=>(used.has(y.id)-used.has(x.id))||((+y.balance||0)-(+x.balance||0)));
+        if(!payers.length)r.querySelector("[data-fund-payers]").innerHTML='<p class="muted" style="font-size:12.5px">Не удалось получить балансы юрлиц Click.ru.</p>';
+        else upd();
+      })();
+    },
     actions:[{label:"Отмена"},{label:"Выполнить",variant:"primary",fn(r,close){
       const amount=Math.max(0,+(formVals(r).amount||0)),start=!!(r.querySelector('input[name="start"]')||{}).checked;
       if(!amount&&!start){toast("Укажите сумму или отметьте запуск",{tone:"warning"});return false}
