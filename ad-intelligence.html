@@ -1,4 +1,55 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><style id="nv-extra">
+nv-carousel{display:block;min-width:0}
+.cx{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:16px 0 14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.cx-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:0 16px}
+.cx-ht{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cx-ht b{font:600 15px var(--font-display)}
+.cx-ht span{font-size:12.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cx-hr{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.cx-ct{font:500 12px var(--font-mono);color:var(--ink-2);background:var(--surface-2);border-radius:99px;padding:3px 9px}
+.cx-vp{position:relative}
+.cx-track{display:flex;gap:12px;list-style:none;margin:0;padding:2px 16px 6px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;outline:none;cursor:grab}
+.cx-track::-webkit-scrollbar{display:none}
+.cx-track.drag{cursor:grabbing;scroll-snap-type:none}
+.cx-track:focus-visible{box-shadow:inset 0 0 0 2px var(--info);border-radius:12px}
+.cx-slide{flex:0 0 clamp(150px,21%,210px);scroll-snap-align:start}
+.cx-card{all:unset;box-sizing:border-box;display:flex;flex-direction:column;width:100%;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface);cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s}
+.cx-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-2);border-color:var(--line-2)}
+.cx-card:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+.cx-art{position:relative;aspect-ratio:4/5;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--ink-3)}
+.cx-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none;user-select:none}
+.cx-n{position:absolute;left:8px;top:8px;min-width:24px;height:24px;border-radius:99px;background:rgba(14,18,16,.72);color:#fff;font:600 12px var(--font-body);display:flex;align-items:center;justify-content:center;padding:0 7px}
+.cx-b{padding:9px 11px 11px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.cx-d{font-size:11.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cx-t{font-size:13px;font-weight:600;color:var(--ink);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em}
+.cx-nav{position:absolute;top:calc(50% - 40px);z-index:2;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-shadow:var(--shadow-2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .15s,transform .15s}
+.cx-nav.prev{left:8px}.cx-nav.next{right:8px}
+.cx-nav:hover{transform:scale(1.08)}
+.cx-nav[disabled]{opacity:0;pointer-events:none}
+.cx-dots{display:flex;gap:6px;justify-content:center;padding:0 16px;flex-wrap:wrap}
+.cx-dot{width:7px;height:7px;border-radius:99px;border:0;padding:0;background:var(--line-2);cursor:pointer;transition:width .2s,background .2s}
+.cx-dot.on{width:20px;background:var(--ink)}
+nv-carousel.cx-fit .cx-dots{display:none}
+@media(max-width:640px){.cx-slide{flex-basis:62%}.cx-nav{display:none}}
+.cx-list{display:flex;flex-direction:column;gap:16px}
+.tab-hint{margin:0;padding:12px 16px 0;font-size:13px;color:var(--ink-2);line-height:1.45}
+.jumps{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.jump{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:4px;padding:14px;border:1px solid var(--line);border-radius:var(--r-l);background:var(--surface);transition:border-color .12s,box-shadow .12s,transform .12s}
+.jump:hover{border-color:var(--line-2);box-shadow:var(--shadow-2);transform:translateY(-1px)}
+.jump:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+.jump .jn{font:600 26px var(--font-display);line-height:1.1}
+.jump .jt{font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:6px}
+.jump .jd{font-size:12.5px;color:var(--ink-3);line-height:1.35}
+.sch-row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1.2fr) minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.sch-row:last-child{border-bottom:0}
+.sch-row .st{font-weight:600}.sch-row .ss{font-size:12.5px;color:var(--ink-3)}
+.sch-bar{height:6px;border-radius:99px;background:var(--surface-3);overflow:hidden;margin-top:6px}
+.sch-bar i{display:block;height:100%;background:var(--ok);border-radius:99px}
+.sch-act{display:flex;gap:6px;justify-content:flex-end}
+.sch-sum{font-size:12.5px;color:var(--ink-2);background:var(--surface-2);border-radius:10px;padding:10px 12px;line-height:1.45}
+@media(max-width:760px){.sch-row{grid-template-columns:1fr}.sch-act{justify-content:flex-start}}
+</style>
+</head><body>
 <title>ParsYa Ads — Разведка рекламы</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1686,6 +1737,37 @@ define("nv-creative-card",class extends NvEl{
     q(".cr-save").onclick=()=>this.emit("nv-save",{id:this.a("cid"),saved:!this.b("saved")});
     const c=q(".cr-ck input");if(c)c.onchange=()=>this.emit("nv-select",{id:this.a("cid"),selected:c.checked})}
 },"Предметные",{desc:"Карточка найденного объявления. Показывает настоящее изображение или видео креатива, если они есть (поля image/video парсера); заглушка — только когда у объявления вообще нет медиа.",events:["nv-open {id}","nv-save {id,saved}","nv-select {id,selected}"],previewW:300,attrs:{cid:{type:"string",default:"c1",desc:"ID креатива"},headline:{type:"string",default:"Беговые кроссовки с примеркой дома",desc:"Заголовок"},advertiser:{type:"string",default:"Кросс-Лаб",desc:"Рекламодатель"},domain:{type:"string",default:"krosslab.example",desc:"Домен"},platform:{type:"string",default:"Яндекс / РСЯ",desc:"Площадка"},format:{type:"enum",values:["image","native","video","carousel"],default:"image",desc:"Формат"},date:{type:"string",default:"сегодня",desc:"Когда замечено"},discount:{type:"number",default:"30",desc:"Скидка в процентах"},cta:{type:"string",default:"Выбрать пару",desc:"Текст кнопки"},image:{type:"string",default:"",desc:"Адрес настоящего изображения креатива"},video:{type:"string",default:"",desc:"Адрес настоящего видео креатива"},poster:{type:"string",default:"",desc:"Превью-кадр для видео"},copy:{type:"string",default:"Доставим и заберём лишнюю пару бесплатно.",desc:"Текст объявления, 1–2 строки"},"desc-full":{type:"string",default:"",desc:"Полный текст объявления для кнопки «Скопировать» (без обрезки) — по умолчанию берётся copy"},platforms:{type:"string",default:"",desc:"Другие площадки через запятую, если то же объявление встречено не только на основной"},saved:{type:"bool",desc:"Сохранён"},selectable:{type:"bool",desc:"Показывает флажок"},selected:{type:"bool",desc:"Выбран"}}});
+define("nv-carousel",class extends NvEl{
+  get slides(){return this._slides||[]}
+  set slides(v){this._slides=v||[];if(this._init)this.update()}
+  html(){
+    const sl=this.slides,n=sl.length,plat=this.a("platform");
+    const card=(m,i)=>`<li class="cx-slide" data-i="${i}"><button type="button" class="cx-card" data-id="${esc(m.id)}" aria-label="Слайд ${i+1} из ${n}: ${esc(m.title||m.domain||"")}"><span class="cx-art"><span class="cx-na">${ic("image-off",22)}</span>${m.image?`<img src="${esc(m.image)}" alt="" loading="lazy" draggable="false" onerror="this.remove()">`:""}<span class="cx-n">${esc(m.n!=null?m.n:i+1)}</span></span><span class="cx-b"><span class="cx-d">${esc(m.domain||"—")}</span><span class="cx-t">${esc(m.title||"Без заголовка")}</span></span></button></li>`;
+    return `<section class="cx" aria-roledescription="карусель"><header class="cx-h"><div class="cx-ht"><b>${esc(this.a("heading"))}</b><span>${esc(this.a("subtitle"))}</span></div><div class="cx-hr">${plat?`<nv-badge>${esc(plat)}</nv-badge>`:""}<span class="cx-ct" aria-live="polite">1 / ${n}</span></div></header>
+    <div class="cx-vp"><button type="button" class="cx-nav prev" aria-label="Назад" disabled>${ic("chevron-left",18)}</button><ul class="cx-track" tabindex="0" role="list" aria-label="Слайды карусели">${sl.map(card).join("")}</ul><button type="button" class="cx-nav next" aria-label="Вперёд">${ic("chevron-right",18)}</button></div>
+    ${n>1&&n<=12?`<div class="cx-dots">${sl.map((_,i)=>`<button type="button" class="cx-dot${i?"":" on"}" data-i="${i}" aria-label="К слайду ${i+1}"></button>`).join("")}</div>`:""}</section>`;
+  }
+  mounted(){
+    const tr=this.querySelector(".cx-track");if(!tr)return;
+    const slides=[...tr.children],n=slides.length,prev=this.querySelector(".prev"),next=this.querySelector(".next"),dots=[...this.querySelectorAll(".cx-dot")],ct=this.querySelector(".cx-ct");
+    const left=el=>el.getBoundingClientRect().left;
+    const step=()=>slides.length>1?left(slides[1])-left(slides[0]):(slides[0]?slides[0].offsetWidth+12:300);
+    const cur=()=>{if(tr.scrollLeft+tr.clientWidth>=tr.scrollWidth-2)return n-1;let b=0,bd=1e9;const o=left(tr)+16;slides.forEach((s,i)=>{const d=Math.abs(left(s)-o);if(d<bd){bd=d;b=i}});return b};
+    let raf=0;
+    const sync=()=>{raf=0;const fits=tr.scrollWidth<=tr.clientWidth+2;this.classList.toggle("cx-fit",fits);if(fits){if(ct)ct.textContent=n+" шт.";prev.disabled=next.disabled=true;return}const i=cur();if(ct)ct.textContent=(i+1)+" / "+n;dots.forEach((d,k)=>d.classList.toggle("on",k===i));prev.disabled=tr.scrollLeft<=2;next.disabled=tr.scrollLeft+tr.clientWidth>=tr.scrollWidth-2};
+    tr.addEventListener("scroll",()=>{if(!raf)raf=requestAnimationFrame(sync)},{passive:true});
+    const page=d=>tr.scrollBy({left:d*step()*Math.max(1,Math.floor(tr.clientWidth/step())),behavior:"smooth"});
+    prev.onclick=()=>page(-1);next.onclick=()=>page(1);
+    dots.forEach(d=>d.onclick=()=>{const s=slides[+d.dataset.i];tr.scrollBy({left:left(s)-left(tr)-16,behavior:"smooth"})});
+    tr.addEventListener("keydown",e=>{if(e.key==="ArrowRight"){e.preventDefault();tr.scrollBy({left:step(),behavior:"smooth"})}else if(e.key==="ArrowLeft"){e.preventDefault();tr.scrollBy({left:-step(),behavior:"smooth"})}});
+    let sx=0,sl0=0,down=false,moved=false;
+    tr.addEventListener("pointerdown",e=>{if(e.pointerType!=="mouse"||e.button!==0)return;down=true;moved=false;sx=e.clientX;sl0=tr.scrollLeft});
+    window.addEventListener("pointermove",e=>{if(!down)return;const dx=e.clientX-sx;if(!moved&&Math.abs(dx)>5){moved=true;tr.classList.add("drag")}if(moved)tr.scrollLeft=sl0-dx});
+    window.addEventListener("pointerup",()=>{if(!down)return;down=false;if(moved){setTimeout(()=>{moved=false},0);tr.classList.remove("drag")}});
+    tr.addEventListener("click",e=>{const b=e.target.closest(".cx-card");if(!b)return;if(moved){e.preventDefault();return}this.emit("nv-open",{id:b.dataset.id})},true);
+    sync();
+  }
+},"Предметные",{desc:"Настоящая карусель рекламы: слайды листаются стрелками, свайпом, перетаскиванием мышью или клавишами ← →. Слайды передаются свойством slides = [{id,image,title,domain,n}]; клик по слайду — событие nv-open.",events:["nv-open {id}"],previewW:640,attrs:{heading:{type:"string",default:"Карусель в Яндекс / РСЯ",desc:"Заголовок"},subtitle:{type:"string",default:"6 слайдов · krosslab.example",desc:"Подпись под заголовком"},platform:{type:"string",default:"Яндекс / РСЯ",desc:"Площадка"}}});
 define("nv-service-card",class extends NvEl{
   html(){return `<button type="button" class="svc-c" data-svc="${esc(this.a("service"))}"><span class="ic">${ic(this.a("icon"))}</span><h3>${esc(this.a("name"))}</h3><p>${esc(this.a("description"))}</p><span class="m"><span>${esc(this.a("metric"))}</span><nv-status value="${esc(this.a("status"))}"></nv-status></span></button>`}
 },"Предметные",{desc:"Сервис в каталоге бренда.",previewW:300,attrs:{service:{type:"enum",values:["intel","launch","studio","connect","sites","crm","seo","mail","bots"],default:"launch",desc:"Определяет фирменный цвет"},name:{type:"string",default:"Массовый запуск",desc:"Название"},description:{type:"string",default:"Сотни объявлений на все площадки за один проход.",desc:"Польза в одной фразе"},icon:{type:"string",default:"rocket",desc:"Иконка"},metric:{type:"string",default:"3 кампании активны",desc:"Главный показатель"},status:{type:"enum",values:["ready","soon"],default:"ready",desc:"Состояние"}}});
@@ -2560,7 +2642,7 @@ const seed=()=>({
   sel:[],cmp:[],cmpF:{q:"",platform:"",format:"",period:"",adv:""},
   savedIds:loadSavedCreativeIds(),
   collections:[],collectionsLoaded:false,collectionItemsCache:{},openK:null,
-  scans:[],scansLoaded:false,scanF:{q:"",status:""},
+  schedules:[],schedulesLoaded:false,scans:[],scansLoaded:false,scanF:{q:"",status:""},
   advertisers:[],advertisersLoaded:false,advQ:"",advSub:"all",
   intents:[],intentsLoaded:false,activeIntents:getActiveIntents(),
   ana:{loaded:false,loading:false,platSub:"coverage",campSub:"campaigns",freshSub:"fresh",totals:{},coverage:[],breakdown:[],fresh:[],freshTotal:0,discounts:[],discTotal:0,apps:[],appsTotal:0,cross:[],carousels:[],campaigns:[],keywords:[],growing:[],mismatch:[],coverageReport:[]}
@@ -2654,6 +2736,10 @@ function bindCards(root,target){
     if(target==="sel"){e.target.toggleAttribute("selected",e.detail.selected);libBulk()}
     else N.refresh();
   });
+}
+function anaSub(text){
+  const a=S.intel.activeIntents||[];
+  return text+(a.length?" Данные по запросам: "+a.map(x=>"«"+x+"»").join(", ")+".":" Данные по всем запросам — выберите «Интент», чтобы сузить.");
 }
 function intentControlHtml(){
   const I=S.intel,opts=I.intents.map(i=>esc(i.intent)+":"+esc(i.intent)+" ("+(i.creatives_count||0)+")").join("|");
@@ -2894,7 +2980,7 @@ function gridOfCollectionItems(items,colId){
 async function loadScans(){
   try{
     const data=await api("/api/v1/runs",{limit:50});
-    S.intel.scans=(data.items||[]).map(r=>({id:r.id,key_text:r.key_text,city:r.city,status:r.status,total:r.total_creatives||0,created_at:r.created_at,started_at:r.started_at,finished_at:r.finished_at,error_text:r.error_text}));
+    S.intel.scans=(data.items||[]).map(r=>({id:r.id,key_text:r.key_text,city:r.city,status:r.status,total:r.total_creatives||0,created_at:r.created_at,started_at:r.started_at,finished_at:r.finished_at,error_text:r.error_text,schedule_id:r.schedule_id}));
     S.intel.scansLoaded=true;
     clearTimeout(S.intel._scanPoll);
     if((data.items||[]).some(r=>r.status==="queued"||r.status==="running"))S.intel._scanPoll=setTimeout(loadScans,5000);
@@ -2922,23 +3008,61 @@ function scanCardInfo(s,medianMs){
   const pct=Math.max(5,Math.min(96,Math.round(elapsed/medianMs*100)));
   return{status:"running",pct:String(pct),note:remain>0?"~"+fmtMinutes(remain)+" осталось":"дольше обычного ("+fmtMinutes(elapsed)+")"};
 }
+const FREQ_OPTS="once:Один раз|1:1 раз в день|2:2 раза в день|3:3 раза в день|4:4 раза в день|6:6 раз в день|8:8 раз в день|12:12 раз в день";
+const DAYS_OPTS="7:7 дней|14:14 дней|30:30 дней";
+function schedSummary(freq,days){
+  if(freq==="once")return"Запуск один раз, сразу после создания.";
+  const n=+freq,d=+days,total=n*d,gap=24/n,gapTxt=gap>=1?(Number.isInteger(gap)?gap+" ч":gap.toFixed(1).replace(".",",")+" ч"):Math.round(gap*60)+" мин";
+  const end=new Date(Date.now()+d*864e5).toLocaleDateString("ru-RU",{day:"2-digit",month:"long"});
+  return `Запусков: ${n} × ${d} = ${total}, примерно каждые ${gapTxt}. Первый — сразу, расписание действует до ${end}. Если предыдущий запуск ещё идёт, следующий слот пропускается. Для одного запроса используется один и тот же аккаунт Яндекса.`;
+}
 function scanDlg(){
   overlay("modal",{title:"Новое сканирование",subtitle:"Воркер подберёт задание при следующем опросе и начнёт собирать креативы.",size:"md",
-    body:'<nv-tag-input name="key" label="Что ищем" value="" placeholder="Например, кроссовки" hint="Введите запрос и нажмите Enter. На каждый запрос создаётся отдельное задание" required></nv-tag-input><nv-input name="city" label="Город" value="Москва"></nv-input>',
+    body:'<nv-tag-input name="key" label="Что ищем" value="" placeholder="Например, кроссовки" hint="Введите запрос и нажмите Enter. На каждый запрос создаётся отдельное задание" required></nv-tag-input><nv-input name="city" label="Город" value="Москва"></nv-input><nv-select name="freq" label="Как часто запускать" value="once" options="'+FREQ_OPTS+'"></nv-select><div data-sch-days hidden><nv-select name="days" label="Повторять каждый день в течение" value="7" options="'+DAYS_OPTS+'"></nv-select></div><div class="sch-sum" data-sch-sum>'+esc(schedSummary("once","7"))+'</div>',
+    mount(r){
+      const upd=()=>{const f=r.querySelector('[name="freq"]').value,d=r.querySelector('[name="days"]').value;r.querySelector("[data-sch-days]").hidden=f==="once";r.querySelector("[data-sch-sum]").textContent=schedSummary(f,d)};
+      r.addEventListener("nv-change",upd);
+    },
     actions:[{label:"Отмена"},{label:"Создать задание",variant:"primary",icon:"radar",fn(r,close){
       const v=formVals(r),keyRaw=(v.key||"").trim();
       if(!keyRaw){r.querySelector('[name="key"]').setAttribute("error","Введите хотя бы один запрос");return false}
       const keys=keyRaw.split(",").map(x=>x.trim()).filter(Boolean),city=(v.city||"").trim()||"Москва";
+      const sched=v.freq&&v.freq!=="once"?{runs_per_day:+v.freq,duration_days:+v.days}:null;
       (async()=>{
         try{
-          for(const k of keys)await apiPost("/api/v1/runs",{city,key_text:k});
-          await loadScans();N.go("intel-scans");
-          toast(keys.length>1?"Создано заданий: "+keys.length:"Задание создано",{tone:"success"});
+          for(const k of keys){
+            if(sched)await apiPost("/api/v1/schedules",{city,key_text:k,...sched});
+            else await apiPost("/api/v1/runs",{city,key_text:k});
+          }
+          await Promise.all([loadScans(),loadSchedules()]);N.go("intel-scans");
+          toast(sched?(keys.length>1?"Создано расписаний: "+keys.length:"Расписание создано, первый запуск уже в очереди"):(keys.length>1?"Создано заданий: "+keys.length:"Задание создано"),{tone:"success"});
           close();
         }catch(err){toast("Не удалось создать задание: "+(err.message||""),{tone:"danger"})}
       })();
       return false;
     }}]});
+}
+async function loadSchedules(){
+  try{const data=await api("/api/v1/schedules",{});S.intel.schedules=data.items||[]}
+  catch(err){S.intel.schedules=S.intel.schedules||[]}
+  S.intel.schedulesLoaded=true;N.refreshIf("intel-scans");
+}
+async function schedAction(id,action){
+  const run=async()=>{try{await apiPost("/api/v1/schedules/"+id+"/action",{action});await loadSchedules();toast(action==="pause"?"Расписание на паузе":action==="resume"?"Расписание возобновлено":"Расписание остановлено",{tone:"success"})}catch(err){toast("Не удалось: "+(err.message||""),{tone:"danger"})}};
+  if(action==="cancel"){const sc=(S.intel.schedules||[]).find(x=>String(x.id)===String(id));confirm({title:"Остановить расписание?",text:"Новые запуски по запросу «"+(sc?sc.key_text:"")+"» создаваться не будут. Уже идущие задания не прерываются.",confirm:"Остановить",danger:true,fn(){run()}})}
+  else run();
+}
+const SCHED_STATUS={active:["Активно","success"],paused:["На паузе","warning"],finished:["Завершено","neutral"],cancelled:["Остановлено","neutral"]};
+function schedulesHtml(list){
+  if(!list.length)return"";
+  const rows=list.map(x=>{
+    const pct=x.runs_total?Math.min(100,Math.round(x.runs_created/x.runs_total*100)):0,st=SCHED_STATUS[x.status]||[x.status,"neutral"],live=x.status==="active"||x.status==="paused";
+    return `<div class="sch-row"><div><div class="st">${esc(x.key_text)}</div><div class="ss">${esc(x.city)} · ${x.runs_per_day} ${plural(x.runs_per_day,"раз","раза","раз")} в день × ${x.duration_days} дн.</div></div>
+    <div><nv-badge tone="${st[1]}">${st[0]}</nv-badge><div class="sch-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div><div class="ss">Запущено ${x.runs_created} из ${x.runs_total}${x.runs_skipped?" · пропущено "+x.runs_skipped:""}</div></div>
+    <div class="ss">${x.status==="active"&&x.next_run_at?"Следующий запуск:<br><b>"+esc(fmtDateTime(x.next_run_at))+"</b>":x.status==="paused"?"Запуски приостановлены":"Закончено: "+esc(fmtDateTime(x.finished_at||x.end_at))}</div>
+    <div class="sch-act">${live?(x.status==="active"?`<nv-button size="sm" variant="secondary" icon="pause" data-act="schedAction" data-id="${x.id}" data-a="pause">Пауза</nv-button>`:`<nv-button size="sm" variant="secondary" icon="play" data-act="schedAction" data-id="${x.id}" data-a="resume">Продолжить</nv-button>`)+`<nv-button size="sm" variant="ghost" icon="x" icon-only hint="Остановить" data-act="schedAction" data-id="${x.id}" data-a="cancel"></nv-button>`:""}</div></div>`;
+  }).join("");
+  return `<nv-card heading="Расписания" subtitle="Автоматические повторные сканирования">${rows}</nv-card>`;
 }
 async function openScanDetail(job){
   let data;
@@ -3031,10 +3155,24 @@ function wireTable(r,id,rows,columns,onClick){
 function thumb(c){return c.image_url?`<img src="${esc(c.image_url)}" alt="" style="width:34px;height:34px;border-radius:9px;object-fit:cover;flex-shrink:0">`:`<span style="width:34px;height:34px;border-radius:9px;background:var(--surface-2);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--ink-3)">${ic("image",16)}</span>`}
 function titleCell(c,sub){return `<div class="row" style="gap:9px;align-items:center"><span style="display:inline-flex">${thumb(c)}</span><div><div class="cell-t">${esc(c.title||c.domain||"Без заголовка")}</div><div class="cell-s">${esc(sub)}</div></div></div>`}
 function coverageStatus(pct){return pct>=40?`<nv-badge tone="success">Хорошо</nv-badge>`:pct>0?`<nv-badge tone="warning">Частично</nv-badge>`:`<nv-badge tone="danger">Нет раскрытий</nv-badge>`}
-function carouselsHtml(groups){
-  if(!groups.length)return'<p class="muted">Карусели пока не найдены.</p>';
-  return `<div class="stack">${groups.map(g=>`<div class="row between" style="align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)"><div><b>Карусель · ${esc(g.platform||"")}</b><div class="muted" style="font-size:12.5px">${g.member_count||(g.members||[]).length} объявлений · последний показ ${esc((g.last_seen_at||"").slice(0,10))}</div></div><div class="stack" style="gap:4px;max-width:360px">${(g.members||[]).slice(0,6).map((m,i)=>`<button type="button" class="row" style="gap:6px;align-items:center;font-size:12.5px;border:0;background:none;padding:0;cursor:pointer;text-align:left" data-act="carouselOpen" data-id="${esc(m.id)}">${thumb(m)}<span>${m.carousel_slide_index!=null?"#"+(m.carousel_slide_index+1)+" ":""}<b>${esc(m.domain||"—")}</b>${m.title?" · "+esc(m.title.slice(0,50)):""}</span></button>`).join("")}</div></div>`).join("")}</div>`;
+function renderCarousels(host){
+  const I=S.intel.ana,all=I.carousels||[];
+  if(!all.length){host.innerHTML='<nv-empty icon="gallery-horizontal" heading="Каруселей пока нет" text="Карусель — это несколько объявлений, показанных рядом в одном рекламном блоке. Они появятся здесь после сканирований."></nv-empty>';return}
+  const plat=I.carPlat||"all",groups=all.filter(g=>plat==="all"||(g.platform||"—")===plat);
+  if(!groups.length){host.innerHTML='<nv-empty icon="filter-x" heading="На этой площадке каруселей нет" text="Выберите другую площадку."></nv-empty>';return}
+  host.innerHTML='<div class="cx-list"></div>';const list=host.firstChild;
+  groups.forEach(g=>{
+    const ms=g.members||[],doms=[...new Set(ms.map(m=>m.domain).filter(Boolean))];
+    const el=document.createElement("nv-carousel");
+    el.setAttribute("heading",doms.length===1?doms[0]:(doms.slice(0,2).join(", ")+(doms.length>2?" и ещё "+(doms.length-2):"")||"Карусель"));
+    el.setAttribute("subtitle",(g.member_count||ms.length)+" "+plural(g.member_count||ms.length,"слайд","слайда","слайдов")+" · последний показ "+fmtDateTime(g.last_seen_at));
+    el.setAttribute("platform",g.platform||"");
+    el.slides=ms.map((m,i)=>({id:m.id,image:m.image_url,title:m.title,domain:m.domain,n:m.carousel_slide_index!=null?m.carousel_slide_index+1:i+1}));
+    el.addEventListener("nv-open",e=>openCreative(e.detail.id));
+    list.append(el);
+  });
 }
+function plural(n,a,b,c){const m=Math.abs(n)%100,k=m%10;return m>10&&m<20?c:k>1&&k<5?b:k===1?a:c}
 function wireAnalyticsTables(r,I){
   const trendChart=r.querySelector("#an-trend-chart");
   if(trendChart){const t=dailyTrend(I.recentItems,14);trendChart.data={labels:t.labels,series:[{name:"Креативов",values:t.values}]}}
@@ -3059,7 +3197,7 @@ function wireAnalyticsTables(r,I){
   const appsFoot=r.querySelector("#an-apps-total");if(appsFoot)appsFoot.textContent="Всего рекламы приложений: "+I.appsTotal;
   wireTable(r,"an-cross",I.cross.map((x,i)=>({id:i,...x})),
     [{key:"title",label:"Объявление",render:x=>titleCell(x,(x.platforms||[]).join(", "))},{key:"platform_count",label:"Площадок",align:"right"},{key:"last_seen_at",label:"Последний показ",render:x=>(x.last_seen_at||"").slice(0,10)}]);
-  const cc=r.querySelector("#an-carousel");if(cc)cc.innerHTML=carouselsHtml(I.carousels);
+  const cc=r.querySelector("#an-carousel");if(cc)renderCarousels(cc);
   wireTable(r,"an-camp",I.campaigns.map(x=>({id:x.campaign_id,...x})),
     [{key:"campaign_id",label:"Campaign ID",render:x=>`<span class="mono">${esc(x.campaign_id)}</span>`},{key:"n",label:"Креативов",align:"right"},{key:"last_seen_at",label:"Последний показ",render:x=>(x.last_seen_at||"").slice(0,10)}],
     x=>filterByCampaign(x.campaign_id));
@@ -3168,15 +3306,17 @@ scans(){
     return true;
   });
   const medianMs=scanDurationMedian(L);
-  return{title:"Сканирования",sub:"Задания для парсера: что искать и где.",actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
-  help:{steps:["Создайте задание: запрос и город.","Воркер заберёт его из очереди при следующем опросе.","Когда статус станет «Завершено», реклама появится в библиотеке."]},
+  return{title:"Сканирования",sub:"Задания для парсера: что искать, где и как часто.",actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
+  help:{steps:["Создайте задание: запрос, город и (по желанию) как часто повторять — например, 3 раза в день на 7 дней.","Воркер заберёт его из очереди при следующем опросе.","Расписания можно ставить на паузу и останавливать в блоке «Расписания». Когда статус станет «Завершено», реклама появится в библиотеке."]},
   body:`<div class="grid g4">${stat("Всего задач",total)}${stat("Выполняется",active)}${stat("Завершено",done)}${stat("Ошибка",failed)}</div>
   <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Запрос или город" value="${esc(sf.q)}" data-chg="scanF" data-key="q"></nv-input><nv-select label="Статус" value="${esc(sf.status)}" options=":Все статусы|queued:В очереди|running:Выполняется|succeeded:Завершено|failed:Ошибка" data-chg="scanF" data-key="status"></nv-select>${(sf.q||sf.status)?'<nv-button variant="ghost" size="sm" icon="x" data-act="scanFReset">Сбросить</nv-button>':""}</div>
+  ${schedulesHtml(S.intel.schedules||[])}
   <div class="grid g4lg">${rows.length?rows.map(s=>{const info=scanCardInfo(s,medianMs);
-    return `<nv-scan-card title="${esc(s.key_text)}" subtitle="${esc(s.city||"")}" status="${esc(info.status)}" pct="${esc(info.pct)}" ${info.indeterminate?"indeterminate":""} note="${esc(info.note)}" found="${esc(s.total||0)}"><nv-button size="sm" variant="secondary" icon="external-link" icon-only hint="Открыть" data-act="scanOpen" data-id="${esc(s.id)}">Открыть</nv-button>${s.status==="succeeded"?`<nv-button size="sm" variant="secondary" icon="layout-grid" icon-only hint="Показать в библиотеке" data-act="scanToLib" data-id="${esc(s.id)}">Показать в библиотеке</nv-button>`:""}</nv-scan-card>`;
+    return `<nv-scan-card title="${esc(s.key_text)}" subtitle="${esc((s.city||"")+(s.schedule_id?" · по расписанию":""))}" status="${esc(info.status)}" pct="${esc(info.pct)}" ${info.indeterminate?"indeterminate":""} note="${esc(info.note)}" found="${esc(s.total||0)}"><nv-button size="sm" variant="secondary" icon="external-link" icon-only hint="Открыть" data-act="scanOpen" data-id="${esc(s.id)}">Открыть</nv-button>${s.status==="succeeded"?`<nv-button size="sm" variant="secondary" icon="layout-grid" icon-only hint="Показать в библиотеке" data-act="scanToLib" data-id="${esc(s.id)}">Показать в библиотеке</nv-button>`:""}</nv-scan-card>`;
   }).join(""):'<nv-card><nv-empty icon="search-x" heading="Заданий не найдено" text="Измените фильтры или создайте новое сканирование."><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>'}</div>`,
   after(root){
     if(!S.intel.scansLoaded)loadScans();
+    if(!S.intel.schedulesLoaded)loadSchedules();
     root.querySelectorAll('[data-act="scanOpen"]').forEach(b=>b.onclick=()=>{const s=L.find(x=>String(x.id)===b.dataset.id);if(s)openScanDetail(s)});
     root.querySelectorAll('[data-act="scanToLib"]').forEach(b=>b.onclick=()=>{const s=L.find(x=>String(x.id)===b.dataset.id);if(s)filterByJob(s.id,s.key_text)});
   }}},
@@ -3186,9 +3326,18 @@ overview(){
   if(I.loading&&!I.loaded)return{title:"Обзор",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="4"></nv-skeleton>'};
   const T=I.totals||{};
   const pd7=periodDelta(I.recentItems,7),trendSpark=dailyTrend(I.recentItems,7);
-  return{title:"Обзор",sub:"Сводка по всей рекламе, которую нашёл парсер.",actions:intentControlHtml(),
+  return{title:"Обзор",sub:anaSub("Сводка по найденной рекламе."),actions:intentControlHtml(),
+  help:{title:"Как пользоваться анализом",steps:["Сверху выберите «Интент» — запрос, по которому смотрим данные.","Ниже — цифры и карточки «Куда смотреть дальше»: нажмите, чтобы перейти к деталям.","В таблицах нажатие на строку открывает объявления в библиотеке."]},
   body:`<div class="grid g4">${stat("Всего креативов",T.creatives||0,`delta="${esc(pd7.delta)}" trend="${pd7.trend}" note="за 7 дней к прошлым 7" spark="${esc(JSON.stringify(trendSpark.values))}"`)}${stat("Рекламодателей раскрыто",T.advertisers||0)}${stat("Креативов с юрлицом",T.creatives_with_advertiser||0,'hint="Сколько объявлений удалось привязать к ИНН"')}${stat("Площадок под наблюдением",I.coverage.length||0)}</div>
-  <nv-card heading="Тренды" subtitle="Новых креативов в день, последние 14 дней"><nv-chart id="an-trend-chart" label="Новых креативов в день"></nv-chart></nv-card>`,
+  <nv-card heading="Тренды" subtitle="Новых креативов в день, последние 14 дней"><nv-chart id="an-trend-chart" label="Новых креативов в день"></nv-chart></nv-card>
+  <div><div class="sect-t" style="margin-bottom:10px">Куда смотреть дальше</div><div class="jumps">${[
+    ["fresh","","sparkles",I.freshTotal,"Новое за 7 дней","Что конкуренты запустили недавно"],
+    ["fresh","discounts","badge-percent",I.discTotal,"Объявления со скидкой","Чем заманивают ценой"],
+    ["carousels","","gallery-horizontal",(I.carousels||[]).length,"Карусели","Блоки из нескольких слайдов"],
+    ["advertisers","growth","trending-up",(I.growing||[]).length,"Растущие рекламодатели","Кто нарастил активность"],
+    ["campaigns","campaigns","target",(I.campaigns||[]).length,"Кампании","Кампании за рекламой"],
+    ["platforms","coverage","radar",(I.coverage||[]).length,"Площадки","Где и насколько видно рекламодателя"]
+  ].map(j=>`<button type="button" class="jump" data-act="anaGo" data-id="${j[0]}" data-sub="${j[1]}"><span class="jt">${ic(j[2],15)}${esc(j[4])}</span><span class="jn">${esc(j[3]||0)}</span><span class="jd">${esc(j[5])}</span></button>`).join("")}</div></div>`,
   after(root){wireAnalyticsTables(root,I)}}},
 sources(){
   const I=S.intel.ana;
@@ -3202,8 +3351,12 @@ carousels(){
   const I=S.intel.ana;
   if(!I.loaded&&!I.loading)loadAnalytics();
   if(I.loading&&!I.loaded)return{title:"Карусели",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="2"></nv-skeleton>'};
-  return{title:"Карусели",sub:"Объявления, распознанные как часть карусели.",actions:intentControlHtml(),
-  body:`<nv-card><div id="an-carousel"><nv-skeleton count="2"></nv-skeleton></div></nv-card>`,
+  const all=I.carousels||[],slides=all.reduce((n,g)=>n+(g.member_count||(g.members||[]).length),0),plats=[...new Set(all.map(g=>g.platform||"—"))];
+  return{title:"Карусели",sub:anaSub("Рекламные блоки из нескольких объявлений, показанных рядом."),actions:intentControlHtml(),
+  help:{title:"Как читать",steps:["Каждая карточка — одна карусель, слайды идут в порядке показа.","Листайте стрелками, колесом/свайпом или клавишами ← →.","Нажмите на слайд, чтобы открыть объявление целиком."]},
+  body:`<div class="grid g3">${stat("Каруселей",all.length)}${stat("Слайдов всего",slides)}${stat("Площадок",plats.length)}</div>
+  ${plats.length>1?`<nv-segmented label="Площадка" value="${esc(I.carPlat||"all")}" options="${["all:Все"].concat(plats.map(p=>esc(p)+":"+esc(p))).join("|")}" data-chg="anaCarPlat"></nv-segmented>`:""}
+  <div id="an-carousel"><nv-skeleton count="2"></nv-skeleton></div>`,
   after(root){wireAnalyticsTables(root,I)}}},
 campaigns(){
   const I=S.intel.ana;
@@ -3214,8 +3367,9 @@ campaigns(){
     campaigns:`<nv-card heading="Самые частые кампании" subtitle="Топ-10 по числу креативов"><nv-chart id="an-camp-chart" type="hbar" label="Кампании"></nv-chart></nv-card><nv-card flush><nv-table id="an-camp" clickable empty-text="Кампании пока не найдены"></nv-table></nv-card>`,
     keywords:`<nv-card heading="Самые частые слова" subtitle="Топ-10 по числу креативов"><nv-chart id="an-kw-chart" type="hbar" label="Ключевые слова"></nv-chart></nv-card><nv-card flush><nv-table id="an-kw" clickable empty-text="Ключевые слова пока не найдены"></nv-table></nv-card>`
   };
-  return{title:"Кампании и слова",sub:"По campaign_id из разметки и utm_term из ссылки.",actions:intentControlHtml(),
-  body:`<div class="tabbed"><nv-tabs items="campaigns:Кампании|keywords:Ключевые слова" value="${esc(sub)}" data-chg="anaCampSub"></nv-tabs><div class="tab-b" style="padding:16px">${bodies[sub]||bodies.campaigns}</div></div>`,
+  const hints={campaigns:"Рекламные кампании конкурентов (campaign_id из разметки). Нажмите на строку — в библиотеке откроются объявления этой кампании.",keywords:"Ключевые слова, по которым конкуренты запускают рекламу (utm_term из ссылки). Нажмите на строку — откроются связанные объявления."};
+  return{title:"Кампании и слова",sub:anaSub("Какие кампании и ключевые слова стоят за найденной рекламой."),actions:intentControlHtml(),
+  body:`<div class="tabbed"><nv-tabs items="campaigns:Кампании|keywords:Ключевые слова" value="${esc(sub)}" data-chg="anaCampSub"></nv-tabs><p class="tab-hint">${esc(hints[sub]||hints.campaigns)}</p><div class="tab-b" style="padding:16px">${bodies[sub]||bodies.campaigns}</div></div>`,
   after(root){wireAnalyticsTables(root,I)}}},
 fresh(){
   const I=S.intel.ana;
@@ -3227,8 +3381,9 @@ fresh(){
     discounts:`<nv-card flush><nv-table id="an-disc" clickable empty-text="Скидки пока не найдены"></nv-table><div id="an-disc-total" class="muted" style="padding:10px 14px;font-size:12.5px"></div></nv-card>`,
     apps:`<nv-card flush><nv-table id="an-apps" clickable empty-text="Реклама приложений не найдена"></nv-table><div id="an-apps-total" class="muted" style="padding:10px 14px;font-size:12.5px"></div></nv-card>`
   };
-  return{title:"Новое и акции",sub:"Свежие креативы, скидки и реклама приложений.",actions:intentControlHtml(),
-  body:`<div class="tabbed"><nv-tabs items="fresh:Новое за 7 дней|discounts:Со скидкой|apps:Реклама приложений" value="${esc(sub)}" data-chg="anaFreshSub"></nv-tabs><div class="tab-b" style="padding:16px">${bodies[sub]||bodies.fresh}</div></div>`,
+  const hints={fresh:"Объявления, которые парсер впервые заметил за последние 7 дней. Нажмите на строку, чтобы открыть объявление.",discounts:"Объявления с указанной скидкой или ценой — смотрите, чем конкуренты заманивают.",apps:"Реклама мобильных приложений (магазины приложений, установки)."};
+  return{title:"Новое и акции",sub:anaSub("Свежие объявления, скидки и реклама приложений."),actions:intentControlHtml(),
+  body:`<div class="tabbed"><nv-tabs items="fresh:Новое за 7 дней|discounts:Со скидкой|apps:Реклама приложений" value="${esc(sub)}" data-chg="anaFreshSub"></nv-tabs><p class="tab-hint">${esc(hints[sub]||hints.fresh)}</p><div class="tab-b" style="padding:16px">${bodies[sub]||bodies.fresh}</div></div>`,
   after(root){wireAnalyticsTables(root,I)}}},
 platforms(){
   const I=S.intel.ana;
@@ -3237,11 +3392,13 @@ platforms(){
   const sub=I.platSub||"coverage";
   const bodies={
     coverage:`<nv-card heading="Раскрытие рекламодателя по площадкам" subtitle="Доля креативов с известным юрлицом"><nv-chart id="an-cov-chart" type="hbar" label="Раскрытие по площадкам"></nv-chart></nv-card><nv-card flush><nv-table id="an-cov" empty-text="Пока нет данных"></nv-table></nv-card>`,
+    sources:`<nv-card heading="Как распознана площадка" subtitle="Среди последних 200 креативов"><nv-chart id="an-brk-chart" type="hbar" label="Источники"></nv-chart></nv-card><nv-card flush><nv-table id="an-brk" empty-text="Пока нет данных"></nv-table></nv-card>`,
     repeats:`<nv-card flush><nv-table id="an-cross" empty-text="Повторов пока нет"></nv-table></nv-card>`,
     conditions:`<nv-card flush><nv-table id="an-cr" empty-text="Пока нет данных"></nv-table></nv-card>`
   };
-  return{title:"Площадки",sub:"Покрытие, повторы и условия раскрытия по рекламным сетям.",actions:intentControlHtml(),
-  body:`<div class="tabbed"><nv-tabs items="coverage:Покрытие|repeats:Повторы|conditions:Условия" value="${esc(sub)}" data-chg="anaPlatSub"></nv-tabs><div class="tab-b" style="padding:16px">${bodies[sub]||bodies.coverage}</div></div>`,
+  const hints={coverage:"Для каждой рекламной сети: у какой доли объявлений удалось узнать рекламодателя (юрлицо). Чем выше процент — тем надёжнее данные.",sources:"По какому признаку парсер понял, на какой площадке показана реклама (разметка, ссылка, домен и т. д.).",repeats:"Объявления, которые один и тот же рекламодатель крутит сразу на нескольких площадках.",conditions:"При каких условиях (площадка, способ, тип креатива) рекламодатель раскрывается чаще или реже."};
+  return{title:"Площадки и источники",sub:anaSub("Качество данных по рекламным сетям: покрытие, способ распознавания, повторы."),actions:intentControlHtml(),
+  body:`<div class="tabbed"><nv-tabs items="coverage:Покрытие|sources:Как распознали|repeats:Повторы|conditions:Условия" value="${esc(sub)}" data-chg="anaPlatSub"></nv-tabs><p class="tab-hint">${esc(hints[sub]||hints.coverage)}</p><div class="tab-b" style="padding:16px">${bodies[sub]||bodies.coverage}</div></div>`,
   after(root){wireAnalyticsTables(root,I)}}},
 advertisers(){
   const I=S.intel,A=S.intel.ana;
@@ -3256,9 +3413,10 @@ advertisers(){
     mismatch:(A.loading&&!A.loaded)?'<nv-skeleton count="2"></nv-skeleton>':
       `<nv-card flush><nv-table id="an-mis" clickable empty-text="Несовпадений не найдено"></nv-table></nv-card>`
   };
+  const advHints={all:"Компании, чьё юрлицо удалось раскрыть. Нажмите на строку — в библиотеке откроются все их объявления.",growth:"Кто за эту неделю нашёл больше объявлений, чем за прошлую: рост активности конкурента.",mismatch:"Объявления, где сайт рекламодателя и посадочная страница — разные домены (партнёрки, чужие лендинги)."};
   return{title:"Рекламодатели",sub:"Компании с раскрытым юрлицом из найденной рекламы.",
   actions:sub==="all"?`<nv-input icon="search" type="search" placeholder="Название или ИНН" value="${esc(I.advQ)}" data-chg="advQ"></nv-input>`:intentControlHtml(),
-  body:`<div class="tabbed"><nv-tabs items="all:Все|growth:Рост|mismatch:Несовпадение посадочной" value="${esc(sub)}" data-chg="advSub"></nv-tabs><div class="tab-b" style="padding:16px">${bodies[sub]||bodies.all}</div></div>`,
+  body:`<div class="tabbed"><nv-tabs items="all:Все|growth:Рост|mismatch:Несовпадение посадочной" value="${esc(sub)}" data-chg="advSub"></nv-tabs><p class="tab-hint">${esc(advHints[sub]||advHints.all)}</p><div class="tab-b" style="padding:16px">${bodies[sub]||bodies.all}</div></div>`,
   after(root){
     if(sub==="all"){
       if(!I.advertisersLoaded)loadAdvertisers(I.advQ);
@@ -3271,6 +3429,8 @@ advertisers(){
 };
 
 Object.assign(N.acts,{
+  anaGo(a,d){const A=S.intel.ana;if(d.id==="fresh"&&d.sub)A.freshSub=d.sub;if(d.id==="platforms"&&d.sub)A.platSub=d.sub;if(d.id==="campaigns"&&d.sub)A.campSub=d.sub;if(d.id==="advertisers"&&d.sub)S.intel.advSub=d.sub;N.go("intel-"+d.id)},
+  schedAction(a,d){schedAction(d.id,d.a)},
   carouselOpen(a,d){openCreative(d.id)},
   copyField(a,d){const v=d.value||"";const done=()=>toast("Скопировано",{tone:"success"});if(navigator.clipboard)navigator.clipboard.writeText(v).then(done).catch(()=>toast("Браузер запретил копирование. Скопируйте текст вручную",{tone:"warning"}));else toast("Скопируйте текст вручную",{tone:"warning"})},
   cardAddToCollection(a,d){const g=findGroup(d.id);if(!g){toast("Креатив не найден",{tone:"warning"});return}collectDlg([{group_key:g.group_key,creative_id:g.representative.id}])},
@@ -3301,6 +3461,7 @@ N.chg.cmpF=(v,d)=>{S.intel.cmpF[d.key]=v;N.refresh()};
 N.chg.scanF=(v,d)=>{S.intel.scanF[d.key]=v;N.refresh()};
 N.acts.scanFReset=()=>{S.intel.scanF={q:"",status:""};N.refresh()};
 N.chg.intentSet=v=>{const list=v?v.split(","):[];S.intel.activeIntents=list;setActiveIntents(list);loadLibrary();if(S.intel.ana.loaded)loadAnalytics(true);N.refresh()};
+N.chg.anaCarPlat=v=>{S.intel.ana.carPlat=v;N.refresh()};
 N.chg.anaCampSub=v=>{S.intel.ana.campSub=v;N.refresh()};
 N.chg.anaFreshSub=v=>{S.intel.ana.freshSub=v;N.refresh()};
 N.chg.anaPlatSub=v=>{S.intel.ana.platSub=v;N.refresh()};
@@ -3323,11 +3484,10 @@ N.register({id:"intel",name:"Разведка рекламы",short:"Разве�
   ]},
   {group:"Анализ",items:[
     {id:"overview",label:"Обзор",icon:"layout-dashboard"},
-    {id:"sources",label:"Источники",icon:"share-2"},
-    {id:"carousels",label:"Карусели",icon:"gallery-horizontal"},
+    {id:"fresh",label:"Новое и акции",icon:"sparkles",count:()=>S.intel.ana.freshTotal||""},
+    {id:"carousels",label:"Карусели",icon:"gallery-horizontal",count:()=>(S.intel.ana.carousels||[]).length||""},
     {id:"campaigns",label:"Кампании и слова",icon:"target"},
-    {id:"fresh",label:"Новое и акции",icon:"sparkles"},
-    {id:"platforms",label:"Площадки",icon:"radar"},
+    {id:"platforms",label:"Площадки и источники",icon:"radar"},
     {id:"advertisers",label:"Рекламодатели",icon:"building-2"}
   ]}
  ],
