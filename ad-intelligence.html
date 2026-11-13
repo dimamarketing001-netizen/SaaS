@@ -4223,7 +4223,7 @@ accounts(){
         ${stat("Всего в пуле",fmt(sm.total||0),`note="активных ${fmt(sm.active||0)}"`)}
         ${stat("Добавлено сегодня",fmt(sm.added_today||0),`note="за 7 дней ${fmt(sm.added_7d||0)} · в среднем ${sm.avg_added_per_day||0}/день" spark="${esc(JSON.stringify(dl.added||[]))}"`)}
         <nv-share-stat label="Занято рекламой" value="${sm.used||0}" total="${sm.total||0}" tone="accent" note="кампаний ${fmt(sm.campaigns||0)}" hint="Логин уже использован для кампании addAvto (по кампаниям, а не по флагу is_free пула)"></nv-share-stat>
-        <nv-share-stat label="Свободно для запуска" value="${sm.free||0}" total="${sm.total||0}" tone="ok" hint="Активные и ещё не использованные в рекламе"></nv-share-stat>
+        <nv-share-stat label="Свободно для запуска" value="${sm.free||0}" total="${sm.total||0}" tone="ok" note="${sm.no_token?"ещё "+fmt(sm.no_token)+" без токена Метрики":""}" hint="Активные, не использованные в рекламе и с токеном Метрики"></nv-share-stat>
       </div>
       <div class="dash-g4" style="margin-top:12px">
         <nv-share-stat label="С токеном Метрики" value="${sm.with_metrika||0}" total="${sm.total||0}" tone="ok" hint="Без токена Метрики скрипт не создаст счётчик и цель lead"></nv-share-stat>
@@ -4234,13 +4234,13 @@ accounts(){
       <nv-card heading="Добавление и использование по дням" style="margin-top:12px"><nv-chart type="bar" height="230" label="Аккаунтов в день" data="${chart}"></nv-chart></nv-card>
       <nv-card heading="Аккаунты пула" subtitle="Где используется каждый аккаунт. Клик по строке с рекламой открывает проект." style="margin-top:12px">
         <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Логин, проект, аккаунт Click.ru" value="${esc(A.accQuery||"")}" data-chg="adsAccQuery"></nv-input>
-          <nv-segmented value="${esc(f)}" options="all:Все ${items.length}|used:В рекламе ${sm.used||0}|free:Свободные ${sm.free||0}|problem:Проблемные ${sm.problem||0}|expiring:Токен истекает ${sm.token_expiring_30d||0}" data-chg="adsPoolState"></nv-segmented></div>
+          <nv-segmented value="${esc(f)}" options="all:Все ${items.length}|used:В рекламе ${sm.used||0}|free:Свободные ${sm.free||0}|no_token:Без токена ${sm.no_token||0}|problem:Проблемные ${sm.problem||0}|expiring:Токен истекает ${sm.token_expiring_30d||0}" data-chg="adsPoolState"></nv-segmented></div>
         <div class="muted" style="font-size:12.5px;margin:6px 0">Показано ${rows.length} из ${items.length}</div>
         ${rows.length?`<nv-table id="ads-pool-t" page-size="25" clickable></nv-table>`:`<nv-empty icon="users" heading="Аккаунтов не найдено" text="Измените фильтр или поиск."></nv-empty>`}
       </nv-card>`;
     if(rows.length)wireTable(root,"ads-pool-t",rows.map(a=>({id:a.login,...a,_uses:(a.uses||[]).length})),
       [{key:"login",label:"Логин",sort:true,render:a=>`<b>${esc(a.login)}</b>${a.last_error?`<br><span style="font-size:12px;color:var(--bad)">${esc(a.last_error.slice(0,80))}</span>`:""}`},
-       {key:"state",label:"Состояние",sort:true,render:a=>a.state==="used"?'<nv-status value="live" label="В рекламе"></nv-status>':a.state==="free"?'<nv-status value="ready" label="Свободен"></nv-status>':`<nv-status value="failed" label="${esc(POOL_ST[a.status]||a.status||"Проблема")}"></nv-status>`},
+       {key:"state",label:"Состояние",sort:true,render:a=>a.state==="used"?'<nv-status value="live" label="В рекламе"></nv-status>':a.state==="free"?'<nv-status value="ready" label="Свободен"></nv-status>':a.state==="no_token"?'<nv-status value="review" label="Нет токена Метрики" hint="Провижининг такой логин не берёт: без токена не создать счётчик и цель lead"></nv-status>':`<nv-status value="failed" label="${esc(POOL_ST[a.status]||a.status||"Проблема")}"></nv-status>`},
        {key:"_uses",label:"Где используется",sort:true,render:a=>(a.uses||[]).length?(a.uses||[]).map(u=>`<div style="font-size:12.5px"><b>${esc(u.project_name||("Проект "+u.project_id))}</b> <span class="muted">· Click.ru ${esc(String(u.account_id||"—"))} · кампания ${esc(String(u.campaign_id||"—"))}</span></div>`).join(""):'<span class="muted">—</span>'},
        {key:"created_at",label:"Добавлен",sort:true,render:a=>a.created_at?fmtDateTime(a.created_at):"—"},
        {key:"has_metrika_token",label:"Метрика",sort:true,render:a=>a.has_metrika_token?(a.token_days_left!=null&&a.token_days_left<30?`<nv-badge tone="warning">Токен: ${a.token_days_left} дн.</nv-badge>`:'<nv-badge tone="success">Подключена</nv-badge>'):'<nv-badge tone="warning">Нет токена</nv-badge>'},
