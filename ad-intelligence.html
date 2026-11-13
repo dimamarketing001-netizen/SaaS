@@ -50,6 +50,21 @@ nv-carousel.cx-fit .cx-dots{display:none}
 .jump .jn{font:600 26px var(--font-display);line-height:1.1}
 .jump .jt{font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:6px}
 .jump .jd{font-size:12.5px;color:var(--ink-3);line-height:1.35}
+.sch-list{display:flex;flex-direction:column;gap:12px}
+.sch-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.sch-card.off{opacity:.8}
+.sch-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.sch-id h4{font:600 16px var(--font-display);margin:0 0 6px}
+.sch-chips{display:flex;gap:6px;flex-wrap:wrap}
+.sch-chips span{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;color:var(--ink-2);background:var(--surface-2);border-radius:99px;padding:3px 10px}
+.sch-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sch-prog .sch-bar{margin-top:0;height:8px}
+.sch-pl{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-top:6px}
+.sch-pl b{color:var(--ink)}
+.sch-card .sch-tl,.sch-card .sch-tlc,.sch-card .sch-runs{grid-column:auto;margin:0}
+.sch-runs{border-top:1px solid var(--line);padding-top:8px}
+.sr-row{grid-template-columns:64px minmax(0,1.2fr) 110px minmax(0,1.2fr) auto}
+.sr-row .row nv-button[variant=ghost]{opacity:.85}
 .sch-row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1.2fr) minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
 .sch-row:last-child{border-bottom:0}
 .sch-row .st{font-weight:600}.sch-row .ss{font-size:12.5px;color:var(--ink-3)}
@@ -3214,7 +3229,7 @@ function schedRunsHtml(x){
     else body=rr.items.map(r=>{
       const st=SR_ST[r.status]||[r.status,"neutral"],rel=r.relevance;
       const retry=r.status==="queued"&&r.attempts?` · повтор после сбоя, попытка ${r.attempts+1}`:r.status==="failed"&&r.attempts?` · попыток: ${r.attempts}`:"";
-      return `<div class="sr-row"><b>#${r.id}</b><span>${esc(fmtDateTime(r.started_at||r.created_at))}<div class="ss">${r.finished_at?"до "+esc(fmtDateTime(r.finished_at)):esc(retry.slice(3)||"")}</div></span><span><nv-badge tone="${st[1]}">${st[0]}</nv-badge></span><span class="ss">найдено <b>${r.total_creatives||0}</b>${rel&&rel.found?" · по интенту <b>"+rel.relevant+"</b>":""}${r.error_text&&r.status==="failed"?'<br>'+esc(String(r.error_text).slice(0,80)):""}</span><span class="row" style="gap:6px"><nv-button size="sm" variant="ghost" data-act="schedRunOpen" data-id="${r.id}">Подробнее</nv-button>${(r.total_creatives>0)?`<nv-button size="sm" variant="secondary" icon="layout-grid" data-act="schedRunLib" data-id="${r.id}" data-k="${esc(r.key_text||"")}">В библиотеку</nv-button>`:""}</span></div>`}).join("")+(rr.total>rr.items.length?`<div class="ss" style="padding:8px 10px">Показаны последние ${rr.items.length} из ${rr.total}</div>`:"");
+      return `<div class="sr-row"><b>#${r.id}</b><span>${esc(fmtDateTime(r.started_at||r.created_at))}<div class="ss">${r.finished_at?"до "+esc(fmtDateTime(r.finished_at)):esc(retry.slice(3)||"")}</div></span><span><nv-badge tone="${st[1]}">${st[0]}</nv-badge></span><span class="ss">найдено <b>${r.total_creatives||0}</b>${rel&&rel.found?" · по интенту <b>"+rel.relevant+"</b>":""}${r.error_text&&r.status==="failed"?'<br>'+esc(String(r.error_text).slice(0,80)):""}</span><span class="row" style="gap:6px"><nv-button size="sm" variant="secondary" data-act="schedRunOpen" data-id="${r.id}">Подробнее</nv-button>${(r.total_creatives>0)?`<nv-button size="sm" variant="secondary" icon="layout-grid" data-act="schedRunLib" data-id="${r.id}" data-k="${esc(r.key_text||"")}">В библиотеку</nv-button>`:""}</span></div>`}).join("")+(rr.total>rr.items.length?`<div class="ss" style="padding:8px 10px">Показаны последние ${rr.items.length} из ${rr.total}</div>`:"");
   }
   return `<details class="sch-runs" data-sid="${x.id}" ${open?"open":""}><summary>Запуски расписания · ${x.runs_created}</summary>${body}</details>`;
 }
@@ -3237,13 +3252,16 @@ function schedulesHtml(list){
   if(!list.length)return `<nv-card><nv-empty icon="calendar-clock" heading="${S.intel.schedTab==="ended"?"Завершённых расписаний нет":"Активных расписаний нет"}" text="При создании сканирования выберите «Как часто запускать» — например, 3 раза в день на 7 дней."><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>`;
   const rows=list.map(x=>{
     const pct=x.runs_total?Math.min(100,Math.round(x.runs_created/x.runs_total*100)):0,st=SCHED_STATUS[x.status]||[x.status,"neutral"],live=x.status==="active"||x.status==="paused";
-    return `<div class="sch-row"><div><div class="st">${esc(x.key_text)}</div><div class="ss">${esc(x.city)} · ${x.runs_per_day} ${plural(x.runs_per_day,"раз","раза","раз")} в день × ${x.duration_days} дн.</div></div>
-    <div><nv-badge tone="${st[1]}">${st[0]}</nv-badge><div class="sch-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div><div class="ss">Запущено ${x.runs_created} из ${x.runs_total}${x.runs_skipped?" · пропущено "+x.runs_skipped:""}</div></div>
-    <div class="ss">${x.status==="active"&&x.next_run_at?"Следующий запуск:<br><b>"+esc(fmtDateTime(x.next_run_at))+"</b>":x.status==="paused"?"Запуски приостановлены":"Закончено: "+esc(fmtDateTime(x.finished_at||x.end_at))}</div>
-    <div class="sch-act">${live?(x.status==="active"?`<nv-button size="sm" variant="secondary" icon="pause" data-act="schedAction" data-id="${x.id}" data-a="pause">Пауза</nv-button>`:`<nv-button size="sm" variant="secondary" icon="play" data-act="schedAction" data-id="${x.id}" data-a="resume">Продолжить</nv-button>`)+`<nv-button size="sm" variant="ghost" icon="x" icon-only hint="Остановить" data-act="schedAction" data-id="${x.id}" data-a="cancel"></nv-button>`:""}</div>
-    ${schedTimeline(x)}${schedRunsHtml(x)}</div>`;
+    const btn=live?(x.status==="active"?`<nv-button size="sm" variant="secondary" icon="pause" data-act="schedAction" data-id="${x.id}" data-a="pause">Пауза</nv-button>`:`<nv-button size="sm" variant="primary" icon="play" data-act="schedAction" data-id="${x.id}" data-a="resume">Продолжить</nv-button>`)+`<nv-button size="sm" variant="ghost" icon="x" data-act="schedAction" data-id="${x.id}" data-a="cancel" hint="Остановить расписание насовсем">Остановить</nv-button>`:"";
+    const nextTxt=x.status==="active"&&x.next_run_at?`Следующий запуск <b>${esc(fmtDateTime(x.next_run_at))}</b>`:x.status==="paused"?"Запуски приостановлены":`Закончено ${esc(fmtDateTime(x.finished_at||x.end_at))}`;
+    return `<section class="sch-card${live?"":" off"}">
+      <div class="sch-top"><div class="sch-id"><h4>${esc(x.key_text)}</h4><div class="sch-chips"><span>${ic("map-pin",12)} ${esc(x.city)}</span><span>${ic("repeat",12)} ${x.runs_per_day} ${plural(x.runs_per_day,"раз","раза","раз")} в день</span><span>${ic("calendar",12)} ${x.duration_days} дн.</span></div></div>
+        <div class="sch-right"><nv-badge tone="${st[1]}">${st[0]}</nv-badge>${btn}</div></div>
+      <div class="sch-prog"><div class="sch-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
+        <div class="sch-pl"><span>Запущено <b>${x.runs_created}</b> из ${x.runs_total}${x.runs_skipped?" · пропущено "+x.runs_skipped:""}</span><span>${nextTxt}</span></div></div>
+      ${schedTimeline(x)}${schedRunsHtml(x)}</section>`;
   }).join("");
-  return `<nv-card>${rows}</nv-card>`;
+  return `<div class="sch-list">${rows}</div>`;
 }
 async function openScanDetail(job){
   let data;
