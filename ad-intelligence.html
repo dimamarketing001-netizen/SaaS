@@ -2636,7 +2636,7 @@ function groupRealCreatives(items){
 }
 
 const seed=()=>({
-  f:{q:"",platform:"",format:"",saved:"",sort:"recent",period:"",page:1,pageSize:25},
+  f:{q:"",platform:"",format:"",saved:"",job:"",sort:"recent",period:"",page:1,pageSize:25},
   savedViews:loadSavedViews(),
   lib:{groups:[],total:0,loaded:false,loading:false},
   sel:[],cmp:[],cmpF:{q:"",platform:"",format:"",period:"",adv:""},
@@ -2654,8 +2654,8 @@ function findGroup(id){
   for(const p of pools){const g=p.find(x=>String(x.representative.id)===String(id));if(g)return g}
   return null;
 }
-function anyF(){const f=S.intel.f;return f.q||f.platform||f.format||f.saved||(f.period&&f.period!=="all")}
-const VIEW_FIELDS=["q","platform","format","saved","sort","period"];
+function anyF(){const f=S.intel.f;return f.q||f.platform||f.format||f.saved||f.job||(f.period&&f.period!=="all")}
+const VIEW_FIELDS=["q","platform","format","saved","job","sort","period"];
 const viewKey=f=>JSON.stringify(VIEW_FIELDS.map(k=>f[k]||""));
 function activeViewId(){const f=S.intel.f,key=viewKey(f),v=S.intel.savedViews.find(x=>viewKey(x.f)===key);return v?v.id:""}
 function filtered(){
@@ -2751,6 +2751,8 @@ async function loadLibrary(extra){
   const I=S.intel;I.lib.loading=true;N.refreshIf("intel-library","intel-compare");
   const params={sort:I.f.sort==="discount"?"discount":"recent",limit:120};
   if(I.f.q)params.q=I.f.q;
+  // Фильтр по запуску: показываем креативы именно этого задания, без сужения по активному интенту
+  if(I.f.job){params.job_id=I.f.job;params.intent=""}
   const rg=NEONUI.rangeOf(I.f.period);
   if(rg)params.date_from=new Date(rg[0]).toISOString().slice(0,10);
   Object.assign(params,extra||{});
@@ -2784,13 +2786,22 @@ async function filterBySearch(q){
   toast("Показаны результаты поиска «"+q+"»",{tone:"success"});
 }
 async function filterByJob(jobId,label){
-  try{
-    const data=await api("/api/v1/creatives",{job_id:jobId,limit:60,sort:"recent"});
-    S.intel.lib.groups=groupRealCreatives(data.items);S.intel.lib.total=data.total;S.intel.lib.loaded=true;
-    Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:""});
-    N.go("intel-library");
-    toast("Показаны креативы задания «"+label+"»",{tone:"success"});
-  }catch(err){toast("Не удалось загрузить: "+(err.message||""),{tone:"danger"})}
+  Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:String(jobId),page:1});
+  await loadLibrary();
+  N.go("intel-library");
+  toast("Показаны креативы запуска #"+jobId+(label?" «"+label+"»":"")+". Сбросить фильтр — кнопка над списком",{tone:"success"});
+}
+/* Список запусков для фильтра «Запуск» в библиотеке */
+function jobFilterOptions(){
+  const f=S.intel.f,clean=t=>String(t||"").replace(/[:|]/g," ").trim();
+  const list=(S.intel.scans||[]).filter(j=>j.total>0||String(j.id)===String(f.job));
+  const d=iso=>{const x=new Date(iso);return isNaN(x)?"":x.toLocaleDateString("ru-RU",{day:"2-digit",month:"2-digit"})+" "+x.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})};
+  return ":Все запуски"+list.map(j=>"|"+j.id+":"+clean("#"+j.id+" · "+(j.key_text||"")+" · "+d(j.created_at)+" · "+j.total+" крео.")).join("");
+}
+function jobBannerHtml(){
+  const f=S.intel.f;if(!f.job)return"";
+  const j=(S.intel.scans||[]).find(x=>String(x.id)===String(f.job));
+  return `<div class="row between" style="gap:10px;align-items:center;background:var(--info-bg);color:var(--info);border-radius:12px;padding:9px 12px;font-size:13px"><span>${ic("filter",14)} Показаны креативы только запуска <b>#${esc(f.job)}</b>${j?" · «"+esc(j.key_text||"")+"»":""}</span><nv-button size="sm" variant="secondary" icon="x" data-act="libJobReset">Показать все запуски</nv-button></div>`;
 }
 async function filterByAdvertiser(inn,name){
   try{
@@ -3231,7 +3242,8 @@ library(){
   actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
   help:{title:"С чего начать",steps:["Запустите сканирование по своему запросу и городу.","Откройте креатив — там цена, ERID и ссылка.","Сохраняйте находки или собирайте их в подборки."]},
   body:`<div class="grid g4">${stat("Показано карточек",r.length)}${stat("Всего по интенту",I.lib.total||0,'hint="Общее число после группировки одинаковых объявлений"')}${stat("С кодом ERID",erid,'note="из загруженных"')}${stat("В избранном",savedN,'note="из загруженных"')}</div>
-  <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст, домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select><nv-select label="Сортировка" value="${f.sort}" options="recent:Сначала новые|oldest:Сначала старые|name:Домен А-Я" data-chg="libF" data-key="sort"></nv-select><nv-select label="На странице" value="${+f.pageSize||25}" options="25:25|50:50|100:100|200:200" data-chg="libF" data-key="pageSize"></nv-select>${intentControlHtml()}</div>
+  <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст, домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-select label="Запуск" value="${esc(f.job||"")}" options="${esc(jobFilterOptions())}" data-chg="libF" data-key="job"></nv-select><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select><nv-select label="Сортировка" value="${f.sort}" options="recent:Сначала новые|oldest:Сначала старые|name:Домен А-Я" data-chg="libF" data-key="sort"></nv-select><nv-select label="На странице" value="${+f.pageSize||25}" options="25:25|50:50|100:100|200:200" data-chg="libF" data-key="pageSize"></nv-select>${intentControlHtml()}</div>
+  ${jobBannerHtml()}
   <nv-saved-views id="lib-views" views="${esc(JSON.stringify(I.savedViews.map(v=>({id:v.id,name:v.name}))))}" value="${esc(activeViewId())}" can-save></nv-saved-views>
   <div id="lib-count" class="muted" style="font-size:13px"></div></div><div id="lib-res">${I.lib.loading&&!I.lib.loaded?'<nv-skeleton count="6"></nv-skeleton>':""}</div><div id="lib-page" class="row" style="justify-content:center;margin-top:16px"></div><div class="bulk" id="lib-bulk" hidden></div>`,
   after(root){
@@ -3434,7 +3446,8 @@ Object.assign(N.acts,{
   carouselOpen(a,d){openCreative(d.id)},
   copyField(a,d){const v=d.value||"";const done=()=>toast("Скопировано",{tone:"success"});if(navigator.clipboard)navigator.clipboard.writeText(v).then(done).catch(()=>toast("Браузер запретил копирование. Скопируйте текст вручную",{tone:"warning"}));else toast("Скопируйте текст вручную",{tone:"warning"})},
   cardAddToCollection(a,d){const g=findGroup(d.id);if(!g){toast("Креатив не найден",{tone:"warning"});return}collectDlg([{group_key:g.group_key,creative_id:g.representative.id}])},
-  libReset(){Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:""});loadLibrary()},
+  libReset(){Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:""});loadLibrary()},
+  libJobReset(){S.intel.f.job="";S.intel.f.page=1;loadLibrary()},
   bulkSave(){const set=new Set(S.intel.savedIds);S.intel.sel.forEach(g=>set.add(String(g.representative.id)));S.intel.savedIds=[...set];persistSavedCreativeIds(S.intel.savedIds);const n=S.intel.sel.length;S.intel.sel=[];N.refresh();toast("В избранное добавлено: "+n,{tone:"success"})},
   bulkCollect(){collectDlg(S.intel.sel.map(g=>({group_key:g.group_key,creative_id:g.representative.id})))},
   bulkCompare(){S.intel.cmp=[...S.intel.sel];S.intel.sel=[];N.go("intel-compare")},
@@ -3451,6 +3464,7 @@ Object.assign(N.acts,{
 N.chg.libF=(v,d)=>{
   if(d.key==="pageSize"){S.intel.f.pageSize=+v||25;S.intel.f.page=1;libRes();return}
   S.intel.f[d.key]=v;S.intel.f.page=1;
+  if(d.key==="job"){loadLibrary();return}
   if(d.key==="q"){clearTimeout(S.intel._qT);S.intel._qT=setTimeout(()=>loadLibrary(),400)}
   else if(d.key==="period")loadLibrary();
   else libRes();
@@ -3550,7 +3564,9 @@ function saveRep(){const r=S.ads.rep;try{localStorage.setItem(REP_KEY,JSON.strin
 async function loadReport(refresh){
   const A=S.ads,r=A.rep;r.loading=true;N.refreshIf("ads-report");
   try{
-    r.data=await api("/api/v1/ads/ads-dashboard",{date_from:r.dateFrom,date_to:r.dateTo,project_ids:r.projects||undefined,threshold:r.threshold,refresh:refresh?"true":undefined});
+    const per=String(r.period||"30"),cust=per.includes("..")?per.split(".."):null;
+    // presets -> days: the server counts the range by ITS clock (browser clocks may be wrong, 2026-11-13)
+    r.data=await api("/api/v1/ads/ads-dashboard",{date_from:cust?cust[0]:undefined,date_to:cust?cust[1]:undefined,days:cust?undefined:per,project_ids:r.projects||undefined,threshold:r.threshold,refresh:refresh?"true":undefined});
     r.loaded=true;(r.data.errors||[]).forEach(e=>toast("Статистика Click.ru: "+e,{tone:"warning"}));
   }catch(err){toast("Не удалось загрузить отчёт: "+(err.message||""),{tone:"danger"})}
   r.loading=false;N.refreshIf("ads-report");
@@ -4419,15 +4435,15 @@ report(){
     <nv-button icon="refresh-cw" data-act="adsRepLoad" hint="Заново спросить Click.ru и Директ, включая статусы">Обновить</nv-button></div>
   <div id="ads-rep-res">${r.loading&&!d?'<nv-skeleton count="6"></nv-skeleton>':""}</div>`,
   after(root){
-    if(!r.dateFrom){const rg=NEONUI.rangeOf(r.period||"30")||NEONUI.rangeOf("30");
-      r.dateFrom=new Date(rg[0]).toISOString().slice(0,10);r.dateTo=new Date(rg[1]).toISOString().slice(0,10)}
     if(!r.loaded&&!r.loading){loadReport();return}
     const el=root.querySelector("#ads-rep-res");if(!d||!el)return;
     const sm=d.summary||{},t=d.totals||{},th=sm.threshold,rub=v=>v==null?"—":fmt(Math.round(v))+" ₽",rub2=v=>v==null?"—":Number(v).toLocaleString("ru-RU",{maximumFractionDigits:2})+" ₽";
     const items=(d.items||[]).filter(a=>(!r.status||r.status.split(",").includes((a.status||{}).code||"unknown"))&&(!r.q||(a.pool_login+" "+a.account_id+" "+(a.project_name||"")).toLowerCase().includes(r.q.toLowerCase())));
     const by=sm.by_status||{};
     const chart=(keys,names,type)=>esc(JSON.stringify({labels:(d.daily.labels||[]).map(x=>x.slice(8,10)+"."+x.slice(5,7)),series:keys.map((k,i)=>({name:names[i],values:d.daily[k]||[]}))}));
+    const dd=x=>x?x.slice(8,10)+"."+x.slice(5,7)+"."+x.slice(0,4):"";
     el.innerHTML=`${r.loading?'<nv-progress value="60" label="Обновляю…"></nv-progress>':""}
+      ${d.date_from?`<div class="muted" style="font-size:12.5px;margin:0 0 8px">Период отчёта: ${dd(d.date_from)} – ${dd(d.date_to)}</div>`:""}
       <div class="dash-g4">
         <nv-share-stat label="Аккаунты с показами" value="${sm.with_any_impressions||0}" total="${sm.accounts||0}" note="забанено ${by.banned||0}" hint="Сколько аккаунтов выбранных проектов получили хотя бы один показ за период"></nv-share-stat>
         <nv-share-stat label="Показов больше ${th}" value="${sm.with_impressions||0}" total="${sm.accounts||0}" tone="accent"></nv-share-stat>
@@ -4485,8 +4501,7 @@ N.chg.adsPoolDays=v=>{S.ads.poolDays=+v||30;loadPool()};
 N.acts.adsPoolLoad=()=>loadPool();
 const POOL_ST={active:"Активен",invalid_cookies:"Протухли cookies",banned:"Забанен",blocked:"Заблокирован",error:"Ошибка"};
 N.chg.adsRepPeriod=v=>{
-  const rg=NEONUI.rangeOf(v)||NEONUI.rangeOf("30");S.ads.rep.period=v;
-  S.ads.rep.dateFrom=new Date(rg[0]).toISOString().slice(0,10);S.ads.rep.dateTo=new Date(rg[1]).toISOString().slice(0,10);
+  S.ads.rep.period=v||"30";
   saveRep();loadReport();
 };
 N.chg.adsRepProjects=v=>{S.ads.rep.projects=v==="_"?"":v;saveRep();loadReport()};
