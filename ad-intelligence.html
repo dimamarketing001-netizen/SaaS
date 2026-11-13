@@ -50,6 +50,7 @@ nv-carousel.cx-fit .cx-dots{display:none}
 .jump .jn{font:600 26px var(--font-display);line-height:1.1}
 .jump .jt{font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:6px}
 .jump .jd{font-size:12.5px;color:var(--ink-3);line-height:1.35}
+.rid{font:600 12px var(--font-mono);color:var(--ink-3);background:var(--surface-2);border-radius:6px;padding:1px 6px;margin-right:4px;vertical-align:1px}
 .sch-list{display:flex;flex-direction:column;gap:12px}
 .sch-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:14px;min-width:0}
 .sch-card.off{opacity:.8}
@@ -1844,12 +1845,13 @@ define("nv-scan-card",class extends NvEl{
   html(){
     const st=this.a("status"),pctRaw=this.a("pct"),known=pctRaw!=="",pct=known?Math.max(0,Math.min(100,+pctRaw)):0,indet=this.b("indeterminate");
     const title=this.a("title"),initials=(title||"??").slice(0,2).toUpperCase();
-    return `<article class="int scanc"><div class="h"><span class="lg" style="color:var(--svc-ink)">${esc(initials)}</span><div><h4>${esc(title)}</h4>${this.a("subtitle")?`<div class="cat">${esc(this.a("subtitle"))}</div>`:""}</div></div>
+    return `<article class="int scanc"><div class="h"><span class="lg" style="color:var(--svc-ink)">${esc(initials)}</span><div><h4>${this.a("rid")?`<span class="rid" title="Номер запуска">#${esc(this.a("rid"))}</span> `:""}${esc(title)}</h4>${this.a("subtitle")?`<div class="cat">${esc(this.a("subtitle"))}</div>`:""}</div></div>
     <div class="scanc-bar t-${esc(st)}${indet?" indet":""}"><i style="width:${indet?100:pct}%"></i></div>
     <p${this.a("relevant")!==""?` title="Интент креатива относится к ключевому слову запуска (по оценке Gemini)${+this.a("rel-pending")?"; ещё определяется: "+esc(this.a("rel-pending")):""}"`:""}>${esc(this.a("note"))} · ${esc(this.a("found"))} найдено${this.a("relevant")!==""?` · ${esc(this.a("relevant"))} по интенту`:""}</p>
     <div class="f"><nv-status value="${esc(st)}"></nv-status><span class="int-actions" data-slot></span></div></article>`;
   }
 },"Предметные",{desc:"Карточка задания сканирования: статус, линия прогресса/ETA, что уже найдено.",slot:"Кнопки действий",demoHtml:'<nv-button size="sm" variant="secondary" icon="external-link" icon-only hint="Открыть">Открыть</nv-button>',previewW:300,attrs:{
+  rid:{type:"string",default:"142",desc:"Номер запуска (показывается перед названием)"},
   title:{type:"string",default:"кроссовки",desc:"Запрос"},
   subtitle:{type:"string",default:"Москва",desc:"Город"},
   status:{type:"enum",values:["queued","running","done","failed"],default:"running",desc:"Статус (совпадает со значениями nv-status)"},
@@ -3520,7 +3522,7 @@ scans(){
   <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Запрос или город" value="${esc(sf.q)}" data-chg="scanF" data-key="q"></nv-input><nv-select label="Статус" value="${esc(sf.status)}" options=":Все статусы|queued:В очереди|running:Выполняется|succeeded:Завершено|failed:Ошибка" data-chg="scanF" data-key="status"></nv-select>${(sf.q||sf.status)?'<nv-button variant="ghost" size="sm" icon="x" data-act="scanFReset">Сбросить</nv-button>':""}</div>
   ${schedBanner()}
   <div class="grid g4lg">${rows.length?rows.map(s=>{const info=scanCardInfo(s,medianMs);
-    return `<nv-scan-card title="${esc(s.key_text)}" subtitle="${esc((s.city||"")+(s.schedule_id?" · по расписанию":""))}" status="${esc(info.status)}" pct="${esc(info.pct)}" ${info.indeterminate?"indeterminate":""} note="${esc(info.note)}" found="${esc(s.total||0)}" ${s.rel?`relevant="${s.rel.relevant}" rel-of="${s.rel.found}" rel-pending="${s.rel.pending||""}"`:""}><nv-button size="sm" variant="secondary" icon="external-link" icon-only hint="Открыть" data-act="scanOpen" data-id="${esc(s.id)}">Открыть</nv-button>${(s.total>0||s.status==="succeeded")?`<nv-button size="sm" variant="secondary" icon="layout-grid" icon-only hint="${s.status==="running"||s.status==="queued"?"Показать уже найденное (запуск ещё идёт)":"Показать в библиотеке"}" data-act="scanToLib" data-id="${esc(s.id)}">БиблиотекаПоказать в библиотеке</nv-button>`:""}</nv-scan-card>`;
+    return `<nv-scan-card rid="${esc(s.id)}" title="${esc(s.key_text)}" subtitle="${esc((s.city||"")+(s.schedule_id?" · по расписанию":""))}" status="${esc(info.status)}" pct="${esc(info.pct)}" ${info.indeterminate?"indeterminate":""} note="${esc(info.note)}" found="${esc(s.total||0)}" ${s.rel?`relevant="${s.rel.relevant}" rel-of="${s.rel.found}" rel-pending="${s.rel.pending||""}"`:""}><nv-button size="sm" variant="secondary" icon="external-link" icon-only hint="Открыть" data-act="scanOpen" data-id="${esc(s.id)}">Открыть</nv-button>${(s.total>0||s.status==="succeeded")?`<nv-button size="sm" variant="secondary" icon="layout-grid" icon-only hint="${s.status==="running"||s.status==="queued"?"Показать уже найденное (запуск ещё идёт)":"Показать в библиотеке"}" data-act="scanToLib" data-id="${esc(s.id)}">БиблиотекаПоказать в библиотеке</nv-button>`:""}</nv-scan-card>`;
   }).join(""):'<nv-card><nv-empty icon="search-x" heading="Заданий не найдено" text="Измените фильтры или создайте новое сканирование."><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>'}</div>`,
   after(root){
     if(!S.intel.scansLoaded)loadScans();
