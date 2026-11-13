@@ -3057,7 +3057,8 @@ function gridOfCollectionItems(items,colId){
 async function loadScans(){
   try{
     const data=await api("/api/v1/runs",{limit:50});
-    S.intel.scans=(data.items||[]).map(r=>({id:r.id,key_text:r.key_text,city:r.city,status:r.status,total:r.total_creatives||0,created_at:r.created_at,started_at:r.started_at,finished_at:r.finished_at,error_text:r.error_text,schedule_id:r.schedule_id,rel:r.relevance||null}));
+    S.intel.scans=(data.items||[]).map(r=>({id:r.id,key_text:r.key_text,city:r.city,status:r.status,total:r.total_creatives||0,created_at:r.created_at,started_at:r.started_at,finished_at:r.finished_at,error_text:r.error_text,schedule_id:r.schedule_id,rel:r.relevance||null,stage:r.stage||null}));
+    S.intel.eta=data.eta||null;
     S.intel.scansLoaded=true;
     loadSchedules();
     clearTimeout(S.intel._scanPoll);
@@ -3065,8 +3066,17 @@ async function loadScans(){
     N.refreshIf("intel-scans");
   }catch(err){S.intel.scansLoaded=true;toast("Не удалось загрузить сканирования: "+(err.message||""),{tone:"danger"});N.refreshIf("intel-scans")}
 }
-function fmtMinutes(ms){const m=Math.round(ms/60000);return m<1?"меньше минуты":m+" мин"}
+function fmtMinutes(ms){const m=Math.round(ms/60000);return m<1?"меньше минуты":m<60?m+" мин":Math.floor(m/60)+" ч"+(m%60?" "+(m%60)+" мин":"")}
 /* Медиана длительности уже завершённых заданий — единственная честная база для оценки ETA у текущих. */
+/* Среднее время ПОЛНЫХ запусков (все площадки, без обрывов) — считает сервер по последним 5 */
+function fullRunMs(){const e=S.intel.eta;return e&&e.avg_full_seconds?e.avg_full_seconds*1000:null}
+function stageText(st){
+  if(!st)return"";
+  if(st.kind==="sites")return"площадка "+st.index+" из "+st.total;
+  if(st.kind==="dzen_main")return st.index?"Дзен, проход "+st.index+" из "+st.total:"Дзен"+(st.scroll?", прокрутка "+st.scroll+" из "+st.scroll_total:"");
+  if(st.kind==="dzen_search")return"Дзен, предварительный поиск";
+  return"";
+}
 function scanDurationMedian(list){
   const durs=list.filter(s=>s.status==="succeeded"&&s.started_at&&s.finished_at).map(s=>new Date(s.finished_at)-new Date(s.started_at)).filter(d=>d>0).sort((a,b)=>a-b);
   return durs.length?durs[Math.floor(durs.length/2)]:null;
@@ -3081,10 +3091,11 @@ function scanCardInfo(s,medianMs){
     return{status:"failed",pct:"100",note:durMs!=null?"Ошибка через "+fmtMinutes(durMs):"Ошибка"};
   }
   if(s.status==="queued")return{status:"queued",pct:"0",note:"Ждёт воркера"};
-  if(!s.started_at||!medianMs)return{status:"running",pct:"",indeterminate:true,note:"Идёт сканирование…"};
+  const stg=stageText(s.stage),pre=stg?stg+" · ":"";
+  if(!s.started_at||!medianMs)return{status:"running",pct:"",indeterminate:true,note:pre+"Идёт сканирование…"};
   const elapsed=Date.now()-new Date(s.started_at),remain=medianMs-elapsed;
   const pct=Math.max(5,Math.min(96,Math.round(elapsed/medianMs*100)));
-  return{status:"running",pct:String(pct),note:remain>0?"~"+fmtMinutes(remain)+" осталось":"дольше обычного ("+fmtMinutes(elapsed)+")"};
+  return{status:"running",pct:String(pct),note:pre+(remain>0?"~"+fmtMinutes(remain)+" осталось":"дольше обычного ("+fmtMinutes(elapsed)+")")};
 }
 const FREQ_OPTS="once:Один раз|1:1 раз в день|2:2 раза в день|3:3 раза в день|4:4 раза в день|6:6 раз в день|8:8 раз в день|12:12 раз в день";
 const DAYS_OPTS="7:7 дней|14:14 дней|30:30 дней";
@@ -3401,7 +3412,7 @@ scans(){
     if(q&&!((s.key_text||"")+" "+(s.city||"")).toLowerCase().includes(q))return false;
     return true;
   });
-  const medianMs=scanDurationMedian(L);
+  const medianMs=fullRunMs()||scanDurationMedian(L);
   return{title:"Сканирования",sub:"Задания для парсера: что искать, где и как часто.",actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
   help:{steps:["Создайте задание: запрос, город и (по желанию) как часто повторять — например, 3 раза в день на 7 дней.","Воркер заберёт его из очереди при следующем опросе.","Расписания можно ставить на паузу и останавливать в блоке «Расписания». Когда статус станет «Завершено», реклама появится в библиотеке."]},
   body:`<div class="grid g4">${stat("Всего задач",total)}${stat("Выполняется",active)}${stat("Завершено",done)}${stat("Ошибка",failed)}</div>
