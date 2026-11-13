@@ -2785,7 +2785,9 @@ function intentControlHtml(){
 
 /* ---------- Библиотека ---------- */
 async function loadLibrary(extra){
-  const I=S.intel;I.lib.loading=true;N.refreshIf("intel-library","intel-compare");
+  const I=S.intel;I.lib.loading=true;
+  const seq=I._libSeq=(I._libSeq||0)+1;  // ответы приходят в любом порядке — учитываем только последний запрос
+  if(document.getElementById("lib-res"))libRes();else N.refreshIf("intel-library","intel-compare");
   const params={sort:I.f.sort==="discount"?"discount":"recent",limit:120};
   if(I.f.q)params.q=I.f.q;
   // Фильтр по запуску: показываем креативы именно этого задания, без сужения по ключевому слову
@@ -2796,15 +2798,13 @@ async function loadLibrary(extra){
   Object.assign(params,extra||{});
   try{
     const data=await api("/api/v1/creatives",params);
+    if(seq!==I._libSeq)return;
     I.lib.groups=groupRealCreatives(data.items);
     I.lib.total=data.total;
     I.lib.loaded=true;
-  }catch(err){I.lib.loaded=true;toast("Не удалось загрузить креативы: "+(err.message||""),{tone:"danger"})}
+  }catch(err){if(seq!==I._libSeq)return;I.lib.loaded=true;toast("Не удалось загрузить креативы: "+(err.message||""),{tone:"danger"})}
   I.lib.loading=false;
   N.refreshIf("intel-library","intel-compare");
-  // Запуск ещё идёт — найденное показываем сразу и подтягиваем новое каждые 15 с
-  clearTimeout(I._libLive);
-  if(I.f.job&&jobIsLive(I.f.job)){I._libLive=setTimeout(()=>{if(I.f.job&&jobIsLive(I.f.job)&&N.route&&N.route().v==="library")loadLibrary()},15000)}
   if(!I._aiT||Date.now()-I._aiT>30000||(I._aiJob||"")!==String(I.f.job||""))loadAiIntents();
 }
 function closeAllLayers(){document.querySelectorAll(".ov [data-x]").forEach(b=>b.click())}
@@ -2884,7 +2884,7 @@ function jobFilterOptions(){
 function jobBannerHtml(){
   const f=S.intel.f;if(!f.job)return"";
   const j=(S.intel.scans||[]).find(x=>String(x.id)===String(f.job));
-  return `<div class="row between" style="gap:10px;align-items:center;background:var(--info-bg);color:var(--info);border-radius:12px;padding:9px 12px;font-size:13px"><span>${ic("filter",14)} Показаны креативы только запуска <b>#${esc(f.job)}</b>${j?" · «"+esc(j.key_text||"")+"»":""}${jobIsLive(f.job)?" · <b>запуск ещё идёт</b> — найденное уже тут, список обновляется сам":""}</span><span class="row" style="gap:8px;align-items:center;flex-wrap:wrap">${relCheckHtml()}<nv-button size="sm" variant="secondary" icon="x" data-act="libJobReset">Показать все запуски</nv-button></span></div>`;
+  return `<div class="row between" style="gap:10px;align-items:center;background:var(--info-bg);color:var(--info);border-radius:12px;padding:9px 12px;font-size:13px"><span>${ic("filter",14)} Показаны креативы только запуска <b>#${esc(f.job)}</b>${j?" · «"+esc(j.key_text||"")+"»":""}${jobIsLive(f.job)?" · <b>запуск ещё идёт</b> — найденное уже тут, новое подтянется по кнопке «Обновить»":""}</span><span class="row" style="gap:8px;align-items:center;flex-wrap:wrap">${relCheckHtml()}${jobIsLive(f.job)?'<nv-button size="sm" variant="secondary" icon="refresh-cw" data-act="libRefresh">Обновить</nv-button>':""}<nv-button size="sm" variant="secondary" icon="x" data-act="libJobReset">Показать все запуски</nv-button></span></div>`;
 }
 async function filterByAdvertiser(inn,name){
   try{
@@ -3563,6 +3563,7 @@ Object.assign(N.acts,{
   carouselOpen(a,d){openCreative(d.id)},
   copyField(a,d){const v=d.value||"";const done=()=>toast("Скопировано",{tone:"success"});if(navigator.clipboard)navigator.clipboard.writeText(v).then(done).catch(()=>toast("Браузер запретил копирование. Скопируйте текст вручную",{tone:"warning"}));else toast("Скопируйте текст вручную",{tone:"warning"})},
   cardAddToCollection(a,d){const g=findGroup(d.id);if(!g){toast("Креатив не найден",{tone:"warning"});return}collectDlg([{group_key:g.group_key,creative_id:g.representative.id}])},
+  libRefresh(){loadScans();loadLibrary()},
   libReset(){Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:"",rel:"all",aiIntent:""});loadLibrary()},
   runOpen(a,d){openScanDetail({id:+d.id})},
   aiFilter(a,d){closeAllLayers();Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:"",aiIntent:d.v,page:1});loadLibrary();N.go("intel-library")},
