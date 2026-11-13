@@ -3806,15 +3806,41 @@ async function loadConnection(){
 const REP_KEY="parsya_ads_report";
 try{Object.assign(S.ads.rep,JSON.parse(localStorage.getItem(REP_KEY)||"{}"),{loaded:false,loading:false,data:null})}catch(e){}
 function saveRep(){const r=S.ads.rep;try{localStorage.setItem(REP_KEY,JSON.stringify({period:r.period,projects:r.projects,threshold:r.threshold,status:r.status}))}catch(e){}}
+// Отчёт (2026-11-13): цифры — сразу и без статусов (Click.ru /stat < 1 с),
+// статусы — следом по проектам (каждый — до ~20 с из-за лимитов Click.ru).
+// Таймаут 60 с: индикатор «Обновляю…» больше не висит бесконечно.
+function withTimeout(p,ms,what){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error(what+": нет ответа за "+Math.round(ms/1000)+" с")),ms))])}
 async function loadReport(refresh){
-  const A=S.ads,r=A.rep;r.loading=true;N.refreshIf("ads-report");
+  const A=S.ads,r=A.rep,seq=(r.seq||0)+1;r.seq=seq;r.loading=true;N.refreshIf("ads-report");
   try{
     const per=String(r.period||"30"),cust=per.includes("..")?per.split(".."):null;
     // presets -> days: the server counts the range by ITS clock (browser clocks may be wrong, 2026-11-13)
-    r.data=await api("/api/v1/ads/ads-dashboard",{date_from:cust?cust[0]:undefined,date_to:cust?cust[1]:undefined,days:cust?undefined:per,project_ids:r.projects||undefined,threshold:r.threshold,refresh:refresh?"true":undefined});
-    r.loaded=true;(r.data.errors||[]).forEach(e=>toast("Статистика Click.ru: "+e,{tone:"warning"}));
-  }catch(err){toast("Не удалось загрузить отчёт: "+(err.message||""),{tone:"danger"})}
+    const data=await withTimeout(api("/api/v1/ads/ads-dashboard",{date_from:cust?cust[0]:undefined,date_to:cust?cust[1]:undefined,days:cust?undefined:per,project_ids:r.projects||undefined,threshold:r.threshold,with_status:"false"}),60000,"Отчёт");
+    if(seq!==r.seq)return;
+    const prev={};((r.data&&r.data.items)||[]).forEach(a=>{if(a.status)prev[a.account_id]=a.status});
+    (data.items||[]).forEach(a=>{if(!a.status&&prev[a.account_id])a.status=prev[a.account_id]});
+    r.data=data;r.loaded=true;(data.errors||[]).forEach(e=>toast("Статистика Click.ru: "+e,{tone:"warning"}));
+  }catch(err){if(seq===r.seq)toast("Не удалось загрузить отчёт: "+(err.message||""),{tone:"danger"})}
+  if(seq!==r.seq)return;
   r.loading=false;N.refreshIf("ads-report");
+  if(r.data)loadReportStatuses(refresh,seq);
+}
+async function loadReportStatuses(refresh,seq){
+  const r=S.ads.rep,d=r.data;if(!d)return;
+  const pids=[...new Set((d.items||[]).map(a=>a.project_id))];if(!pids.length)return;
+  r.stLoading=true;N.refreshIf("ads-report");
+  for(const pid of pids){
+    try{
+      const st=await withTimeout(api("/api/v1/ads/projects/"+pid+"/statuses",{refresh:refresh?"true":undefined}),90000,"Статусы");
+      if(seq!==r.seq||r.data!==d)return;
+      const by={};(st.items||[]).forEach(x=>{by[x.account_id]=x});
+      d.items.forEach(a=>{if(a.project_id===pid&&by[a.account_id])a.status=by[a.account_id]});
+    }catch(err){if(seq===r.seq)toast("Статусы проекта "+pid+": "+(err.message||""),{tone:"warning"})}
+    const bs={};d.items.forEach(a=>{const c=(a.status||{}).code;if(c)bs[c]=(bs[c]||0)+1});
+    d.summary=Object.assign(d.summary||{},{by_status:bs});
+    N.refreshIf("ads-report");
+  }
+  if(seq===r.seq){r.stLoading=false;N.refreshIf("ads-report")}
 }
 /* Подключение Click.ru = API-токен + вход в веб-кабинет (логин/пароль).
    Кабинет нужен для шага, которого нет в API Click.ru: подключение Яндекс ID
@@ -4734,7 +4760,7 @@ report(){
     const by=sm.by_status||{};
     const chart=(keys,names,type)=>esc(JSON.stringify({labels:(d.daily.labels||[]).map(x=>x.slice(8,10)+"."+x.slice(5,7)),series:keys.map((k,i)=>({name:names[i],values:d.daily[k]||[]}))}));
     const dd=x=>x?x.slice(8,10)+"."+x.slice(5,7)+"."+x.slice(0,4):"";
-    el.innerHTML=`${r.loading?'<nv-progress value="60" label="Обновляю…"></nv-progress>':""}
+    el.innerHTML=`${r.loading?'<nv-progress value="60" label="Обновляю…"></nv-progress>':""}${!r.loading&&r.stLoading?'<div class="muted" style="font-size:12.5px;margin:0 0 6px">Подтягиваю статусы аккаунтов…</div>':""}
       ${d.date_from?`<div class="muted" style="font-size:12.5px;margin:0 0 8px">Период отчёта: ${dd(d.date_from)} – ${dd(d.date_to)}</div>`:""}
       <div class="dash-g4">
         <nv-share-stat label="Аккаунты с показами" value="${sm.with_any_impressions||0}" total="${sm.accounts||0}" note="забанено ${by.banned||0}" hint="Сколько аккаунтов выбранных проектов получили хотя бы один показ за период"></nv-share-stat>
