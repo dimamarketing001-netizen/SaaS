@@ -3298,11 +3298,18 @@ async function loadAdvertisers(q){
 }
 
 /* ---------- Аналитика ---------- */
+/* Данные анализа хранятся в localStorage вместе с остальным состоянием — после повторного захода они старые.
+   Поэтому при открытии любого экрана анализа подтягиваем свежие, если им больше минуты (старые показываем, пока грузим). */
+function ensureAna(){
+  const I=S.intel.ana;
+  if(I.loading)return;
+  if(!I.loaded||!I.at||Date.now()-I.at>60000)loadAnalytics(true);
+}
 async function loadAnalytics(force){
   const I=S.intel.ana;
   if(I.loading)return;
   if(I.loaded&&!force)return;
-  I.loading=true;N.refreshIf("intel-overview","intel-sources","intel-carousels","intel-campaigns","intel-fresh","intel-platforms","intel-advertisers");
+  I.loading=true;if(!I.loaded)N.refreshIf("intel-overview","intel-sources","intel-carousels","intel-campaigns","intel-fresh","intel-platforms","intel-advertisers");
   const safe=p=>p.catch(()=>({}));
   const[coverage,recent,fresh,discounts,apps,cross,carousels,campaigns,keywords,growing,mismatch,coverageReport]=await Promise.all([
     safe(api("/api/v1/coverage",{})),
@@ -3329,7 +3336,7 @@ async function loadAnalytics(force){
   I.cross=cross.items||[];I.carousels=carousels.items||[];I.campaigns=campaigns.items||[];
   I.keywords=keywords.items||[];I.growing=growing.items||[];I.mismatch=mismatch.items||[];
   I.coverageReport=coverageReport.items||[];
-  I.loaded=true;I.loading=false;
+  I.loaded=true;I.loading=false;I.at=Date.now();
   N.refreshIf("intel-overview","intel-sources","intel-carousels","intel-campaigns","intel-fresh","intel-platforms","intel-advertisers");
 }
 /* Считаем по уже загруженным последним креативам (captured_at) — без доп. запросов к бэкенду. */
@@ -3537,7 +3544,7 @@ schedules(){
 },
 overview(){
   const I=S.intel.ana;
-  if(!I.loaded&&!I.loading)loadAnalytics();
+  ensureAna();
   if(I.loading&&!I.loaded)return{title:"Обзор",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="4"></nv-skeleton>'};
   const T=I.totals||{};
   const pd7=periodDelta(I.recentItems,7),trendSpark=dailyTrend(I.recentItems,7);
@@ -3556,7 +3563,7 @@ overview(){
   after(root){wireAnalyticsTables(root,I)}}},
 sources(){
   const I=S.intel.ana;
-  if(!I.loaded&&!I.loading)loadAnalytics();
+  ensureAna();
   if(I.loading&&!I.loaded)return{title:"Источники",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="3"></nv-skeleton>'};
   return{title:"Источники",sub:"Среди последних 200 креативов — по какому признаку распознана площадка.",actions:intentControlHtml(),
   body:`<nv-card heading="Источники"><nv-chart id="an-brk-chart" type="hbar" label="Источники"></nv-chart></nv-card>
@@ -3564,7 +3571,7 @@ sources(){
   after(root){wireAnalyticsTables(root,I)}}},
 carousels(){
   const I=S.intel.ana;
-  if(!I.loaded&&!I.loading)loadAnalytics();
+  ensureAna();
   if(I.loading&&!I.loaded)return{title:"Карусели",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="2"></nv-skeleton>'};
   const all=I.carousels||[],slides=all.reduce((n,g)=>n+(g.member_count||(g.members||[]).length),0),plats=[...new Set(all.map(g=>g.platform||"—"))];
   return{title:"Карусели",sub:anaSub("Рекламные блоки из нескольких объявлений, показанных рядом."),actions:intentControlHtml(),
@@ -3575,7 +3582,7 @@ carousels(){
   after(root){wireAnalyticsTables(root,I)}}},
 campaigns(){
   const I=S.intel.ana;
-  if(!I.loaded&&!I.loading)loadAnalytics();
+  ensureAna();
   if(I.loading&&!I.loaded)return{title:"Кампании и слова",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="3"></nv-skeleton>'};
   const sub=I.campSub||"campaigns";
   const bodies={
@@ -3588,7 +3595,7 @@ campaigns(){
   after(root){wireAnalyticsTables(root,I)}}},
 fresh(){
   const I=S.intel.ana;
-  if(!I.loaded&&!I.loading)loadAnalytics();
+  ensureAna();
   if(I.loading&&!I.loaded)return{title:"Новое и акции",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="3"></nv-skeleton>'};
   const sub=I.freshSub||"fresh";
   const bodies={
@@ -3602,7 +3609,7 @@ fresh(){
   after(root){wireAnalyticsTables(root,I)}}},
 platforms(){
   const I=S.intel.ana;
-  if(!I.loaded&&!I.loading)loadAnalytics();
+  ensureAna();
   if(I.loading&&!I.loaded)return{title:"Площадки",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="4"></nv-skeleton>'};
   const sub=I.platSub||"coverage";
   const bodies={
@@ -3618,7 +3625,7 @@ platforms(){
 advertisers(){
   const I=S.intel,A=S.intel.ana;
   const sub=I.advSub||"all";
-  if(sub!=="all"&&!A.loaded&&!A.loading)loadAnalytics();
+  if(sub!=="all")ensureAna();
   const bodies={
     all:`<nv-card flush><nv-table id="ad-t" clickable page-size="10" empty-text="Рекламодатели не найдены"></nv-table></nv-card>`,
     growth:(A.loading&&!A.loaded)?'<nv-skeleton count="3"></nv-skeleton>':
