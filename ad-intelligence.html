@@ -3898,7 +3898,7 @@ function projectWizard(existingProject){
     const cur=box.querySelector("[name=\"regions\"]");if(cur)wiz.regionsRaw=cur.value||"";
     box.innerHTML=regionsField();
   })();
-  function regionIdsOf(raw){return(raw||"").split(",").map(x=>x.trim()).filter(x=>/^d+$/.test(x))}
+  function regionIdsOf(raw){return(raw||"").split(",").map(x=>x.trim()).filter(x=>/^\d+$/.test(x))}
   function regionNames(ids){const by=new Map((wiz.geoRegions||[]).map(r=>[String(r.id),r.name]));return ids.map(id=>by.get(String(id))||String(id))}
   function regionsField(){
     const label="Город или регион показа";
