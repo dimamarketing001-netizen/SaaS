@@ -1,4 +1,14 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><style id="nv-extra">
+/* Выбранный фильтр обводится контуром — единый стиль для всех фильтров (nv-filter-select, nv-date-range,
+   nv-select как фильтр «Все…», поиск с текстом). Класс .act ставят сами компоненты. */
+.fs.act,.ctl.act{border-color:var(--svc-ink,var(--ok));box-shadow:0 0 0 1px var(--svc-ink,var(--ok));background:color-mix(in srgb,var(--svc-ink,var(--ok)) 8%,var(--surface))}
+.fs.act:hover{border-color:var(--svc-ink,var(--ok))}
+/* в панелях фильтров (.toolbar) рамку рисует .fld, а не .ctl — контур ставим на неё */
+.toolbar .fld:has(.ctl.act){border-color:var(--svc-ink,var(--ok));box-shadow:0 0 0 1px var(--svc-ink,var(--ok));background:color-mix(in srgb,var(--svc-ink,var(--ok)) 8%,var(--l2))}
+.toolbar .fld:has(.ctl.act) label{color:var(--svc-ink,var(--ok))}
+.toolbar .ctl.act{box-shadow:none;background:none}
+.fs.act .fs-l,.ctl.act>svg,.ctl.act>nv-icon{color:var(--svc-ink,var(--ok))}
+.fs.act .fs-v{font-weight:600}
 nv-carousel{display:block;min-width:0}
 .cx{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:16px 0 14px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .cx-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:0 16px}
@@ -1525,7 +1535,7 @@ define("nv-term",class extends NvEl{
 /* ---------- Формы ---------- */
 function field(el,inner){const id=el._id||(el._id=uid("f"));const l=el.a("label"),h=el.a("hint"),e=el.a("error");
   return `<div class="fld">${l?`<label for="${id}">${esc(l)}${el.b("required")?' <span class="req" aria-label="обязательно">*</span>':""}</label>`:""}${inner(id)}${e?`<span class="err" role="alert">${esc(e)}</span>`:h?`<span class="hint">${esc(h)}</span>`:""}</div>`}
-const fieldAttrs={label:{type:"string",default:"",desc:"Подпись над полем"},name:{type:"string",default:"",desc:"Ключ значения при сборе формы"},hint:{type:"string",default:"",desc:"Что вводить и зачем"},error:{type:"string",default:"",desc:"Текст ошибки: что не так и как исправить"},required:{type:"bool",desc:"Обязательное поле"},disabled:{type:"bool",desc:"Недоступно"}};
+const fieldAttrs={filter:{type:"bool",desc:"Поле работает как фильтр: при непустом значении обводится контуром"},label:{type:"string",default:"",desc:"Подпись над полем"},name:{type:"string",default:"",desc:"Ключ значения при сборе формы"},hint:{type:"string",default:"",desc:"Что вводить и зачем"},error:{type:"string",default:"",desc:"Текст ошибки: что не так и как исправить"},required:{type:"bool",desc:"Обязательное поле"},disabled:{type:"bool",desc:"Недоступно"}};
 class FieldEl extends NvEl{
   get value(){const c=this.querySelector("input,select,textarea");return c?c.value:this.a("value")}
   set value(v){const c=this.querySelector("input,select,textarea");if(c)c.value=v;else this.setAttribute("value",v)}
@@ -1533,10 +1543,10 @@ class FieldEl extends NvEl{
   attributeChangedCallback(n,o,v){if(n==="value")this._ext=true;super.attributeChangedCallback(n,o,v)}
   /* Смена error или hint не должна стирать то, что человек уже ввёл */
   update(){const c=this.querySelector("input,select,textarea"),cur=c&&!this._ext?c.value:null;this._ext=false;super.update();if(cur!==null){const n=this.querySelector("input,select,textarea");if(n)n.value=cur}}
-  mounted(){const c=this.querySelector("input,select,textarea");if(!c)return;const ev=c.tagName==="SELECT"?"change":"input";c.addEventListener(ev,x=>{x.stopPropagation();this.emit("nv-change",{value:c.value,name:this.name});if(this.hasAttribute("error"))this.removeAttribute("error")})}
+  mounted(){const c=this.querySelector("input,select,textarea");if(!c)return;const ev=c.tagName==="SELECT"?"change":"input";c.addEventListener(ev,x=>{x.stopPropagation();{const w=c.closest(".ctl");if(w&&(c.type==="search"||this.b("filter")))w.classList.toggle("act",!!c.value)}this.emit("nv-change",{value:c.value,name:this.name});if(this.hasAttribute("error"))this.removeAttribute("error")})}
 }
 define("nv-input",class extends FieldEl{
-  html(){return field(this,id=>`<div class="ctl${this.a("error")?" bad":""}${this.b("disabled")?" off":""}">${this.a("icon")?ic(this.a("icon"),15):""}<input id="${id}" type="${esc(this.a("type"))}" value="${esc(this.a("value"))}" placeholder="${esc(this.a("placeholder"))}" ${this.b("disabled")?"disabled":""} ${this.b("required")?"required":""} ${this.a("error")?'aria-invalid="true"':""}>${this.a("suffix")?`<span class="suf">${esc(this.a("suffix"))}</span>`:""}</div>`)}
+  html(){return field(this,id=>`<div class="ctl${this.a("error")?" bad":""}${this.b("disabled")?" off":""}${(this.a("type")==="search"||this.b("filter"))&&this.a("value")?" act":""}">${this.a("icon")?ic(this.a("icon"),15):""}<input id="${id}" type="${esc(this.a("type"))}" value="${esc(this.a("value"))}" placeholder="${esc(this.a("placeholder"))}" ${this.b("disabled")?"disabled":""} ${this.b("required")?"required":""} ${this.a("error")?'aria-invalid="true"':""}>${this.a("suffix")?`<span class="suf">${esc(this.a("suffix"))}</span>`:""}</div>`)}
 },"Формы",{desc:"Текстовое поле.",events:["nv-change {value,name}"],attrs:{...fieldAttrs,type:{type:"enum",values:["text","email","url","number","search","password","date"],default:"text",desc:"Тип ввода"},value:{type:"string",default:"",desc:"Значение"},placeholder:{type:"string",default:"",desc:"Пример ввода"},icon:{type:"string",default:"",desc:"Иконка слева"},suffix:{type:"string",default:"",desc:"Единица справа: ₽, %"}},demo:{label:"Город",placeholder:"Например, Казань",hint:"Реклама зависит от региона",icon:"map-pin"}});
 define("nv-textarea",class extends FieldEl{
   html(){return field(this,id=>`<div class="ctl${this.a("error")?" bad":""}" style="align-items:stretch"><textarea id="${id}" rows="${esc(this.a("rows"))}" placeholder="${esc(this.a("placeholder"))}" ${this.b("disabled")?"disabled":""}>${esc(this.a("value"))}</textarea></div>`)}
@@ -1544,8 +1554,10 @@ define("nv-textarea",class extends FieldEl{
 define("nv-select",class extends FieldEl{
   opts(){return parseOpts(this.a("options"))}
   get value(){const o=this.opts(),v=this.a("value");return o.some(x=>x.value===v)?v:(o[0]?o[0].value:"")}
+  /* Фильтр = список, где первый вариант «Все…» с пустым значением (или явный атрибут filter); выбран не он — обводим */
+  filterOn(){const o=this.opts();return (this.b("filter")||(o[0]&&o[0].value===""))&&this.value!==(o[0]?o[0].value:"")}
   set value(v){this.setAttribute("value",v)}
-  html(){const o=this.opts(),cur=o.find(x=>x.value===this.a("value"))||o[0];return field(this,id=>`<div class="ctl${this.a("error")?" bad":""}${this.b("disabled")?" off":""}">${this.a("icon")?ic(this.a("icon"),15):""}<button type="button" id="${id}" class="dd" aria-haspopup="listbox" aria-expanded="${!!this._on}" ${this.b("disabled")?"disabled":""}><span>${esc(cur?cur.label:"")}</span>${ic("chevron-down",14)}</button></div>`)}
+  html(){const o=this.opts(),cur=o.find(x=>x.value===this.a("value"))||o[0];return field(this,id=>`<div class="ctl${this.a("error")?" bad":""}${this.b("disabled")?" off":""}${this.filterOn()?" act":""}">${this.a("icon")?ic(this.a("icon"),15):""}<button type="button" id="${id}" class="dd" aria-haspopup="listbox" aria-expanded="${!!this._on}" ${this.b("disabled")?"disabled":""}><span>${esc(cur?cur.label:"")}</span>${ic("chevron-down",14)}</button></div>`)}
   mounted(){const b=this.querySelector(".dd");b.onclick=()=>this._on?closePop():this.pop();b.onkeydown=e=>{if((e.key==="ArrowDown"||e.key==="ArrowUp")&&!this._on){e.preventDefault();this.pop()}}}
   pop(){const o=this.opts(),search=this.b("searchable"),cur=this.value;this._on=true;this.querySelector(".dd").setAttribute("aria-expanded","true");
     const rows=q=>{const L=o.filter(x=>!q||x.label.toLowerCase().includes(q));return L.map(x=>`<button type="button" role="option" class="pop-i${x.value===cur?" on":""}" aria-selected="${x.value===cur}" data-v="${esc(x.value)}"><span class="t">${esc(x.label)}</span>${x.value===cur?ic("check",14):""}</button>`).join("")||'<p class="pop-e">Ничего не нашлось</p>'};
@@ -1849,7 +1861,7 @@ define("nv-filter-select",class extends NvEl{
   get value(){return this.a("value")}get name(){return this.getAttribute("name")}
   sel(){return this.a("value").split(",").filter(Boolean)}
   html(){const o=parseOpts(this.a("options")),s=this.sel(),f=o.find(x=>x.value===s[0]),txt=!s.length?(this.a("placeholder")||"Все"):f?f.label+(s.length>1?" +"+(s.length-1):""):String(s.length),l=this.a("label");
-    return `<button type="button" class="fs" aria-haspopup="listbox" aria-expanded="${!!this._on}">${l?`<span class="fs-l">${esc(l)}</span>`:""}<span class="fs-v${s.length?" on":""}">${esc(txt)}</span>${ic("chevron-down",14)}</button>`}
+    return `<button type="button" class="fs${s.length?" act":""}" aria-haspopup="listbox" aria-expanded="${!!this._on}">${l?`<span class="fs-l">${esc(l)}</span>`:""}<span class="fs-v${s.length?" on":""}">${esc(txt)}</span>${ic("chevron-down",14)}</button>`}
   mounted(){this.firstChild.onclick=()=>this._on?closePop():this.pop()}
   pop(){const o=parseOpts(this.a("options")),search=o.length>5;this._on=true;this.firstChild.setAttribute("aria-expanded","true");
     const rows=q=>{const s=this.sel(),L=o.filter(x=>!q||x.label.toLowerCase().includes(q));return L.map(x=>`<label class="pop-o"><input type="checkbox" value="${esc(x.value)}" ${s.includes(x.value)?"checked":""}><span class="box">${ic("check",12)}</span><span class="t">${esc(x.label)}</span></label>`).join("")||'<p class="pop-e">Ничего не нашлось</p>'};
@@ -1865,7 +1877,7 @@ define("nv-date-range",class extends NvEl{
   get value(){return this.a("value")}get name(){return this.getAttribute("name")}
   presets(){return parseOpts(this.a("presets")||"7:7 дней|30:30 дней|90:90 дней|all:Всё время")}
   text(){const v=this.a("value");if(v.includes("..")){const[a,b]=v.split("..");return fmtD(a)+" – "+fmtD(b)}const p=this.presets().find(x=>x.value===(v||"all"));return p?p.label:"Всё время"}
-  html(){const l=this.a("label");return `<button type="button" class="fs" aria-haspopup="dialog" aria-expanded="${!!this._on}">${ic("calendar",14)}${l?`<span class="fs-l">${esc(l)}</span>`:""}<span class="fs-v${this.a("value")&&this.a("value")!=="all"?" on":""}">${esc(this.text())}</span>${ic("chevron-down",14)}</button>`}
+  html(){const l=this.a("label");return `<button type="button" class="fs${this.a("value")&&this.a("value")!=="all"?" act":""}" aria-haspopup="dialog" aria-expanded="${!!this._on}">${ic("calendar",14)}${l?`<span class="fs-l">${esc(l)}</span>`:""}<span class="fs-v${this.a("value")&&this.a("value")!=="all"?" on":""}">${esc(this.text())}</span>${ic("chevron-down",14)}</button>`}
   mounted(){this.firstChild.onclick=()=>this._on?closePop():this.pop()}
   pop(){this._on=true;const v=this.a("value"),custom=v.includes("..")?v.split(".."):["",""];
     openPop(this,`<div class="pop-l">${this.presets().map(p=>`<button type="button" class="pop-i${(v||"all")===p.value?" on":""}" data-v="${esc(p.value)}">${esc(p.label)}</button>`).join("")}</div><div class="pop-d"><p class="pop-h">Свои даты: начало и конец</p><nv-calendar mode="range" value="${custom[0]?custom[0]+".."+custom[1]:""}" data-cal></nv-calendar></div>`,{width:286,onClose:()=>{this._on=false},mount:(p,close)=>{
@@ -2793,7 +2805,7 @@ async function loadLibrary(extra){
   // Запуск ещё идёт — найденное показываем сразу и подтягиваем новое каждые 15 с
   clearTimeout(I._libLive);
   if(I.f.job&&jobIsLive(I.f.job)){I._libLive=setTimeout(()=>{if(I.f.job&&jobIsLive(I.f.job)&&N.route&&N.route().v==="library")loadLibrary()},15000)}
-  if(!I._aiT||Date.now()-I._aiT>30000)loadAiIntents();
+  if(!I._aiT||Date.now()-I._aiT>30000||(I._aiJob||"")!==String(I.f.job||""))loadAiIntents();
 }
 function closeAllLayers(){document.querySelectorAll(".ov [data-x]").forEach(b=>b.click())}
 function relCheckHtml(){
@@ -2815,9 +2827,18 @@ function libMatchTile(){
 }
 function jobIsLive(id){const j=(S.intel.scans||[]).find(x=>String(x.id)===String(id));return !!j&&(j.status==="running"||j.status==="queued")}
 async function loadAiIntents(){
-  const I=S.intel;I._aiT=Date.now();
-  try{const d=await api("/api/v1/ai-intents",{});I.aiIntents=d.items||[];I.aiPending=d.pending||0;I.aiLoaded=true;N.refreshIf("intel-library")}
-  catch(err){I.aiLoaded=true}
+  /* Интенты креативов: при выбранном запуске — только его интенты, без запуска — все */
+  const I=S.intel,job=String(I.f.job||"");I._aiT=Date.now();I._aiJob=job;
+  try{
+    const d=await api("/api/v1/ai-intents",job?{job_id:job}:{});
+    if(job!==String(I.f.job||""))return;  // запуск успели сменить — ответ устарел
+    I.aiIntents=d.items||[];I.aiPending=d.pending||0;I.aiLoaded=true;
+    // выбранные интенты, которых нет у этого запуска, снимаем
+    const have=new Set(I.aiIntents.map(x=>String(x.intent||"").toLowerCase()).concat(I.aiPending?["__pending__"]:[]));
+    const keep=String(I.f.aiIntent||"").split(",").filter(Boolean).filter(x=>have.has(x.toLowerCase()));
+    if(keep.join(",")!==String(I.f.aiIntent||"")){I.f.aiIntent=keep.join(",");I.f.page=1;loadLibrary();return}
+    N.refreshIf("intel-library");
+  }catch(err){I.aiLoaded=true}
 }
 function aiIntentOptions(){
   const I=S.intel,clean=t=>String(t||"").replace(/[:|,]/g," ").trim();
