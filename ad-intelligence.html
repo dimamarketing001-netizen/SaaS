@@ -2297,6 +2297,24 @@ async function creativeImgSrc(ref){
 }
 // Галерея: миниатюры + «убрать» + загрузка с компьютера + добавить по ссылке.
 // getList/setList — где хранится список (строка через \n в визарде).
+/* Креативы из подборок парсера → визард (2026-11-13). Тексты чистим и
+   укорачиваем до лимитов Директа по границе слова; картинки сервер addAvto
+   скачивает в оригинале и обрезает под 450–5000 px и 3:4…4:3. */
+function crClean(t){return String(t||"").replace(/[   ]/g," ").replace(/\s+/g," ").trim()}
+function crFit(t,n){t=crClean(t);if(t.length<=n)return t;let c=t.slice(0,n+1);const sp=c.lastIndexOf(" ");c=(sp>n*0.5?c.slice(0,sp):t.slice(0,n));c=c.replace(/[\s,;:\-–—(«"]+$/,"").trim();let prev;do{prev=c;c=c.replace(/\s+(и|в|во|с|со|на|по|к|о|об|у|а|из|за|от|до|для|или|но)$/i,"").replace(/[\s,;:\-–—]+$/,"")}while(c!==prev);return c}
+async function collectionCreatives(colId){
+  const d=await api("/api/v1/collections/"+colId+"/items",{});
+  return (d.items||[]).map(it=>({headline:crFit(it.title,56),ad_text:crFit(it.description,81),
+    image:(it.creative_type==="video"?(it.video_poster||""):(it.image_url||"")).trim()})).filter(x=>x.headline||x.ad_text||x.image);
+}
+async function importCreativeImages(urls){
+  const out={};if(!urls.length)return out;
+  for(let i=0;i<urls.length;i+=20){
+    const r=await apiPost("/api/v1/ads/creative-images/import-urls",{urls:urls.slice(i,i+20)});
+    (r.items||[]).forEach(x=>{out[x.url]=x});
+  }
+  return out;
+}
 function mountCreativeGallery(host,getList,setList,{single=false}={}){
  const render=()=>{
   const list=getList();
@@ -4169,7 +4187,8 @@ function projectWizard(existingProject){
       ${displayUrlField(wiz.displayUrl,"Отображаемая ссылка — для всех объявлений (необязательно)")}
       <label class="row" style="gap:8px;margin-top:8px"><input type="checkbox" name="wizAutoStart" ${wiz.autoStart?"checked":""}><span><b>Сразу запустить показы</b> — объявления на модерацию и включение кампании (нужна маркировка ОРД/ERID в Click.ru)</span></label>
       <div class="muted" id="wiz-fund-total" style="font-size:12.5px;margin-top:6px"></div></nv-card>`;
-    body.innerHTML=(wiz.locked?lockedHtml:ozonRegenHtml)+structureHtml+modeHtml+`<div id="wiz-creatives">${manual?manualHtml:poolHtml}</div>`+fundHtml+`
+    const colBtnHtml=`<div class="row" style="gap:8px;align-items:center;margin:8px 0"><nv-button size="sm" variant="secondary" icon="folder-open" data-wiz-from-col>Взять из подборки парсера</nv-button><span class="muted" style="font-size:12.5px">${manual?"Креативы подборки по порядку разложатся по аккаунтам":"Заголовки, тексты и картинки подборки добавятся к списку"}</span></div>`;
+    body.innerHTML=(wiz.locked?lockedHtml:ozonRegenHtml)+structureHtml+modeHtml+(wiz.locked&&!manual?"":colBtnHtml)+`<div id="wiz-creatives">${manual?manualHtml:poolHtml}</div>`+fundHtml+`
     ${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="rocket" data-wiz-launch>Запустить массовый запуск</nv-button>')}
     <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
     if(wiz.locked&&!manual){
@@ -4187,6 +4206,52 @@ function projectWizard(existingProject){
         const gen=await ozonGenerate(wiz.project.id,wiz.project.ozon_url,s=>{regenMsg.textContent=regenLabel+" Прошло "+s+" с."},capHost);
         wiz.project=gen.project;reseedPools(wiz.project);drawStep5(body);
       }catch(err){regenMsg.textContent=err.message||"Не удалось перегенерировать";regenMsg.style.color="var(--bad)";btn.removeAttribute("disabled")}
+    };
+    const colBtn=body.querySelector("[data-wiz-from-col]");
+    if(colBtn)colBtn.onclick=async()=>{
+      let K;try{K=(await api("/api/v1/collections",{})).items||[]}catch(err){toast("Не удалось загрузить подборки: "+(err.message||""),{tone:"danger"});return}
+      if(!K.length){toast("Подборок пока нет — создайте её в разделе «Подборки» парсера",{tone:"warning"});return}
+      overlay("modal",{title:"Креативы из подборки",subtitle:manual?"По одному креативу на аккаунт, по порядку":"Добавятся к заголовкам, текстам и картинкам проекта",
+        body:`<nv-select name="k" label="Подборка" options="${esc(K.map(k=>k.id+":"+k.name.replace(/[|:]/g," ")+" ("+(k.items_count||0)+")").join("|"))}" value="${esc(String(K[0].id))}"></nv-select>
+          <div class="stack" style="gap:6px;margin-top:10px"><label class="row" style="gap:8px"><input type="checkbox" name="h" checked><span>Заголовки (обрежем до 56 символов по слову)</span></label>
+          <label class="row" style="gap:8px"><input type="checkbox" name="t" checked><span>Описания → тексты (до 81 символа; пустые пропустим)</span></label>
+          <label class="row" style="gap:8px"><input type="checkbox" name="i" checked><span>Изображения (оригинал, обрежем под 4:3 для Директа; ${manual?"по одному на аккаунт":"в проекте до 20"})</span></label></div>
+          <div class="muted" data-col-msg style="font-size:12.5px;margin-top:8px"></div>`,
+        actions:[{label:"Отмена"},{label:"Добавить",variant:"primary",fn(r,close){
+          const sel=r.querySelector('[name="k"]'),kid=sel&&sel.value,useH=r.querySelector('[name="h"]').checked,useT=r.querySelector('[name="t"]').checked,useI=r.querySelector('[name="i"]').checked,m=r.querySelector("[data-col-msg]");
+          (async()=>{
+            try{
+              m.style.color="";m.textContent="Загружаю подборку…";
+              const cr=await collectionCreatives(kid);
+              if(!cr.length){m.textContent="В подборке нет креативов с текстом или картинкой";m.style.color="var(--bad)";return}
+              const lines=x=>(x||"").split("\n").map(y=>y.trim()).filter(Boolean);
+              let imgUrls=[];
+              if(useI){
+                const have=manual?0:lines(wiz.imageUrls).length;
+                imgUrls=[...new Set(cr.map(c=>c.image).filter(Boolean))].slice(0,manual?wiz.manualSets.length:Math.max(0,20-have));
+              }
+              m.textContent=imgUrls.length?"Скачиваю и подгоняю картинки: "+imgUrls.length+" шт.…":"Добавляю…";
+              const imgs=await importCreativeImages(imgUrls);
+              const bad=Object.values(imgs).filter(x=>x.error).length;
+              let added={h:0,t:0,i:0};
+              if(manual){
+                wiz.manualSets.forEach((set,i)=>{const c=cr[i];if(!c)return;
+                  if(useH&&c.headline){set.headline=c.headline;added.h++}
+                  if(useT&&c.ad_text){set.ad_text=c.ad_text;added.t++}
+                  if(useI&&c.image&&imgs[c.image]&&imgs[c.image].ref){set.image_url=imgs[c.image].ref;added.i++}});
+              }else{
+                const merge=(cur,add,max)=>{const l=lines(cur),seen=new Set(l.map(x=>x.toLowerCase()));let n=0;
+                  for(const a of add){if(l.length>=max)break;if(a&&!seen.has(a.toLowerCase())){l.push(a);seen.add(a.toLowerCase());n++}}return[l.join("\n"),n]};
+                if(useH){const[v,n]=merge(wiz.headlines,cr.map(c=>c.headline),100);wiz.headlines=v;added.h=n}
+                if(useT){const[v,n]=merge(wiz.adTexts,cr.map(c=>c.ad_text),100);wiz.adTexts=v;added.t=n}
+                if(useI){const[v,n]=merge(wiz.imageUrls,imgUrls.map(u=>imgs[u]&&imgs[u].ref).filter(Boolean),20);wiz.imageUrls=v;added.i=n}
+              }
+              close();drawStep5(body);
+              toast(`Из подборки: заголовков ${added.h}, текстов ${added.t}, картинок ${added.i}`+(bad?` · не подошло картинок: ${bad}`:""),{tone:bad?"warning":"success"});
+            }catch(err){m.textContent="Не удалось: "+(err.message||"");m.style.color="var(--bad)"}
+          })();
+          return false;
+        }}]});
     };
     body.querySelectorAll('input[name="wizStructure"]').forEach(inp=>inp.onchange=()=>{wiz.adsPerGroup=inp.value==="multi"?(wiz.adsPerGroup>1?wiz.adsPerGroup:5):1;drawStep5(body)});
     body.querySelector('nv-select[name="creative_mode"]').addEventListener("nv-change",e=>{wiz.creativeMode=e.detail.value;if(wiz.creativeMode!=="shuffle")wiz.adsPerGroup=1;drawStep5(body)});
