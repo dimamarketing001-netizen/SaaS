@@ -1814,7 +1814,7 @@ define("nv-scan-card",class extends NvEl{
     const title=this.a("title"),initials=(title||"??").slice(0,2).toUpperCase();
     return `<article class="int scanc"><div class="h"><span class="lg" style="color:var(--svc-ink)">${esc(initials)}</span><div><h4>${esc(title)}</h4>${this.a("subtitle")?`<div class="cat">${esc(this.a("subtitle"))}</div>`:""}</div></div>
     <div class="scanc-bar t-${esc(st)}${indet?" indet":""}"><i style="width:${indet?100:pct}%"></i></div>
-    <p${this.a("relevant")!==""?` title="Подходят под ключевое слово запуска по интенту, тексту или смыслу${+this.a("rel-pending")?"; ещё определяется: "+esc(this.a("rel-pending")):""}"`:""}>${esc(this.a("note"))} · ${esc(this.a("found"))} найдено${this.a("relevant")!==""?` · ${esc(this.a("relevant"))} по интенту`:""}</p>
+    <p${this.a("relevant")!==""?` title="Интент креатива относится к ключевому слову запуска (по оценке Gemini)${+this.a("rel-pending")?"; ещё определяется: "+esc(this.a("rel-pending")):""}"`:""}>${esc(this.a("note"))} · ${esc(this.a("found"))} найдено${this.a("relevant")!==""?` · ${esc(this.a("relevant"))} по интенту`:""}</p>
     <div class="f"><nv-status value="${esc(st)}"></nv-status><span class="int-actions" data-slot></span></div></article>`;
   }
 },"Предметные",{desc:"Карточка задания сканирования: статус, линия прогресса/ETA, что уже найдено.",slot:"Кнопки действий",demoHtml:'<nv-button size="sm" variant="secondary" icon="external-link" icon-only hint="Открыть">Открыть</nv-button>',previewW:300,attrs:{
@@ -2819,7 +2819,7 @@ function libMatchTile(){
   if(f.job){
     const r=jobRel(f.job);
     if(r&&r.found){const pc=Math.round(r.relevant/r.found*100);
-      return stat("Подходят по интенту запуска",r.relevant+" из "+r.found,`note="${pc}% · ${r.pending?"ещё определяется "+r.pending:"по ключевому слову запуска"}" hint="Креатив подходит, если его интент (по оценке Gemini), текст или смысл совпадает с ключевым словом запуска. Остальные пойманы рекламной сетью по аудитории, а не по теме."`)}
+      return stat("Подходят по интенту запуска",r.relevant+" из "+r.found,`note="${pc}% · ${r.pending?"ещё определяется "+r.pending:"по ключевому слову запуска"}" hint="Креатив подходит, если его интент (по оценке Gemini) по смыслу относится к ключевому слову запуска. Остальные показаны рекламной сетью по аудитории (например, стоматология пенсионерам), а не по теме запроса."`)}
     return stat("Подходят по интенту запуска","…",'note="считаем"');
   }
   const L=I.scans||[],withC=L.filter(x=>(x.total||0)>0).length;
@@ -3207,7 +3207,7 @@ async function openScanDetail(job){
       <dt>Начато</dt><dd>${esc(fmtDateTime(data.started_at))}</dd>
       <dt>Завершено</dt><dd>${data.finished_at?esc(fmtDateTime(data.finished_at)):"ещё не завершено"}</dd>
       <dt>Найдено креативов</dt><dd>${esc(data.total_creatives||0)}</dd>
-      ${data.relevance&&data.relevance.found?`<dt>Подходят по интенту</dt><dd><b>${data.relevance.relevant}</b> из ${data.relevance.found} · ${Math.round(data.relevance.relevant/data.relevance.found*100)}%${data.relevance.pending?" · ещё определяется "+data.relevance.pending:""}<div class="muted" style="font-size:12px">Креатив подходит, если его интент, текст или смысл совпадает с ключевым словом «${esc(data.key_text||"")}»</div></dd>`:""}
+      ${data.relevance&&data.relevance.found?`<dt>Подходят по интенту</dt><dd><b>${data.relevance.relevant}</b> из ${data.relevance.found} · ${Math.round(data.relevance.relevant/data.relevance.found*100)}%${data.relevance.pending?" · ещё определяется "+data.relevance.pending:""}<div class="muted" style="font-size:12px">Креатив подходит, если его интент по смыслу относится к ключевому слову «${esc(data.key_text||"")}»</div></dd>`:""}
     </dl>
     <div class="sect-t">По площадкам</div>
     ${sites.length?`<dl class="dl">${sites.map(s=>`<dt>${esc(siteLabel[s.platform]||s.platform)}</dt><dd>${siteStatusLabel[s.status]||s.status||"—"} · найдено ${esc(s.unique_creatives||0)}${s.partial_creatives?" (частично "+esc(s.partial_creatives)+")":""}${s.ad_signal_detected!=null?(s.ad_signal_detected?" · реклама обнаружена":" · реклама не обнаружена"):""}${s.error_text?"<br><span class=\"mono\" style=\"font-size:11.5px\">"+esc(s.error_text)+"</span>":""}</dd>`).join("")}</dl>`:'<p class="muted">Площадки ещё не обработаны.</p>'}`,
