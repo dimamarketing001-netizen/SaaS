@@ -74,6 +74,15 @@ nv-carousel.cx-fit .cx-dots{display:none}
 .sch-d .dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center}
 .sch-d .dots i{width:5px;height:5px;border-radius:50%;background:var(--line-2)}
 .sch-d .dots i.on{background:var(--ok)}
+.sch-runs{grid-column:1/-1;margin-top:2px}
+.sch-runs>summary{cursor:pointer;font-size:13px;font-weight:600;padding:6px 0;list-style:none}
+.sch-runs>summary::-webkit-details-marker{display:none}
+.sch-runs>summary::before{content:"▸";display:inline-block;margin-right:6px;transition:transform .15s}
+.sch-runs[open]>summary::before{transform:rotate(90deg)}
+.sr-row{display:grid;grid-template-columns:70px minmax(0,1.3fr) 130px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;font-size:13px}
+.sr-row:nth-child(odd){background:color-mix(in srgb,var(--ink) 4%,transparent)}
+.sr-row .ss{font-size:12.5px;color:var(--ink-3)}
+@media(max-width:720px){.sr-row{grid-template-columns:60px 1fr auto}.sr-row>:nth-child(4){display:none}}
 .sch-tlc{grid-column:1/-1;font-size:12px;color:var(--ink-3);margin-top:-4px}
 @media(max-width:760px){.sch-row{grid-template-columns:1fr}.sch-act{justify-content:flex-start}}
 </style>
@@ -3166,6 +3175,7 @@ async function loadSchedules(){
   try{const data=await api("/api/v1/schedules",{});S.intel.schedules=data.items||[];S.intel.schedulesError=""}
   catch(err){S.intel.schedules=S.intel.schedules||[];S.intel.schedulesError=err.message||"ошибка сети"}
   S.intel.schedulesLoaded=true;N.refreshIf("intel-scans","intel-schedules");
+  (S.intel.schedOpen||[]).forEach(id=>{if(!(S.intel.schedRuns||{})[id]||S.intel._schedRunsT!==Math.floor(Date.now()/20000)){S.intel._schedRunsT=Math.floor(Date.now()/20000);loadSchedRuns(id)}});
 }
 async function schedAction(id,action){
   const run=async()=>{try{await apiPost("/api/v1/schedules/"+id+"/action",{action});await loadSchedules();toast(action==="pause"?"Расписание на паузе":action==="resume"?"Расписание возобновлено":"Расписание остановлено",{tone:"success"})}catch(err){toast("Не удалось: "+(err.message||""),{tone:"danger"})}};
@@ -3186,6 +3196,26 @@ function schedTimeline(x){
   const dayNo=Math.min(x.duration_days,Math.max(1,cur+1));
   return `<div class="sch-tl" role="img" aria-label="Таймлайн расписания по дням">${cells}</div><div class="sch-tlc">${x.status==="active"||x.status==="paused"?"День "+dayNo+" из "+x.duration_days+" · ":""}точки — слоты запусков за день, зелёные уже прошли</div>`;
 }
+const SR_ST={queued:["В очереди","neutral"],running:["Идёт","info"],succeeded:["Готово","success"],failed:["Ошибка","danger"]};
+function schedRunsHtml(x){
+  const I=S.intel,open=(I.schedOpen||[]).includes(x.id),rr=(I.schedRuns||{})[x.id];
+  let body="";
+  if(open){
+    if(!rr)body='<div class="ss" style="padding:8px 10px">Загружаем запуски…</div>';
+    else if(!rr.items.length)body='<div class="ss" style="padding:8px 10px">Запусков по этому расписанию пока не было.</div>';
+    else body=rr.items.map(r=>{
+      const st=SR_ST[r.status]||[r.status,"neutral"],rel=r.relevance;
+      const retry=r.status==="queued"&&r.attempts?` · повтор после сбоя, попытка ${r.attempts+1}`:r.status==="failed"&&r.attempts?` · попыток: ${r.attempts}`:"";
+      return `<div class="sr-row"><b>#${r.id}</b><span>${esc(fmtDateTime(r.started_at||r.created_at))}<div class="ss">${r.finished_at?"до "+esc(fmtDateTime(r.finished_at)):esc(retry.slice(3)||"")}</div></span><span><nv-badge tone="${st[1]}">${st[0]}</nv-badge></span><span class="ss">найдено <b>${r.total_creatives||0}</b>${rel&&rel.found?" · по интенту <b>"+rel.relevant+"</b>":""}${r.error_text&&r.status==="failed"?'<br>'+esc(String(r.error_text).slice(0,80)):""}</span><span class="row" style="gap:6px"><nv-button size="sm" variant="ghost" data-act="schedRunOpen" data-id="${r.id}">Подробнее</nv-button>${(r.total_creatives>0)?`<nv-button size="sm" variant="secondary" icon="layout-grid" data-act="schedRunLib" data-id="${r.id}" data-k="${esc(r.key_text||"")}">В библиотеку</nv-button>`:""}</span></div>`}).join("")+(rr.total>rr.items.length?`<div class="ss" style="padding:8px 10px">Показаны последние ${rr.items.length} из ${rr.total}</div>`:"");
+  }
+  return `<details class="sch-runs" data-sid="${x.id}" ${open?"open":""}><summary>Запуски расписания · ${x.runs_created}</summary>${body}</details>`;
+}
+async function loadSchedRuns(id){
+  const I=S.intel;I.schedRuns=I.schedRuns||{};
+  try{const d=await api("/api/v1/runs",{schedule_id:id,limit:100});I.schedRuns[id]={items:d.items||[],total:d.total||0}}
+  catch(e){I.schedRuns[id]={items:[],total:0}}
+  N.refreshIf("intel-schedules");
+}
 const schedLive=x=>x.status==="active"||x.status==="paused";
 function schedBanner(){
   const live=(S.intel.schedules||[]).filter(schedLive);
@@ -3203,7 +3233,7 @@ function schedulesHtml(list){
     <div><nv-badge tone="${st[1]}">${st[0]}</nv-badge><div class="sch-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div><div class="ss">Запущено ${x.runs_created} из ${x.runs_total}${x.runs_skipped?" · пропущено "+x.runs_skipped:""}</div></div>
     <div class="ss">${x.status==="active"&&x.next_run_at?"Следующий запуск:<br><b>"+esc(fmtDateTime(x.next_run_at))+"</b>":x.status==="paused"?"Запуски приостановлены":"Закончено: "+esc(fmtDateTime(x.finished_at||x.end_at))}</div>
     <div class="sch-act">${live?(x.status==="active"?`<nv-button size="sm" variant="secondary" icon="pause" data-act="schedAction" data-id="${x.id}" data-a="pause">Пауза</nv-button>`:`<nv-button size="sm" variant="secondary" icon="play" data-act="schedAction" data-id="${x.id}" data-a="resume">Продолжить</nv-button>`)+`<nv-button size="sm" variant="ghost" icon="x" icon-only hint="Остановить" data-act="schedAction" data-id="${x.id}" data-a="cancel"></nv-button>`:""}</div>
-    ${schedTimeline(x)}</div>`;
+    ${schedTimeline(x)}${schedRunsHtml(x)}</div>`;
   }).join("");
   return `<nv-card>${rows}</nv-card>`;
 }
@@ -3470,7 +3500,15 @@ schedules(){
   return{title:"Расписания",sub:"Автоматические повторные сканирования: сколько раз в день и сколько дней.",actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
   body:`<div class="row" style="gap:8px;flex-wrap:wrap"><nv-button size="sm" variant="${tab==="live"?"primary":"secondary"}" data-act="schedTab" data-v="live">Активные · ${live.length}</nv-button><nv-button size="sm" variant="${tab==="ended"?"primary":"secondary"}" data-act="schedTab" data-v="ended">Завершённые и остановленные · ${ended.length}</nv-button></div>
   ${schedulesHtml(tab==="ended"?ended:live)}`,
-  after(){if(!S.intel.schedulesLoaded)loadSchedules()}};
+  after(root){
+    if(!S.intel.schedulesLoaded)loadSchedules();
+    root.querySelectorAll("details[data-sid]").forEach(d=>d.addEventListener("toggle",()=>{
+      const id=+d.dataset.sid,I=S.intel,was=(I.schedOpen||[]).includes(id);
+      if(d.open===was)return;  // событие от перерисовки, а не от клика
+      I.schedOpen=(I.schedOpen||[]).filter(x=>x!==id);
+      if(d.open){I.schedOpen.push(id);loadSchedRuns(id)}
+    }));
+  }};
 },
 overview(){
   const I=S.intel.ana;
@@ -3585,6 +3623,8 @@ Object.assign(N.acts,{
   schedAction(a,d){schedAction(d.id,d.a)},
   schedReload(){loadSchedules()},
   schedOpen(){N.go("intel-schedules")},
+  schedRunOpen(a,d){openScanDetail({id:+d.id})},
+  schedRunLib(a,d){filterByJob(+d.id,d.k)},
   schedTab(a,d){S.intel.schedTab=d.v;N.refresh()},
   carouselOpen(a,d){openCreative(d.id)},
   copyField(a,d){const v=d.value||"";const done=()=>toast("Скопировано",{tone:"success"});if(navigator.clipboard)navigator.clipboard.writeText(v).then(done).catch(()=>toast("Браузер запретил копирование. Скопируйте текст вручную",{tone:"warning"}));else toast("Скопируйте текст вручную",{tone:"warning"})},
