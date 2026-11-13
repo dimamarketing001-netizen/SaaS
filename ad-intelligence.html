@@ -46,6 +46,10 @@ nv-carousel.cx-fit .cx-dots{display:none}
 .sch-bar{height:6px;border-radius:99px;background:var(--surface-3);overflow:hidden;margin-top:6px}
 .sch-bar i{display:block;height:100%;background:var(--ok);border-radius:99px}
 .sch-act{display:flex;gap:6px;justify-content:flex-end}
+.scanc-rel{display:flex;align-items:center;gap:8px;margin:2px 0 0;font-size:12.5px;color:var(--ink-2)}
+.scanc-rel .rb{flex:0 0 64px;height:6px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.scanc-rel .rb i{display:block;height:100%;background:var(--ok);border-radius:99px}
+.scanc-rel b{color:var(--ink)}
 .cr-kw{margin:2px 0 0;font-size:11.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cr-kw b{font-weight:600;color:var(--ink-2)}
 .run-link{all:unset;cursor:pointer;color:var(--info);font-weight:600}
@@ -1746,11 +1750,11 @@ define("nv-creative-card",class extends NvEl{
     if(disc)media=`<span class="disc">−${esc(disc)}%</span>`+media;
     return `<article class="cr${this.b("selected")?" sel":""}${sc?" has-ck":""}">${sc?`<label class="ck cr-ck"><input type="checkbox" ${this.b("selected")?"checked":""} aria-label="Выбрать креатив"><span class="box">${ic("check",14)}</span></label>`:""}<button type="button" class="cr-save${this.b("saved")?" on":""}" data-tip="${this.b("saved")?"Убрать из сохранённых":"Сохранить в избранное"}" aria-pressed="${this.b("saved")}" aria-label="Сохранить креатив">${ic("bookmark")}</button>
       <button type="button" class="art${img||vid?"":" empty"}" data-open aria-label="Открыть подробности">${media}</button>
-      <div class="cr-b"><div class="cr-top"><button type="button" class="cr-t" data-open>${esc(headline)}</button><div class="cr-m">${this.a("domain")?`<img class="cr-fav" src="${esc(favUrl(this.a("domain")))}" alt="" width="14" height="14" loading="lazy" onerror="this.style.visibility='hidden'">`:""}${esc(this.a("domain"))}${this.a("date")?" · "+esc(this.a("date")):""}</div>${copy?`<p class="cr-copy">${esc(copy)}</p>`:""}${this.a("keyword")?`<p class="cr-kw" title="Ключевое слово, по которому парсер искал это объявление">Запрос: <b>${esc(this.a("keyword"))}</b></p>`:""}</div><div class="cr-f">${this.a("ai-intent")?`<nv-badge tone="info" icon="tag" title="Интент креатива — о чём реклама на самом деле (определил Gemini)">${esc(this.a("ai-intent"))}</nv-badge>`:""}<nv-badge>${esc(this.a("platform"))}</nv-badge><nv-badge tone="accent">${esc(FORMAT[fm]||fm)}</nv-badge>${plats.map(p=>`<nv-badge tone="neutral">${esc(p)}</nv-badge>`).join("")}<span class="cr-copy-btns"><button type="button" data-act="studFromCreative" data-id="${this.a("cid")}" data-tip="Открыть в редакторе" aria-label="Открыть в редакторе">${ic("square-pen",13)}</button><button type="button" data-act="cardAddToCollection" data-id="${this.a("cid")}" data-tip="Добавить в подборку" aria-label="Добавить в подборку">${ic("folder-plus",13)}</button></span></div></div></article>`}
+      <div class="cr-b"><div class="cr-top"><button type="button" class="cr-t" data-open>${esc(headline)}</button><div class="cr-m">${this.a("domain")?`<img class="cr-fav" src="${esc(favUrl(this.a("domain")))}" alt="" width="14" height="14" loading="lazy" onerror="this.style.visibility='hidden'">`:""}${esc(this.a("domain"))}${this.a("date")?" · "+esc(this.a("date")):""}</div>${copy?`<p class="cr-copy">${esc(copy)}</p>`:""}${this.a("keyword")?`<p class="cr-kw" title="Ключевое слово, по которому парсер искал это объявление">Запрос: <b>${esc(this.a("keyword"))}</b></p>`:""}</div><div class="cr-f">${this.a("match")==="yes"?`<nv-badge tone="success" icon="check">по теме</nv-badge>`:this.a("match")==="no"?`<nv-badge tone="warning" icon="circle-off" title="Рекламная сеть показала это объявление по аудитории, а не по теме запроса">не по теме</nv-badge>`:this.a("match")==="pending"?`<nv-badge tone="neutral" icon="loader">определяется</nv-badge>`:""}${this.a("ai-intent")?`<nv-badge tone="info" icon="tag" title="Интент креатива — о чём реклама на самом деле (определил Gemini)">${esc(this.a("ai-intent"))}</nv-badge>`:""}<nv-badge>${esc(this.a("platform"))}</nv-badge><nv-badge tone="accent">${esc(FORMAT[fm]||fm)}</nv-badge>${plats.map(p=>`<nv-badge tone="neutral">${esc(p)}</nv-badge>`).join("")}<span class="cr-copy-btns"><button type="button" data-act="studFromCreative" data-id="${this.a("cid")}" data-tip="Открыть в редакторе" aria-label="Открыть в редакторе">${ic("square-pen",13)}</button><button type="button" data-act="cardAddToCollection" data-id="${this.a("cid")}" data-tip="Добавить в подборку" aria-label="Добавить в подборку">${ic("folder-plus",13)}</button></span></div></div></article>`}
   mounted(){const q=s=>this.querySelector(s);this.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>this.emit("nv-open",{id:this.a("cid")}));
     q(".cr-save").onclick=()=>this.emit("nv-save",{id:this.a("cid"),saved:!this.b("saved")});
     const c=q(".cr-ck input");if(c)c.onchange=()=>this.emit("nv-select",{id:this.a("cid"),selected:c.checked})}
-},"Предметные",{desc:"Карточка найденного объявления. Показывает настоящее изображение или видео креатива, если они есть (поля image/video парсера); заглушка — только когда у объявления вообще нет медиа.",events:["nv-open {id}","nv-save {id,saved}","nv-select {id,selected}"],previewW:300,attrs:{"ai-intent":{type:"string",default:"",desc:"Интент креатива: о чём реклама на самом деле (по оценке Gemini)"},keyword:{type:"string",default:"",desc:"Ключевое слово запуска, по которому парсер нашёл объявление (не путать с интентом креатива)"},cid:{type:"string",default:"c1",desc:"ID креатива"},headline:{type:"string",default:"Беговые кроссовки с примеркой дома",desc:"Заголовок"},advertiser:{type:"string",default:"Кросс-Лаб",desc:"Рекламодатель"},domain:{type:"string",default:"krosslab.example",desc:"Домен"},platform:{type:"string",default:"Яндекс / РСЯ",desc:"Площадка"},format:{type:"enum",values:["image","native","video","carousel"],default:"image",desc:"Формат"},date:{type:"string",default:"сегодня",desc:"Когда замечено"},discount:{type:"number",default:"30",desc:"Скидка в процентах"},cta:{type:"string",default:"Выбрать пару",desc:"Текст кнопки"},image:{type:"string",default:"",desc:"Адрес настоящего изображения креатива"},video:{type:"string",default:"",desc:"Адрес настоящего видео креатива"},poster:{type:"string",default:"",desc:"Превью-кадр для видео"},copy:{type:"string",default:"Доставим и заберём лишнюю пару бесплатно.",desc:"Текст объявления, 1–2 строки"},"desc-full":{type:"string",default:"",desc:"Полный текст объявления для кнопки «Скопировать» (без обрезки) — по умолчанию берётся copy"},platforms:{type:"string",default:"",desc:"Другие площадки через запятую, если то же объявление встречено не только на основной"},saved:{type:"bool",desc:"Сохранён"},selectable:{type:"bool",desc:"Показывает флажок"},selected:{type:"bool",desc:"Выбран"}}});
+},"Предметные",{desc:"Карточка найденного объявления. Показывает настоящее изображение или видео креатива, если они есть (поля image/video парсера); заглушка — только когда у объявления вообще нет медиа.",events:["nv-open {id}","nv-save {id,saved}","nv-select {id,selected}"],previewW:300,attrs:{match:{type:"enum",values:["","yes","no","pending"],default:"",desc:"Подходит ли креатив под ключевое слово выбранного запуска (показывается только при выбранном запуске)"},"ai-intent":{type:"string",default:"",desc:"Интент креатива: о чём реклама на самом деле (по оценке Gemini)"},keyword:{type:"string",default:"",desc:"Ключевое слово запуска, по которому парсер нашёл объявление (не путать с интентом креатива)"},cid:{type:"string",default:"c1",desc:"ID креатива"},headline:{type:"string",default:"Беговые кроссовки с примеркой дома",desc:"Заголовок"},advertiser:{type:"string",default:"Кросс-Лаб",desc:"Рекламодатель"},domain:{type:"string",default:"krosslab.example",desc:"Домен"},platform:{type:"string",default:"Яндекс / РСЯ",desc:"Площадка"},format:{type:"enum",values:["image","native","video","carousel"],default:"image",desc:"Формат"},date:{type:"string",default:"сегодня",desc:"Когда замечено"},discount:{type:"number",default:"30",desc:"Скидка в процентах"},cta:{type:"string",default:"Выбрать пару",desc:"Текст кнопки"},image:{type:"string",default:"",desc:"Адрес настоящего изображения креатива"},video:{type:"string",default:"",desc:"Адрес настоящего видео креатива"},poster:{type:"string",default:"",desc:"Превью-кадр для видео"},copy:{type:"string",default:"Доставим и заберём лишнюю пару бесплатно.",desc:"Текст объявления, 1–2 строки"},"desc-full":{type:"string",default:"",desc:"Полный текст объявления для кнопки «Скопировать» (без обрезки) — по умолчанию берётся copy"},platforms:{type:"string",default:"",desc:"Другие площадки через запятую, если то же объявление встречено не только на основной"},saved:{type:"bool",desc:"Сохранён"},selectable:{type:"bool",desc:"Показывает флажок"},selected:{type:"bool",desc:"Выбран"}}});
 define("nv-carousel",class extends NvEl{
   get slides(){return this._slides||[]}
   set slides(v){this._slides=v||[];if(this._init)this.update()}
@@ -1798,7 +1802,7 @@ define("nv-scan-card",class extends NvEl{
     const title=this.a("title"),initials=(title||"??").slice(0,2).toUpperCase();
     return `<article class="int scanc"><div class="h"><span class="lg" style="color:var(--svc-ink)">${esc(initials)}</span><div><h4>${esc(title)}</h4>${this.a("subtitle")?`<div class="cat">${esc(this.a("subtitle"))}</div>`:""}</div></div>
     <div class="scanc-bar t-${esc(st)}${indet?" indet":""}"><i style="width:${indet?100:pct}%"></i></div>
-    <p>${esc(this.a("note"))} · ${esc(this.a("found"))} найдено</p>
+    <p>${esc(this.a("note"))} · ${esc(this.a("found"))} найдено</p>${this.a("relevant")!==""?(()=>{const f=+this.a("rel-of")||+this.a("found")||0,r=+this.a("relevant")||0,pc=f?Math.round(r/f*100):0,pend=+this.a("rel-pending")||0;return `<div class="scanc-rel" title="Сколько найденных креативов подходят под ключевое слово запуска (по интенту Gemini, тексту и смыслу)"><span class="rb"><i style="width:${pc}%"></i></span><span>из них <b>${r}</b> подходят по теме · <b>${pc}%</b>${pend?` · ещё определяется ${pend}`:""}</span></div>`})():""}
     <div class="f"><nv-status value="${esc(st)}"></nv-status><span class="int-actions" data-slot></span></div></article>`;
   }
 },"Предметные",{desc:"Карточка задания сканирования: статус, линия прогресса/ETA, что уже найдено.",slot:"Кнопки действий",demoHtml:'<nv-button size="sm" variant="secondary" icon="external-link" icon-only hint="Открыть">Открыть</nv-button>',previewW:300,attrs:{
@@ -1808,7 +1812,10 @@ define("nv-scan-card",class extends NvEl{
   pct:{type:"string",default:"62",desc:"Процент выполнения (оценка). Пусто — неизвестно"},
   indeterminate:{type:"bool",desc:"Прогресс нельзя оценить — вместо процента полосатая анимация"},
   note:{type:"string",default:"~2 мин осталось",desc:"Главное сообщение рядом с «найдено»"},
-  found:{type:"string",default:"12",desc:"Найдено креативов"}
+  found:{type:"string",default:"12",desc:"Найдено креативов"},
+  relevant:{type:"string",default:"",desc:"Сколько из найденных подходят под ключевое слово запуска (пусто — не показывать)"},
+  "rel-of":{type:"string",default:"",desc:"Из скольких креативов считалась релевантность (по умолчанию — found)"},
+  "rel-pending":{type:"string",default:"",desc:"Сколько креативов ещё определяется"}
 }});
 define("nv-kanban",class extends NvEl{
   set columns(v){this._c=v;this._init&&this.update()}
@@ -2650,7 +2657,7 @@ function groupRealCreatives(items){
 }
 
 const seed=()=>({
-  f:{q:"",platform:"",format:"",saved:"",job:"",aiIntent:"",sort:"recent",period:"",page:1,pageSize:25},
+  f:{q:"",platform:"",format:"",saved:"",job:"",rel:"all",aiIntent:"",sort:"recent",period:"",page:1,pageSize:25},
   aiIntents:[],aiPending:0,aiLoaded:false,
   savedViews:loadSavedViews(),
   lib:{groups:[],total:0,loaded:false,loading:false},
@@ -2727,7 +2734,7 @@ function cardHtml(g,selected){
   const otherPlatforms=[...new Set((g.platforms||[]).map(realPlatformLabel))].filter(l=>l!==primary);
   const fmt=formatOf(rep);
   const mediaAttrs=(fmt==="video"&&rep.video_src)?`video="${esc(rep.video_src)}" poster="${esc(rep.video_poster||"")}"`:`image="${esc(rep.image_url||"")}"`;
-  return `<nv-creative-card cid="${esc(rep.id)}" headline="${esc(rep.title||rep.domain||"Без заголовка")}" advertiser="${esc(rep.domain||"—")}" domain="${esc(rep.domain||"")}" platform="${esc(primary)}" format="${fmt}" date="${esc(fmtDateTime(g.last_seen_at||rep.captured_at))}" discount="${rep.discount_percent||""}" cta="${esc(rep.cta_text||"")}" ${mediaAttrs} ai-intent="${esc(realAiIntent(rep))}" keyword="${esc((rep.intents||[]).join("; "))}" copy="${esc((rep.description||"").slice(0,180))}" desc-full="${esc(rep.description||"")}" platforms="${esc(otherPlatforms.join(","))}" ${saved?"saved":""} selectable ${selected?"selected":""}></nv-creative-card>`;
+  return `<nv-creative-card cid="${esc(rep.id)}" headline="${esc(rep.title||rep.domain||"Без заголовка")}" advertiser="${esc(rep.domain||"—")}" domain="${esc(rep.domain||"")}" platform="${esc(primary)}" format="${fmt}" date="${esc(fmtDateTime(g.last_seen_at||rep.captured_at))}" discount="${rep.discount_percent||""}" cta="${esc(rep.cta_text||"")}" ${mediaAttrs} ai-intent="${esc(realAiIntent(rep))}" keyword="${esc((rep.intents||[]).join("; "))}" match="${!S.intel.f.job?"":rep.job_match===true?"yes":rep.job_match===false?"no":rep.job_match===null&&S.intel.f.job?"pending":""}" copy="${esc((rep.description||"").slice(0,180))}" desc-full="${esc(rep.description||"")}" platforms="${esc(otherPlatforms.join(","))}" ${saved?"saved":""} selectable ${selected?"selected":""}></nv-creative-card>`;
 }
 function bindCards(root,target){
   target=target||"sel";
@@ -2770,7 +2777,7 @@ async function loadLibrary(extra){
   const params={sort:I.f.sort==="discount"?"discount":"recent",limit:120};
   if(I.f.q)params.q=I.f.q;
   // Фильтр по запуску: показываем креативы именно этого задания, без сужения по ключевому слову
-  if(I.f.job){params.job_id=I.f.job;params.intent=""}
+  if(I.f.job){params.job_id=I.f.job;params.intent="";if(I.f.rel==="yes"||I.f.rel==="no")params.only_relevant=I.f.rel==="yes"?"1":"no"}
   if(I.f.aiIntent)params.ai_intent=I.f.aiIntent;
   const rg=NEONUI.rangeOf(I.f.period);
   if(rg)params.date_from=new Date(rg[0]).toISOString().slice(0,10);
@@ -2789,6 +2796,18 @@ async function loadLibrary(extra){
   if(!I._aiT||Date.now()-I._aiT>30000)loadAiIntents();
 }
 function closeAllLayers(){document.querySelectorAll(".ov [data-x]").forEach(b=>b.click())}
+function jobRel(id){const j=(S.intel.scans||[]).find(x=>String(x.id)===String(id));return j&&j.rel?j.rel:null}
+function libMatchTile(){
+  const I=S.intel,f=I.f;
+  if(f.job){
+    const r=jobRel(f.job);
+    if(r&&r.found){const pc=Math.round(r.relevant/r.found*100);
+      return stat("Подходят по интенту запуска",r.relevant+" из "+r.found,`note="${pc}% · ${r.pending?"ещё определяется "+r.pending:"по ключевому слову запуска"}" hint="Креатив подходит, если его интент (по оценке Gemini), текст или смысл совпадает с ключевым словом запуска. Остальные пойманы рекламной сетью по аудитории, а не по теме."`)}
+    return stat("Подходят по интенту запуска","…",'note="считаем"');
+  }
+  const L=I.scans||[],withC=L.filter(x=>(x.total||0)>0).length;
+  return stat("Запусков",L.length,`note="с креативами: ${withC}" hint="Выберите запуск в фильтре — здесь появится, сколько его креативов подходят по теме"`);
+}
 function jobIsLive(id){const j=(S.intel.scans||[]).find(x=>String(x.id)===String(id));return !!j&&(j.status==="running"||j.status==="queued")}
 async function loadAiIntents(){
   const I=S.intel;I._aiT=Date.now();
@@ -2824,7 +2843,7 @@ async function filterBySearch(q){
   toast("Показаны результаты поиска «"+q+"»",{tone:"success"});
 }
 async function filterByJob(jobId,label){
-  Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:String(jobId),page:1});
+  Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:String(jobId),rel:"all",page:1});
   await loadLibrary();
   N.go("intel-library");
   toast("Показаны креативы запуска #"+jobId+(label?" «"+label+"»":"")+". Сбросить фильтр — кнопка над списком",{tone:"success"});
@@ -2839,7 +2858,7 @@ function jobFilterOptions(){
 function jobBannerHtml(){
   const f=S.intel.f;if(!f.job)return"";
   const j=(S.intel.scans||[]).find(x=>String(x.id)===String(f.job));
-  return `<div class="row between" style="gap:10px;align-items:center;background:var(--info-bg);color:var(--info);border-radius:12px;padding:9px 12px;font-size:13px"><span>${ic("filter",14)} Показаны креативы только запуска <b>#${esc(f.job)}</b>${j?" · «"+esc(j.key_text||"")+"»":""}${jobIsLive(f.job)?" · <b>запуск ещё идёт</b> — найденное уже тут, список обновляется сам":""}</span><nv-button size="sm" variant="secondary" icon="x" data-act="libJobReset">Показать все запуски</nv-button></div>`;
+  return `<div class="row between" style="gap:10px;align-items:center;background:var(--info-bg);color:var(--info);border-radius:12px;padding:9px 12px;font-size:13px"><span>${ic("filter",14)} Показаны креативы только запуска <b>#${esc(f.job)}</b>${j?" · «"+esc(j.key_text||"")+"»":""}${jobIsLive(f.job)?" · <b>запуск ещё идёт</b> — найденное уже тут, список обновляется сам":""}</span><span class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><nv-segmented value="${esc(f.rel||"all")}" options="all:Все креативы|yes:Только по теме|no:Не по теме" data-chg="libRel"></nv-segmented><nv-button size="sm" variant="secondary" icon="x" data-act="libJobReset">Показать все запуски</nv-button></span></div>`;
 }
 async function filterByAdvertiser(inn,name){
   try{
@@ -3033,7 +3052,7 @@ function gridOfCollectionItems(items,colId){
 async function loadScans(){
   try{
     const data=await api("/api/v1/runs",{limit:50});
-    S.intel.scans=(data.items||[]).map(r=>({id:r.id,key_text:r.key_text,city:r.city,status:r.status,total:r.total_creatives||0,created_at:r.created_at,started_at:r.started_at,finished_at:r.finished_at,error_text:r.error_text,schedule_id:r.schedule_id}));
+    S.intel.scans=(data.items||[]).map(r=>({id:r.id,key_text:r.key_text,city:r.city,status:r.status,total:r.total_creatives||0,created_at:r.created_at,started_at:r.started_at,finished_at:r.finished_at,error_text:r.error_text,schedule_id:r.schedule_id,rel:r.relevance||null}));
     S.intel.scansLoaded=true;
     loadSchedules();
     clearTimeout(S.intel._scanPoll);
@@ -3151,6 +3170,7 @@ async function openScanDetail(job){
       <dt>Начато</dt><dd>${esc(fmtDateTime(data.started_at))}</dd>
       <dt>Завершено</dt><dd>${data.finished_at?esc(fmtDateTime(data.finished_at)):"ещё не завершено"}</dd>
       <dt>Найдено креативов</dt><dd>${esc(data.total_creatives||0)}</dd>
+      ${data.relevance&&data.relevance.found?`<dt>Подходят по теме</dt><dd><b>${data.relevance.relevant}</b> из ${data.relevance.found} · ${Math.round(data.relevance.relevant/data.relevance.found*100)}%${data.relevance.pending?" · ещё определяется "+data.relevance.pending:""}<div class="muted" style="font-size:12px">Креатив подходит, если его интент, текст или смысл совпадает с ключевым словом «${esc(data.key_text||"")}»</div></dd>`:""}
     </dl>
     <div class="sect-t">По площадкам</div>
     ${sites.length?`<dl class="dl">${sites.map(s=>`<dt>${esc(siteLabel[s.platform]||s.platform)}</dt><dd>${siteStatusLabel[s.status]||s.status||"—"} · найдено ${esc(s.unique_creatives||0)}${s.partial_creatives?" (частично "+esc(s.partial_creatives)+")":""}${s.ad_signal_detected!=null?(s.ad_signal_detected?" · реклама обнаружена":" · реклама не обнаружена"):""}${s.error_text?"<br><span class=\"mono\" style=\"font-size:11.5px\">"+esc(s.error_text)+"</span>":""}</dd>`).join("")}</dl>`:'<p class="muted">Площадки ещё не обработаны.</p>'}`,
@@ -3300,7 +3320,7 @@ library(){
   return{title:"Библиотека рекламы",sub:"Реклама конкурентов, которую нашёл парсер. Откройте объявление, чтобы увидеть детали.",
   actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
   help:{title:"С чего начать",steps:["Запустите сканирование по своему запросу и городу.","Откройте креатив — там цена, ERID и ссылка.","Сохраняйте находки или собирайте их в подборки."]},
-  body:`<div class="grid g4">${stat("Показано карточек",r.length)}${stat("Всего по ключевому слову",I.lib.total||0,'hint="Общее число после группировки одинаковых объявлений"')}${stat("С кодом ERID",erid,'note="из загруженных"')}${stat("В избранном",savedN,'note="из загруженных"')}</div>
+  body:`<div class="grid g4">${stat("Показано карточек",r.length)}${libMatchTile()}${stat("С кодом ERID",erid,'note="из загруженных"')}${stat("В избранном",savedN,'note="из загруженных"')}</div>
   <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст, домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-select label="Запуск" value="${esc(f.job||"")}" options="${esc(jobFilterOptions())}" data-chg="libF" data-key="job"></nv-select><nv-filter-select label="Интент креатива" value="${esc(f.aiIntent)}" options="${esc(aiIntentOptions()||"_:Пока не определены")}" placeholder="Все интенты" min-width="320" data-chg="libF" data-key="aiIntent"></nv-filter-select><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select><nv-select label="Сортировка" value="${f.sort}" options="recent:Сначала новые|oldest:Сначала старые|name:Домен А-Я" data-chg="libF" data-key="sort"></nv-select><nv-select label="На странице" value="${+f.pageSize||25}" options="25:25|50:50|100:100|200:200" data-chg="libF" data-key="pageSize"></nv-select>${intentControlHtml()}</div>
   ${jobBannerHtml()}
   <nv-saved-views id="lib-views" views="${esc(JSON.stringify(I.savedViews.map(v=>({id:v.id,name:v.name}))))}" value="${esc(activeViewId())}" can-save></nv-saved-views>
@@ -3383,7 +3403,7 @@ scans(){
   <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Запрос или город" value="${esc(sf.q)}" data-chg="scanF" data-key="q"></nv-input><nv-select label="Статус" value="${esc(sf.status)}" options=":Все статусы|queued:В очереди|running:Выполняется|succeeded:Завершено|failed:Ошибка" data-chg="scanF" data-key="status"></nv-select>${(sf.q||sf.status)?'<nv-button variant="ghost" size="sm" icon="x" data-act="scanFReset">Сбросить</nv-button>':""}</div>
   ${schedulesHtml(S.intel.schedules||[])}
   <div class="grid g4lg">${rows.length?rows.map(s=>{const info=scanCardInfo(s,medianMs);
-    return `<nv-scan-card title="${esc(s.key_text)}" subtitle="${esc((s.city||"")+(s.schedule_id?" · по расписанию":""))}" status="${esc(info.status)}" pct="${esc(info.pct)}" ${info.indeterminate?"indeterminate":""} note="${esc(info.note)}" found="${esc(s.total||0)}"><nv-button size="sm" variant="secondary" icon="external-link" icon-only hint="Открыть" data-act="scanOpen" data-id="${esc(s.id)}">Открыть</nv-button>${(s.total>0||s.status==="succeeded")?`<nv-button size="sm" variant="secondary" icon="layout-grid" icon-only hint="${s.status==="running"||s.status==="queued"?"Показать уже найденное (запуск ещё идёт)":"Показать в библиотеке"}" data-act="scanToLib" data-id="${esc(s.id)}">Показать в библиотеке</nv-button>`:""}</nv-scan-card>`;
+    return `<nv-scan-card title="${esc(s.key_text)}" subtitle="${esc((s.city||"")+(s.schedule_id?" · по расписанию":""))}" status="${esc(info.status)}" pct="${esc(info.pct)}" ${info.indeterminate?"indeterminate":""} note="${esc(info.note)}" found="${esc(s.total||0)}" ${s.rel?`relevant="${s.rel.relevant}" rel-of="${s.rel.found}" rel-pending="${s.rel.pending||""}"`:""}><nv-button size="sm" variant="secondary" icon="external-link" icon-only hint="Открыть" data-act="scanOpen" data-id="${esc(s.id)}">Открыть</nv-button>${(s.total>0||s.status==="succeeded")?`<nv-button size="sm" variant="secondary" icon="layout-grid" icon-only hint="${s.status==="running"||s.status==="queued"?"Показать уже найденное (запуск ещё идёт)":"Показать в библиотеке"}" data-act="scanToLib" data-id="${esc(s.id)}">Показать в библиотеке</nv-button>`:""}</nv-scan-card>`;
   }).join(""):'<nv-card><nv-empty icon="search-x" heading="Заданий не найдено" text="Измените фильтры или создайте новое сканирование."><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>'}</div>`,
   after(root){
     if(!S.intel.scansLoaded)loadScans();
@@ -3506,11 +3526,11 @@ Object.assign(N.acts,{
   carouselOpen(a,d){openCreative(d.id)},
   copyField(a,d){const v=d.value||"";const done=()=>toast("Скопировано",{tone:"success"});if(navigator.clipboard)navigator.clipboard.writeText(v).then(done).catch(()=>toast("Браузер запретил копирование. Скопируйте текст вручную",{tone:"warning"}));else toast("Скопируйте текст вручную",{tone:"warning"})},
   cardAddToCollection(a,d){const g=findGroup(d.id);if(!g){toast("Креатив не найден",{tone:"warning"});return}collectDlg([{group_key:g.group_key,creative_id:g.representative.id}])},
-  libReset(){Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:"",aiIntent:""});loadLibrary()},
+  libReset(){Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:"",rel:"all",aiIntent:""});loadLibrary()},
   runOpen(a,d){openScanDetail({id:+d.id})},
   aiFilter(a,d){closeAllLayers();Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:"",aiIntent:d.v,page:1});loadLibrary();N.go("intel-library")},
   runLib(a,d){closeAllLayers();filterByJob(+d.id,d.k)},
-  libJobReset(){S.intel.f.job="";S.intel.f.page=1;loadLibrary()},
+  libJobReset(){S.intel.f.job="";S.intel.f.rel="all";S.intel.f.page=1;loadLibrary()},
   bulkSave(){const set=new Set(S.intel.savedIds);S.intel.sel.forEach(g=>set.add(String(g.representative.id)));S.intel.savedIds=[...set];persistSavedCreativeIds(S.intel.savedIds);const n=S.intel.sel.length;S.intel.sel=[];N.refresh();toast("В избранное добавлено: "+n,{tone:"success"})},
   bulkCollect(){collectDlg(S.intel.sel.map(g=>({group_key:g.group_key,creative_id:g.representative.id})))},
   bulkCompare(){S.intel.cmp=[...S.intel.sel];S.intel.sel=[];N.go("intel-compare")},
@@ -3524,6 +3544,7 @@ Object.assign(N.acts,{
   kRemoveItem(a,d){removeFromCollection(d.col,d.key)},
   kDel(a,d){const k=S.intel.collections.find(x=>x.id===d.id);if(!k)return;confirm({title:"Удалить подборку «"+k.name+"»?",text:"Все элементы подборки удалятся без возможности восстановления.",confirm:"Удалить подборку",danger:true,fn(){(async()=>{try{await apiDelete("/api/v1/collections/"+k.id);S.intel.openK=null;await loadCollections();N.refresh();toast("Подборка удалена")}catch(err){toast("Не удалось удалить: "+(err.message||""),{tone:"danger"})}})()}})}
 });
+N.chg.libRel=v=>{S.intel.f.rel=v||"all";S.intel.f.page=1;loadLibrary()};
 N.chg.libF=(v,d)=>{
   if(d.key==="pageSize"){S.intel.f.pageSize=+v||25;S.intel.f.page=1;libRes();return}
   S.intel.f[d.key]=v;S.intel.f.page=1;
