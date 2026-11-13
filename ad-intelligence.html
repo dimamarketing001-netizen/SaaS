@@ -1,10 +1,10 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><style id="nv-extra">
 /* Выбранный фильтр обводится контуром — единый стиль для всех фильтров (nv-filter-select, nv-date-range,
    nv-select как фильтр «Все…», поиск с текстом). Класс .act ставят сами компоненты. */
-.fs.act,.ctl.act{border-color:var(--svc-ink,var(--ok));box-shadow:0 0 0 1px var(--svc-ink,var(--ok));background:color-mix(in srgb,var(--svc-ink,var(--ok)) 8%,var(--surface))}
+.fs.act,.ctl.act{border-color:var(--svc-ink,var(--ok));box-shadow:0 0 0 3px var(--svc-soft,color-mix(in srgb,var(--ok) 18%,transparent));background:color-mix(in srgb,var(--svc-ink,var(--ok)) 8%,var(--surface))}
 .fs.act:hover{border-color:var(--svc-ink,var(--ok))}
 /* в панелях фильтров (.toolbar) рамку рисует .fld, а не .ctl — контур ставим на неё */
-.toolbar .fld:has(.ctl.act){border-color:var(--svc-ink,var(--ok));box-shadow:0 0 0 1px var(--svc-ink,var(--ok));background:color-mix(in srgb,var(--svc-ink,var(--ok)) 8%,var(--l2))}
+.toolbar .fld:has(.ctl.act){border-color:var(--svc-ink,var(--ok));box-shadow:0 0 0 3px var(--svc-soft,color-mix(in srgb,var(--ok) 18%,transparent));background:color-mix(in srgb,var(--svc-ink,var(--ok)) 8%,var(--l2))}
 .toolbar .fld:has(.ctl.act) label{color:var(--svc-ink,var(--ok))}
 .toolbar .ctl.act{box-shadow:none;background:none}
 .fs.act .fs-l,.ctl.act>svg,.ctl.act>nv-icon{color:var(--svc-ink,var(--ok))}
