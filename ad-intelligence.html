@@ -2804,8 +2804,18 @@ async function loadLibrary(extra){
     I.lib.loaded=true;
   }catch(err){if(seq!==I._libSeq)return;I.lib.loaded=true;toast("Не удалось загрузить креативы: "+(err.message||""),{tone:"danger"})}
   I.lib.loading=false;
-  N.refreshIf("intel-library","intel-compare");
+  refreshLibSafe();
   if(!I._aiT||Date.now()-I._aiT>30000||(I._aiJob||"")!==String(I.f.job||""))loadAiIntents();
+}
+/* Перерисовка библиотеки не должна ломать открытый выпадающий фильтр: пока он открыт — обновляем только список, остальное после закрытия */
+function refreshLibSafe(){
+  if(document.querySelector("body > .pop")){
+    if(document.getElementById("lib-res"))libRes();
+    clearTimeout(S.intel._popW);
+    const w=()=>{if(document.querySelector("body > .pop"))S.intel._popW=setTimeout(w,250);else N.refreshIf("intel-library","intel-compare")};
+    S.intel._popW=setTimeout(w,250);return;
+  }
+  N.refreshIf("intel-library","intel-compare");
 }
 function closeAllLayers(){document.querySelectorAll(".ov [data-x]").forEach(b=>b.click())}
 function relCheckHtml(){
@@ -2837,7 +2847,7 @@ async function loadAiIntents(){
     const have=new Set(I.aiIntents.map(x=>String(x.intent||"").toLowerCase()).concat(I.aiPending?["__pending__"]:[]));
     const keep=String(I.f.aiIntent||"").split(",").filter(Boolean).filter(x=>have.has(x.toLowerCase()));
     if(keep.join(",")!==String(I.f.aiIntent||"")){I.f.aiIntent=keep.join(",");I.f.page=1;loadLibrary();return}
-    N.refreshIf("intel-library");
+    refreshLibSafe();
   }catch(err){I.aiLoaded=true}
 }
 function aiIntentOptions(){
