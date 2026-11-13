@@ -2676,7 +2676,7 @@ const seed=()=>({
   sel:[],cmp:[],cmpF:{q:"",platform:"",format:"",period:"",adv:""},
   savedIds:loadSavedCreativeIds(),
   collections:[],collectionsLoaded:false,collectionItemsCache:{},openK:null,
-  schedules:[],schedulesLoaded:false,scans:[],scansLoaded:false,scanF:{q:"",status:""},
+  schedules:[],schedulesLoaded:false,scans:[],scansLoaded:false,scanF:{q:"",status:""},schedTab:"live",
   advertisers:[],advertisersLoaded:false,advQ:"",advSub:"all",
   intents:[],intentsLoaded:false,activeIntents:getActiveIntents(),
   ana:{loaded:false,loading:false,platSub:"coverage",campSub:"campaigns",freshSub:"fresh",totals:{},coverage:[],breakdown:[],fresh:[],freshTotal:0,discounts:[],discTotal:0,apps:[],appsTotal:0,cross:[],carousels:[],campaigns:[],keywords:[],growing:[],mismatch:[],coverageReport:[]}
@@ -3165,7 +3165,7 @@ function scanDlg(){
 async function loadSchedules(){
   try{const data=await api("/api/v1/schedules",{});S.intel.schedules=data.items||[];S.intel.schedulesError=""}
   catch(err){S.intel.schedules=S.intel.schedules||[];S.intel.schedulesError=err.message||"ошибка сети"}
-  S.intel.schedulesLoaded=true;N.refreshIf("intel-scans");
+  S.intel.schedulesLoaded=true;N.refreshIf("intel-scans","intel-schedules");
 }
 async function schedAction(id,action){
   const run=async()=>{try{await apiPost("/api/v1/schedules/"+id+"/action",{action});await loadSchedules();toast(action==="pause"?"Расписание на паузе":action==="resume"?"Расписание возобновлено":"Расписание остановлено",{tone:"success"})}catch(err){toast("Не удалось: "+(err.message||""),{tone:"danger"})}};
@@ -3186,10 +3186,17 @@ function schedTimeline(x){
   const dayNo=Math.min(x.duration_days,Math.max(1,cur+1));
   return `<div class="sch-tl" role="img" aria-label="Таймлайн расписания по дням">${cells}</div><div class="sch-tlc">${x.status==="active"||x.status==="paused"?"День "+dayNo+" из "+x.duration_days+" · ":""}точки — слоты запусков за день, зелёные уже прошли</div>`;
 }
+const schedLive=x=>x.status==="active"||x.status==="paused";
+function schedBanner(){
+  const live=(S.intel.schedules||[]).filter(schedLive);
+  if(!live.length)return"";
+  const next=live.filter(x=>x.status==="active"&&x.next_run_at).map(x=>x.next_run_at).sort()[0];
+  return `<div class="row between" style="gap:10px;align-items:center;background:var(--info-bg);color:var(--info);border-radius:12px;padding:9px 12px;font-size:13px"><span>${ic("calendar-clock",14)} Активных расписаний: <b>${live.length}</b>${next?" · ближайший запуск <b>"+esc(fmtDateTime(next))+"</b>":""}</span><nv-button size="sm" variant="secondary" data-act="schedOpen">Открыть расписания</nv-button></div>`;
+}
 function schedulesHtml(list){
   if(!S.intel.schedulesLoaded)return"";
   if(S.intel.schedulesError&&!list.length)return `<nv-callout tone="warning" heading="Не удалось загрузить расписания">${esc(S.intel.schedulesError)} <nv-button size="sm" variant="secondary" icon="refresh-cw" data-act="schedReload">Повторить</nv-button></nv-callout>`;
-  if(!list.length)return `<nv-card heading="Расписания" subtitle="Автоматические повторные сканирования"><nv-empty icon="calendar-clock" heading="Расписаний пока нет" text="При создании сканирования выберите «Как часто запускать» — например, 3 раза в день на 7 дней."><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>`;
+  if(!list.length)return `<nv-card><nv-empty icon="calendar-clock" heading="${S.intel.schedTab==="ended"?"Завершённых расписаний нет":"Активных расписаний нет"}" text="При создании сканирования выберите «Как часто запускать» — например, 3 раза в день на 7 дней."><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>`;
   const rows=list.map(x=>{
     const pct=x.runs_total?Math.min(100,Math.round(x.runs_created/x.runs_total*100)):0,st=SCHED_STATUS[x.status]||[x.status,"neutral"],live=x.status==="active"||x.status==="paused";
     return `<div class="sch-row"><div><div class="st">${esc(x.key_text)}</div><div class="ss">${esc(x.city)} · ${x.runs_per_day} ${plural(x.runs_per_day,"раз","раза","раз")} в день × ${x.duration_days} дн.</div></div>
@@ -3198,7 +3205,7 @@ function schedulesHtml(list){
     <div class="sch-act">${live?(x.status==="active"?`<nv-button size="sm" variant="secondary" icon="pause" data-act="schedAction" data-id="${x.id}" data-a="pause">Пауза</nv-button>`:`<nv-button size="sm" variant="secondary" icon="play" data-act="schedAction" data-id="${x.id}" data-a="resume">Продолжить</nv-button>`)+`<nv-button size="sm" variant="ghost" icon="x" icon-only hint="Остановить" data-act="schedAction" data-id="${x.id}" data-a="cancel"></nv-button>`:""}</div>
     ${schedTimeline(x)}</div>`;
   }).join("");
-  return `<nv-card heading="Расписания" subtitle="Автоматические повторные сканирования">${rows}</nv-card>`;
+  return `<nv-card>${rows}</nv-card>`;
 }
 async function openScanDetail(job){
   let data;
@@ -3448,7 +3455,7 @@ scans(){
   help:{steps:["Создайте задание: запрос, город и (по желанию) как часто повторять — например, 3 раза в день на 7 дней.","Воркер заберёт его из очереди при следующем опросе.","Расписания можно ставить на паузу и останавливать в блоке «Расписания». Когда статус станет «Завершено», реклама появится в библиотеке."]},
   body:`<div class="grid g4">${stat("Всего задач",total)}${stat("Выполняется",active)}${stat("Завершено",done)}${stat("Ошибка",failed)}</div>
   <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Запрос или город" value="${esc(sf.q)}" data-chg="scanF" data-key="q"></nv-input><nv-select label="Статус" value="${esc(sf.status)}" options=":Все статусы|queued:В очереди|running:Выполняется|succeeded:Завершено|failed:Ошибка" data-chg="scanF" data-key="status"></nv-select>${(sf.q||sf.status)?'<nv-button variant="ghost" size="sm" icon="x" data-act="scanFReset">Сбросить</nv-button>':""}</div>
-  ${schedulesHtml(S.intel.schedules||[])}
+  ${schedBanner()}
   <div class="grid g4lg">${rows.length?rows.map(s=>{const info=scanCardInfo(s,medianMs);
     return `<nv-scan-card title="${esc(s.key_text)}" subtitle="${esc((s.city||"")+(s.schedule_id?" · по расписанию":""))}" status="${esc(info.status)}" pct="${esc(info.pct)}" ${info.indeterminate?"indeterminate":""} note="${esc(info.note)}" found="${esc(s.total||0)}" ${s.rel?`relevant="${s.rel.relevant}" rel-of="${s.rel.found}" rel-pending="${s.rel.pending||""}"`:""}><nv-button size="sm" variant="secondary" icon="external-link" icon-only hint="Открыть" data-act="scanOpen" data-id="${esc(s.id)}">Открыть</nv-button>${(s.total>0||s.status==="succeeded")?`<nv-button size="sm" variant="secondary" icon="layout-grid" icon-only hint="${s.status==="running"||s.status==="queued"?"Показать уже найденное (запуск ещё идёт)":"Показать в библиотеке"}" data-act="scanToLib" data-id="${esc(s.id)}">Показать в библиотеке</nv-button>`:""}</nv-scan-card>`;
   }).join(""):'<nv-card><nv-empty icon="search-x" heading="Заданий не найдено" text="Измените фильтры или создайте новое сканирование."><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>'}</div>`,
@@ -3458,6 +3465,13 @@ scans(){
     root.querySelectorAll('[data-act="scanOpen"]').forEach(b=>b.onclick=()=>{const s=L.find(x=>String(x.id)===b.dataset.id);if(s)openScanDetail(s)});
     root.querySelectorAll('[data-act="scanToLib"]').forEach(b=>b.onclick=()=>{const s=L.find(x=>String(x.id)===b.dataset.id);if(s)filterByJob(s.id,s.key_text)});
   }}},
+schedules(){
+  const all=S.intel.schedules||[],live=all.filter(schedLive),ended=all.filter(x=>!schedLive(x)),tab=S.intel.schedTab;
+  return{title:"Расписания",sub:"Автоматические повторные сканирования: сколько раз в день и сколько дней.",actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
+  body:`<div class="row" style="gap:8px;flex-wrap:wrap"><nv-button size="sm" variant="${tab==="live"?"primary":"secondary"}" data-act="schedTab" data-v="live">Активные · ${live.length}</nv-button><nv-button size="sm" variant="${tab==="ended"?"primary":"secondary"}" data-act="schedTab" data-v="ended">Завершённые и остановленные · ${ended.length}</nv-button></div>
+  ${schedulesHtml(tab==="ended"?ended:live)}`,
+  after(){if(!S.intel.schedulesLoaded)loadSchedules()}};
+},
 overview(){
   const I=S.intel.ana;
   if(!I.loaded&&!I.loading)loadAnalytics();
@@ -3570,6 +3584,8 @@ Object.assign(N.acts,{
   anaGo(a,d){const A=S.intel.ana;if(d.id==="fresh"&&d.sub)A.freshSub=d.sub;if(d.id==="platforms"&&d.sub)A.platSub=d.sub;if(d.id==="campaigns"&&d.sub)A.campSub=d.sub;if(d.id==="advertisers"&&d.sub)S.intel.advSub=d.sub;N.go("intel-"+d.id)},
   schedAction(a,d){schedAction(d.id,d.a)},
   schedReload(){loadSchedules()},
+  schedOpen(){N.go("intel-schedules")},
+  schedTab(a,d){S.intel.schedTab=d.v;N.refresh()},
   carouselOpen(a,d){openCreative(d.id)},
   copyField(a,d){const v=d.value||"";const done=()=>toast("Скопировано",{tone:"success"});if(navigator.clipboard)navigator.clipboard.writeText(v).then(done).catch(()=>toast("Браузер запретил копирование. Скопируйте текст вручную",{tone:"warning"}));else toast("Скопируйте текст вручную",{tone:"warning"})},
   cardAddToCollection(a,d){const g=findGroup(d.id);if(!g){toast("Креатив не найден",{tone:"warning"});return}collectDlg([{group_key:g.group_key,creative_id:g.representative.id}])},
@@ -3626,7 +3642,8 @@ N.register({id:"intel",name:"Разведка рекламы",short:"Разве�
     {id:"library",label:"Библиотека",icon:"layout-grid",count:()=>S.intel.lib.total||""},
     {id:"compare",label:"Сравнение",icon:"columns-3"},
     {id:"collections",label:"Подборки",icon:"folder-heart"},
-    {id:"scans",label:"Сканирования",icon:"scan-search",count:()=>S.intel.scans.filter(s=>s.status==="queued"||s.status==="running").length||""}
+    {id:"scans",label:"Сканирования",icon:"scan-search",count:()=>S.intel.scans.filter(s=>s.status==="queued"||s.status==="running").length||""},
+    {id:"schedules",label:"Расписания",icon:"calendar-clock",count:()=>(S.intel.schedules||[]).filter(schedLive).length||""}
   ]},
   {group:"Анализ",items:[
     {id:"overview",label:"Обзор",icon:"layout-dashboard"},
