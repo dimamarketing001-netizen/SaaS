@@ -4756,7 +4756,7 @@ report(){
     if(!r.loaded&&!r.loading){loadReport();return}
     const el=root.querySelector("#ads-rep-res");if(!d||!el)return;
     const sm=d.summary||{},t=d.totals||{},th=sm.threshold,rub=v=>v==null?"—":fmt(Math.round(v))+" ₽",rub2=v=>v==null?"—":Number(v).toLocaleString("ru-RU",{maximumFractionDigits:2})+" ₽";
-    const items=(d.items||[]).filter(a=>(!r.status||r.status.split(",").includes((a.status||{}).code||"unknown"))&&(!r.q||(a.pool_login+" "+a.account_id+" "+(a.project_name||"")).toLowerCase().includes(r.q.toLowerCase())));
+    const items=(d.items||[]).filter(a=>(!r.status||r.status.split(",").includes((a.status||{}).code||"unknown"))&&(!r.q||(a.pool_login+" "+a.account_id+" "+(a.campaign_id||"")+" "+(a.project_name||"")).toLowerCase().includes(r.q.toLowerCase())));
     const by=sm.by_status||{};
     const chart=(keys,names,type)=>esc(JSON.stringify({labels:(d.daily.labels||[]).map(x=>x.slice(8,10)+"."+x.slice(5,7)),series:keys.map((k,i)=>({name:names[i],values:d.daily[k]||[]}))}));
     const dd=x=>x?x.slice(8,10)+"."+x.slice(5,7)+"."+x.slice(0,4):"";
@@ -4785,7 +4785,7 @@ report(){
         ${items.length?`<nv-table id="ads-rep-t" page-size="25" clickable></nv-table>`:`<nv-empty icon="bar-chart-3" heading="Нет аккаунтов" text="Измените проекты, период или фильтры."></nv-empty>`}
       </nv-card>`;
     if(items.length)wireTable(root,"ads-rep-t",items.map(a=>({id:a.account_id,...a,st:(a.status||{}).code||"unknown"})),
-      [{key:"pool_login",label:"Аккаунт",sort:true,render:a=>`<b>${esc(a.pool_login||"—")}</b><br><span class="muted" style="font-size:12px">#${a.account_id} · ${esc(a.project_name||"")}</span>`},
+      [{key:"pool_login",label:"Аккаунт",sort:true,render:a=>`<b>${esc(a.pool_login||"—")}</b><br><span class="muted" style="font-size:12px">#${a.account_id} · ${esc(a.project_name||"")}</span>${a.campaign_id?`<br><span class="muted" style="font-size:12px">Кампания Директа: <b class="num" style="user-select:all">${esc(String(a.campaign_id))}</b></span>`:""}`},
        {key:"st",label:"Статус",sort:true,render:a=>accStatusHtml(a.status||{code:"unknown"})},
        {key:"impressions",label:"Показы",align:"right",sort:true,render:a=>fmt(a.impressions)},
        {key:"clicks",label:"Клики",align:"right",sort:true,render:a=>fmt(a.clicks)},
