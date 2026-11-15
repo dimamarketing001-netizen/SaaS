@@ -2846,7 +2846,7 @@ async function loadLibrary(extra){
   const params={sort:I.f.sort==="discount"?"discount":"recent",limit:120};
   if(I.f.q)params.q=I.f.q;
   // Фильтр по запуску: показываем креативы именно этого задания, без сужения по ключевому слову
-  if(I.f.job){params.job_id=I.f.job;params.intent="";if(I.f.rel==="yes"||I.f.rel==="no")params.only_relevant=I.f.rel==="yes"?"1":"no"if(I.f.hist)params.history="1"}
+  if(I.f.job){params.job_id=I.f.job;params.intent="";if(I.f.rel==="yes"||I.f.rel==="no")params.only_relevant=I.f.rel==="yes"?"1":"no";if(I.f.hist)params.history="1"}
   if(I.f.aiIntent)params.ai_intent=I.f.aiIntent;
   const rg=NEONUI.rangeOf(I.f.period);
   if(rg)params.date_from=new Date(rg[0]).toISOString().slice(0,10);
