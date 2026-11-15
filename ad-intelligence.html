@@ -76,6 +76,35 @@ nv-carousel.cx-fit .cx-dots{display:none}
 .scanc-rel .rb{flex:0 0 64px;height:6px;border-radius:99px;background:var(--surface-3);overflow:hidden}
 .scanc-rel .rb i{display:block;height:100%;background:var(--ok);border-radius:99px}
 .scanc-rel b{color:var(--ink)}
+#bell{position:relative;display:inline-flex}
+.belln{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;box-sizing:border-box;padding:0 4px;border-radius:999px;background:var(--bad,#dc2626);color:#fff;font:700 10px/17px var(--font-ui,system-ui);text-align:center;pointer-events:none;box-shadow:0 0 0 2px var(--bg,#e6e9e3);z-index:2}
+nv-strength{display:block;min-width:0}
+.sg{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:12px 12px 0 0;background:var(--surface-2);min-width:0}
+.sg-r{flex:none;font:700 13px var(--font-display);color:var(--ink-3);min-width:22px}
+.sg-s{flex:none;display:flex;align-items:baseline;gap:4px}.sg-s b{font:700 20px var(--font-display);line-height:1}.sg-s span{font-size:11px;color:var(--ink-3)}
+.sg-b{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.sg-bar{height:6px;border-radius:999px;background:color-mix(in srgb,var(--ink) 9%,transparent);overflow:hidden}.sg-bar i{display:block;height:100%;border-radius:999px;background:var(--ink-3)}
+.sg.leader{background:color-mix(in srgb,var(--success,#16a34a) 13%,var(--surface))}.sg.leader .sg-bar i{background:var(--success,#16a34a)}.sg.leader .sg-r{color:var(--success,#16a34a)}
+.sg.strong .sg-bar i{background:var(--info,#2563eb)}
+.sg-f{display:flex;gap:4px 10px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-2)}.sg-f b{font-weight:700;color:var(--ink)}
+.ld{display:flex;flex-direction:column;min-width:0}.ld nv-creative-card{flex:1}.ld .cr{border-top-left-radius:0;border-top-right-radius:0}
+.ld-wrap{display:grid;grid-template-columns:minmax(230px,300px) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:900px){.ld-wrap{grid-template-columns:minmax(0,1fr)}}
+nv-bar-list{display:block;min-width:0}
+.bl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.bl-r{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;min-width:0}
+button.bl-r{cursor:pointer}button.bl-r:hover{background:var(--surface-2)}button.bl-r:focus-visible{outline:2px solid var(--accent,#16a34a);outline-offset:-2px}
+.bl-n{width:18px;flex:none;font-size:12px;color:var(--ink-3);text-align:right}
+.bl-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.bl-t{display:flex;align-items:center;gap:7px;min-width:0}
+.bl-l{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.bl-bar{height:5px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.bl-bar i{display:block;height:100%;border-radius:999px;background:var(--ink-3)}.bl-bar i.ok{background:var(--success,#16a34a)}
+.bl-s{font-size:11.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl-v{flex:none;font-size:13px;font-weight:600;white-space:nowrap}
+.bl-r nv-icon{flex:none;color:var(--ink-3)}
+.bl-empty{padding:18px 8px;font-size:13px;color:var(--ink-3)}
+.ov-lead{font-size:15px;line-height:1.5;margin:0;max-width:880px}.ov-lead b{font-weight:700}
 nv-choice-bar{display:block;min-width:0}
 .chb{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
 .chb-l{font-size:12px;font-weight:600;color:var(--ink-3);min-width:132px}
@@ -2104,6 +2133,20 @@ define("nv-permission-matrix",class extends NvEl{
   html(){const Ro=this.a("roles").split("|"),R=parseJSON(this.a("rows"),[]),ro=this.b("readonly");return `<div class="tw"><table class="nm"><thead><tr><th>Что можно делать</th>${Ro.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${R.map(r=>r.group?`<tr class="g"><th colspan="${Ro.length+1}">${esc(r.group)}</th></tr>`:`<tr><th>${esc(r.label)}</th>${Ro.map((c,j)=>`<td><label class="ck nm-c"><input type="checkbox" data-r="${esc(r.id)}" data-c="${j}" ${r.values[j]?"checked":""} ${ro||r.locked?"disabled":""} aria-label="${esc(c)}: ${esc(r.label)}"><span class="box">${ic("check",13)}</span></label></td>`).join("")}</tr>`).join("")}</tbody></table></div>`}
   mounted(){this.onchange=e=>{const i=e.target;if(i.dataset.r)this.emit("nv-toggle",{id:i.dataset.r,role:+i.dataset.c,value:i.checked})}}
 },"Команда",{desc:"Права ролей. Строку можно закрепить, чтобы её нельзя было изменить.",events:["nv-toggle {id,role,value}"],wide:1,attrs:{roles:{type:"string",default:"Владелец|Менеджер|Наблюдатель",desc:"Роли через |"},rows:{type:"string",default:'[{"group":"Реклама"},{"id":"launch","label":"Запускать кампании","values":[1,1,0]},{"id":"bill","label":"Менять тариф","values":[1,0,0],"locked":true}]',desc:"Права JSON"},readonly:{type:"bool",desc:"Только просмотр"}}});
+define("nv-strength",class extends NvEl{
+  html(){const sc=Math.max(0,Math.min(100,+this.a("score")||0)),lv=this.a("level")||"normal",f=parseJSON(this.a("factors"),[]),names={leader:"лидер темы",strong:"сильное",normal:"обычное"};
+    return `<div class="sg ${esc(lv)}" title="Сила объявления: чем на большем числе сайтов, в большем числе запусков и городов оно встречается и чем дольше крутится — тем выше"><span class="sg-r">${this.a("rank")?"#"+esc(this.a("rank")):""}</span><span class="sg-s"><b class="num">${sc}</b><span>${esc(names[lv]||"")}</span></span><span class="sg-b"><span class="sg-bar"><i style="width:${Math.max(3,sc)}%"></i></span><span class="sg-f">${f.map(x=>`<span><b class="num">${esc(x.value)}</b> ${esc(x.label)}</span>`).join("")}</span></span></div>`}
+},"Данные",{desc:"Сила объявления внутри своей темы: место, балл 0–100 и из чего он сложился (сайты, запуски, города, дни). Ставится над карточкой объявления.",previewW:340,attrs:{rank:{type:"string",default:"1",desc:"Место в теме"},score:{type:"number",default:72,desc:"Балл 0–100"},level:{type:"enum",values:["leader","strong","normal"],default:"leader",desc:"Уровень: лидер темы, сильное, обычное"},factors:{type:"string",default:'[{"value":7,"label":"сайтов"},{"value":12,"label":"запусков"},{"value":5,"label":"городов"},{"value":4,"label":"дня"}]',desc:"JSON-массив: value, label"}}});
+define("nv-bar-list",class extends NvEl{
+  get rows(){return this._rows||parseJSON(this.a("rows"),[])}
+  set rows(v){this._rows=v||[];if(this._init)this.update()}
+  html(){const rows=this.rows,click=this.b("clickable"),max=Math.max(1,...rows.map(r=>+r.value||0)),empty=this.a("empty-text")||"Пока нет данных";
+    if(!rows.length)return `<div class="bl-empty">${esc(empty)}</div>`;
+    return `<ol class="bl">${rows.map((r,i)=>{const w=Math.max(2,Math.round((+r.value||0)/max*100));
+      const inner=`<span class="bl-n">${i+1}</span><span class="bl-m"><span class="bl-t"><span class="bl-l" title="${esc(r.label)}">${esc(r.label)}</span>${r.badge?`<nv-badge tone="${esc(r.tone||"success")}">${esc(r.badge)}</nv-badge>`:""}</span><span class="bl-bar"><i style="width:${w}%" class="${r.tone==="success"?"ok":""}"></i></span>${r.note?`<span class="bl-s">${esc(r.note)}</span>`:""}</span><span class="bl-v num">${esc(r.display!=null?r.display:r.value)}</span>`;
+      return click?`<li><button type="button" class="bl-r" data-id="${esc(r.id!=null?r.id:i)}">${inner}${ic("chevron-right",14)}</button></li>`:`<li><div class="bl-r">${inner}</div></li>`}).join("")}</ol>`}
+  mounted(){this._init=true;this.onclick=e=>{const b=e.target.closest("button.bl-r");if(b)this.emit("nv-pick",{id:b.dataset.id})}}
+},"Данные",{desc:"Рейтинг: строки с номером, названием, полосой доли и числом. С атрибутом clickable строка открывает подробности (событие nv-pick). Для списков «топ рекламодателей», «о чём реклама».",events:["nv-pick {id}"],previewW:420,attrs:{rows:{type:"string",default:'[{"id":"a","label":"матрасы","value":32,"display":"32 · 6%","badge":"по теме","note":"Аскона, Орматек"},{"id":"b","label":"недвижимость","value":79,"display":"79 · 15%"},{"id":"c","label":"оборудование","value":81,"display":"81 · 16%"}]',desc:"JSON-массив: id, label, value, display, note, badge, tone"},clickable:{type:"bool",desc:"Строки нажимаются"},"empty-text":{type:"string",default:"Пока нет данных",desc:"Текст, когда строк нет"}}});
 define("nv-choice-bar",class extends NvEl{
   get value(){return this.a("value")}
   html(){const v=this.a("value"),l=this.a("label");let o=[];try{o=JSON.parse(this.a("options")||"[]")}catch(e){}
@@ -2236,7 +2279,7 @@ const API_BASE=(localStorage.getItem("parsya_api_base")||DEFAULT_API_BASE).repla
    (библиотека + аналитика) ограничен выбранными поисковыми запросами. */
 const INTENT_SCOPED_PATHS=new Set(["/api/v1/creatives","/api/v1/advertisers","/api/v1/coverage",
  "/api/v1/analytics/cross-platform","/api/v1/analytics/carousels","/api/v1/analytics/campaigns",
- "/api/v1/analytics/keywords","/api/v1/analytics/fastest-growing","/api/v1/analytics/landing-mismatch","/api/v1/analytics/daily"]);
+ "/api/v1/analytics/keywords","/api/v1/analytics/fastest-growing","/api/v1/analytics/landing-mismatch","/api/v1/analytics/daily","/api/v1/analytics/summary","/api/v1/analytics/leaders"]);
 function getActiveIntents(){try{return JSON.parse(localStorage.getItem("parsya_active_intents")||"[]")}catch(e){return[]}}
 function setActiveIntents(list){try{localStorage.setItem("parsya_active_intents",JSON.stringify(list||[]))}catch(e){}}
 function activeIntentParam(){const list=getActiveIntents();return list.length?list.join(","):""}
@@ -2575,7 +2618,7 @@ function shell(){
 function sideNav(){
   const{s,v,svc}=route(),shut=S.core.sideShut||{};
   const itemHtml=i=>{
-    const c=typeof i.count==="function"?i.count():i.count,on=i.id===v;
+    const c=typeof i.count==="function"?i.count():i.count,on=i.id===v||(i.also||[]).includes(v);
     return `<button type="button" class="side-item${on?" on":""}" data-go="${s}-${i.id}" data-tip="${esc(i.label)}" ${on?'aria-current="page"':""}>${ic(i.icon)}<span class="t">${esc(i.label)}</span>${c!=null&&c!==""?`<span class="side-count">${esc(c)}</span>`:""}</button>`;
   };
   return (svc.nav||[]).map(g=>{const k=s+"/"+g.group,closed=g.group&&shut[k];return `<div class="side-group">${g.group?`<button type="button" class="side-label" data-act="sideTog" data-k="${esc(k)}" aria-expanded="${!closed}"><span>${esc(g.group)}</span>${ic(closed?"chevron-down":"chevron-up",14)}</button>`:""}${closed?"":`<div class="${g.group?"tree":""}">${g.items.map(itemHtml).join("")}</div>`}</div>`}).join("");
@@ -2595,7 +2638,7 @@ NEON.render=render;
 NEON.refresh=()=>{renderView(true);NEON.save()};
 NEON.refreshIf=(...keys)=>{const{s,v}=route();if(keys.includes(s+"-"+v))renderView(true)};
 window.addEventListener("hashchange",()=>{document.getElementById("shell")&&document.getElementById("shell").classList.remove("nav-open");render()});
-function updBell(){const b=document.getElementById("bell");if(!b)return;const n=NOTIF.unreadCount;b.setAttribute("label",n?"Уведомления, новых: "+n:"Уведомления");const old=b.querySelector(".belln");old&&old.remove();if(n){const i=document.createElement("span");i.className="belln";i.textContent=n;i.style.cssText="position:absolute;margin:-22px 0 0 18px;background:var(--bad);color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:0 5px;pointer-events:none";b.style.position="relative";b.append(i)}}
+function updBell(){const b=document.getElementById("bell");if(!b)return;const n=NOTIF.unreadCount;b.setAttribute("label",n?"Уведомления, новых: "+n:"Уведомления");const old=b.querySelector(".belln");old&&old.remove();if(n){const i=document.createElement("span");i.className="belln";i.textContent=n>99?"99+":n;i.setAttribute("aria-hidden","true");b.append(i)}}
 
 document.addEventListener("click",e=>{
   const g=e.target.closest("[data-go]");if(g){e.preventDefault();[...document.querySelectorAll(".ov")].forEach(o=>o.remove());NEON.go(g.dataset.go);return}
@@ -2763,7 +2806,7 @@ const seed=()=>({
 
 const CR=()=>S.intel.lib.groups;
 function findGroup(id){
-  const pools=[CR(),S.intel._lastCollectionItems||[],S.intel.cmp,S.intel.sel];
+  const pools=[CR(),S.intel._lastCollectionItems||[],S.intel._ovItems||[],S.intel.cmp,S.intel.sel];
   for(const p of pools){const g=p.find(x=>String(x.representative.id)===String(id));if(g)return g}
   return null;
 }
@@ -2921,6 +2964,20 @@ function refreshLibSafe(){
     S.intel._popW=setTimeout(w,250);return;
   }
   N.refreshIf("intel-library","intel-compare");
+}
+function plural(n,one,few,many){n=Math.abs(+n||0);const a=n%10,b=n%100;return a===1&&b!==11?one:(a>=2&&a<=4&&(b<10||b>=20)?few:many)}
+async function loadLeaders(theme){
+  const L=S.intel.lead=S.intel.lead||{};
+  const seq=L.seq=(L.seq||0)+1;L.loading=true;
+  if(theme!==undefined)L.theme=theme;
+  N.refreshIf("intel-leaders");
+  try{
+    const d=await api("/api/v1/analytics/leaders",L.theme?{ai_intent:L.theme}:{});
+    if(seq!==L.seq)return;
+    L.data=d;L.theme=d.theme||"";L.kw=(S.intel.activeIntents||[]).join(",");L.at=Date.now();
+  }catch(err){if(seq!==L.seq)return;toast("Не удалось загрузить сильные объявления: "+(err.message||""),{tone:"danger"})}
+  L.loading=false;L.loaded=true;
+  N.refreshIf("intel-leaders");
 }
 function closeAllLayers(){document.querySelectorAll(".ov [data-x]").forEach(b=>b.click())}
 function libScopeHtml(){
@@ -3425,7 +3482,7 @@ async function loadAnalytics(force){
   if(I.loaded&&!force)return;
   I.loading=true;if(!I.loaded)N.refreshIf("intel-overview","intel-sources","intel-carousels","intel-campaigns","intel-fresh","intel-platforms","intel-advertisers");
   const safe=p=>p.catch(()=>({}));
-  const[coverage,recent,fresh,discounts,apps,cross,carousels,campaigns,keywords,growing,mismatch,coverageReport,daily]=await Promise.all([
+  const[coverage,recent,fresh,discounts,apps,cross,carousels,campaigns,keywords,growing,mismatch,coverageReport,daily,summary]=await Promise.all([
     safe(api("/api/v1/coverage",{})),
     safe(api("/api/v1/creatives",{sort:"recent",limit:200})),
     safe(api("/api/v1/creatives",{date_from:new Date(Date.now()-7*864e5).toISOString().slice(0,10),sort:"recent",limit:12})),
@@ -3438,9 +3495,10 @@ async function loadAnalytics(force){
     safe(api("/api/v1/analytics/fastest-growing",{})),
     safe(api("/api/v1/analytics/landing-mismatch",{})),
     safe(api("/api/v1/analytics/coverage",{})),
-    safe(api("/api/v1/analytics/daily",{days:14}))
+    safe(api("/api/v1/analytics/daily",{days:14})),
+    safe(api("/api/v1/analytics/summary",{}))
   ]);
-  I.daily=daily.items||[];
+  I.daily=daily.items||[];I.summary=summary&&summary.totals?summary:null;
   I.coverage=coverage.platforms||[];I.totals=coverage.totals||{};
   const recentItems=recent.items||[],counts={};
   I.recentItems=recentItems;
@@ -3548,6 +3606,12 @@ function wireAnalyticsTables(r,I){
     [{key:"label",label:"Условие",render:x=>esc([x.platform,x.detection_method,x.creative_type].filter(Boolean).join(" · ")||"Без метки")},{key:"status",label:"Статус",render:x=>coverageStatus(x.pct)},{key:"pct",label:"Раскрыто",align:"right",render:x=>x.pct+"%"},{key:"disclosed_creatives",label:"Креативов",align:"right",render:x=>x.disclosed_creatives+" из "+x.total_creatives}]);
 }
 
+/* Запуски и расписания — один раздел: расписание лишь создаёт запуски автоматически */
+function scanTabsHtml(cur){
+  const I=S.intel,run=(I.scans||[]).filter(s=>s.status==="queued"||s.status==="running").length,live=(I.schedules||[]).filter(schedLive).length;
+  return `<nv-tabs items="scans:Запуски${run?" · идёт "+run:""}|schedules:Расписания${live?" · "+live:""}" value="${cur}" data-chg="scanTab"></nv-tabs>`;
+}
+N.chg.scanTab=v=>N.go("intel-"+(v==="schedules"?"schedules":"scans"));
 /* ---------- Экраны ---------- */
 const stat=(l,v,o)=>`<nv-stat label="${esc(l)}" value="${esc(v)}" ${o||""}></nv-stat>`;
 const views={
@@ -3556,14 +3620,16 @@ library(){
   const plats=["Яндекс / РСЯ","Яндекс Дзен","VK Ads","Google Ads","Taboola"];
   const erid=CR().filter(g=>g.representative.erid).length;
   const savedN=I.savedIds.length;
+  const moreN=(f.platform?1:0)+(f.format?1:0)+(f.saved?1:0)+((I.activeIntents||[]).length?1:0);
   return{title:"Библиотека рекламы",sub:"Реклама конкурентов, которую нашёл парсер. Откройте объявление, чтобы увидеть детали.",
   actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
   help:{title:"С чего начать",steps:["Запустите сканирование по своему запросу и городу.","Откройте креатив — там цена, ERID и ссылка.","Сохраняйте находки или собирайте их в подборки."]},
   body:`<div class="grid g4">${stat("Найдено объявлений",fmt(I.lib.server?(I.lib.total||0):r.length),'note="по текущим фильтрам"')}${libMatchTile()}${stat("С кодом ERID",erid,'note="на этой странице"')}${stat("В избранном",savedN,'note="всего сохранено"')}</div>
-  <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст, домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-select label="Запуск" value="${esc(f.job||"")}" options="${esc(jobFilterOptions())}" data-chg="libF" data-key="job"></nv-select><nv-filter-select label="Интент креатива" value="${esc(f.aiIntent)}" options="${esc(aiIntentOptions()||"_:Пока не определены")}" placeholder="Все интенты" min-width="320" data-chg="libF" data-key="aiIntent"></nv-filter-select><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select><nv-select label="Сортировка" value="${f.sort}" options="recent:Сначала новые|oldest:Сначала старые|name:Домен А-Я" data-chg="libF" data-key="sort"></nv-select><nv-select label="На странице" value="${+f.pageSize||25}" options="25:25|50:50|100:100|200:200" data-chg="libF" data-key="pageSize"></nv-select>${intentControlHtml()}</div>
+  <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-select label="Запуск" value="${esc(f.job||"")}" options="${esc(jobFilterOptions())}" data-chg="libF" data-key="job"></nv-select><nv-filter-select label="Тема объявления" value="${esc(f.aiIntent)}" options="${esc(aiIntentOptions()||"_:Пока не определены")}" placeholder="Все темы" min-width="320" data-chg="libF" data-key="aiIntent"></nv-filter-select><nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-button variant="${moreN||I.fMore?"secondary":"ghost"}" icon="sliders-horizontal" data-act="libMore">Ещё фильтры${moreN?" · "+moreN:""}</nv-button></div>
+  ${I.fMore||moreN?`<div class="toolbar"><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select>${intentControlHtml()}</div>`:""}
   ${jobBannerHtml()}
   <nv-saved-views id="lib-views" views="${esc(JSON.stringify(I.savedViews.map(v=>({id:v.id,name:v.name}))))}" value="${esc(activeViewId())}" can-save></nv-saved-views>
-  <div id="lib-count" class="muted" style="font-size:13px"></div></div><div id="lib-res">${I.lib.loading&&!I.lib.loaded?'<nv-skeleton count="6"></nv-skeleton>':""}</div><div id="lib-page" class="row" style="justify-content:center;margin-top:16px"></div><div class="bulk" id="lib-bulk" hidden></div>`,
+  <div class="row between" style="gap:10px;align-items:center;flex-wrap:wrap"><div id="lib-count" class="muted" style="font-size:13px"></div><div class="row" style="gap:8px;flex-wrap:wrap"><nv-select label="Сортировка" value="${f.sort}" options="recent:Сначала новые|oldest:Сначала старые|name:Домен А-Я" data-chg="libF" data-key="sort"></nv-select><nv-select label="На странице" value="${+f.pageSize||25}" options="25:25|50:50|100:100|200:200" data-chg="libF" data-key="pageSize"></nv-select></div></div></div><div id="lib-res">${I.lib.loading&&!I.lib.loaded?'<nv-skeleton count="6"></nv-skeleton>':""}</div><div id="lib-page" class="row" style="justify-content:center;margin-top:16px"></div><div class="bulk" id="lib-bulk" hidden></div>`,
   after(root){
     if(!I.lib.loaded&&!I.lib.loading)loadLibrary();
     libRes();
@@ -3636,11 +3702,11 @@ scans(){
     return true;
   });
   const medianMs=fullRunMs()||scanDurationMedian(L);
-  return{title:"Сканирования",sub:"Задания для парсера: что искать, где и как часто.",actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
-  help:{steps:["Создайте задание: запрос, город и (по желанию) как часто повторять — например, 3 раза в день на 7 дней.","Воркер заберёт его из очереди при следующем опросе.","Расписания можно ставить на паузу и останавливать в блоке «Расписания». Когда статус станет «Завершено», реклама появится в библиотеке."]},
-  body:`<div class="grid g4">${stat("Всего задач",total)}${stat("Выполняется",active)}${stat("Завершено",done)}${stat("Ошибка",failed)}</div>
+  return{title:"Сканирования",sub:"Все запуски парсера: разовые и созданные по расписанию.",actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
+  help:{steps:["Создайте задание: запрос, город и (по желанию) как часто повторять — например, 3 раза в день на 7 дней.","Воркер заберёт его из очереди при следующем опросе.","Повторы ставятся на паузу и останавливаются во вкладке «Расписания». Когда статус станет «Завершено», реклама появится в библиотеке."]},
+  body:`${scanTabsHtml("scans")}
+  <div class="grid g4">${stat("Запусков",total,'note="последние 50"')}${stat("Идёт сейчас",active)}${stat("Завершено",done)}${stat("С ошибкой",failed)}</div>
   <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Запрос или город" value="${esc(sf.q)}" data-chg="scanF" data-key="q"></nv-input><nv-select label="Статус" value="${esc(sf.status)}" options=":Все статусы|queued:В очереди|running:Выполняется|succeeded:Завершено|failed:Ошибка" data-chg="scanF" data-key="status"></nv-select>${(sf.q||sf.status)?'<nv-button variant="ghost" size="sm" icon="x" data-act="scanFReset">Сбросить</nv-button>':""}</div>
-  ${schedBanner()}
   <div class="grid g4lg">${rows.length?rows.map(s=>{const info=scanCardInfo(s,medianMs);
     return `<nv-scan-card rid="${esc(s.id)}" title="${esc(s.key_text)}" subtitle="${esc((s.city||"")+(s.schedule_id?" · по расписанию":""))}" status="${esc(info.status)}" pct="${esc(info.pct)}" ${info.indeterminate?"indeterminate":""} note="${esc(info.note)}" found="${esc(s.total||0)}" ${s.rel?`relevant="${s.rel.relevant}" rel-of="${s.rel.found}" rel-pending="${s.rel.pending||""}"`:""}><nv-button size="sm" variant="secondary" icon="external-link" icon-only hint="Открыть" data-act="scanOpen" data-id="${esc(s.id)}">Открыть</nv-button>${(s.total>0||s.status==="succeeded")?`<nv-button size="sm" variant="secondary" icon="layout-grid" icon-only hint="${s.status==="running"||s.status==="queued"?"Показать уже найденное (запуск ещё идёт)":"Показать в библиотеке"}" data-act="scanToLib" data-id="${esc(s.id)}">БиблиотекаПоказать в библиотеке</nv-button>`:""}</nv-scan-card>`;
   }).join(""):'<nv-card><nv-empty icon="search-x" heading="Заданий не найдено" text="Измените фильтры или создайте новое сканирование."><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>'}</div>`,
@@ -3652,8 +3718,9 @@ scans(){
   }}},
 schedules(){
   const all=S.intel.schedules||[],live=all.filter(schedLive),ended=all.filter(x=>!schedLive(x)),tab=S.intel.schedTab;
-  return{title:"Расписания",sub:"Автоматические повторные сканирования: сколько раз в день и сколько дней.",actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
-  body:`<div class="tabbed"><nv-tabs items="live:Активные · ${live.length}|ended:Завершённые и остановленные · ${ended.length}" value="${tab}" data-chg="schedTab"></nv-tabs><div class="tab-b" style="padding:12px 16px">${schedulesHtml(tab==="ended"?ended:live)}</div></div>`,
+  return{title:"Сканирования",sub:"Расписания запускают сканирование автоматически: сколько раз в день и сколько дней. Каждый запуск появляется во вкладке «Запуски».",actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
+  body:`${scanTabsHtml("schedules")}
+  <div class="tabbed"><nv-tabs items="live:Активные · ${live.length}|ended:Завершённые и остановленные · ${ended.length}" value="${tab}" data-chg="schedTab"></nv-tabs><div class="tab-b" style="padding:12px 16px">${schedulesHtml(tab==="ended"?ended:live)}</div></div>`,
   after(root){
     if(!S.intel.schedulesLoaded)loadSchedules();
     root.querySelectorAll("details[data-sid]").forEach(d=>d.addEventListener("toggle",()=>{
@@ -3668,21 +3735,84 @@ overview(){
   const I=S.intel.ana;
   ensureAna();
   if(I.loading&&!I.loaded)return{title:"Обзор",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="4"></nv-skeleton>'};
-  const T=I.totals||{};
+  const M=I.summary||{totals:{},intents:[],advertisers:[],top_creatives:[],sites:[]},T=M.totals||{},ot=M.on_topic;
+  const kw=S.intel.activeIntents||[],kwTxt=kw.map(x=>"«"+x+"»").join(", ");
   const pd7=periodDelta(I.recentItems,7),trendSpark=dailyTrend(I.recentItems,7);
-  return{title:"Обзор",sub:anaSub("Сводка по найденной рекламе."),actions:intentControlHtml(),
-  help:{title:"Как пользоваться анализом",steps:["Сверху выберите «Ключевое слово запуска» — запрос, по которому искал парсер.","Ниже — цифры и карточки «Куда смотреть дальше»: нажмите, чтобы перейти к деталям.","В таблицах нажатие на строку открывает объявления в библиотеке."]},
-  body:`<div class="grid g4">${stat("Всего креативов",T.creatives||0,`delta="${esc(pd7.delta)}" trend="${pd7.trend}" note="за 7 дней к прошлым 7" spark="${esc(JSON.stringify(trendSpark.values))}"`)}${stat("Рекламодателей раскрыто",T.advertisers||0)}${stat("Креативов с юрлицом",T.creatives_with_advertiser||0,'hint="Сколько объявлений удалось привязать к ИНН"')}${stat("Площадок под наблюдением",I.coverage.length||0)}</div>
-  <nv-card heading="Тренды" subtitle="Новых креативов в день, последние 14 дней"><nv-chart id="an-trend-chart" label="Новых креативов в день"></nv-chart></nv-card>
-  <div><div class="sect-t" style="margin-bottom:10px">Куда смотреть дальше</div><div class="jumps">${[
-    ["fresh","","sparkles",I.freshTotal,"Новое за 7 дней","Что конкуренты запустили недавно"],
-    ["fresh","discounts","badge-percent",I.discTotal,"Объявления со скидкой","Чем заманивают ценой"],
-    ["carousels","","gallery-horizontal",(I.carousels||[]).length,"Карусели","Блоки из нескольких слайдов"],
-    ["advertisers","growth","trending-up",(I.growing||[]).length,"Растущие рекламодатели","Кто нарастил активность"],
-    ["campaigns","campaigns","target",(I.campaigns||[]).length,"Кампании","Кампании за рекламой"],
-    ["platforms","coverage","radar",(I.coverage||[]).length,"Площадки","Где и насколько видно рекламодателя"]
-  ].map(j=>`<button type="button" class="jump" data-act="anaGo" data-id="${j[0]}" data-sub="${j[1]}"><span class="jt">${ic(j[2],15)}${esc(j[4])}</span><span class="jn">${esc(j[3]||0)}</span><span class="jd">${esc(j[5])}</span></button>`).join("")}</div></div>`,
-  after(root){wireAnalyticsTables(root,I)}}},
+  const offTopic=(M.intents||[]).filter(x=>!x.on_topic).slice(0,3).map(x=>x.intent);
+  // Главный вывод одной фразой: что нашли и сколько из этого по делу
+  let lead;
+  if(!T.creatives)lead="Объявлений пока нет. Запустите сканирование по своему запросу — здесь появится сводка.";
+  else if(ot)lead=`По ${kw.length>1?"запросам":"запросу"} ${esc(kwTxt)} найдено <b>${fmt(T.creatives)}</b> объявлений, из них по теме — <b>${fmt(ot.count)}</b> (${ot.pct}%).`+(offTopic.length?` Остальное рекламная сеть показала по аудитории, а не по теме: чаще всего это ${esc(offTopic.join(", "))}.`:"")+(M.topic_only?" Списки рекламодателей и объявлений ниже — только по теме запроса.":"");
+  else lead=`В базе <b>${fmt(T.creatives)}</b> объявлений от <b>${fmt(T.advertisers||0)}</b> рекламодателей. Выберите справа «Ключевое слово запуска» — увидите, сколько объявлений по теме вашего запроса и кто именно рекламируется по нему.`;
+  const tiles=[stat("Объявлений",fmt(T.creatives||0),`delta="${esc(pd7.delta)}" trend="${pd7.trend}" note="новых за 7 дней к прошлым 7" spark="${esc(JSON.stringify(trendSpark.values))}"`),
+    ot?stat("По теме запроса",ot.pct+"%",`note="${fmt(ot.count)} из ${fmt(ot.of)} с определённой темой" hint="Объявление по теме, если его интент по смыслу относится к ключевому слову запуска. Остальное показано по аудитории."`):stat("Сайтов с рекламой",fmt(T.sites||0),'note="где парсер нашёл объявления"'),
+    stat("Рекламодателей",fmt(T.advertisers||0),'note="с раскрытым юрлицом" hint="Компании, чей ИНН удалось узнать из объявления"'),
+    stat("Новых за 7 дней",fmt(T.fresh_7d||0),'note="впервые замечены"')].join("");
+  const attn=[
+    ["fresh","","sparkles",T.fresh_7d,"Новое за 7 дней","Что запустили недавно"],
+    ["fresh","discounts","badge-percent",T.discounts,"Со скидкой или ценой","Чем заманивают"],
+    ["advertisers","mismatch","unlink",T.landing_mismatch,"Ведут на чужой сайт","Посадочная не на домене рекламодателя: партнёрки, агрегаторы"],
+    ["","","scale",T.legal_mismatch,"Другое юрлицо на сайте","ИНН на сайте не совпадает с ИНН в объявлении — видно в карточке объявления"]];
+  return{title:"Обзор",sub:kw.length?"Сводка по "+(kw.length>1?"запросам ":"запросу ")+kwTxt+".":"Сводка по всей найденной рекламе.",actions:intentControlHtml(),
+  help:{title:"Как пользоваться обзором",steps:["Справа выберите «Ключевое слово запуска» — запрос, по которому искал парсер.","«О чём реклама» показывает, какие темы сеть показала по этому запросу. Зелёные — по теме.","Нажмите на тему, рекламодателя или объявление — откроются подробности."]},
+  body:`<p class="ov-lead">${lead}</p>
+  <div class="grid g4">${tiles}</div>
+  <div class="grid g2">
+    <nv-card heading="О чём реклама" subtitle="Темы найденных объявлений. Нажмите — откроются объявления этой темы"><nv-bar-list id="ov-intents" clickable empty-text="Темы ещё определяются"></nv-bar-list></nv-card>
+    <nv-card heading="${M.topic_only?"Кто рекламируется по теме":"Кто рекламируется больше всех"}" subtitle="По числу разных объявлений. Нажмите — откроются объявления компании"><nv-bar-list id="ov-adv" clickable empty-text="Рекламодатели пока не раскрыты"></nv-bar-list></nv-card>
+  </div>
+  <div><div class="sect-t" style="margin-bottom:4px">${M.topic_only?"Объявления по теме, которые встречаются чаще всего":"Объявления, которые встречаются чаще всего"}</div><div class="muted" style="font-size:12.5px;margin-bottom:10px">Если объявление находится из запуска в запуск, его не выключают — скорее всего, оно окупается. <button type="button" class="run-link" data-act="anaGo" data-id="leaders" data-sub="">Все сильные объявления по темам</button></div><div id="ov-top" class="grid g3"></div></div>
+  <div class="grid g2">
+    <nv-card heading="Динамика" subtitle="Новых объявлений в день, последние 14 дней"><nv-chart id="an-trend-chart" label="Новых объявлений в день"></nv-chart></nv-card>
+    <nv-card heading="Где показывают" subtitle="Сайты, на которых парсер нашёл эту рекламу"><nv-bar-list id="ov-sites" empty-text="Пока нет данных"></nv-bar-list></nv-card>
+  </div>
+  <div><div class="sect-t" style="margin-bottom:10px">На что обратить внимание</div><div class="jumps">${attn.map(j=>j[0]?`<button type="button" class="jump" data-act="anaGo" data-id="${j[0]}" data-sub="${j[1]}"><span class="jt">${ic(j[2],15)}${esc(j[4])}</span><span class="jn">${esc(fmt(j[3]||0))}</span><span class="jd">${esc(j[5])}</span></button>`:`<div class="jump" style="cursor:default"><span class="jt">${ic(j[2],15)}${esc(j[4])}</span><span class="jn">${esc(fmt(j[3]||0))}</span><span class="jd">${esc(j[5])}</span></div>`).join("")}</div></div>`,
+  after(root){
+    wireAnalyticsTables(root,I);
+    const q=id=>root.querySelector(id),bi=q("#ov-intents"),ba=q("#ov-adv"),bs=q("#ov-sites"),top=q("#ov-top");
+    if(bi){bi.rows=(M.intents||[]).map(x=>({id:x.intent,label:x.intent,value:x.count,display:fmt(x.count)+" · "+x.pct+"%",badge:x.on_topic?"по теме":"",tone:x.on_topic?"success":""}));
+      bi.addEventListener("nv-pick",e=>N.acts.aiFilter(null,{v:e.detail.id}))}
+    if(ba){ba.rows=(M.advertisers||[]).map(a=>({id:a.inn,label:a.name,value:a.creatives,display:fmt(a.creatives)+" объявл.",note:"ИНН "+a.inn+(a.website_url?" · "+hostOf(a.website_url):"")+" · встречено "+fmt(a.shows||0)+" раз"}));
+      ba.addEventListener("nv-pick",e=>{const a=(M.advertisers||[]).find(x=>String(x.inn)===String(e.detail.id));if(a)filterByAdvertiser(a.inn,a.name)})}
+    if(bs)bs.rows=(M.sites||[]).map(x=>({id:x.site,label:x.site,value:x.count,display:fmt(x.count)+" · "+x.pct+"%"}));
+    if(top){const items=M.top_creatives||[];
+      top.innerHTML=items.length?items.map(it=>cardHtml({group_key:it.content_fingerprint||("hash:"+it.creative_hash),representative:it,platforms:[it.detection_method],last_seen_at:(it.stats&&it.stats.last_seen_at)||it.captured_at},false).replace(" selectable "," ")).join(""):'<div class="muted" style="font-size:13px">Пока нет объявлений, встреченных больше одного раза.</div>';
+      S.intel._ovItems=items.map(it=>({group_key:it.content_fingerprint||("hash:"+it.creative_hash),representative:it,platforms:[]}));
+      bindCards(top,"ov")}
+  }}},
+leaders(){
+  const L=S.intel.lead=S.intel.lead||{},kw=(S.intel.activeIntents||[]).join(",");
+  // тему выбирали под другой запрос — выбираем заново
+  if(!L.loading&&(!L.loaded||L.kw!==kw||Date.now()-(L.at||0)>120000)){if(L.kw!==kw)L.theme="";setTimeout(()=>loadLeaders(),0)}
+  const D=L.data;
+  if(!D)return{title:"Сильные объявления",sub:"Загружаем…",actions:intentControlHtml(),body:'<nv-skeleton count="6"></nv-skeleton>'};
+  const themes=D.themes||[],items=D.items||[],lead=items.filter(x=>x.level==="leader").length,strong=items.filter(x=>x.level==="strong").length;
+  const best=items[0];
+  const leadTxt=!D.theme?"Тем пока нет — они появятся, когда у объявлений определится интент."
+    :`В теме <b>«${esc(D.theme)}»</b> — <b>${fmt(D.total_in_theme)}</b> ${plural(D.total_in_theme,"объявление","объявления","объявлений")}, из них <b>${fmt(D.repeated)}</b> ${plural(D.repeated,"встречено","встречены","встречены")} больше одного раза или на нескольких сайтах.`
+      +(best&&best.score>=30?` Сильнее всех — «${esc((best.creative.title||best.creative.domain||"").slice(0,70))}»${best.advertiser&&best.advertiser.name?" ("+esc(best.advertiser.name)+")":""}: ${best.sites} ${plural(best.sites,"сайт","сайта","сайтов")}, ${best.runs} ${plural(best.runs,"запуск","запуска","запусков")}, ${best.cities} ${plural(best.cities,"город","города","городов")}.`
+        :" Явных лидеров пока нет: объявления встречались по одному разу. Запустите сканирование по этому запросу ещё несколько раз или в других городах — лидеры проявятся.");
+  return{title:"Сильные объявления",sub:"Какие объявления в своей теме встречаются чаще, шире и дольше остальных — их не выключают, значит, они работают.",actions:intentControlHtml(),
+  help:{title:"Как читать",steps:["Слева выберите тему. Зелёные темы подходят под выбранный запрос.","Балл 0–100 складывается из числа сайтов, запусков, городов и дней, когда объявление встречалось.","Лидер темы — от 60 баллов. Нажмите на карточку, чтобы увидеть детали и рекламодателя."]},
+  body:`<p class="ov-lead">${leadTxt}</p>
+  <div class="ld-wrap">
+    <nv-card heading="Темы" subtitle="Сколько разных объявлений в теме"><nv-bar-list id="ld-themes" clickable empty-text="Темы ещё определяются"></nv-bar-list></nv-card>
+    <div class="stack">
+      <div class="grid g4">${stat("Объявлений в теме",fmt(D.total_in_theme||0))}${stat("Лидеров темы",lead,'note="от 60 баллов"')}${stat("Сильных",strong,'note="30–59 баллов"')}${stat("Встречались повторно",fmt(D.repeated||0),'note="больше одного раза"')}</div>
+      ${L.loading?'<nv-skeleton count="3"></nv-skeleton>':`<div id="ld-list" class="grid g3"></div>`}
+    </div>
+  </div>`,
+  after(root){
+    const bt=root.querySelector("#ld-themes"),list=root.querySelector("#ld-list");
+    if(bt){bt.rows=themes.slice(0,25).map(t=>({id:t.intent,label:t.intent,value:t.count,display:fmt(t.count),badge:t.intent===D.theme?"выбрана":(t.on_topic?"по теме":""),tone:t.intent===D.theme?"info":(t.on_topic?"success":""),note:t.advertisers?fmt(t.advertisers)+" "+plural(t.advertisers,"рекламодатель","рекламодателя","рекламодателей"):""}));
+      bt.addEventListener("nv-pick",e=>loadLeaders(e.detail.id))}
+    if(list){
+      list.innerHTML=items.length?items.map(x=>{const c=x.creative,g={group_key:c.content_fingerprint||("hash:"+c.creative_hash),representative:c,platforms:[c.detection_method],last_seen_at:(c.stats&&c.stats.last_seen_at)||c.captured_at};
+        const f=[{value:x.sites,label:plural(x.sites,"сайт","сайта","сайтов")},{value:x.runs,label:plural(x.runs,"запуск","запуска","запусков")},{value:x.cities,label:plural(x.cities,"город","города","городов")},{value:x.days,label:plural(x.days,"день","дня","дней")}];
+        return `<div class="ld"><nv-strength rank="${x.rank}" score="${x.score}" level="${esc(x.level)}" factors="${esc(JSON.stringify(f))}"></nv-strength>${cardHtml(g,false).replace(" selectable "," ")}</div>`}).join(""):'<nv-card><nv-empty icon="search-x" heading="В этой теме пока нет объявлений" text="Выберите другую тему слева."></nv-empty></nv-card>';
+      S.intel._ovItems=items.map(x=>({group_key:x.creative.content_fingerprint||("hash:"+x.creative.creative_hash),representative:x.creative,platforms:[]}));
+      bindCards(list,"ld")}
+  }}},
 sources(){
   const I=S.intel.ana;
   ensureAna();
@@ -3741,7 +3871,7 @@ platforms(){
     conditions:`<nv-card flush><nv-table id="an-cr" empty-text="Пока нет данных"></nv-table></nv-card>`
   };
   const hints={coverage:"Для каждой рекламной сети: у какой доли объявлений удалось узнать рекламодателя (юрлицо). Чем выше процент — тем надёжнее данные.",sources:"По какому признаку парсер понял, на какой площадке показана реклама (разметка, ссылка, домен и т. д.).",repeats:"Объявления, которые один и тот же рекламодатель крутит сразу на нескольких площадках.",conditions:"При каких условиях (площадка, способ, тип креатива) рекламодатель раскрывается чаще или реже."};
-  return{title:"Площадки и источники",sub:anaSub("Качество данных по рекламным сетям: покрытие, способ распознавания, повторы."),actions:intentControlHtml(),
+  return{title:"Качество данных",sub:anaSub("Служебный отчёт: насколько полно парсер распознаёт рекламу и рекламодателя на каждой площадке."),actions:intentControlHtml(),
   body:`<div class="tabbed"><nv-tabs items="coverage:Покрытие|sources:Как распознали|repeats:Повторы|conditions:Условия" value="${esc(sub)}" data-chg="anaPlatSub"></nv-tabs><p class="tab-hint">${esc(hints[sub]||hints.coverage)}</p><div class="tab-b" style="padding:16px">${bodies[sub]||bodies.coverage}</div></div>`,
   after(root){wireAnalyticsTables(root,I)}}},
 advertisers(){
@@ -3784,6 +3914,7 @@ Object.assign(N.acts,{
   copyField(a,d){const v=d.value||"";const done=()=>toast("Скопировано",{tone:"success"});if(navigator.clipboard)navigator.clipboard.writeText(v).then(done).catch(()=>toast("Браузер запретил копирование. Скопируйте текст вручную",{tone:"warning"}));else toast("Скопируйте текст вручную",{tone:"warning"})},
   cardAddToCollection(a,d){const g=findGroup(d.id);if(!g){toast("Креатив не найден",{tone:"warning"});return}collectDlg([{group_key:g.group_key,creative_id:g.representative.id}])},
   libRefresh(){loadScans();loadLibrary()},
+  libMore(){S.intel.fMore=!S.intel.fMore;N.refreshIf("intel-library")},
   libReset(){Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:"",rel:"all",src:"",aiIntent:"",page:1});loadLibrary()},
   runOpen(a,d){openScanDetail({id:+d.id})},
   aiFilter(a,d){closeAllLayers();Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:"",aiIntent:d.v,page:1});loadLibrary();N.go("intel-library")},
@@ -3837,23 +3968,31 @@ N.register({id:"intel",name:"Разведка рекламы",short:"Разве�
     {id:"library",label:"Библиотека",icon:"layout-grid",count:()=>S.intel.lib.total||""},
     {id:"compare",label:"Сравнение",icon:"columns-3"},
     {id:"collections",label:"Подборки",icon:"folder-heart"},
-    {id:"scans",label:"Сканирования",icon:"scan-search",count:()=>S.intel.scans.filter(s=>s.status==="queued"||s.status==="running").length||""},
-    {id:"schedules",label:"Расписания",icon:"calendar-clock",count:()=>(S.intel.schedules||[]).filter(schedLive).length||""}
+    {id:"scans",also:["schedules"],label:"Сканирования",icon:"scan-search",count:()=>S.intel.scans.filter(s=>s.status==="queued"||s.status==="running").length||""}
   ]},
   {group:"Анализ",items:[
     {id:"overview",label:"Обзор",icon:"layout-dashboard"},
+    {id:"leaders",label:"Сильные объявления",icon:"trophy"},
     {id:"fresh",label:"Новое и акции",icon:"sparkles",count:()=>S.intel.ana.freshTotal||""},
-    {id:"carousels",label:"Карусели",icon:"gallery-horizontal",count:()=>(S.intel.ana.carousels||[]).length||""},
-    {id:"campaigns",label:"Кампании и слова",icon:"target"},
-    {id:"platforms",label:"Площадки и источники",icon:"radar"},
     {id:"advertisers",label:"Рекламодатели",icon:"building-2"}
-  ]}
+  ]},
+  // Технические отчёты о качестве сбора — пользователю они ничего не говорят, оставлены администратору
+  ...(session&&session.role==="admin"?[{group:"Служебное",items:[
+    {id:"platforms",label:"Качество данных",icon:"radar"},
+    {id:"campaigns",label:"Кампании и слова",icon:"target"},
+    {id:"carousels",label:"Карусели",icon:"gallery-horizontal"}
+  ]}]:[])
  ],
  views,seed,
  commands:[{label:"Новое сканирование",icon:"radar",run:scanDlg}],
  search:q=>CR().filter(g=>((g.representative.title||"")+(g.representative.domain||"")).toLowerCase().includes(q)).slice(0,5).map(g=>({icon:"image",label:g.representative.title||g.representative.domain,sub:g.representative.domain,run(){N.go("intel-library");setTimeout(()=>openCreative(g.representative.id),50)}}))
 });
 S.intel.savedViews=loadSavedViews();
+// Состояние экрана сохраняется между перезагрузками; флаги «идёт загрузка» переносить нельзя —
+// иначе после обновления страницы в момент загрузки аналитика и библиотека висят на заглушке навсегда.
+if(S.intel.ana){S.intel.ana.loading=false;S.intel.ana.loaded=false;S.intel.ana.at=0}
+if(S.intel.lib){S.intel.lib.loading=false;S.intel.lib.loaded=false}
+S.intel.activeIntents=getActiveIntents();
 
 loadLibrary();
 loadCollections();
