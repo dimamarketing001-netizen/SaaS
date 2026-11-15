@@ -2801,7 +2801,7 @@ function cardHtml(g,selected){
   const otherPlatforms=[...new Set((g.platforms||[]).map(realPlatformLabel))].filter(l=>l!==primary);
   const fmt=formatOf(rep);
   const mediaAttrs=(fmt==="video"&&rep.video_src)?`video="${esc(rep.video_src)}" poster="${esc(rep.video_poster||"")}"`:`image="${esc(rep.image_url||"")}"`;
-  return `<nv-creative-card cid="${esc(rep.id)}" headline="${esc(rep.title||rep.domain||"Без заголовка")}" advertiser="${esc(rep.domain||"—")}" domain="${esc(rep.domain||"")}" platform="${esc(primary)}" format="${fmt}" date="${esc(fmtDateTime(g.last_seen_at||rep.captured_at))}" discount="${rep.discount_percent||""}" cta="${esc(rep.cta_text||"")}" ${mediaAttrs} colls="${esc(JSON.stringify((rep.collections||[]).map(c=>c.name)))}" ai-intent="${esc(realAiIntent(rep))}" keyword="${esc((rep.intents||[]).join("; "))}" copy="${esc((rep.description||"").slice(0,180))}" desc-full="${esc(rep.description||"")}" platforms="${esc(otherPlatforms.join(","))}" ${saved?"saved":""} selectable ${selected?"selected":""}></nv-creative-card>`;
+  return `<nv-creative-card cid="${esc(rep.id)}" headline="${esc(rep.title||rep.domain||"Без заголовка")}" advertiser="${esc(rep.domain||"—")}" domain="${esc(rep.domain||"")}" platform="${esc(primary+(rep.from_history?" · из прошлых запусков":""))}" format="${fmt}" date="${esc(fmtDateTime(g.last_seen_at||rep.captured_at))}" discount="${rep.discount_percent||""}" cta="${esc(rep.cta_text||"")}" ${mediaAttrs} colls="${esc(JSON.stringify((rep.collections||[]).map(c=>c.name)))}" ai-intent="${esc(realAiIntent(rep))}" keyword="${esc((rep.intents||[]).join("; "))}" copy="${esc((rep.description||"").slice(0,180))}" desc-full="${esc(rep.description||"")}" platforms="${esc(otherPlatforms.join(","))}" ${saved?"saved":""} selectable ${selected?"selected":""}></nv-creative-card>`;
 }
 function bindCards(root,target){
   target=target||"sel";
@@ -2846,7 +2846,7 @@ async function loadLibrary(extra){
   const params={sort:I.f.sort==="discount"?"discount":"recent",limit:120};
   if(I.f.q)params.q=I.f.q;
   // Фильтр по запуску: показываем креативы именно этого задания, без сужения по ключевому слову
-  if(I.f.job){params.job_id=I.f.job;params.intent="";if(I.f.rel==="yes"||I.f.rel==="no")params.only_relevant=I.f.rel==="yes"?"1":"no"}
+  if(I.f.job){params.job_id=I.f.job;params.intent="";if(I.f.rel==="yes"||I.f.rel==="no")params.only_relevant=I.f.rel==="yes"?"1":"no"if(I.f.hist)params.history="1"}
   if(I.f.aiIntent)params.ai_intent=I.f.aiIntent;
   const rg=NEONUI.rangeOf(I.f.period);
   if(rg)params.date_from=new Date(rg[0]).toISOString().slice(0,10);
@@ -2876,7 +2876,8 @@ function closeAllLayers(){document.querySelectorAll(".ov [data-x]").forEach(b=>b
 function relCheckHtml(){
   const f=S.intel.f,r=jobRel(f.job);
   const hint=r&&r.found?` (${r.relevant} из ${r.found}${r.pending?", ещё определяется "+r.pending:""})`:"";
-  return `<nv-checkbox label="Показывать только по интенту${hint}" ${f.rel==="yes"?"checked":""} data-chg="libRel"></nv-checkbox>`;
+  return `<nv-checkbox label="Показывать только по интенту${hint}" ${f.rel==="yes"?"checked":""} data-chg="libRel"></nv-checkbox>
+  <nv-checkbox label="Добавить креативы по этому запросу из прошлых запусков" ${f.hist?"checked":""} data-chg="libHist"></nv-checkbox>`;
 }
 function jobRel(id){const j=(S.intel.scans||[]).find(x=>String(x.id)===String(id));return j&&j.rel?j.rel:null}
 function libMatchTile(){
@@ -3002,6 +3003,30 @@ async function openCreative(id){
   const byType={};(data.identifiers||[]).forEach(i=>{(byType[i.identifier_type]=byType[i.identifier_type]||[]).push(i.identifier_value)});
   const idsHtml=Object.keys(ID_LABELS).map(t=>{const v=byType[t];return v&&v.length?`<dt>${esc(ID_LABELS[t])} (${v.length})</dt><dd class="mono">${v.map(esc).join(", ")}</dd>`:""}).join("");
   const utmBits=[["utm_source","Источник"],["utm_medium","Канал"],["utm_campaign","Кампания"],["utm_content","Контент"],["utm_term","Ключевое слово"]].filter(([k])=>utm[k]).map(([k,l])=>`<dt>${esc(l)}</dt><dd class="mono">${esc(utm[k])}</dd>`).join("");
+  const L=data.landing,LG=L&&L.legal,LC=(L&&L.compare)||{};
+  const LTONE={match:"success",mismatch:"danger",partial:"warning",site_only:"info",ad_only:"info",platform:"neutral",no_data:"neutral"};
+  const LHEAD={match:"Юрлицо совпадает",mismatch:"Юрлица не совпадают",partial:"Юрлицо совпадает частично",site_only:"Юрлицо найдено только на сайте",ad_only:"Юрлицо известно только из объявления",platform:"Сторонняя площадка",no_data:"Сравнить не с чем"};
+  const LCONF={high:"высокая — реквизиты со страницы реквизитов, контактов или из подвала",medium:"средняя — найдено в одном месте сайта",low:"низкая — найдено только в политике или оферте, там бывают чужие реквизиты"};
+  const LKIND={requisites:"страница реквизитов",contacts:"страница контактов",landing:"сама посадочная (подвал, текст)",about:"страница «О компании»",oferta:"оферта / договор",policy:"политика конфиденциальности",jsonld:"разметка сайта",docs:"документы"};
+  const LSTAT={ok:"открылась",js_only:"открылась, но содержимое рисуется скриптами — текст прочитать не удалось",http_error:"сайт ответил ошибкой",error:"не открылась",pending:"ещё не проверялась"};
+  const landHtml=!L?"":`<div class="sect-t">Сайт и владелец сайта</div>
+    ${L.status==="pending"?'<div class="muted" style="font-size:13px">Сайт ещё не проверялся — данные появятся после следующего обхода посадочных.</div>':`
+    ${LC.status&&LC.status!=="no_data"?`<nv-callout tone="${LTONE[LC.status]||"neutral"}" heading="${esc(LHEAD[LC.status]||"")}">${esc(LC.text||"")}</nv-callout>`:""}
+    <dl class="dl">
+      <dt>Сайт</dt><dd>${esc(L.site_name||L.domain||"—")}${L.site_name&&L.domain?` <span class="muted">· ${esc(L.domain)}</span>`:""}</dd>
+      <dt>Заголовок страницы (H1)</dt><dd>${esc(L.h1||"не найден")}</dd>
+      <dt>Название вкладки (title)</dt><dd>${esc(L.page_title||"не найдено")}</dd>
+      <dt>Страница</dt><dd>${esc(LSTAT[L.status]||L.status||"—")}${L.fetched_at?` <span class="muted">· проверено ${esc(fmtDateTime(L.fetched_at))}</span>`:""}</dd>
+      ${LG&&LG.status==="found"?`
+      <dt>Юрлицо на сайте</dt><dd>${esc(LG.name||"название не указано")}</dd>
+      <dt>ИНН на сайте</dt><dd class="mono">${esc(LG.inn||"—")}${adv&&adv.inn&&LG.inn?(adv.inn===LG.inn?' <nv-badge tone="success">как в объявлении</nv-badge>':` <nv-badge tone="danger">в объявлении ${esc(adv.inn)}</nv-badge>`):""}</dd>
+      ${LG.ogrn?`<dt>ОГРН</dt><dd class="mono">${esc(LG.ogrn)}</dd>`:""}
+      ${LG.kpp?`<dt>КПП</dt><dd class="mono">${esc(LG.kpp)}</dd>`:""}
+      <dt>Где найдено</dt><dd>${esc(LKIND[LG.source_kind]||LG.source_kind||"—")}${LG.source_url?` · <a href="${esc(LG.source_url)}" target="_blank" rel="noopener noreferrer">открыть</a>`:""}</dd>
+      <dt>Надёжность</dt><dd>${esc(LCONF[LG.confidence]||"—")}</dd>
+      ${(LG.other_inns||[]).length?`<dt>Другие ИНН на сайте</dt><dd class="mono">${LG.other_inns.slice(0,6).map(esc).join(", ")}</dd>`:""}
+      `:(LG&&LG.status==="platform"?"":`<dt>Юрлицо на сайте</dt><dd>реквизиты на сайте не найдены</dd>`)}
+    </dl>`}`;
   overlay("drawer",{title:cr.domain||"Креатив",subtitle:plat,size:"md",
     body:`${media}
     <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">${copyBtn(cr.title,"Заголовок объявления","Заголовок")}${copyBtn(cr.description,"Текст объявления","Текст")}${copyBtn(cr.domain,"Домен","Домен")}</div>
@@ -3032,6 +3057,7 @@ async function openCreative(id){
       ${adv&&adv.phone?`<dt>Телефон</dt><dd>${esc(adv.phone)}</dd>`:""}
       ${adv&&adv.website_url?`<dt>Сайт рекламодателя</dt><dd class="mono">${esc(adv.website_url)}</dd>`:""}
     </dl>
+    ${landHtml}
     <div class="sect-t">Посадочная страница и UTM</div>
     <dl class="dl">
       ${utm.final_url?`<dt>Фактическая посадочная</dt><dd class="mono">${esc(utm.final_url_domain||utm.final_url)}</dd>`:`<dt>Посадочная страница</dt><dd>не определена</dd>`}
@@ -3689,7 +3715,7 @@ Object.assign(N.acts,{
   runOpen(a,d){openScanDetail({id:+d.id})},
   aiFilter(a,d){closeAllLayers();Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:"",aiIntent:d.v,page:1});loadLibrary();N.go("intel-library")},
   runLib(a,d){closeAllLayers();filterByJob(+d.id,d.k)},
-  libJobReset(){S.intel.f.job="";S.intel.f.rel="all";S.intel.f.page=1;loadLibrary()},
+  libJobReset(){S.intel.f.job="";S.intel.f.hist=false;S.intel.f.rel="all";S.intel.f.page=1;loadLibrary()},
   bulkSave(){const set=new Set(S.intel.savedIds);S.intel.sel.forEach(g=>set.add(String(g.representative.id)));S.intel.savedIds=[...set];persistSavedCreativeIds(S.intel.savedIds);const n=S.intel.sel.length;S.intel.sel=[];N.refresh();toast("В избранное добавлено: "+n,{tone:"success"})},
   bulkCollect(){collectDlg(S.intel.sel.map(g=>({group_key:g.group_key,creative_id:g.representative.id})))},
   bulkCompare(){S.intel.cmp=[...S.intel.sel];S.intel.sel=[];N.go("intel-compare")},
@@ -3704,6 +3730,7 @@ Object.assign(N.acts,{
   kDel(a,d){const k=S.intel.collections.find(x=>x.id===d.id);if(!k)return;confirm({title:"Удалить подборку «"+k.name+"»?",text:"Все элементы подборки удалятся без возможности восстановления.",confirm:"Удалить подборку",danger:true,fn(){(async()=>{try{await apiDelete("/api/v1/collections/"+k.id);S.intel.openK=null;await loadCollections();N.refresh();toast("Подборка удалена")}catch(err){toast("Не удалось удалить: "+(err.message||""),{tone:"danger"})}})()}})}
 });
 N.chg.schedTab=v=>{S.intel.schedTab=v;N.refresh()};
+N.chg.libHist=v=>{S.intel.f.hist=(v===true||v==="true");S.intel.f.page=1;loadLibrary()};
 N.chg.libRel=v=>{S.intel.f.rel=(v===true||v==="true")?"yes":"all";S.intel.f.page=1;loadLibrary()};
 N.chg.libF=(v,d)=>{
   if(d.key==="pageSize"){S.intel.f.pageSize=+v||25;S.intel.f.page=1;libRes();return}
