@@ -76,6 +76,21 @@ nv-carousel.cx-fit .cx-dots{display:none}
 .scanc-rel .rb{flex:0 0 64px;height:6px;border-radius:99px;background:var(--surface-3);overflow:hidden}
 .scanc-rel .rb i{display:block;height:100%;background:var(--ok);border-radius:99px}
 .scanc-rel b{color:var(--ink)}
+nv-choice-bar{display:block;min-width:0}
+.chb{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+.chb-l{font-size:12px;font-weight:600;color:var(--ink-3);min-width:132px}
+.chb-o{display:flex;gap:6px;flex-wrap:wrap;min-width:0}
+.chb-o button{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .12s,border-color .12s,color .12s}
+.chb-o button:hover:not(:disabled){border-color:var(--ink-3);color:var(--ink)}
+.chb-o button:disabled{opacity:.45;cursor:not-allowed}
+.chb-o button b{font-weight:600;font-size:12px;color:var(--ink-3);background:var(--surface-2);border-radius:999px;padding:1px 7px}
+.chb-o button[aria-checked="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface);font-weight:600}
+.chb-o button[aria-checked="true"] b{background:color-mix(in srgb,var(--surface) 22%,transparent);color:var(--surface)}
+.lib-scope{display:flex;flex-direction:column;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.lib-scope-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px}
+.lib-scope-h .t{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+.lib-scope-n{font-size:12px;color:var(--ink-3);margin:0}
+@media(max-width:640px){.chb-l{min-width:0;width:100%}}
 .cr-st{margin:4px 0 0;font-size:11.5px;font-weight:600;color:var(--ink-2);display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden}.cr-st span{overflow:hidden;text-overflow:ellipsis}
 .st-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}.st-tile{background:var(--surface-2);border-radius:10px;padding:8px 10px;min-width:0}.st-tile span{display:block;font-size:11px;color:var(--ink-3)}.st-tile b{display:block;font-size:13px;margin-top:2px;overflow-wrap:anywhere}
 @media(max-width:560px){.st-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -1801,11 +1816,11 @@ define("nv-creative-card",class extends NvEl{
     if(disc)media=`<span class="disc">−${esc(disc)}%</span>`+media;
     return `<article class="cr${this.b("selected")?" sel":""}${sc?" has-ck":""}">${sc?`<label class="ck cr-ck"><input type="checkbox" ${this.b("selected")?"checked":""} aria-label="Выбрать креатив"><span class="box">${ic("check",14)}</span></label>`:""}<button type="button" class="cr-save${this.b("saved")?" on":""}" data-tip="${this.b("saved")?"Убрать из сохранённых":"Сохранить в избранное"}" aria-pressed="${this.b("saved")}" aria-label="Сохранить креатив">${ic("bookmark")}</button>
       <button type="button" class="art${img||vid?"":" empty"}" data-open aria-label="Открыть подробности">${media}</button>
-      <div class="cr-b"><div class="cr-top"><button type="button" class="cr-t" data-open>${esc(headline)}</button><div class="cr-m">${this.a("domain")?`<img class="cr-fav" src="${esc(favUrl(this.a("domain")))}" alt="" width="14" height="14" loading="lazy" onerror="this.style.visibility='hidden'">`:""}${esc(this.a("domain"))}${this.a("date")?" · "+esc(this.a("date")):""}</div>${copy?`<p class="cr-copy">${esc(copy)}</p>`:""}${this.a("stats")?`<p class="cr-st" title="Сколько дней парсер встречает это объявление и сколько раз встретил">${ic("activity",12)}<span>${esc(this.a("stats"))}</span></p>`:""}${this.a("keyword")?`<p class="cr-kw" title="Ключевое слово, по которому парсер искал это объявление">Запрос: <b>${esc(this.a("keyword"))}</b></p>`:""}</div><div class="cr-f"><div class="cr-tags">${this.a("ai-intent")?`<nv-badge tone="info" icon="tag" title="Интент креатива — о чём реклама на самом деле (определил Gemini)">${esc(this.a("ai-intent"))}</nv-badge>`:""}<nv-badge>${esc(this.a("platform"))}</nv-badge><nv-badge tone="accent">${esc(FORMAT[fm]||fm)}</nv-badge>${plats.map(p=>`<nv-badge tone="neutral">${esc(p)}</nv-badge>`).join("")}${colls.map(n=>`<nv-badge tone="success" icon="folder" title="Подборка">${esc(n)}</nv-badge>`).join("")}</div><div class="cr-tools"><span class="cr-copy-btns"><button type="button" data-act="studFromCreative" data-id="${this.a("cid")}" data-tip="Открыть в редакторе" aria-label="Открыть в редакторе">${ic("square-pen",13)}</button><button type="button" data-act="cardAddToCollection" data-id="${this.a("cid")}" data-tip="Добавить в подборку" aria-label="Добавить в подборку">${ic("folder-plus",13)}</button></span></div></div></div></article>`}
+      <div class="cr-b"><div class="cr-top"><button type="button" class="cr-t" data-open>${esc(headline)}</button><div class="cr-m">${this.a("domain")?`<img class="cr-fav" src="${esc(favUrl(this.a("domain")))}" alt="" width="14" height="14" loading="lazy" onerror="this.style.visibility='hidden'">`:""}${esc(this.a("domain"))}${this.a("date")?" · "+esc(this.a("date")):""}</div>${copy?`<p class="cr-copy">${esc(copy)}</p>`:""}${this.a("stats")?`<p class="cr-st" title="Сколько дней парсер встречает это объявление и сколько раз встретил">${ic("activity",12)}<span>${esc(this.a("stats"))}</span></p>`:""}${this.a("keyword")?`<p class="cr-kw" title="Ключевое слово, по которому парсер искал это объявление">Запрос: <b>${esc(this.a("keyword"))}</b></p>`:""}</div><div class="cr-f"><div class="cr-tags">${this.b("history")?`<nv-badge tone="warning" icon="history" title="Найдено не в ваших запусках: объявление из общей базы сервиса, подходит по теме запроса">Из истории</nv-badge>`:""}${this.a("ai-intent")?`<nv-badge tone="info" icon="tag" title="Интент креатива — о чём реклама на самом деле (определил Gemini)">${esc(this.a("ai-intent"))}</nv-badge>`:""}<nv-badge>${esc(this.a("platform"))}</nv-badge><nv-badge tone="accent">${esc(FORMAT[fm]||fm)}</nv-badge>${plats.map(p=>`<nv-badge tone="neutral">${esc(p)}</nv-badge>`).join("")}${colls.map(n=>`<nv-badge tone="success" icon="folder" title="Подборка">${esc(n)}</nv-badge>`).join("")}</div><div class="cr-tools"><span class="cr-copy-btns"><button type="button" data-act="studFromCreative" data-id="${this.a("cid")}" data-tip="Открыть в редакторе" aria-label="Открыть в редакторе">${ic("square-pen",13)}</button><button type="button" data-act="cardAddToCollection" data-id="${this.a("cid")}" data-tip="Добавить в подборку" aria-label="Добавить в подборку">${ic("folder-plus",13)}</button></span></div></div></div></article>`}
   mounted(){const q=s=>this.querySelector(s);this.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>this.emit("nv-open",{id:this.a("cid")}));
     q(".cr-save").onclick=()=>this.emit("nv-save",{id:this.a("cid"),saved:!this.b("saved")});
     const c=q(".cr-ck input");if(c)c.onchange=()=>this.emit("nv-select",{id:this.a("cid"),selected:c.checked})}
-},"Предметные",{desc:"Карточка найденного объявления. Показывает настоящее изображение или видео креатива, если они есть (поля image/video парсера); заглушка — только когда у объявления вообще нет медиа.",events:["nv-open {id}","nv-save {id,saved}","nv-select {id,selected}"],previewW:300,attrs:{colls:{type:"string",default:"[]",desc:"Названия подборок, где лежит креатив (JSON-массив)"},stats:{type:"string",default:"12 дней в открутке · встречено 7 раз",desc:"Сколько дней объявление в открутке и сколько раз его встретил парсер"},"ai-intent":{type:"string",default:"",desc:"Интент креатива: о чём реклама на самом деле (по оценке Gemini)"},keyword:{type:"string",default:"",desc:"Ключевое слово запуска, по которому парсер нашёл объявление (не путать с интентом креатива)"},cid:{type:"string",default:"c1",desc:"ID креатива"},headline:{type:"string",default:"Беговые кроссовки с примеркой дома",desc:"Заголовок"},advertiser:{type:"string",default:"Кросс-Лаб",desc:"Рекламодатель"},domain:{type:"string",default:"krosslab.example",desc:"Домен"},platform:{type:"string",default:"Яндекс / РСЯ",desc:"Площадка"},format:{type:"enum",values:["image","native","video","carousel"],default:"image",desc:"Формат"},date:{type:"string",default:"сегодня",desc:"Когда замечено"},discount:{type:"number",default:"30",desc:"Скидка в процентах"},cta:{type:"string",default:"Выбрать пару",desc:"Текст кнопки"},image:{type:"string",default:"",desc:"Адрес настоящего изображения креатива"},video:{type:"string",default:"",desc:"Адрес настоящего видео креатива"},poster:{type:"string",default:"",desc:"Превью-кадр для видео"},copy:{type:"string",default:"Доставим и заберём лишнюю пару бесплатно.",desc:"Текст объявления, 1–2 строки"},"desc-full":{type:"string",default:"",desc:"Полный текст объявления для кнопки «Скопировать» (без обрезки) — по умолчанию берётся copy"},platforms:{type:"string",default:"",desc:"Другие площадки через запятую, если то же объявление встречено не только на основной"},saved:{type:"bool",desc:"Сохранён"},selectable:{type:"bool",desc:"Показывает флажок"},selected:{type:"bool",desc:"Выбран"}}});
+},"Предметные",{desc:"Карточка найденного объявления. Показывает настоящее изображение или видео креатива, если они есть (поля image/video парсера); заглушка — только когда у объявления вообще нет медиа.",events:["nv-open {id}","nv-save {id,saved}","nv-select {id,selected}"],previewW:300,attrs:{colls:{type:"string",default:"[]",desc:"Названия подборок, где лежит креатив (JSON-массив)"},history:{type:"bool",desc:"Объявление из общей базы (не из своих запусков) — на карточке метка «Из истории»"},stats:{type:"string",default:"12 дней в открутке · встречено 7 раз",desc:"Сколько дней объявление в открутке и сколько раз его встретил парсер"},"ai-intent":{type:"string",default:"",desc:"Интент креатива: о чём реклама на самом деле (по оценке Gemini)"},keyword:{type:"string",default:"",desc:"Ключевое слово запуска, по которому парсер нашёл объявление (не путать с интентом креатива)"},cid:{type:"string",default:"c1",desc:"ID креатива"},headline:{type:"string",default:"Беговые кроссовки с примеркой дома",desc:"Заголовок"},advertiser:{type:"string",default:"Кросс-Лаб",desc:"Рекламодатель"},domain:{type:"string",default:"krosslab.example",desc:"Домен"},platform:{type:"string",default:"Яндекс / РСЯ",desc:"Площадка"},format:{type:"enum",values:["image","native","video","carousel"],default:"image",desc:"Формат"},date:{type:"string",default:"сегодня",desc:"Когда замечено"},discount:{type:"number",default:"30",desc:"Скидка в процентах"},cta:{type:"string",default:"Выбрать пару",desc:"Текст кнопки"},image:{type:"string",default:"",desc:"Адрес настоящего изображения креатива"},video:{type:"string",default:"",desc:"Адрес настоящего видео креатива"},poster:{type:"string",default:"",desc:"Превью-кадр для видео"},copy:{type:"string",default:"Доставим и заберём лишнюю пару бесплатно.",desc:"Текст объявления, 1–2 строки"},"desc-full":{type:"string",default:"",desc:"Полный текст объявления для кнопки «Скопировать» (без обрезки) — по умолчанию берётся copy"},platforms:{type:"string",default:"",desc:"Другие площадки через запятую, если то же объявление встречено не только на основной"},saved:{type:"bool",desc:"Сохранён"},selectable:{type:"bool",desc:"Показывает флажок"},selected:{type:"bool",desc:"Выбран"}}});
 define("nv-carousel",class extends NvEl{
   get slides(){return this._slides||[]}
   set slides(v){this._slides=v||[];if(this._init)this.update()}
@@ -2089,6 +2104,12 @@ define("nv-permission-matrix",class extends NvEl{
   html(){const Ro=this.a("roles").split("|"),R=parseJSON(this.a("rows"),[]),ro=this.b("readonly");return `<div class="tw"><table class="nm"><thead><tr><th>Что можно делать</th>${Ro.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${R.map(r=>r.group?`<tr class="g"><th colspan="${Ro.length+1}">${esc(r.group)}</th></tr>`:`<tr><th>${esc(r.label)}</th>${Ro.map((c,j)=>`<td><label class="ck nm-c"><input type="checkbox" data-r="${esc(r.id)}" data-c="${j}" ${r.values[j]?"checked":""} ${ro||r.locked?"disabled":""} aria-label="${esc(c)}: ${esc(r.label)}"><span class="box">${ic("check",13)}</span></label></td>`).join("")}</tr>`).join("")}</tbody></table></div>`}
   mounted(){this.onchange=e=>{const i=e.target;if(i.dataset.r)this.emit("nv-toggle",{id:i.dataset.r,role:+i.dataset.c,value:i.checked})}}
 },"Команда",{desc:"Права ролей. Строку можно закрепить, чтобы её нельзя было изменить.",events:["nv-toggle {id,role,value}"],wide:1,attrs:{roles:{type:"string",default:"Владелец|Менеджер|Наблюдатель",desc:"Роли через |"},rows:{type:"string",default:'[{"group":"Реклама"},{"id":"launch","label":"Запускать кампании","values":[1,1,0]},{"id":"bill","label":"Менять тариф","values":[1,0,0],"locked":true}]',desc:"Права JSON"},readonly:{type:"bool",desc:"Только просмотр"}}});
+define("nv-choice-bar",class extends NvEl{
+  get value(){return this.a("value")}
+  html(){const v=this.a("value"),l=this.a("label");let o=[];try{o=JSON.parse(this.a("options")||"[]")}catch(e){}
+    return `<div class="chb">${l?`<span class="chb-l">${esc(l)}</span>`:""}<div class="chb-o" role="radiogroup" ${l?`aria-label="${esc(l)}"`:""}>${o.map(x=>`<button type="button" role="radio" aria-checked="${String(x.value)===v}" data-v="${esc(x.value)}" ${x.hint?`data-tip="${esc(x.hint)}"`:""} ${x.disabled?"disabled":""}>${x.icon?ic(x.icon,14):""}<span>${esc(x.label)}</span>${x.count!=null&&x.count!==""?`<b class="num">${esc(x.count)}</b>`:""}</button>`).join("")}</div></div>`}
+  mounted(){this.querySelector(".chb-o").onclick=e=>{const b=e.target.closest("button");if(b&&!b.disabled&&b.dataset.v!==this.a("value")){this.setAttribute("value",b.dataset.v);this.emit("nv-change",{value:b.dataset.v,name:this.getAttribute("name")})}}}
+},"Формы",{desc:"Выбор одного варианта, когда у каждого есть количество и пояснение: подпись слева, варианты кнопками со счётчиком, пояснение при наведении. Для переключателей вида «что показывать в списке».",events:["nv-change {value,name}"],previewW:560,attrs:{label:{type:"string",default:"Откуда объявления",desc:"Подпись слева"},options:{type:"string",default:'[{"value":"own","label":"Мой запуск","count":84,"icon":"radar"},{"value":"history","label":"Из истории","count":312,"icon":"history","hint":"Объявления из общей базы, подходящие по теме"},{"value":"all","label":"Всё вместе","count":396,"icon":"layers"}]',desc:"JSON-массив: value, label, count, icon, hint, disabled"},value:{type:"string",default:"own",desc:"Выбранное значение"},name:{type:"string",default:"",desc:"Ключ значения"}}});
 define("nv-pagination",class extends NvEl{
   html(){const p=+this.a("page")||1,t=Math.max(1,+this.a("pages")||1),s=new Set([1,t,p,p-1,p+1].filter(x=>x>=1&&x<=t)),L=[...s].sort((a,b)=>a-b);let out="",prev=0;L.forEach(n=>{if(n-prev>1)out+='<span class="pg-e">…</span>';out+=`<button type="button" data-p="${n}" class="${n===p?"on":""}" ${n===p?'aria-current="page"':""} aria-label="Страница ${n}">${n}</button>`;prev=n});return `<nav class="pg" aria-label="Страницы"><button type="button" data-p="${p-1}" ${p<=1?"disabled":""} aria-label="Назад">${ic("chevron-left",14)}</button>${out}<button type="button" data-p="${p+1}" ${p>=t?"disabled":""} aria-label="Вперёд">${ic("chevron-right",14)}</button></nav>`}
   mounted(){this.firstChild.onclick=e=>{const b=e.target.closest("[data-p]");if(b&&!b.disabled){this.setAttribute("page",b.dataset.p);this.emit("nv-change",{value:+b.dataset.p});const f=this.querySelector(".on");f&&f.focus()}}}
@@ -2215,7 +2236,7 @@ const API_BASE=(localStorage.getItem("parsya_api_base")||DEFAULT_API_BASE).repla
    (библиотека + аналитика) ограничен выбранными поисковыми запросами. */
 const INTENT_SCOPED_PATHS=new Set(["/api/v1/creatives","/api/v1/advertisers","/api/v1/coverage",
  "/api/v1/analytics/cross-platform","/api/v1/analytics/carousels","/api/v1/analytics/campaigns",
- "/api/v1/analytics/keywords","/api/v1/analytics/fastest-growing","/api/v1/analytics/landing-mismatch"]);
+ "/api/v1/analytics/keywords","/api/v1/analytics/fastest-growing","/api/v1/analytics/landing-mismatch","/api/v1/analytics/daily"]);
 function getActiveIntents(){try{return JSON.parse(localStorage.getItem("parsya_active_intents")||"[]")}catch(e){return[]}}
 function setActiveIntents(list){try{localStorage.setItem("parsya_active_intents",JSON.stringify(list||[]))}catch(e){}}
 function activeIntentParam(){const list=getActiveIntents();return list.length?list.join(","):""}
@@ -2719,7 +2740,7 @@ function groupRealCreatives(items){
     const key=row.content_fingerprint||("hash:"+row.creative_hash);
     if(!groups[key]){groups[key]={group_key:key,representative:row,platforms:[],first_seen_at:row.captured_at,last_seen_at:row.captured_at};order.push(key)}
     const g=groups[key];
-    if(!g.platforms.includes(row.platform))g.platforms.push(row.platform);
+    (row.group_methods||[row.detection_method]).forEach(m=>{if(!g.platforms.includes(m))g.platforms.push(m)});
     if(row.captured_at<g.first_seen_at)g.first_seen_at=row.captured_at;
     if(row.captured_at>=g.last_seen_at){g.last_seen_at=row.captured_at;g.representative=row}
   }
@@ -2727,7 +2748,7 @@ function groupRealCreatives(items){
 }
 
 const seed=()=>({
-  f:{q:"",platform:"",format:"",saved:"",job:"",rel:"all",aiIntent:"",sort:"recent",period:"",page:1,pageSize:25},
+  f:{q:"",platform:"",format:"",saved:"",job:"",rel:"all",src:"",aiIntent:"",sort:"recent",period:"",page:1,pageSize:25},
   aiIntents:[],aiPending:0,aiLoaded:false,
   savedViews:loadSavedViews(),
   lib:{groups:[],total:0,loaded:false,loading:false},
@@ -2746,12 +2767,13 @@ function findGroup(id){
   for(const p of pools){const g=p.find(x=>String(x.representative.id)===String(id));if(g)return g}
   return null;
 }
-function anyF(){const f=S.intel.f;return f.q||f.platform||f.format||f.saved||f.job||f.aiIntent||(f.period&&f.period!=="all")}
+function anyF(){const f=S.intel.f;return f.q||f.platform||f.format||f.saved||f.job||f.aiIntent||f.src==="history"||f.src==="all"||(f.period&&f.period!=="all")}
 const VIEW_FIELDS=["q","platform","format","saved","job","aiIntent","sort","period"];
 const viewKey=f=>JSON.stringify(VIEW_FIELDS.map(k=>f[k]||""));
 function activeViewId(){const f=S.intel.f,key=viewKey(f),v=S.intel.savedViews.find(x=>viewKey(x.f)===key);return v?v.id:""}
 function filtered(){
   const I=S.intel,f=I.f,savedSet=new Set(I.savedIds);
+  if(I.lib.server)return CR();  // фильтры, сортировку и страницы уже применил сервер
   let r=CR().filter(g=>{
     const rep=g.representative;
     if(f.platform&&realPlatformLabel(rep.detection_method)!==f.platform)return false;
@@ -2814,7 +2836,7 @@ function cardHtml(g,selected){
   const otherPlatforms=[...new Set((g.platforms||[]).map(realPlatformLabel))].filter(l=>l!==primary);
   const fmt=formatOf(rep);
   const mediaAttrs=(fmt==="video"&&rep.video_src)?`video="${esc(rep.video_src)}" poster="${esc(rep.video_poster||"")}"`:`image="${esc(rep.image_url||"")}"`;
-  return `<nv-creative-card cid="${esc(rep.id)}" headline="${esc(rep.title||rep.domain||"Без заголовка")}" advertiser="${esc(rep.domain||"—")}" domain="${esc(rep.domain||"")}" platform="${esc(primary+(rep.from_history?" · из прошлых запусков":""))}" format="${fmt}" date="${esc(fmtDateTime(g.last_seen_at||rep.captured_at))}" discount="${rep.discount_percent||""}" cta="${esc(rep.cta_text||"")}" ${mediaAttrs} colls="${esc(JSON.stringify((rep.collections||[]).map(c=>c.name)))}" ai-intent="${esc(realAiIntent(rep))}" stats="${esc(statsLine(rep.stats))}" keyword="${esc((rep.intents||[]).join("; "))}" copy="${esc((rep.description||"").slice(0,180))}" desc-full="${esc(rep.description||"")}" platforms="${esc(otherPlatforms.join(","))}" ${saved?"saved":""} selectable ${selected?"selected":""}></nv-creative-card>`;
+  return `<nv-creative-card cid="${esc(rep.id)}" headline="${esc(rep.title||rep.domain||"Без заголовка")}" advertiser="${esc(rep.domain||"—")}" domain="${esc(rep.domain||"")}" platform="${esc(primary)}" ${rep.from_history?"history":""} format="${fmt}" date="${esc(fmtDateTime(g.last_seen_at||rep.captured_at))}" discount="${rep.discount_percent||""}" cta="${esc(rep.cta_text||"")}" ${mediaAttrs} colls="${esc(JSON.stringify((rep.collections||[]).map(c=>c.name)))}" ai-intent="${esc(realAiIntent(rep))}" stats="${esc(statsLine(rep.stats))}" keyword="${esc((rep.intents||[]).join("; "))}" copy="${esc((rep.description||"").slice(0,180))}" desc-full="${esc(rep.description||"")}" platforms="${esc(otherPlatforms.join(","))}" ${saved?"saved":""} selectable ${selected?"selected":""}></nv-creative-card>`;
 }
 function bindCards(root,target){
   target=target||"sel";
@@ -2856,20 +2878,35 @@ async function loadLibrary(extra){
   const I=S.intel;I.lib.loading=true;
   const seq=I._libSeq=(I._libSeq||0)+1;  // ответы приходят в любом порядке — учитываем только последний запрос
   if(document.getElementById("lib-res"))libRes();else N.refreshIf("intel-library","intel-compare");
-  const params={sort:I.f.sort==="discount"?"discount":"recent",limit:120};
-  if(I.f.q)params.q=I.f.q;
-  // Фильтр по запуску: показываем креативы именно этого задания, без сужения по ключевому слову
-  if(I.f.job){params.job_id=I.f.job;params.intent="";if(I.f.rel==="yes"||I.f.rel==="no")params.only_relevant=I.f.rel==="yes"?"1":"no";if(I.f.hist)params.history="1"}
+  const f=I.f,ps=+f.pageSize||25,pg=Math.max(1,+f.page||1);
+  const params={group:1,limit:ps,offset:(pg-1)*ps,sort:{name:"domain",oldest:"oldest",discount:"discount"}[f.sort]||"recent",source:f.src||""};
+  if(f.q)params.q=f.q;
+  if(f.platform)params.platform_label=f.platform;
+  if(f.format)params.format=f.format;
+  if(f.saved==="yes")params.ids=I.savedIds.join(",")||"0";
+  if(f.saved==="no"&&I.savedIds.length)params.exclude_ids=I.savedIds.join(",");
+  // Выбран запуск: показываем его креативы, без сужения по «ключевому слову запуска»
+  if(f.job){params.job_id=f.job;params.intent="";if(f.rel==="yes"||f.rel==="no")params.only_relevant=f.rel==="yes"?"1":"no"}
   if(I.f.aiIntent)params.ai_intent=I.f.aiIntent;
   const rg=NEONUI.rangeOf(I.f.period);
-  if(rg)params.date_from=new Date(rg[0]).toISOString().slice(0,10);
+  // даты — по местному времени (как записаны в базе); у своего диапазона учитываем и конец
+  if(rg){const loc=t=>{const d=new Date(t),z=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())};
+    params.date_from=loc(rg[0]);if(String(I.f.period).includes(".."))params.date_to=loc(rg[1])}
   Object.assign(params,extra||{});
   try{
     const data=await api("/api/v1/creatives",params);
     if(seq!==I._libSeq)return;
     I.lib.groups=groupRealCreatives(data.items);
-    I.lib.total=data.total;
+    I.lib.total=data.total;I.lib.counts=data.counts||null;I.lib.job=data.job||null;I.lib.isAdmin=!!data.is_admin;I.lib.server=!extra;
+    if(data.source&&!extra)I.f.src=data.source;
     I.lib.loaded=true;
+    // страница за пределами списка (например, сузили фильтр) — возвращаемся на последнюю
+    // у запуска нет ни одного объявления по теме — пустой список ничего не объясняет, показываем всё найденное
+    const cj=data.counts&&data.counts.job;
+    if(!extra&&f.job&&f.rel==="yes"&&f.src!=="history"&&!data.total&&cj&&cj.found>0&&!cj.relevant){
+      f.rel="all";f.page=1;I.lib.loading=false;toast("В этом запуске нет объявлений по теме запроса — показаны все найденные ("+cj.found+")",{tone:"warning"});return loadLibrary()}
+    const last=Math.max(1,Math.ceil((data.total||0)/ps));
+    if(!extra&&pg>last){I.f.page=last;I.lib.loading=false;return loadLibrary()}
   }catch(err){if(seq!==I._libSeq)return;I.lib.loaded=true;toast("Не удалось загрузить креативы: "+(err.message||""),{tone:"danger"})}
   I.lib.loading=false;
   refreshLibSafe();
@@ -2886,17 +2923,34 @@ function refreshLibSafe(){
   N.refreshIf("intel-library","intel-compare");
 }
 function closeAllLayers(){document.querySelectorAll(".ov [data-x]").forEach(b=>b.click())}
-function relCheckHtml(){
-  const f=S.intel.f,r=jobRel(f.job);
-  const hint=r&&r.found?` (${r.relevant} из ${r.found}${r.pending?", ещё определяется "+r.pending:""})`:"";
-  return `<nv-checkbox label="Показывать только по интенту${hint}" ${f.rel==="yes"?"checked":""} data-chg="libRel"></nv-checkbox>
-  <nv-checkbox label="Добавить креативы по этому запросу из прошлых запусков" ${f.hist?"checked":""} data-chg="libHist"></nv-checkbox>`;
+function libScopeHtml(){
+  const I=S.intel,f=I.f,c=I.lib.counts||{},n=v=>v==null?"":fmt(v);
+  const j=f.job?((I.lib.job&&String(I.lib.job.id)===String(f.job)?I.lib.job:null)||(I.scans||[]).find(x=>String(x.id)===String(f.job))):null;
+  const src=[
+    {value:"own",label:f.job?"Этот запуск":"Мои запуски",count:n(c.own),icon:"radar",hint:f.job?"Объявления, которые парсер нашёл именно в этом запуске":"Объявления, найденные во всех ваших запусках"},
+    {value:"history",label:"Из истории",count:n(c.history),icon:"history",hint:"Объявления из общей базы сервиса, найденные не в ваших запусках, но подходящие по теме "+(f.job?"запроса":"ваших запросов")},
+    {value:"all",label:"Всё вместе",count:n(c.all),icon:"layers",hint:"Свои объявления и подходящие из истории одним списком. Объявления из истории помечены на карточке"}];
+  if(I.lib.isAdmin&&!f.job)src.push({value:"db",label:"Вся база",icon:"database",hint:"Все объявления всех пользователей без отбора по теме. Доступно только администратору"});
+  const jr=(c.job)||null,hist=f.src==="history";
+  const rel=[
+    {value:"yes",label:"По теме запроса",count:jr?n(jr.relevant):"",icon:"target",hint:"Только объявления, которые по смыслу относятся к ключевому слову запуска"},
+    {value:"all",label:"Все найденные",count:jr?n(jr.found):"",icon:"list",hint:"Всё, что показала рекламная сеть в этом запуске, включая рекламу не по теме"},
+    {value:"no",label:"Не по теме",count:jr?n(jr.irrelevant):"",icon:"circle-off",hint:"Реклама, показанная по аудитории, а не по теме запроса",disabled:hist}];
+  const live=f.job&&jobIsLive(f.job);
+  const note=f.src==="own"?"":(f.src==="db"?"Показана вся база без отбора по теме.":"Объявления из истории подобраны по интенту: их тема совпадает с "+(f.job?"ключевым словом запуска":"ключевыми словами ваших запусков")+". Чужие запросы и запуски не показываются.");
+  return `<div class="lib-scope">
+    ${f.job?`<div class="lib-scope-h"><span class="t">${ic("filter",14)}<span>Запуск <b>#${esc(f.job)}</b>${j?" · «"+esc(j.key_text||"")+"»"+(j.city?" · "+esc(j.city):""):""}</span>${live?'<nv-badge tone="info">ещё идёт</nv-badge>':""}${jr&&jr.pending?`<nv-badge tone="neutral" title="Интент этих объявлений ещё определяется">определяется: ${esc(jr.pending)}</nv-badge>`:""}</span><span class="row" style="gap:8px">${live?'<nv-button size="sm" variant="secondary" icon="refresh-cw" data-act="libRefresh">Обновить</nv-button>':""}<nv-button size="sm" variant="ghost" icon="x" data-act="libJobReset">Все мои запуски</nv-button></span></div>`:""}
+    <nv-choice-bar label="Откуда объявления" value="${esc(f.src||"own")}" options="${esc(JSON.stringify(src))}" data-chg="libSrc"></nv-choice-bar>
+    ${f.job?`<nv-choice-bar label="Что показывать" value="${esc(hist?"yes":(f.rel||"all"))}" options="${esc(JSON.stringify(rel))}" data-chg="libRel"></nv-choice-bar>`:""}
+    ${note?`<p class="lib-scope-n">${esc(note)}</p>`:""}
+  </div>`;
 }
 function jobRel(id){const j=(S.intel.scans||[]).find(x=>String(x.id)===String(id));return j&&j.rel?j.rel:null}
 function libMatchTile(){
   const I=S.intel,f=I.f;
   if(f.job){
-    const r=jobRel(f.job);
+    const cj=I.lib.counts&&I.lib.counts.job;
+    const r=cj?{found:cj.found,relevant:cj.relevant,pending:cj.pending}:jobRel(f.job);
     if(r&&r.found){const pc=Math.round(r.relevant/r.found*100);
       return stat("Подходят по интенту запуска",r.relevant+" из "+r.found,`note="${pc}% · ${r.pending?"ещё определяется "+r.pending:"по ключевому слову запуска"}" hint="Креатив подходит, если его интент (по оценке Gemini) по смыслу относится к ключевому слову запуска. Остальные показаны рекламной сетью по аудитории (например, стоматология пенсионерам), а не по теме запроса."`)}
     return stat("Подходят по интенту запуска","…",'note="считаем"');
@@ -2931,8 +2985,8 @@ async function jumpToLibrary(params,label){
   try{
     const data=await api("/api/v1/creatives",params);
     S.intel.lib.groups=groupRealCreatives(data.items);
-    S.intel.lib.total=data.total;S.intel.lib.loaded=true;
-    Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:""});
+    S.intel.lib.total=data.total;S.intel.lib.loaded=true;S.intel.lib.server=false;S.intel.lib.counts=null;
+    Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",page:1});
     N.go("intel-library");
     toast(label,{tone:"success"});
   }catch(err){toast("Не удалось загрузить: "+(err.message||""),{tone:"danger"})}
@@ -2948,7 +3002,7 @@ async function filterBySearch(q){
   toast("Показаны результаты поиска «"+q+"»",{tone:"success"});
 }
 async function filterByJob(jobId,label){
-  Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:String(jobId),rel:"yes",page:1});
+  Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",aiIntent:"",job:String(jobId),rel:"yes",src:"own",page:1});
   await loadLibrary();
   N.go("intel-library");
   toast("Показаны креативы запуска #"+jobId+(label?" «"+label+"»":"")+". Сбросить фильтр — кнопка над списком",{tone:"success"});
@@ -2960,15 +3014,11 @@ function jobFilterOptions(){
   const d=iso=>{const x=new Date(iso);return isNaN(x)?"":x.toLocaleDateString("ru-RU",{day:"2-digit",month:"2-digit"})+" "+x.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})};
   return ":Все запуски"+list.map(j=>"|"+j.id+":"+clean("#"+j.id+" · "+(j.key_text||"")+" · "+d(j.created_at)+" · "+j.total+" крео.")).join("");
 }
-function jobBannerHtml(){
-  const f=S.intel.f;if(!f.job)return"";
-  const j=(S.intel.scans||[]).find(x=>String(x.id)===String(f.job));
-  return `<div class="row between" style="gap:10px;align-items:center;background:var(--info-bg);color:var(--info);border-radius:12px;padding:9px 12px;font-size:13px"><span>${ic("filter",14)} Показаны креативы только запуска <b>#${esc(f.job)}</b>${j?" · «"+esc(j.key_text||"")+"»":""}${jobIsLive(f.job)?" · <b>запуск ещё идёт</b> — найденное уже тут, новое подтянется по кнопке «Обновить»":""}</span><span class="row" style="gap:8px;align-items:center;flex-wrap:wrap">${relCheckHtml()}${jobIsLive(f.job)?'<nv-button size="sm" variant="secondary" icon="refresh-cw" data-act="libRefresh">Обновить</nv-button>':""}<nv-button size="sm" variant="secondary" icon="x" data-act="libJobReset">Показать все запуски</nv-button></span></div>`;
-}
+function jobBannerHtml(){return libScopeHtml()}
 async function filterByAdvertiser(inn,name){
   try{
     const data=await api("/api/v1/advertisers/"+encodeURIComponent(inn)+"/creatives",{limit:60});
-    S.intel.lib.groups=data.variants||[];S.intel.lib.total=data.total_variants||0;S.intel.lib.loaded=true;
+    S.intel.lib.groups=data.variants||[];S.intel.lib.total=data.total_variants||0;S.intel.lib.loaded=true;S.intel.lib.server=false;S.intel.lib.counts=null;
     Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:""});
     N.go("intel-library");
     toast("Показаны креативы рекламодателя «"+name+"»",{tone:"success"});
@@ -2976,20 +3026,21 @@ async function filterByAdvertiser(inn,name){
 }
 function libRes(){
   const el=document.getElementById("lib-res");if(!el)return;
-  const f=S.intel.f,full=filtered(),sel=S.intel.sel.map(g=>String(g.representative.id));
-  const pageSize=+f.pageSize||25,totalPages=Math.max(1,Math.ceil(full.length/pageSize));
+  const f=S.intel.f,full=filtered(),sel=S.intel.sel.map(g=>String(g.representative.id)),srv=!!S.intel.lib.server;
+  const totalN=srv?(S.intel.lib.total||0):full.length;
+  const pageSize=+f.pageSize||25,totalPages=Math.max(1,Math.ceil(totalN/pageSize));
   let page=+f.page||1;
   if(page>totalPages)page=totalPages;
   if(page<1)page=1;
   f.page=page;f.pageSize=pageSize;
-  const start=(page-1)*pageSize,rr=full.slice(start,start+pageSize);
+  const start=(page-1)*pageSize,rr=srv?full:full.slice(start,start+pageSize);
   const h=document.getElementById("lib-count");
-  if(h)h.innerHTML=(full.length?`Показано <b>${start+1}–${start+rr.length}</b> из ${full.length}`:`Показано <b>0</b>`)+(anyF()?' · <nv-button variant="link" size="sm" data-act="libReset">Сбросить фильтры</nv-button>':"");
+  if(h)h.innerHTML=(totalN&&rr.length?`Показано <b>${fmt(start+1)}–${fmt(start+rr.length)}</b> из ${fmt(totalN)}`:`Показано <b>0</b>`)+(anyF()?' · <nv-button variant="link" size="sm" data-act="libReset">Сбросить фильтры</nv-button>':"");
   el.innerHTML=S.intel.lib.loading?'<nv-skeleton count="6"></nv-skeleton>':(rr.length?`<div class="grid g3">${rr.map(g=>cardHtml(g,sel.includes(String(g.representative.id)))).join("")}</div>`:`<nv-card><nv-empty icon="search-x" heading="По этим фильтрам рекламы нет" text="Уберите часть фильтров или запустите сканирование по новому запросу."><nv-button variant="secondary" data-act="libReset">Сбросить фильтры</nv-button><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>`);
   bindCards(el);
   libBulk();
   const pg=document.getElementById("lib-page");
-  if(pg)pg.innerHTML=totalPages>1?`<nv-pagination page="${f.page}" pages="${totalPages}" data-chg="libPage"></nv-pagination>`:"";
+  if(pg)pg.innerHTML=totalPages>1?`<nv-pagination page="${f.page}" pages="${totalPages}" data-chg="libPage"></nv-pagination><span class="muted" style="font-size:12px">Страница ${f.page} из ${fmt(totalPages)}</span>`:"";
 }
 function libBulk(){
   const sel=S.intel.sel,b=document.getElementById("lib-bulk");if(!b)return;
@@ -3374,7 +3425,7 @@ async function loadAnalytics(force){
   if(I.loaded&&!force)return;
   I.loading=true;if(!I.loaded)N.refreshIf("intel-overview","intel-sources","intel-carousels","intel-campaigns","intel-fresh","intel-platforms","intel-advertisers");
   const safe=p=>p.catch(()=>({}));
-  const[coverage,recent,fresh,discounts,apps,cross,carousels,campaigns,keywords,growing,mismatch,coverageReport]=await Promise.all([
+  const[coverage,recent,fresh,discounts,apps,cross,carousels,campaigns,keywords,growing,mismatch,coverageReport,daily]=await Promise.all([
     safe(api("/api/v1/coverage",{})),
     safe(api("/api/v1/creatives",{sort:"recent",limit:200})),
     safe(api("/api/v1/creatives",{date_from:new Date(Date.now()-7*864e5).toISOString().slice(0,10),sort:"recent",limit:12})),
@@ -3386,8 +3437,10 @@ async function loadAnalytics(force){
     safe(api("/api/v1/analytics/keywords",{})),
     safe(api("/api/v1/analytics/fastest-growing",{})),
     safe(api("/api/v1/analytics/landing-mismatch",{})),
-    safe(api("/api/v1/analytics/coverage",{}))
+    safe(api("/api/v1/analytics/coverage",{})),
+    safe(api("/api/v1/analytics/daily",{days:14}))
   ]);
+  I.daily=daily.items||[];
   I.coverage=coverage.platforms||[];I.totals=coverage.totals||{};
   const recentItems=recent.items||[],counts={};
   I.recentItems=recentItems;
@@ -3404,6 +3457,9 @@ async function loadAnalytics(force){
 }
 /* Считаем по уже загруженным последним креативам (captured_at) — без доп. запросов к бэкенду. */
 function dailyTrend(items,days){
+  // данные по дням считает сервер по всей базе; старый подсчёт по загруженным карточкам — запасной
+  const dl=S.intel.ana.daily||[];
+  if(dl.length){const t=dl.slice(-days);return{labels:t.map(x=>x.day.slice(8,10)+"."+x.day.slice(5,7)),values:t.map(x=>x.count)}}
   const now=new Date(),buckets=[];
   for(let i=days-1;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);buckets.push({key:d.toISOString().slice(0,10),label:d.toLocaleDateString("ru-RU",{day:"2-digit",month:"2-digit"}),n:0})}
   const byKey={};buckets.forEach(b=>byKey[b.key]=b);
@@ -3411,6 +3467,9 @@ function dailyTrend(items,days){
   return{labels:buckets.map(b=>b.label),values:buckets.map(b=>b.n)};
 }
 function periodDelta(items,days){
+  const dl=S.intel.ana.daily||[];
+  if(dl.length>=2*days){const sum=a=>a.reduce((x,y)=>x+y.count,0),a=sum(dl.slice(-days)),b=sum(dl.slice(-2*days,-days));
+    if(!b)return{value:a,delta:"",trend:"flat"};const pct=Math.round((a-b)/b*100);return{value:a,delta:Math.abs(pct)>999?"более 999%":Math.abs(pct)+"%",trend:pct>0?"up":pct<0?"down":"flat"}}
   const now=Date.now(),cur=now-days*864e5,prev=now-2*days*864e5;let a=0,b=0;
   (items||[]).forEach(c=>{const t=new Date(c.captured_at||0).getTime();if(!t)return;if(t>=cur)a++;else if(t>=prev)b++});
   if(!b)return{value:a,delta:"",trend:"flat"};
@@ -3494,13 +3553,13 @@ const stat=(l,v,o)=>`<nv-stat label="${esc(l)}" value="${esc(v)}" ${o||""}></nv-
 const views={
 library(){
   const I=S.intel,f=I.f,r=filtered();
-  const plats=[...new Set(CR().map(g=>realPlatformLabel(g.representative.detection_method)))];
+  const plats=["Яндекс / РСЯ","Яндекс Дзен","VK Ads","Google Ads","Taboola"];
   const erid=CR().filter(g=>g.representative.erid).length;
-  const savedN=CR().filter(g=>I.savedIds.includes(String(g.representative.id))).length;
+  const savedN=I.savedIds.length;
   return{title:"Библиотека рекламы",sub:"Реклама конкурентов, которую нашёл парсер. Откройте объявление, чтобы увидеть детали.",
   actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
   help:{title:"С чего начать",steps:["Запустите сканирование по своему запросу и городу.","Откройте креатив — там цена, ERID и ссылка.","Сохраняйте находки или собирайте их в подборки."]},
-  body:`<div class="grid g4">${stat("Показано карточек",r.length)}${libMatchTile()}${stat("С кодом ERID",erid,'note="из загруженных"')}${stat("В избранном",savedN,'note="из загруженных"')}</div>
+  body:`<div class="grid g4">${stat("Найдено объявлений",fmt(I.lib.server?(I.lib.total||0):r.length),'note="по текущим фильтрам"')}${libMatchTile()}${stat("С кодом ERID",erid,'note="на этой странице"')}${stat("В избранном",savedN,'note="всего сохранено"')}</div>
   <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст, домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-select label="Запуск" value="${esc(f.job||"")}" options="${esc(jobFilterOptions())}" data-chg="libF" data-key="job"></nv-select><nv-filter-select label="Интент креатива" value="${esc(f.aiIntent)}" options="${esc(aiIntentOptions()||"_:Пока не определены")}" placeholder="Все интенты" min-width="320" data-chg="libF" data-key="aiIntent"></nv-filter-select><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select><nv-select label="Сортировка" value="${f.sort}" options="recent:Сначала новые|oldest:Сначала старые|name:Домен А-Я" data-chg="libF" data-key="sort"></nv-select><nv-select label="На странице" value="${+f.pageSize||25}" options="25:25|50:50|100:100|200:200" data-chg="libF" data-key="pageSize"></nv-select>${intentControlHtml()}</div>
   ${jobBannerHtml()}
   <nv-saved-views id="lib-views" views="${esc(JSON.stringify(I.savedViews.map(v=>({id:v.id,name:v.name}))))}" value="${esc(activeViewId())}" can-save></nv-saved-views>
@@ -3706,7 +3765,7 @@ advertisers(){
     if(sub==="all"){
       if(!I.advertisersLoaded)loadAdvertisers(I.advQ);
       const t=root.querySelector("#ad-t");
-      t.columns=[{key:"name",label:"Рекламодатель",sort:true,render:a=>`<div class="row" style="gap:9px;align-items:center;min-width:0;max-width:280px;flex-wrap:nowrap"><nv-avatar name="${esc(a.name||a.inn||"?")}" size="28" src="${esc(favUrl(hostOf(a.website_url)))}"></nv-avatar><div style="min-width:0"><div class="cell-t" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(a.name||"Без названия")}">${esc(a.name||"Без названия")}</div><div class="cell-s mono">ИНН ${esc(a.inn)}</div></div></div>`},{key:"contacts",label:"Контакты",render:a=>{const bits=[];if(a.website_url)bits.push(`<div class="cell-t mono">${esc(a.website_url)}</div>`);if(a.phone)bits.push(`<div class="cell-s mono">${esc(a.phone)}</div>`);if(a.address)bits.push(`<div class="cell-s">${esc(a.address)}</div>`);return bits.join("")||'<span class="muted">не раскрыты</span>'}},{key:"creatives_count",label:"Креативов",align:"right",sort:true},{key:"first_seen_at",label:"Впервые",sort:true,render:a=>a.first_seen_at?N.rel(a.first_seen_at):"—"},{key:"last_seen_at",label:"Последний раз",sort:true,render:a=>a.last_seen_at?N.rel(a.last_seen_at):"—"}];
+      t.columns=[{key:"name",label:"Рекламодатель",sort:true,render:a=>`<div class="row" style="gap:9px;align-items:center;min-width:0;max-width:280px;flex-wrap:nowrap"><nv-avatar name="${esc(a.name||a.inn||"?")}" size="28" src="${esc(favUrl(hostOf(a.website_url)))}"></nv-avatar><div style="min-width:0"><div class="cell-t" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(a.name||"Без названия")}">${esc(a.name||"Без названия")}</div><div class="cell-s mono">ИНН ${esc(a.inn)}</div></div></div>`},{key:"contacts",label:"Контакты",render:a=>{const bits=[];const cut="max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";if(a.website_url)bits.push(`<div class="cell-t mono" style="${cut}" title="${esc(a.website_url)}">${esc(hostOf(a.website_url)||a.website_url)}</div>`);if(a.phone)bits.push(`<div class="cell-s mono" style="${cut}">${esc(a.phone)}</div>`);if(a.address)bits.push(`<div class="cell-s" style="${cut}" title="${esc(a.address)}">${esc(a.address)}</div>`);return bits.join("")||'<span class="muted">не раскрыты</span>'}},{key:"creatives_count",label:"Креативов",align:"right",sort:true},{key:"first_seen_at",label:"Впервые",sort:true,render:a=>a.first_seen_at?N.rel(a.first_seen_at):"—"},{key:"last_seen_at",label:"Последний раз",sort:true,render:a=>a.last_seen_at?N.rel(a.last_seen_at):"—"}];
       t.rows=I.advertisers.map(a=>({...a,id:a.inn}));
       t.addEventListener("nv-row-click",e=>{const a=I.advertisers.find(x=>x.inn===e.detail.id);if(a)filterByAdvertiser(a.inn,a.name||a.inn)});
     }else wireAnalyticsTables(root,A);
@@ -3725,11 +3784,11 @@ Object.assign(N.acts,{
   copyField(a,d){const v=d.value||"";const done=()=>toast("Скопировано",{tone:"success"});if(navigator.clipboard)navigator.clipboard.writeText(v).then(done).catch(()=>toast("Браузер запретил копирование. Скопируйте текст вручную",{tone:"warning"}));else toast("Скопируйте текст вручную",{tone:"warning"})},
   cardAddToCollection(a,d){const g=findGroup(d.id);if(!g){toast("Креатив не найден",{tone:"warning"});return}collectDlg([{group_key:g.group_key,creative_id:g.representative.id}])},
   libRefresh(){loadScans();loadLibrary()},
-  libReset(){Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:"",rel:"all",aiIntent:""});loadLibrary()},
+  libReset(){Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:"",rel:"all",src:"",aiIntent:"",page:1});loadLibrary()},
   runOpen(a,d){openScanDetail({id:+d.id})},
   aiFilter(a,d){closeAllLayers();Object.assign(S.intel.f,{q:"",platform:"",format:"",saved:"",period:"",job:"",aiIntent:d.v,page:1});loadLibrary();N.go("intel-library")},
   runLib(a,d){closeAllLayers();filterByJob(+d.id,d.k)},
-  libJobReset(){S.intel.f.job="";S.intel.f.hist=false;S.intel.f.rel="all";S.intel.f.page=1;loadLibrary()},
+  libJobReset(){S.intel.f.job="";S.intel.f.rel="all";S.intel.f.src="";S.intel.f.page=1;loadLibrary()},
   bulkSave(){const set=new Set(S.intel.savedIds);S.intel.sel.forEach(g=>set.add(String(g.representative.id)));S.intel.savedIds=[...set];persistSavedCreativeIds(S.intel.savedIds);const n=S.intel.sel.length;S.intel.sel=[];N.refresh();toast("В избранное добавлено: "+n,{tone:"success"})},
   bulkCollect(){collectDlg(S.intel.sel.map(g=>({group_key:g.group_key,creative_id:g.representative.id})))},
   bulkCompare(){S.intel.cmp=[...S.intel.sel];S.intel.sel=[];N.go("intel-compare")},
@@ -3744,17 +3803,16 @@ Object.assign(N.acts,{
   kDel(a,d){const k=S.intel.collections.find(x=>x.id===d.id);if(!k)return;confirm({title:"Удалить подборку «"+k.name+"»?",text:"Все элементы подборки удалятся без возможности восстановления.",confirm:"Удалить подборку",danger:true,fn(){(async()=>{try{await apiDelete("/api/v1/collections/"+k.id);S.intel.openK=null;await loadCollections();N.refresh();toast("Подборка удалена")}catch(err){toast("Не удалось удалить: "+(err.message||""),{tone:"danger"})}})()}})}
 });
 N.chg.schedTab=v=>{S.intel.schedTab=v;N.refresh()};
-N.chg.libHist=v=>{S.intel.f.hist=(v===true||v==="true");S.intel.f.page=1;loadLibrary()};
-N.chg.libRel=v=>{S.intel.f.rel=(v===true||v==="true")?"yes":"all";S.intel.f.page=1;loadLibrary()};
+N.chg.libSrc=v=>{S.intel.f.src=v;if(v==="history"&&S.intel.f.rel==="no")S.intel.f.rel="yes";S.intel.f.page=1;loadLibrary()};
+N.chg.libRel=v=>{S.intel.f.rel=v;S.intel.f.page=1;loadLibrary()};
 N.chg.libF=(v,d)=>{
-  if(d.key==="pageSize"){S.intel.f.pageSize=+v||25;S.intel.f.page=1;libRes();return}
+  if(d.key==="pageSize"){S.intel.f.pageSize=+v||25;S.intel.f.page=1;loadLibrary();return}
   S.intel.f[d.key]=v;S.intel.f.page=1;
-  if(d.key==="job"||d.key==="aiIntent"){if(d.key==="job")S.intel.f.rel=v?"yes":"all";loadLibrary();return}
+  if(d.key==="job"){S.intel.f.rel=v?"yes":"all";if(S.intel.f.src==="db")S.intel.f.src="own";loadLibrary();return}
   if(d.key==="q"){clearTimeout(S.intel._qT);S.intel._qT=setTimeout(()=>loadLibrary(),400)}
-  else if(d.key==="period")loadLibrary();
-  else libRes();
+  else loadLibrary();
 };
-N.chg.libPage=v=>{S.intel.f.page=+v;libRes();const sc=document.getElementById("scroll");if(sc)sc.scrollTop=0};
+N.chg.libPage=v=>{S.intel.f.page=+v;const sc=document.getElementById("scroll");if(sc)sc.scrollTop=0;if(S.intel.lib.server)loadLibrary();else libRes()};
 N.chg.advQ=v=>{S.intel.advQ=v;clearTimeout(S.intel._advT);S.intel._advT=setTimeout(()=>loadAdvertisers(v),350)};
 N.chg.cmpF=(v,d)=>{S.intel.cmpF[d.key]=v;N.refresh()};
 N.chg.scanF=(v,d)=>{S.intel.scanF[d.key]=v;N.refresh()};
@@ -4716,7 +4774,7 @@ projects(){
     el.innerHTML=`<div class="muted" style="font-size:12.5px;margin-bottom:8px">Показано ${rows.length} из ${A.projects.length}. Нажмите на проект — откроется история, аккаунты и проверка кампаний.</div>`+
       (rows.length?`<nv-table id="ads-proj-t" page-size="25" clickable></nv-table>`:`<nv-empty icon="filter" heading="Ничего не найдено" text="Измените фильтры или сбросьте их."></nv-empty>`);
     if(rows.length)wireTable(root,"ads-proj-t",rows,
-      [{key:"name",label:"Проект",render:p=>`<div class="cell-t" style="color:var(--accent,#2563eb);text-decoration:underline;text-underline-offset:2px">${esc(p.name)}</div><div class="cell-s">${esc(p.domain||"")}</div>`},
+      [{key:"name",label:"Проект",render:p=>`<div class="cell-t" style="color:var(--accent,#2563eb);text-decoration:underline;text-underline-offset:2px">${esc(p.name)}</div><div class="cell-s" style="max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(p.domain||"")}">${esc(p.domain||"")}</div>`},
        {key:"launch_mode",label:"Режим",render:p=>p.launch_mode==="ozon"?'<nv-badge tone="info">Директ Озон</nv-badge>':'<nv-badge>Директ</nv-badge>'},
        {key:"_status",label:"Статус",render:p=>{const [l,t]=PROJ_STATUS[projStatus(p)];return `<nv-badge${t?` tone="${t}"`:""}>${l}</nv-badge>`}},
        {key:"_camps",label:"Кампаний",align:"right",render:p=>String((p.stats||{}).campaigns_count||0)},
