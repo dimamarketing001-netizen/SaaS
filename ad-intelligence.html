@@ -3379,7 +3379,7 @@ async function openCreative(id){
     </dl>
     <div class="sect-t">Дополнительные сигналы</div>
     <dl class="dl">
-      ${cr.creative_type==="video"?`<dt>Длительность видео</dt><dd>${cr.video_duration?esc(cr.video_duration)+" сек":"не определена"}</dd>`:""}
+      ${cr.creative_type==="video"?`<dt>Длительность видео</dt><dd>${Number(cr.video_duration)>0?esc(cr.video_duration)+" сек":"не определена"}</dd>`:""}
       ${cr.video_src?`<dt>Файл видео</dt><dd class="mono">${esc(cr.video_src)}</dd>`:""}
       <dt>Цена</dt><dd>${esc(cr.price_text||(cr.price_rub?fmt(cr.price_rub)+" ₽":"не указана"))}</dd>
       ${cr.discount_percent?`<dt>Скидка</dt><dd>${esc(cr.discount_percent)}%</dd>`:""}
@@ -5117,6 +5117,41 @@ function accountCheckHtml(r){
 const AD_ST_LABEL={banned:"Аккаунт забанен",no_access:"Нет доступа",rejected:"Отклонена",partial:"Частично запущено",review:"На модерации",live:"Идут показы",no_money:"Нет средств",paused:"Остановлена",stopped:"Показы не идут",draft:"Черновик",archived:"В архиве",unknown:"Нет данных",error:"Не удалось проверить"};
 const adStLabel=c=>AD_ST_LABEL[c]||c;
 const AD_ST_ORDER=["banned","no_access","rejected","partial","review","live","no_money","paused","stopped","draft","archived","unknown","error"];
+/* «Пнуть незапущенные» (2026-11-16): план (dry_run) → подтверждение с суммой →
+   по одному аккаунту (пополнение ждёт Click.ru до минуты — общий запрос
+   упёрся бы в таймаут прокси). Деньги списываются только там, где баланс 0. */
+async function kickStuck(p,onDone){
+  let plan;
+  try{toast("Проверяю аккаунты проекта…");plan=await apiPost("/api/v1/ads/projects/"+p.id+"/kick",{dry_run:true})}
+  catch(err){toast("Не удалось проверить: "+(err.message||""),{tone:"danger"});return}
+  const items=plan.items||[];
+  if(!items.length){toast(`Все ${plan.checked} аккаунтов в порядке — пинать некого`,{tone:"success"});onDone&&onDone();return}
+  const nt=plan.need_topup||0,sug=plan.suggested_amount_rub||1220;
+  overlay("modal",{title:"Пнуть незапущенные: "+items.length,subtitle:`Проверено аккаунтов: ${plan.checked}. Деньги — только где баланс 0.`,
+    body:`<div class="stack" style="gap:8px">${items.map(x=>`<div style="border-bottom:1px solid var(--line);padding:6px 0"><div class="row between" style="gap:8px;flex-wrap:wrap"><div><b>${esc(x.pool_login||"—")}</b> <span class="muted" style="font-size:12px">#${x.account_id} · кампания ${esc(String(x.campaign_id||"—"))}</span></div>${accStatusHtml(x.status)}</div>
+        <div class="muted" style="font-size:12.5px">${esc((x.status||{}).detail||"")}</div>
+        <div style="font-size:12.5px;margin-top:2px">Сделаю: <b>${x.topup?"пополню и ":""}отправлю на модерацию и включу</b></div></div>`).join("")}</div>
+      ${nt?`<nv-input name="amt" type="number" label="Пополнить каждый аккаунт без денег, ₽ с НДС" value="${esc(String(sug))}" style="margin-top:10px"></nv-input><div class="muted" data-kick-sum style="font-size:12.5px;margin-top:4px"></div>`:""}
+      <div class="muted" data-kick-msg style="font-size:12.5px;margin-top:8px"></div>`,
+    mount(r){const a=r.querySelector('[name="amt"]'),sm=r.querySelector("[data-kick-sum]");const upd=()=>{if(sm)sm.textContent=`Итого спишется с Click.ru: ${nt} × ${(+a.value||0).toLocaleString("ru-RU")} ₽ = ${(nt*(+a.value||0)).toLocaleString("ru-RU")} ₽ с НДС`};if(a){a.addEventListener("nv-change",upd);a.addEventListener("input",upd)}upd()},
+    actions:[{label:"Отмена"},{label:nt?"Пополнить и запустить":"Запустить",variant:"primary",fn(r,close){
+      const a=r.querySelector('[name="amt"]'),amount=a?(+a.value||0):0,m=r.querySelector("[data-kick-msg]");
+      if(nt&&amount<=0){m.textContent="Укажите сумму пополнения";m.style.color="var(--bad)";return false}
+      (async()=>{
+        let ok=0,funded=0;const errs=[];
+        for(let i=0;i<items.length;i++){
+          const x=items[i];m.style.color="";m.textContent=`Аккаунт ${i+1} из ${items.length}: ${x.pool_login||x.account_id}…`;
+          try{const res=await apiPost("/api/v1/ads/projects/"+p.id+"/kick",{dry_run:false,amount_rub:x.topup?amount:0,account_ids:[x.account_id]});
+            (res.items||[]).forEach(it=>{if(it.started)ok++;if(it.topup_status==="SUCCESS")funded++;if(!it.started)errs.push(x.account_id+": "+(it.notes||[]).join(", "))});
+          }catch(err){errs.push(x.account_id+": "+(err.message||""))}
+        }
+        close();
+        toast(`Пнуто: запущено ${ok} из ${items.length}`+(nt?`, пополнено ${funded}`:"")+(errs.length?` · не вышло: ${errs.join("; ").slice(0,300)}`:""),{tone:errs.length?"warning":"success"});
+        onDone&&onDone();
+      })();
+      return false;
+    }}]});
+}
 function accStatusHtml(st){
   if(!st)return '<span class="muted" style="font-size:12px">статус…</span>';
   const ads=st.ads||{},extra=ads.total?` · объявлений: принято ${ads.accepted||0}, на модерации ${ads.moderation||0}, отклонено ${ads.rejected||0}`:"";
@@ -5152,7 +5187,7 @@ function openProjectPanel(p){
           ${!h.running_job_id&&h.resume?`<nv-button size="sm" variant="primary" icon="play" data-proj-resume="${h.resume.job_id}" hint="Досоздать недостающие кампании с теми же настройками">Продолжить запуск #${h.resume.job_id} (не хватает ${h.resume.remaining}${h.resume.reuse_accounts?", готовых аккаунтов "+h.resume.reuse_accounts:""})</nv-button>`:""}
           ${p.ozon_url?`<a href="${esc(p.ozon_url)}" target="_blank" rel="noopener" style="font-size:13px;align-self:center">Карточка Ozon</a>`:""}</div>
           <nv-card heading="Аккаунты Директа" subtitle="Где скрипт создал кампании. Статус справа — модерация и показы по Директу, бан — по Click.ru (обновляется раз в 2 минуты). «Проверить» — подробности по API Директа.">
-          ${acc.length?`<div class="row between" style="gap:8px;flex-wrap:wrap;margin-bottom:4px"><div class="st-chips" data-acc-st-sum>${accStatusSummary(stCache)}</div><nv-button size="sm" variant="ghost" icon="refresh-cw" data-acc-st-refresh>Обновить статусы</nv-button></div>`:""}
+          ${acc.length?`<div class="row between" style="gap:8px;flex-wrap:wrap;margin-bottom:4px"><div class="st-chips" data-acc-st-sum>${accStatusSummary(stCache)}</div><div class="row" style="gap:6px"><nv-button size="sm" variant="secondary" icon="zap" data-acc-kick hint="Найти аккаунты, где показы фактически не идут (нет денег, черновик, выключена), и довести их до показов">Пнуть незапущенные</nv-button><nv-button size="sm" variant="ghost" icon="refresh-cw" data-acc-st-refresh>Обновить статусы</nv-button></div></div>`:""}
           ${acc.length?acc.map((a,i)=>`<div style="border-bottom:1px solid var(--line);padding:8px 0">
             <div class="row between" style="gap:8px;flex-wrap:wrap"><div><b>${esc(a.pool_login||"—")}</b> <span class="muted" style="font-size:12.5px">аккаунт Click.ru ${esc(String(a.account_id||"—"))} · кампания ${esc(String(a.campaign_id||"—"))} · ${esc(fmtDateTime(a.created_at))}</span>
               <div class="muted" style="font-size:12.5px">${a.headline?esc(a.headline)+" · ":""}объявлений ${a.ads_created??"—"} · картинка ${a.image_used?"да":"нет"} · быстрых ссылок ${a.sitelinks_used??0} · уточнений ${a.callouts_used??0}${a.note?" · "+esc(a.note):""}</div></div>
@@ -5176,6 +5211,7 @@ function openProjectPanel(p){
         svc("[data-proj-grants]","/metrika-grants",r=>`Доступ к Метрике: ${r.ok} из ${r.total}`);
         const jb=el.querySelector("[data-proj-job]");if(jb)jb.onclick=()=>openJobDrawer(p,+jb.dataset.projJob);
         const sr=el.querySelector("[data-acc-st-refresh]");if(sr)sr.onclick=()=>loadSt(true);
+        const kb=el.querySelector("[data-acc-kick]");if(kb)kb.onclick=()=>kickStuck(p,()=>loadSt(true));
         el.querySelectorAll("[data-acc-check]").forEach(b=>b.onclick=async()=>{
           const a=acc[+b.dataset.accCheck],out=el.querySelector(`[data-acc-out="${b.dataset.accCheck}"]`);
           out.innerHTML='<span class="muted">Спрашиваю Директ…</span>';
