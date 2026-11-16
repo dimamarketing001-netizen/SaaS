@@ -5125,7 +5125,7 @@ async function kickStuck(p,onDone){
   try{toast("Проверяю аккаунты проекта…");plan=await apiPost("/api/v1/ads/projects/"+p.id+"/kick",{dry_run:true})}
   catch(err){toast("Не удалось проверить: "+(err.message||""),{tone:"danger"});return}
   const items=plan.items||[];
-  if(!items.length){toast(`Все ${plan.checked} аккаунтов в порядке — пинать некого`,{tone:"success"});onDone&&onDone();return}
+  if(!items.length){toast(`Пинать некого: проверено ${plan.checked}`+(plan.unchecked?`, не удалось проверить ${plan.unchecked} (лимит Click.ru) — повторите через минуту`:", все идут или на модерации"),{tone:plan.unchecked?"warning":"success"});onDone&&onDone();return}
   const nt=plan.need_topup||0,sug=plan.suggested_amount_rub||1220;
   overlay("modal",{title:"Пнуть незапущенные: "+items.length,subtitle:`Проверено аккаунтов: ${plan.checked}. Деньги — только где баланс 0.`,
     body:`<div class="stack" style="gap:8px">${items.map(x=>`<div style="border-bottom:1px solid var(--line);padding:6px 0"><div class="row between" style="gap:8px;flex-wrap:wrap"><div><b>${esc(x.pool_login||"—")}</b> <span class="muted" style="font-size:12px">#${x.account_id} · кампания ${esc(String(x.campaign_id||"—"))}</span></div>${accStatusHtml(x.status)}</div>
@@ -5138,15 +5138,15 @@ async function kickStuck(p,onDone){
       const a=r.querySelector('[name="amt"]'),amount=a?(+a.value||0):0,m=r.querySelector("[data-kick-msg]");
       if(nt&&amount<=0){m.textContent="Укажите сумму пополнения";m.style.color="var(--bad)";return false}
       (async()=>{
-        let ok=0,funded=0;const errs=[];
+        let ok=0,funded=0;const errs=[],late=[];
         for(let i=0;i<items.length;i++){
           const x=items[i];m.style.color="";m.textContent=`Аккаунт ${i+1} из ${items.length}: ${x.pool_login||x.account_id}…`;
           try{const res=await apiPost("/api/v1/ads/projects/"+p.id+"/kick",{dry_run:false,amount_rub:x.topup?amount:0,account_ids:[x.account_id]});
             (res.items||[]).forEach(it=>{if(it.started)ok++;if(it.topup_status==="SUCCESS")funded++;if(!it.started)errs.push(x.account_id+": "+(it.notes||[]).join(", "))});
-          }catch(err){errs.push(x.account_id+": "+(err.message||""))}
+          }catch(err){const em=err.message||"";if(/50[24]|timeout|Failed to fetch|нет ответа|unreachable/i.test(em))late.push(x.account_id);else errs.push(x.account_id+": "+em)}
         }
         close();
-        toast(`Пнуто: запущено ${ok} из ${items.length}`+(nt?`, пополнено ${funded}`:"")+(errs.length?` · не вышло: ${errs.join("; ").slice(0,300)}`:""),{tone:errs.length?"warning":"success"});
+        toast(`Пнуто: запущено ${ok} из ${items.length}`+(nt?`, пополнено ${funded}`:"")+(late.length?` · ответа не дождались по ${late.join(", ")} — сервер доделывает, проверьте статус через минуту`:"")+(errs.length?` · не вышло: ${errs.join("; ").slice(0,300)}`:""),{tone:errs.length||late.length?"warning":"success"});
         onDone&&onDone();
       })();
       return false;
