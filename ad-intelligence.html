@@ -90,6 +90,98 @@ nv-strength{display:block;min-width:0}
 .ld{display:flex;flex-direction:column;min-width:0}.ld nv-creative-card{flex:1}.ld .cr{border-top-left-radius:0;border-top-right-radius:0}
 .ld-wrap{display:grid;grid-template-columns:minmax(230px,300px) minmax(0,1fr);gap:16px;align-items:start}
 @media(max-width:900px){.ld-wrap{grid-template-columns:minmax(0,1fr)}}
+/* Сравнение объявлений */
+nv-compare-board{display:block;min-width:0}
+.cb-w{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.cb{display:grid;grid-template-columns:148px repeat(var(--n),minmax(190px,1fr));min-width:calc(148px + var(--n)*190px)}
+.cb>*{padding:10px 12px;border-bottom:1px solid var(--line);min-width:0;font-size:13px;line-height:1.4}
+.cb-l{position:sticky;left:0;z-index:1;background:var(--surface);color:var(--ink-2);font-weight:500;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line)}
+.cb-l small{font-size:11.5px;color:var(--ink-3);font-weight:400;line-height:1.3}
+.cb-h{display:flex;flex-direction:column;gap:7px;padding:12px}
+.cb-h.win{background:color-mix(in srgb,var(--success,#16a34a) 8%,var(--surface))}
+.cb-img{all:unset;cursor:pointer;display:block;aspect-ratio:16/10;border-radius:10px;overflow:hidden;background:var(--surface-2)}
+.cb-img img{width:100%;height:100%;object-fit:cover;display:block}
+.cb-img.empty{display:flex;align-items:center;justify-content:center;color:var(--ink-3)}
+.cb-d{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:5px;min-width:0}.cb-d span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cb-t{all:unset;cursor:pointer;font-weight:600;font-size:13.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cb-t:hover{text-decoration:underline}
+.cb-win{align-self:flex-start;font-size:11px;font-weight:700;color:var(--success,#16a34a);background:color-mix(in srgb,var(--success,#16a34a) 14%,transparent);border-radius:999px;padding:2px 9px;display:inline-flex;gap:4px;align-items:center}
+.cb-x{all:unset;cursor:pointer;font-size:12px;color:var(--ink-3);display:inline-flex;gap:4px;align-items:center;align-self:flex-start;border-radius:8px;padding:2px 4px}
+.cb-x:hover{color:var(--bad,#dc2626)}.cb-x:focus-visible,.cb-t:focus-visible,.cb-img:focus-visible{outline:2px solid var(--info,#2563eb);outline-offset:2px}
+.cb-sec{grid-column:1/-1;background:var(--surface-2);font:700 11px var(--font-display);text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);padding:8px 12px;position:sticky;left:0}
+.cb-v{overflow-wrap:anywhere}.cb-v.no{color:var(--ink-3)}
+.cb-num{display:flex;flex-direction:column;gap:5px}
+.cb-num b{font-size:17px;font-weight:700;display:flex;align-items:center;gap:6px}
+.cb-num b em{font-style:normal;font-size:10.5px;font-weight:700;color:var(--success,#16a34a);background:color-mix(in srgb,var(--success,#16a34a) 14%,transparent);border-radius:999px;padding:1px 7px}
+.cb-bar{height:5px;border-radius:999px;background:var(--surface-2);overflow:hidden}.cb-bar i{display:block;height:100%;border-radius:999px;background:var(--ink-3)}
+.cb-num.best .cb-bar i{background:var(--success,#16a34a)}
+.cb-same{grid-column:2/-1;color:var(--ink-3)}.cb-same b{color:var(--ink-2);font-weight:500}
+.cb>.last{border-bottom:0}
+.cmp-verdict{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.5}
+.cmp-verdict nv-icon,.cmp-verdict svg{flex:none;margin-top:2px;color:var(--success,#16a34a)}
+.cmp-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.cmp-steps div{background:var(--surface-2);border-radius:12px;padding:12px;font-size:13px;line-height:1.4;color:var(--ink-2)}
+.cmp-steps b{display:block;color:var(--ink);font-size:13.5px;margin-bottom:3px}
+@media(max-width:760px){.cmp-steps{grid-template-columns:minmax(0,1fr)}.cb{grid-template-columns:104px repeat(var(--n),minmax(170px,1fr));min-width:calc(104px + var(--n)*170px)}}
+.cmp-tray{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cmp-chip{display:inline-flex;align-items:center;gap:7px;background:var(--surface-2);border-radius:999px;padding:3px 4px 3px 4px;font-size:12.5px;max-width:230px}
+.cmp-chip img{width:26px;height:26px;border-radius:50%;object-fit:cover;flex:none;background:var(--surface-3)}
+.cmp-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmp-chip button{all:unset;cursor:pointer;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;color:var(--ink-3);flex:none}
+.cmp-chip button:hover{background:var(--surface-3);color:var(--ink)}
+/* Папки подборок: превью и выбор */
+.folder{position:relative}
+.folder-th{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-bottom:12px}
+.folder-th span{aspect-ratio:1;border-radius:8px;background:var(--surface-2);overflow:hidden;display:block}
+.folder-th img{width:100%;height:100%;object-fit:cover;display:block}
+.folder-upd{font-size:11.5px;color:var(--ink-3)}
+.folder-ck{position:absolute;top:28px;right:14px;z-index:1}
+.folder.has-ck .folder-head{justify-content:flex-start;gap:8px}
+.folder.sel .folder-body,.folder.sel .folder-tab{background:color-mix(in srgb,var(--info,#2563eb) 7%,var(--surface))}
+.folder.sel .folder-body{box-shadow:inset 0 0 0 2px var(--info,#2563eb)}
+.folder-open{all:unset;cursor:pointer;display:block}.folder-open:hover .folder-name{text-decoration:underline}
+.folder-open:focus-visible{outline:2px solid var(--info,#2563eb);outline-offset:3px;border-radius:8px}
+.k-bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.k-bar .grow{flex:1 1 220px}
+/* Сканирования: переключатель и строки расписаний */
+.vsw{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.vsw .seg{background:var(--surface);box-shadow:0 0 0 1px var(--line);padding:3px}
+.vsw .seg button{padding:6px 16px;font-size:13.5px}
+.vsw .seg button[aria-checked="true"]{background:var(--ink);color:var(--surface);box-shadow:none}
+.vsw.sub .seg{background:color-mix(in srgb,var(--ink) 7%,transparent);box-shadow:none}
+.vsw.sub .seg button{padding:4px 12px;font-size:12.5px}
+.vsw.sub .seg button[aria-checked="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-1)}
+.schg{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.schg-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
+.schg-h h4{margin:0;font:700 15px var(--font-display)}
+.schg-h p{margin:2px 0 0;font-size:12.5px;color:var(--ink-3)}
+.schr{border-bottom:1px solid var(--line)}.schr:last-child{border-bottom:0}
+.schr>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(110px,1.1fr) minmax(120px,1fr) minmax(130px,1.2fr) minmax(150px,1.3fr) auto auto 18px;gap:12px;align-items:center;padding:10px 16px;font-size:13px}
+.schr>summary::-webkit-details-marker{display:none}
+.schr>summary:hover{background:var(--surface-2)}
+.schr>summary:focus-visible{outline:2px solid var(--info,#2563eb);outline-offset:-2px}
+.schr-c{font-weight:600;display:flex;align-items:center;gap:6px;min-width:0}.schr-c span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.schr-f,.schr-n{color:var(--ink-2);min-width:0}.schr-n b{color:var(--ink);font-weight:600}
+.schr-p{display:flex;align-items:center;gap:8px;min-width:0}.schr-p .sch-bar{flex:1;margin:0;min-width:40px}.schr-p em{font-style:normal;font-size:12px;color:var(--ink-2);white-space:nowrap}
+.schr-a{display:flex;gap:4px;justify-content:flex-end}
+.schr-ch{color:var(--ink-3);transition:transform .15s;display:inline-flex}.schr[open] .schr-ch{transform:rotate(90deg)}
+.schr.off>summary{color:var(--ink-3)}.schr.off .schr-c{font-weight:500}
+.schr-b{padding:4px 16px 14px;display:flex;flex-direction:column;gap:8px;background:color-mix(in srgb,var(--surface-2) 55%,var(--surface))}
+.schr-b .sch-tl,.schr-b .sch-tlc{grid-column:auto;margin:0}
+.schr-b h5{margin:8px 0 0;font:600 12.5px var(--font-display);color:var(--ink-2)}
+@media(max-width:900px){.schr>summary{grid-template-columns:minmax(0,1fr) auto 18px;row-gap:6px}.schr-f,.schr-n{grid-column:1/-1;font-size:12.5px}.schr-p{grid-column:1/-1}.schr-a{grid-column:1/-1;justify-content:flex-start}.schr-ch{grid-row:1;grid-column:3}}
+
+/* Профиль */
+.pf-head{display:flex;gap:14px;align-items:center;background:var(--surface-2);border-radius:16px;padding:14px}
+.pf-head .pf-t h3{font:700 17px var(--font-display);margin:0}
+.pf-head .pf-t p{margin:2px 0 6px}
+.pf-since{font-size:12px;color:var(--ink-3);margin-left:8px}
+.pf-tiles{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:520px){.pf-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pf-tile{all:unset;box-sizing:border-box;cursor:pointer}
+.pf-tile:hover{box-shadow:inset 0 0 0 1px var(--line-2)}.pf-tile:focus-visible{outline:2px solid var(--info,#2563eb);outline-offset:2px}
+.pf-sec{display:flex;flex-direction:column;gap:12px;padding-top:6px}.pf-sec[hidden]{display:none}
+.pf-sess{display:flex;flex-direction:column;gap:6px}
 nv-bar-list{display:block;min-width:0}
 .bl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
 .bl-r{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;min-width:0}
@@ -1889,8 +1981,12 @@ define("nv-integration-card",class extends NvEl{
     return `<article class="int"><div class="h"><span class="lg" style="color:var(--svc-ink)">${esc(this.a("logo"))}</span><div><h4>${esc(this.a("name"))}</h4><div class="cat">${esc(this.a("category"))}</div></div></div>${this.a("description")?`<p>${esc(this.a("description"))}</p>`:""}<div class="f"><nv-status value="${esc(st)}" ${lbl?`label="${esc(lbl)}"`:""}></nv-status><span class="int-actions" data-slot></span></div></article>`}
 },"Предметные",{desc:"Карточка подключения/интеграции: лого, название, категория, статус, произвольные кнопки действий (передаются как содержимое, как у nv-folder-card).",slot:"Кнопки действий",demoHtml:'<nv-button size="sm" variant="secondary">Настроить</nv-button>',previewW:300,attrs:{name:{type:"string",default:"Telegram-бот",desc:"Название"},logo:{type:"string",default:"TG",desc:"Буквы логотипа"},category:{type:"string",default:"Уведомления",desc:"Категория/подзаголовок"},description:{type:"string",default:"Присылает заявки и оповещения в чат команды.",desc:"Необязательное пояснение"},status:{type:"enum",values:["connected","disconnected","error","active"],default:"disconnected",desc:"Состояние для nv-status"},"status-label":{type:"string",default:"",desc:"Своя подпись статуса вместо стандартной"}}});
 define("nv-folder-card",class extends NvEl{
-  html(){return `<article class="folder"><div class="folder-tab"></div><div class="folder-body"><div class="folder-top"><div class="folder-head">${ic(this.a("icon")||"folder",20)}${this.a("count")!==""?`<span class="folder-count">${esc(this.a("count"))}</span>`:""}</div><h3 class="folder-name">${esc(this.a("name"))}</h3>${this.a("desc")?`<p class="folder-desc">${esc(this.a("desc"))}</p>`:""}</div><div class="folder-foot" data-slot></div></div></article>`}
-},"Предметные",{desc:"Карточка-папка для подборок и коллекций — действия (кнопки, меню) передаются внутрь как обычное содержимое.",slot:"Кнопки действий",demoHtml:'<nv-button size="sm" variant="secondary" icon-end="arrow-right">Открыть</nv-button>',previewW:260,attrs:{name:{type:"string",default:"Конкуренты",desc:"Название папки"},desc:{type:"string",default:"Главные игроки в нише",desc:"Описание"},count:{type:"string",default:"24",desc:"Счётчик содержимого"},icon:{type:"string",default:"folder",desc:"Иконка"}}});
+  html(){const th=parseJSON(this.a("thumbs"),null),sel=this.b("selected"),op=this.b("openable");
+    const top=`<div class="folder-head">${ic(this.a("icon")||"folder",20)}${this.a("count")!==""?`<span class="folder-count">${esc(this.a("count"))}</span>`:""}</div><h3 class="folder-name">${esc(this.a("name"))}</h3>${this.a("desc")?`<p class="folder-desc">${esc(this.a("desc"))}</p>`:""}${this.a("updated")?`<span class="folder-upd">${esc(this.a("updated"))}</span>`:""}`;
+    return `<article class="folder${sel?" sel":""}${this.b("selectable")?" has-ck":""}">${this.b("selectable")?`<label class="ck folder-ck"><input type="checkbox" ${sel?"checked":""} aria-label="Выбрать подборку ${esc(this.a("name"))}"><span class="box">${ic("check",13)}</span></label>`:""}<div class="folder-tab"></div><div class="folder-body">${op?`<button type="button" class="folder-open" aria-label="Открыть подборку ${esc(this.a("name"))}">`:""}<div class="folder-top">${top}</div>${th?`<div class="folder-th">${[0,1,2,3].map(i=>`<span>${th[i]?`<img src="${esc(th[i])}" alt="" loading="lazy">`:""}</span>`).join("")}</div>`:""}${op?"</button>":""}<div class="folder-foot" data-slot></div></div></article>`}
+  mounted(){const c=this.querySelector(".folder-ck input");if(c)c.onchange=()=>{this.toggleAttribute("selected",c.checked);this.emit("nv-check",{id:this.a("fid"),selected:c.checked})};
+    const o=this.querySelector(".folder-open");if(o)o.onclick=()=>this.emit("nv-open-folder",{id:this.a("fid")})}
+},"Предметные",{desc:"Карточка-папка для подборок: название, счётчик, до четырёх превью содержимого и дата изменения. С selectable появляется флажок для массовых действий, с openable папка открывается по нажатию. Действия (кнопки, меню) передаются внутрь как обычное содержимое.",slot:"Кнопки действий",events:["nv-check {id,selected}","nv-open-folder {id}"],demoHtml:'<nv-button size="sm" variant="secondary" icon-end="arrow-right">Открыть</nv-button>',previewW:260,attrs:{name:{type:"string",default:"Конкуренты",desc:"Название папки"},desc:{type:"string",default:"Главные игроки в нише",desc:"Описание"},count:{type:"string",default:"24",desc:"Счётчик содержимого"},icon:{type:"string",default:"folder",desc:"Иконка"},fid:{type:"string",default:"",desc:"Идентификатор для событий"},thumbs:{type:"string",default:"",desc:"JSON-массив адресов картинок (до 4)"},updated:{type:"string",default:"",desc:"Строка о последнем изменении"},selectable:{type:"bool",desc:"Показывать флажок выбора"},selected:{type:"bool",desc:"Выбрана"},openable:{type:"bool",desc:"Открывать по нажатию на папку"}}});
 define("nv-scan-card",class extends NvEl{
   html(){
     const st=this.a("status"),pctRaw=this.a("pct"),known=pctRaw!=="",pct=known?Math.max(0,Math.min(100,+pctRaw)):0,indet=this.b("indeterminate");
@@ -2137,6 +2233,27 @@ define("nv-strength",class extends NvEl{
   html(){const sc=Math.max(0,Math.min(100,+this.a("score")||0)),lv=this.a("level")||"normal",f=parseJSON(this.a("factors"),[]),names={leader:"лидер темы",strong:"сильное",normal:"обычное"};
     return `<div class="sg ${esc(lv)}" title="Сила объявления: чем на большем числе сайтов, в большем числе запусков и городов оно встречается и чем дольше крутится — тем выше"><span class="sg-r">${this.a("rank")?"#"+esc(this.a("rank")):""}</span><span class="sg-s"><b class="num">${sc}</b><span>${esc(names[lv]||"")}</span></span><span class="sg-b"><span class="sg-bar"><i style="width:${Math.max(3,sc)}%"></i></span><span class="sg-f">${f.map(x=>`<span><b class="num">${esc(x.value)}</b> ${esc(x.label)}</span>`).join("")}</span></span></div>`}
 },"Данные",{desc:"Сила объявления внутри своей темы: место, балл 0–100 и из чего он сложился (сайты, запуски, города, дни). Ставится над карточкой объявления.",previewW:340,attrs:{rank:{type:"string",default:"1",desc:"Место в теме"},score:{type:"number",default:72,desc:"Балл 0–100"},level:{type:"enum",values:["leader","strong","normal"],default:"leader",desc:"Уровень: лидер темы, сильное, обычное"},factors:{type:"string",default:'[{"value":7,"label":"сайтов"},{"value":12,"label":"запусков"},{"value":5,"label":"городов"},{"value":4,"label":"дня"}]',desc:"JSON-массив: value, label"}}});
+define("nv-compare-board",class extends NvEl{
+  get data(){return this._data||parseJSON(this.a("data"),{columns:[],sections:[]})}
+  set data(v){this._data=v;if(this._init)this.update()}
+  html(){const D=this.data||{},C=D.columns||[],n=C.length,hide=this.b("hide-same");
+    if(n<2)return `<div class="bl-empty">${esc(this.a("empty-text")||"Добавьте хотя бы два объявления")}</div>`;
+    const cells=[`<div class="cb-l"></div>`+C.map(c=>`<div class="cb-h${c.winner?" win":""}">${c.winner?`<span class="cb-win">${ic("trophy",12)} ${esc(c.winner)}</span>`:""}<button type="button" class="cb-img${c.image?"":" empty"}" data-open="${esc(c.id)}" aria-label="Открыть объявление">${c.image?`<img src="${esc(c.image)}" alt="" loading="lazy">`:ic("image-off",22)}</button><span class="cb-d">${c.domain?`<img src="${esc(favUrl(c.domain))}" alt="" width="14" height="14">`:""}<span>${esc(c.sub||"")}</span></span><button type="button" class="cb-t" data-open="${esc(c.id)}">${esc(c.title||"Без заголовка")}</button><button type="button" class="cb-x" data-rm="${esc(c.id)}">${ic("x",12)} Убрать</button></div>`).join("")];
+    let hidden=0;
+    (D.sections||[]).forEach(sec=>{
+      const rows=(sec.rows||[]).map(r=>{
+        const vals=(r.values||[]).map(v=>v==null||v===""?"—":String(v)),same=new Set(vals).size===1;
+        if(same&&hide){hidden++;return""}
+        const lab=`<div class="cb-l"><span>${esc(r.label)}</span>${r.hint?`<small>${esc(r.hint)}</small>`:""}</div>`;
+        if(r.nums&&!same){const nums=r.nums.map(x=>+x||0),max=Math.max(...nums),uniq=nums.filter(x=>x===max).length===1&&max>0;
+          return lab+nums.map((x,i)=>{const best=uniq&&x===max;return `<div class="cb-v"><div class="cb-num${best?" best":""}"><b class="num">${esc(vals[i])}${best?"<em>больше всех</em>":""}</b><span class="cb-bar"><i style="width:${max?Math.max(4,Math.round(x/max*100)):4}%"></i></span></div></div>`}).join("")}
+        if(same)return lab+`<div class="cb-same">${vals[0]==="—"?"нет ни у одного":`у всех одинаково: <b>${esc(vals[0])}</b>`}</div>`;
+        return lab+vals.map(v=>`<div class="cb-v${v==="—"||v==="нет"?" no":""}">${esc(v)}</div>`).join("")}).join("");
+      if(rows)cells.push(`<div class="cb-sec">${esc(sec.title)}</div>`+rows)});
+    this._hidden=hidden;
+    return `<div class="cb-w"><div class="cb" style="--n:${n}">${cells.join("")}</div></div>`}
+  mounted(){this._init=true;this.onclick=e=>{const o=e.target.closest("[data-open]"),r=e.target.closest("[data-rm]");if(r)this.emit("nv-remove",{id:r.dataset.rm});else if(o)this.emit("nv-open",{id:o.dataset.open})}}
+},"Данные",{desc:"Сравнение 2–4 объявлений по столбцам: картинка и заголовок сверху, ниже разделы со строками. Числовые строки (nums) показываются полосой, лучшее значение помечается. Строки, где у всех одинаково, сворачиваются в одну ячейку или скрываются (hide-same).",events:["nv-open {id}","nv-remove {id}"],wide:1,attrs:{data:{type:"string",default:'{"columns":[{"id":"1","title":"Матрасы со скидкой до 50%","sub":"askona.ru","domain":"askona.ru","winner":"Сильнее"},{"id":"2","title":"Ортопедические матрасы от производителя","sub":"ormatek.com","domain":"ormatek.com"}],"sections":[{"title":"Насколько сильное","rows":[{"label":"Дней в открутке","values":["113","4"],"nums":[113,4]},{"label":"Встречено раз","values":["7","2"],"nums":[7,2]}]},{"title":"Что предлагают","rows":[{"label":"Кнопка","values":["Купить","Подробнее"]},{"label":"Формат","values":["Картинка","Картинка"]}]}]}',desc:"JSON: columns[{id,title,sub,domain,image,winner}], sections[{title,rows[{label,hint,values[],nums[]}]}]"},"hide-same":{type:"bool",desc:"Скрывать строки, где у всех одинаково"},"empty-text":{type:"string",default:"Добавьте хотя бы два объявления",desc:"Текст, когда столбцов меньше двух"}}});
 define("nv-bar-list",class extends NvEl{
   get rows(){return this._rows||parseJSON(this.a("rows"),[])}
   set rows(v){this._rows=v||[];if(this._init)this.update()}
@@ -2562,7 +2679,7 @@ async function loadNotifications(){
   NOTIF.loaded=true;updBell();
 }
 async function loadProfile(){
-  try{const d=await api("/api/v1/profile",{});Object.assign(PROFILE,{name:d.name||"",email:d.email||"",role:d.role||"",avatarDataUrl:d.avatar_data_url||"",prefs:d.notification_prefs||{}})}catch(e){}
+  try{const d=await api("/api/v1/profile",{});Object.assign(PROFILE,{createdAt:d.created_at||"",stats:d.stats||{},name:d.name||"",email:d.email||"",role:d.role||"",avatarDataUrl:d.avatar_data_url||"",prefs:d.notification_prefs||{}})}catch(e){}
   PROFILE.loaded=true;
   const av=document.querySelector(".top-av nv-avatar");
   if(av){av.setAttribute("name",PROFILE.name||session.email||"?");if(PROFILE.avatarDataUrl)av.setAttribute("src",PROFILE.avatarDataUrl)}
@@ -2665,58 +2782,83 @@ NEON.acts.notifOpen=async()=>{
   });
   if(NOTIF.unreadCount){try{await apiPost("/api/v1/notifications/read-all",{})}catch(e){}NOTIF.unreadCount=0;updBell()}
 };
+const NOTIF_DESC={scan_done:"Запуск закончился — можно смотреть объявления",scan_failed:"Запуск не удался: причина будет в уведомлении",captcha_required:"Парсер упёрся в капчу и ждёт",collection_created:"Создана новая подборка",landing_mismatch:"Объявление ведёт не на сайт рекламодателя"};
 NEON.acts.account=async(a,d)=>{
-  if(!PROFILE.loaded)await loadProfile();
-  const prefRows=Object.entries(NOTIF_TYPES).map(([id,meta])=>({id,label:meta.label,values:[PROFILE.prefs[id]!==false]}));
-  overlay("drawer",{title:"Профиль",subtitle:PROFILE.email||session.email,size:"md",
-    body:`<div class="sect-t">Профиль</div>
-    <nv-avatar-upload name="${esc(PROFILE.name||session.email||"?")}" image="${esc(PROFILE.avatarDataUrl||"")}" hint="PNG или JPG, обрежется квадратом"></nv-avatar-upload>
-    <nv-input name="name" label="Имя" value="${esc(PROFILE.name||"")}" placeholder="Например, Дима"></nv-input>
-    <dl class="dl"><dt>Email</dt><dd>${esc(PROFILE.email||session.email||"—")}</dd><dt>Роль</dt><dd>${esc(PROFILE.role==="admin"?"Администратор":"Клиент")}</dd></dl>
-    <nv-button variant="primary" size="sm" data-act-save-profile>Сохранить профиль</nv-button>
-    <div class="sect-t" style="margin-top:18px">Пароль</div>
-    <nv-password-input name="curpw" label="Текущий пароль"></nv-password-input>
-    <nv-password-input name="newpw" label="Новый пароль" strength></nv-password-input>
-    <nv-button variant="secondary" size="sm" data-act-change-pw>Сменить пароль</nv-button>
-    <div class="sect-t" id="notif-prefs-sect" style="margin-top:18px">Уведомления</div>
-    <nv-notify-matrix channels="В сервисе" rows='${esc(JSON.stringify(prefRows))}'></nv-notify-matrix>
-    <nv-button variant="danger" full icon="log-out" data-act="logout" style="margin-top:18px">Выйти</nv-button>`,
-    mount(root){
-      if(d&&d.section==="notifications")setTimeout(()=>root.querySelector("#notif-prefs-sect")?.scrollIntoView({block:"start"}),50);
-      const au=root.querySelector("nv-avatar-upload");
-      /* nv-avatar-upload's own change handler calls this.update() (replacing its <input>,
-         wiping .files) BEFORE it emits nv-change — so by the time a bubble-phase nv-change
-         listener runs, the File is already gone. A capture-phase "change" listener on an
-         ancestor fires on the way DOWN, before the input's own handler runs at all. */
+  await loadProfile();
+  const fdt=iso=>{const t=new Date(iso);return isNaN(t)?"—":t.toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})};
+  let sessions=[];
+  try{sessions=(await api("/api/v1/profile/sessions",{})).items||[]}catch(e){}
+  const P=PROFILE,st=P.stats||{},tab=d&&d.section==="notifications"?"notif":"main";
+  const tile=(l,v,go)=>`<button type="button" class="st-tile pf-tile" data-pgo="${go}"><span>${esc(l)}</span><b class="num">${esc((+v||0).toLocaleString("ru-RU"))}</b></button>`;
+  const sessHtml=()=>sessions.length?sessions.map(x=>`<nv-session-item sid="${esc(x.id)}" device="Вход ${esc(fdt(x.created_at))}" detail="Действует до ${esc(fdt(x.expires_at))}" icon="${x.current?"monitor-check":"monitor"}" ${x.current?"current":""}></nv-session-item>`).join(""):'<p class="muted" style="font-size:13px;margin:0">Не удалось загрузить список входов.</p>';
+  const notifHtml=()=>Object.entries(NOTIF_TYPES).map(([id,m])=>`<nv-settings-row label="${esc(m.label)}" description="${esc(NOTIF_DESC[id]||"")}"><nv-switch name="${id}" ${P.prefs[id]!==false?"checked":""} aria-label="${esc(m.label)}"></nv-switch></nv-settings-row>`).join("");
+  overlay("drawer",{title:"Профиль",subtitle:"Личные данные, вход и уведомления",size:"md",
+    body:`<div class="pf-head"><nv-avatar name="${esc(P.name||P.email||"?")}" ${P.avatarDataUrl?`src="${esc(P.avatarDataUrl)}"`:""} size="64"></nv-avatar><div class="pf-t"><h3 id="pf-name">${esc(P.name||"Без имени")}</h3><p>${esc(P.email||session.email||"—")}</p><span class="nv-badge st t-neutral">${P.role==="admin"?"Администратор":"Клиент"}</span>${P.createdAt?`<span class="pf-since">в сервисе с ${esc(fdt(P.createdAt).split(",")[0])}</span>`:""}</div></div>
+    <div class="st-tiles pf-tiles">${tile("Запусков",st.runs,"intel-scans")}${tile("Найдено объявлений",st.creatives,"intel-library")}${tile("Подборок",st.collections,"intel-collections")}${tile("Расписаний",st.schedules,"intel-schedules")}</div>
+    <nv-tabs items="main:Профиль|sec:Безопасность|notif:Уведомления" value="${tab}" id="pf-tabs"></nv-tabs>
+    <section data-pf="main" class="pf-sec" ${tab==="main"?"":"hidden"}>
+      <nv-avatar-upload name="${esc(P.name||session.email||"?")}" image="${esc(P.avatarDataUrl||"")}" hint="PNG или JPG, обрежется квадратом"></nv-avatar-upload>
+      <nv-input name="name" label="Имя" value="${esc(P.name||"")}" placeholder="Как к вам обращаться" hint="Видно в шапке и в уведомлениях"></nv-input>
+      <div><nv-button variant="primary" size="sm" icon="check" data-act-save-profile>Сохранить</nv-button></div>
+    </section>
+    <section data-pf="sec" class="pf-sec" hidden>
+      <div class="sect-t">Смена пароля</div>
+      <nv-password-input name="curpw" label="Текущий пароль"></nv-password-input>
+      <nv-password-input name="newpw" label="Новый пароль" strength></nv-password-input>
+      <nv-password-input name="newpw2" label="Новый пароль ещё раз"></nv-password-input>
+      <div><nv-button variant="secondary" size="sm" icon="key-round" data-act-change-pw>Сменить пароль</nv-button></div>
+      <p class="muted" style="font-size:12.5px;margin:0">После смены пароля входы на других устройствах завершатся.</p>
+      <div class="row between" style="margin-top:10px;gap:8px;flex-wrap:wrap"><div class="sect-t">Где выполнен вход · <span id="pf-sn">${sessions.length}</span></div><nv-button variant="ghost" size="sm" icon="log-out" data-act-out-others ${sessions.length>1?"":"hidden"}>Выйти на остальных</nv-button></div>
+      <div id="pf-sess" class="pf-sess">${sessHtml()}</div>
+    </section>
+    <section data-pf="notif" class="pf-sec" ${tab==="notif"?"":"hidden"}>
+      <div class="row between" style="gap:8px;flex-wrap:wrap"><p class="muted" style="font-size:13px;margin:0">О чём сообщать в колокольчике в шапке.</p><nv-button variant="ghost" size="sm" data-act-notif-all>Включить все</nv-button></div>
+      <div id="pf-notif">${notifHtml()}</div>
+    </section>
+    <nv-button variant="danger" full icon="log-out" data-act="logout" style="margin-top:18px">Выйти из аккаунта</nv-button>`,
+    mount(root,close){
+      const q=x=>root.querySelector(x);
+      q("#pf-tabs").addEventListener("nv-change",e=>root.querySelectorAll("[data-pf]").forEach(x=>x.hidden=x.dataset.pf!==e.detail.value));
+      root.querySelectorAll("[data-pgo]").forEach(b=>b.onclick=()=>{close();NEON.go(b.dataset.pgo)});
+      const setAvatar=url=>{PROFILE.avatarDataUrl=url;document.querySelectorAll(".top-av nv-avatar,.pf-head nv-avatar").forEach(el=>{if(url)el.setAttribute("src",url);else el.removeAttribute("src")})};
+      /* nv-avatar-upload перерисовывается (и теряет файл) раньше, чем отдаёт nv-change, поэтому
+         файл забираем обработчиком "change" в фазе перехвата — до собственного обработчика поля. */
       root.addEventListener("change",e=>{
         if(!e.target.matches('nv-avatar-upload input[type="file"]'))return;
         const file=e.target.files[0];
         if(!file)return;
-        resizeImageFile(file,160).then(dataUrl=>apiPost("/api/v1/profile/avatar",{data_url:dataUrl}).then(()=>{
-          PROFILE.avatarDataUrl=dataUrl;
-          document.querySelectorAll(".top-av nv-avatar").forEach(el=>el.setAttribute("src",dataUrl));
-          toast("Фото обновлено",{tone:"success"});
-        })).catch(err=>toast("Не удалось загрузить фото: "+(err.message||""),{tone:"danger"}));
+        resizeImageFile(file,160).then(dataUrl=>apiPost("/api/v1/profile/avatar",{data_url:dataUrl}).then(()=>{setAvatar(dataUrl);toast("Фото обновлено",{tone:"success"})})).catch(err=>toast("Не удалось загрузить фото: "+(err.message||""),{tone:"danger"}));
       },true);
+      const au=q("nv-avatar-upload");
       au.addEventListener("nv-error",e=>toast(e.detail.message,{tone:"danger"}));
-      root.querySelector("[data-act-save-profile]").onclick=async()=>{
-        const name=root.querySelector('nv-input[name="name"]').value.trim();
-        try{await apiPatch("/api/v1/profile",{name});PROFILE.name=name;toast("Профиль сохранён",{tone:"success"});render()}
+      au.addEventListener("nv-change",e=>{if(e.detail.value==="")apiPost("/api/v1/profile/avatar",{data_url:""}).then(()=>{setAvatar("");toast("Фото убрано")}).catch(err=>toast("Не удалось убрать фото: "+(err.message||""),{tone:"danger"}))});
+      q("[data-act-save-profile]").onclick=async()=>{
+        const name=q('nv-input[name="name"]').value.trim();
+        try{await apiPatch("/api/v1/profile",{name});PROFILE.name=name;q("#pf-name").textContent=name||"Без имени";toast("Профиль сохранён",{tone:"success"});render()}
         catch(err){toast("Не удалось сохранить: "+(err.message||""),{tone:"danger"})}
       };
-      root.querySelector("[data-act-change-pw]").onclick=async()=>{
-        const curEl=root.querySelector('nv-password-input[name="curpw"]'),newEl=root.querySelector('nv-password-input[name="newpw"]');
-        const cur=curEl.value,nw=newEl.value;
-        if(!cur||!nw){toast("Заполните оба поля",{tone:"warning"});return}
-        if(nw.length<8){toast("Новый пароль — минимум 8 символов",{tone:"warning"});return}
-        try{await apiPost("/api/v1/auth/change-password",{current_password:cur,new_password:nw});toast("Пароль изменён",{tone:"success"});curEl.value="";newEl.value=""}
-        catch(err){toast("Не удалось сменить пароль: "+(err.message||""),{tone:"danger"})}
+      q("[data-act-change-pw]").onclick=async()=>{
+        const c=q('[name="curpw"]'),n=q('[name="newpw"]'),n2=q('[name="newpw2"]');
+        [c,n,n2].forEach(x=>x.removeAttribute("error"));
+        if(!c.value){c.setAttribute("error","Введите текущий пароль");return}
+        if((n.value||"").length<8){n.setAttribute("error","Не короче 8 символов");return}
+        if(n.value===c.value){n.setAttribute("error","Новый пароль совпадает с текущим");return}
+        if(n.value!==n2.value){n2.setAttribute("error","Пароли не совпадают");return}
+        try{const r=await apiPost("/api/v1/auth/change-password",{current_password:c.value,new_password:n.value});
+          toast("Пароль изменён"+(r&&r.revoked_sessions?". Завершено других входов: "+r.revoked_sessions:""),{tone:"success"});[c,n,n2].forEach(x=>x.value="");
+          sessions=sessions.filter(x=>x.current);renderSess()}
+        catch(err){const m=err.message||"";if(/парол|401/i.test(m))c.setAttribute("error","Текущий пароль указан неверно");else toast("Не удалось сменить пароль: "+m,{tone:"danger"})}
       };
-      root.querySelector("nv-notify-matrix").addEventListener("nv-toggle",async e=>{
-        PROFILE.prefs[e.detail.id]=e.detail.value;
-        try{await apiPut("/api/v1/profile/notification-prefs",{prefs:PROFILE.prefs})}
-        catch(err){toast("Не удалось сохранить настройку: "+(err.message||""),{tone:"danger"})}
-      });
+      const renderSess=()=>{q("#pf-sess").innerHTML=sessHtml();q("#pf-sn").textContent=sessions.length;q("[data-act-out-others]").hidden=sessions.length<2};
+      q("#pf-sess").addEventListener("nv-revoke",async e=>{
+        try{await apiDelete("/api/v1/profile/sessions/"+e.detail.id);sessions=sessions.filter(x=>x.id!==e.detail.id);renderSess();toast("Вход завершён",{tone:"success"})}
+        catch(err){toast("Не удалось завершить вход: "+(err.message||""),{tone:"danger"})}});
+      q("[data-act-out-others]").onclick=()=>NEONUI.confirm({title:"Выйти на остальных устройствах?",text:"Останется только этот вход. На других устройствах придётся войти заново.",confirm:"Выйти",danger:true,fn(){(async()=>{
+        try{const r=await apiPost("/api/v1/auth/logout-others",{});sessions=sessions.filter(x=>x.current);renderSess();toast("Завершено входов: "+(r.revoked||0),{tone:"success"})}
+        catch(err){toast("Не удалось: "+(err.message||""),{tone:"danger"})}})()}});
+      const savePrefs=async()=>{try{await apiPut("/api/v1/profile/notification-prefs",{prefs:PROFILE.prefs})}catch(err){toast("Не удалось сохранить настройку: "+(err.message||""),{tone:"danger"})}};
+      q("#pf-notif").addEventListener("nv-change",e=>{const id=e.target.getAttribute("name");if(!id)return;PROFILE.prefs[id]=!!e.detail.value;savePrefs()});
+      q("[data-act-notif-all]").onclick=()=>{Object.keys(NOTIF_TYPES).forEach(id=>PROFILE.prefs[id]=true);q("#pf-notif").innerHTML=notifHtml();savePrefs();toast("Все уведомления включены",{tone:"success"})};
     }
   });
 };
@@ -2795,7 +2937,7 @@ const seed=()=>({
   aiIntents:[],aiPending:0,aiLoaded:false,
   savedViews:loadSavedViews(),
   lib:{groups:[],total:0,loaded:false,loading:false},
-  sel:[],cmp:[],cmpF:{q:"",platform:"",format:"",period:"",adv:""},
+  sel:[],cmp:[],cmpF:{q:"",aiIntent:"",col:"",sort:"recent",rows:"all"},cmpC:{items:[],total:0,loaded:false,loading:false,limit:12},kSel:[],kcSel:[],kF:{q:"",sort:"added"},
   savedIds:loadSavedCreativeIds(),
   collections:[],collectionsLoaded:false,collectionItemsCache:{},openK:null,
   schedules:[],schedulesLoaded:false,scans:[],scansLoaded:false,scanF:{q:"",status:""},schedTab:"live",
@@ -2806,8 +2948,8 @@ const seed=()=>({
 
 const CR=()=>S.intel.lib.groups;
 function findGroup(id){
-  const pools=[CR(),S.intel._lastCollectionItems||[],S.intel._ovItems||[],S.intel.cmp,S.intel.sel];
-  for(const p of pools){const g=p.find(x=>String(x.representative.id)===String(id));if(g)return g}
+  const pools=[CR(),(S.intel.cmpC&&S.intel.cmpC.items)||[],S.intel._lastCollectionItems||[],S.intel._ovItems||[],S.intel.cmp,S.intel.sel,S.intel.kSel||[]];
+  for(const p of pools){const g=p.find(x=>x&&x.representative&&String(x.representative.id)===String(id));if(g)return g}
   return null;
 }
 function anyF(){const f=S.intel.f;return f.q||f.platform||f.format||f.saved||f.job||f.aiIntent||f.src==="history"||f.src==="all"||(f.period&&f.period!=="all")}
@@ -2829,37 +2971,85 @@ function filtered(){
   else if(f.sort==="oldest")r=[...r].reverse();
   return r;
 }
-function cmpFiltered(){
-  const f=S.intel.cmpF,q=(f.q||"").toLowerCase(),rg=NEONUI.rangeOf(f.period);
-  return CR().filter(g=>{
-    const rep=g.representative;
-    if(f.adv&&rep.domain!==f.adv)return false;
-    if(f.platform&&realPlatformLabel(rep.detection_method)!==f.platform)return false;
-    if(f.format&&formatOf(rep)!==f.format)return false;
-    if(rg){const t=+new Date(g.last_seen_at||rep.captured_at);if(t<rg[0]||t>rg[1])return false}
-    if(q&&!((rep.title||"")+(rep.domain||"")+(rep.description||"")).toLowerCase().includes(q))return false;
-    return true;
-  });
+const kGroup=it=>({group_key:it.group_key,representative:it,platforms:[it.detection_method],first_seen_at:it.captured_at,last_seen_at:it.captured_at});
+async function loadCmpCandidates(more){
+  const I=S.intel,C=I.cmpC,f=I.cmpF;
+  if(more)C.limit=Math.min(96,(C.limit||12)+12);else C.limit=12;
+  const seq=C._seq=(C._seq||0)+1;C.loading=true;
+  try{
+    if(f.col){
+      const d=await api("/api/v1/collections/"+f.col+"/items",{});if(seq!==C._seq)return;
+      const q=(f.q||"").toLowerCase();
+      let all=(d.items||[]).filter(it=>!q||((it.title||"")+" "+(it.domain||"")+" "+(it.description||"")).toLowerCase().includes(q)).map(kGroup);
+      C.total=all.length;C.items=all.slice(0,C.limit);
+    }else{
+      const params={group:1,limit:C.limit,offset:0,sort:f.sort==="oldest"?"oldest":"recent",source:""};
+      if(f.q)params.q=f.q;if(f.aiIntent)params.ai_intent=f.aiIntent;
+      const d=await api("/api/v1/creatives",params);if(seq!==C._seq)return;
+      C.items=groupRealCreatives(d.items);C.total=d.total||C.items.length;
+    }
+  }catch(err){if(seq!==C._seq)return;toast("Не удалось загрузить объявления: "+(err.message||""),{tone:"danger"})}
+  C.loading=false;C.loaded=true;
+  const box=document.getElementById("cmp-candidates");
+  if(box){box.innerHTML=cmpCandidatesHtml();const c=document.getElementById("cmp-cnt");if(c)c.innerHTML=cmpCountHtml()}else N.refreshIf("intel-compare");
+}
+function cmpCountHtml(){const C=S.intel.cmpC;return C.loaded?`Показано <b>${C.items.length}</b> из ${fmt(C.total)}`:"Загружаем…"}
+function cmpCandidatesHtml(){
+  const I=S.intel,C=I.cmpC;
+  if(!C.loaded)return '<nv-skeleton count="4"></nv-skeleton>';
+  if(!C.items.length)return `<nv-empty icon="search-x" heading="Ничего не нашлось" text="Измените поиск или тему — либо откройте библиотеку и отметьте объявления там."><nv-button data-go="intel-library" icon="layout-grid">Открыть библиотеку</nv-button></nv-empty>`;
+  return `<div class="grid g4lg">${C.items.map(g=>cardHtml(g,I.cmp.some(x=>String(x.representative.id)===String(g.representative.id)))).join("")}</div>${C.items.length<C.total&&C.items.length<96?`<div class="row" style="justify-content:center;margin-top:14px"><nv-button variant="secondary" icon="chevron-down" data-act="cmpMore">Показать ещё</nv-button></div>`:""}`;
+}
+/* Данные для nv-compare-board и вывод одной фразой: какое объявление сильнее и почему */
+function cmpData(){
+  const c=S.intel.cmp,R=c.map(g=>g.representative),st=R.map(r=>r.stats||{});
+  const num=k=>st.map(x=>+x[k]||0),txt=fn=>R.map(fn);
+  const M=[["days_active","Дней в открутке","Сколько дней парсер встречает объявление: долго крутят то, что окупается",fmtDays],
+    ["shows","Встречено раз","Сколько раз парсер его увидел",v=>v],["runs","Запусков","В скольких запусках парсера попалось",v=>v],
+    ["sites","Сайтов","На скольких площадках показывалось",v=>v],["cities","Городов","В скольких городах показывалось",v=>v]];
+  const wins=R.map(()=>0);
+  M.forEach(([k])=>{const a=num(k),mx=Math.max(...a);if(mx>0&&a.filter(x=>x===mx).length===1)wins[a.indexOf(mx)]++});
+  const top=Math.max(...wins),wi=top>0&&wins.filter(x=>x===top).length===1?wins.indexOf(top):-1;
+  const price=r=>{const t=String(r.price_text||"").trim();return /[1-9]/.test(t)?t:(+r.price_rub>0?fmt(r.price_rub)+" ₽":"")};
+  const sections=[
+    {title:"Насколько сильное",rows:M.map(([k,l,h,f])=>({label:l,hint:h,nums:num(k),values:num(k).map(v=>v?String(f(v)):"—")}))},
+    {title:"Что предлагают",rows:[
+      {label:"Заголовок",values:txt(r=>r.title)},{label:"Текст",values:txt(r=>r.description)},
+      {label:"Кнопка",hint:"Призыв к действию",values:txt(r=>r.cta_text)},{label:"Цена",values:txt(price)},
+      {label:"Скидка",values:txt(r=>r.discount_percent?r.discount_percent+"%":"")}]},
+    {title:"Где и о чём",rows:[
+      {label:"Рекламодатель",values:txt(r=>r.domain)},
+      {label:"Площадка",values:c.map(g=>realPlatformLabel(g.representative.detection_method))},
+      {label:"Формат",values:txt(r=>FORMAT[formatOf(r)]||r.creative_type)},
+      {label:"Тема объявления",values:txt(r=>realAiIntent(r))},
+      {label:"Найдено по запросу",values:txt(r=>(r.intents||[]).join(", "))},
+      {label:"Впервые замечено",values:R.map((r,i)=>st[i].first_seen_at?fmtDateTime(st[i].first_seen_at):fmtDateTime(r.captured_at))},
+      {label:"Последний раз",values:R.map((r,i)=>st[i].last_seen_at?fmtDateTime(st[i].last_seen_at):fmtDateTime(r.captured_at))},
+      {label:"Маркировка (ERID)",values:txt(r=>r.erid?"есть":"нет")}]}];
+  const columns=c.map((g,i)=>{const r=g.representative;return{id:String(r.id),title:r.title||r.domain,sub:r.domain||"—",domain:r.domain||"",image:r.image_url||r.video_poster||"",winner:i===wi?"Сильнее":""}});
+  let verdict;
+  if(wi>=0){const s=st[wi],parts=[];
+    if(s.days_active>1)parts.push("крутится "+fmtDays(s.days_active));
+    if(s.shows>1)parts.push("встречено "+s.shows+" "+plural(s.shows,"раз","раза","раз"));
+    if(s.runs>1)parts.push("в "+s.runs+" "+plural(s.runs,"запуске","запусках","запусках"));
+    if(s.sites>1)parts.push("на "+s.sites+" "+plural(s.sites,"сайте","сайтах","сайтах"));
+    if(s.cities>1)parts.push("в "+s.cities+" "+plural(s.cities,"городе","городах","городах"));
+    verdict=`Сильнее выглядит объявление <b>${esc(R[wi].domain||"№"+(wi+1))}</b> — «${esc((R[wi].title||"").slice(0,70))}»${parts.length?": "+esc(parts.join(", ")):""}. Чем дольше объявление в открутке и чем чаще встречается, тем вероятнее, что оно приносит заявки.`}
+  else if(Math.max(...num("shows"))<=1)verdict="Все выбранные объявления парсер встретил по одному разу — судить о силе пока рано. Сравните предложения: заголовок, цену и кнопку.";
+  else verdict="Явного лидера нет: объявления близки по охвату и сроку. Сравните предложения ниже.";
+  return{columns,sections,verdict};
+}
+function cmpTrayHtml(){
+  const c=S.intel.cmp;
+  return `<div class="cmp-tray">${c.map(g=>{const r=g.representative;return `<span class="cmp-chip">${r.image_url?`<img src="${esc(r.image_url)}" alt="">`:`<img src="${esc(favUrl(r.domain||""))}" alt="">`}<span>${esc(r.domain||r.title||"—")}</span><button type="button" data-act="cmpAdd" data-id="${esc(r.id)}" aria-label="Убрать из сравнения">${ic("x",13)}</button></span>`}).join("")}${c.length?`<nv-button size="sm" variant="ghost" icon="trash-2" data-act="cmpClear">Очистить</nv-button>`:""}</div>`;
 }
 function cmpMatrixHtml(){
   const c=S.intel.cmp;
-  if(c.length<2)return `<nv-empty icon="columns-3" heading="Сравнивать пока нечего" text="Отметьте флажком от 2 до 4 объявлений в списке кандидатов ниже."></nv-empty>`;
-  const plans=c.map(g=>(g.representative.domain||"—")+" · "+(g.representative.title||g.representative.domain||"").slice(0,22));
-  const rows=[
-    {label:"Площадка",values:c.map(g=>realPlatformLabel(g.representative.detection_method))},
-    {label:"Формат",values:c.map(g=>FORMAT[formatOf(g.representative)]||g.representative.creative_type||"—")},
-    {label:"Заголовок",values:c.map(g=>g.representative.title||"—")},
-    {label:"Текст объявления",values:c.map(g=>g.representative.description||"—")},
-    {label:"Кнопка (CTA)",values:c.map(g=>g.representative.cta_text||"—")},
-    {label:"Цена",values:c.map(g=>g.representative.price_text||(g.representative.price_rub?fmt(g.representative.price_rub)+" ₽":"нет"))},
-    {label:"Скидка",values:c.map(g=>g.representative.discount_percent?g.representative.discount_percent+"%":"нет")},
-    {label:"ERID",values:c.map(g=>g.representative.erid||"нет")},
-    {label:"Ключевое слово запуска",values:c.map(g=>(g.representative.intents||[]).join(", ")||"—")},
-    {label:"Интент креатива (Gemini)",values:c.map(g=>realAiIntent(g.representative)||"—")},
-    {label:"Замечено",values:c.map(g=>N.rel(g.last_seen_at||g.representative.captured_at))}
-  ];
-  return `<nv-plan-compare diff plans="${esc(plans.join("|"))}" rows="${esc(JSON.stringify(rows))}"></nv-plan-compare>
-  <div class="row" style="margin-top:12px;gap:6px;flex-wrap:wrap">${c.map(g=>`<nv-button size="sm" variant="ghost" icon="x" data-act="cmpAdd" data-id="${g.representative.id}">Убрать: ${esc(g.representative.domain||"—")}</nv-button>`).join("")}</div>`;
+  if(c.length<2)return `<div class="cmp-steps"><div><b>1. Найдите объявления</b>В списке ниже — поиск по тексту и домену, фильтр по теме или подборке.</div><div><b>2. Отметьте от 2 до 4</b>Флажок в углу карточки. ${c.length?"Одно уже выбрано — добавьте ещё.":"Можно отметить и в библиотеке, затем нажать «Сравнить»."}</div><div><b>3. Смотрите, чем отличаются</b>Покажем, какое объявление сильнее и чем различаются предложения.</div></div>${c.length?`<div style="margin-top:12px">${cmpTrayHtml()}</div>`:""}`;
+  const D=cmpData();
+  return `<div class="cmp-verdict">${ic("trophy",18)}<span>${D.verdict}</span></div>
+  <div class="row between" style="gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0">${cmpTrayHtml()}<div class="vsw sub"><nv-segmented options="all:Все строки|diff:Только различия" value="${S.intel.cmpF.rows==="diff"?"diff":"all"}" data-chg="cmpRows"></nv-segmented></div></div>
+  <nv-compare-board id="cmp-board" ${S.intel.cmpF.rows==="diff"?"hide-same":""}></nv-compare-board>`;
 }
 const AI_UNKNOWN="не определён";
 function realAiIntent(c){return c&&c.ai_intent&&c.ai_intent!==AI_UNKNOWN?c.ai_intent:""}
@@ -2904,6 +3094,7 @@ function bindCards(root,target){
     }else if(i>=0)arr.splice(i,1);
     N.save();
     if(target==="sel"){e.target.toggleAttribute("selected",e.detail.selected);libBulk()}
+    else if(target==="kSel"){e.target.toggleAttribute("selected",e.detail.selected);kBulk()}
     else N.refresh();
   });
 }
@@ -3216,7 +3407,7 @@ async function openCreative(id){
 async function loadCollections(){
   try{
     const data=await api("/api/v1/collections",{});
-    S.intel.collections=(data.items||[]).map(c=>({id:String(c.id),name:c.name,description:c.description,items_count:c.items_count}));
+    S.intel.collections=(data.items||[]).map(c=>({id:String(c.id),name:c.name,description:c.description,items_count:c.items_count,thumbs:c.thumbs||[],updated_at:c.updated_at||c.created_at}));
     S.intel.collectionsLoaded=true;
     N.refreshIf("intel-collections");
   }catch(err){S.intel.collectionsLoaded=true;toast("Не удалось загрузить подборки: "+(err.message||""),{tone:"danger"});N.refreshIf("intel-collections")}
@@ -3225,9 +3416,69 @@ async function openCollection(id){
   try{
     const data=await api("/api/v1/collections/"+id+"/items",{});
     S.intel.collectionItemsCache[id]=data.items||[];
-    S.intel._lastCollectionItems=data.items||[];
+    S.intel._lastCollectionItems=(data.items||[]).map(kGroup);
+    const keys=new Set((data.items||[]).map(x=>x.group_key));
+    S.intel.kSel=(S.intel.kSel||[]).filter(g=>keys.has(g.group_key));
     N.refreshIf("intel-collections");
   }catch(err){toast("Не удалось загрузить подборку: "+(err.message||""),{tone:"danger"})}
+}
+function kItemsFiltered(items){
+  const f=S.intel.kF,q=(f.q||"").toLowerCase();
+  let r=items.filter(it=>!q||((it.title||"")+" "+(it.domain||"")+" "+(it.description||"")).toLowerCase().includes(q));
+  const st=(it,k)=>+((it.stats||{})[k])||0;
+  if(f.sort==="days")r=[...r].sort((a,b)=>st(b,"days_active")-st(a,"days_active"));
+  else if(f.sort==="shows")r=[...r].sort((a,b)=>st(b,"shows")-st(a,"shows"));
+  else if(f.sort==="domain")r=[...r].sort((a,b)=>(a.domain||"").localeCompare(b.domain||"","ru"));
+  return r;
+}
+function kBulk(){
+  const I=S.intel,b=document.getElementById("k-bulk");if(!b)return;
+  const n=I.kSel.length;b.hidden=!n;
+  if(n)b.innerHTML=`<b class="num">Выбрано: ${n}</b><nv-button size="sm" variant="secondary" icon="columns-3" data-act="kCompare" ${n<2||n>4?'disabled hint="Для сравнения выберите от 2 до 4 объявлений"':""}>Сравнить</nv-button><nv-button size="sm" variant="secondary" icon="folder-input" data-act="kMove" data-mode="move">Перенести</nv-button><nv-button size="sm" variant="secondary" icon="copy" data-act="kMove" data-mode="copy">Скопировать</nv-button><nv-button size="sm" variant="secondary" icon="folder-minus" data-act="kRemoveSel">Убрать из подборки</nv-button><nv-button size="sm" variant="ghost" icon="x" data-act="kSelClear">Снять выбор</nv-button>`;
+  const a=document.getElementById("k-all");if(a)a.textContent=n?"Выбрано "+n:"Выбрать все";
+}
+function kcBulk(){
+  const I=S.intel,b=document.getElementById("kc-bulk");if(!b)return;
+  const n=I.kcSel.length;b.hidden=!n;
+  if(n)b.innerHTML=`<b class="num">Выбрано подборок: ${n}</b><nv-button size="sm" variant="secondary" icon="merge" data-act="kcMerge" ${n<2?'disabled hint="Выберите хотя бы две подборки"':""}>Объединить</nv-button><nv-button size="sm" variant="secondary" icon="trash-2" data-act="kcDelete">Удалить</nv-button><nv-button size="sm" variant="ghost" icon="x" data-act="kcClear">Снять выбор</nv-button>`;
+}
+function renameCollectionDlg(id){
+  const k=S.intel.collections.find(x=>x.id===String(id));if(!k)return;
+  overlay("modal",{title:"Изменить подборку",body:`<nv-input name="n" label="Название" value="${esc(k.name)}" required></nv-input><nv-textarea name="d" label="Описание (необязательно)" value="${esc(k.description||"")}"></nv-textarea>`,
+    actions:[{label:"Отмена"},{label:"Сохранить",variant:"primary",fn(r,close){
+      const v=formVals(r),n=(v.n||"").trim();
+      if(!n){r.querySelector('[name="n"]').setAttribute("error","Введите название");return false}
+      (async()=>{try{await apiPatch("/api/v1/collections/"+k.id,{name:n,description:(v.d||"").trim()});await loadCollections();N.refresh();toast("Подборка изменена",{tone:"success"});close()}
+        catch(err){toast("Не удалось сохранить: "+(err.message||""),{tone:"danger"})}})();
+      return false;
+    }}]});
+}
+/* Перенести или скопировать выбранное в другую подборку */
+function moveDlg(mode){
+  const I=S.intel,from=I.openK,sel=I.kSel.slice(),K=I.collections.filter(k=>k.id!==from);
+  if(!sel.length)return;
+  const verb=mode==="move"?"Перенести":"Скопировать";
+  overlay("modal",{title:verb+" в другую подборку",subtitle:"Объявлений: "+sel.length,
+    body:`<nv-select name="k" label="Куда" options="${K.map(k=>k.id+":"+esc(k.name)).join("|")}${K.length?"|":""}new:Создать новую подборку" value="${K[0]?K[0].id:"new"}"></nv-select><nv-input name="n" label="Название новой подборки" placeholder="Например, Лучшие офферы" hint="Нужно, только если выбрана новая подборка"></nv-input>`,
+    actions:[{label:"Отмена"},{label:verb,variant:"primary",fn(r,close){
+      const v=formVals(r);
+      (async()=>{
+        try{
+          let id=v.k,name;
+          if(id==="new"){
+            if(!(v.n||"").trim()){r.querySelector('[name="n"]').setAttribute("error","Введите название подборки");return}
+            const created=await apiPost("/api/v1/collections",{name:v.n.trim(),description:""});id=String(created.id);name=created.name;
+          }else name=(K.find(k=>k.id===id)||{}).name;
+          const res=await apiPost("/api/v1/collections/"+id+"/items/bulk",{items:sel.map(g=>({group_key:g.group_key,creative_id:g.representative.id}))});
+          if(mode==="move")await apiPost("/api/v1/collections/"+from+"/items/remove",{group_keys:sel.map(g=>g.group_key)});
+          I.kSel=[];delete I.collectionItemsCache[id];
+          await loadCollections();await openCollection(from);
+          toast((mode==="move"?"Перенесено":"Скопировано")+" в «"+name+"»: "+sel.length+(res&&res.skipped?" (уже были там: "+res.skipped+")":""),{tone:"success"});
+          close();
+        }catch(err){toast("Не удалось: "+(err.message||""),{tone:"danger"})}
+      })();
+      return false;
+    }}]});
 }
 function createCollectionDlg(){
   overlay("modal",{title:"Новая подборка",body:'<nv-input name="n" label="Название" placeholder="Например, Лучшие офферы" required></nv-input><nv-textarea name="d" label="Описание (необязательно)"></nv-textarea>',
@@ -3281,10 +3532,9 @@ async function removeFromCollection(colId,groupKey){
   catch(err){toast("Не удалось убрать: "+(err.message||""),{tone:"danger"})}
 }
 function gridOfCollectionItems(items,colId){
-  return `<div class="grid g3">${items.map(it=>{
-    const g={group_key:it.group_key,representative:it,last_seen_at:it.captured_at};
-    return `<div class="stack k-item" style="gap:6px">${cardHtml(g,false)}<nv-button size="sm" variant="ghost" icon="x" data-act="kRemoveItem" data-col="${esc(colId)}" data-key="${esc(it.group_key)}">Убрать из подборки</nv-button></div>`;
-  }).join("")}</div>`;
+  const I=S.intel,r=kItemsFiltered(items);
+  if(!r.length)return `<nv-card><nv-empty icon="search-x" heading="По этому поиску в подборке ничего нет" text="Измените текст поиска."></nv-empty></nv-card>`;
+  return `<div class="grid g4lg">${r.map(it=>cardHtml(kGroup(it),I.kSel.some(g=>g.group_key===it.group_key))).join("")}</div>`;
 }
 
 /* ---------- Сканирования ---------- */
@@ -3404,6 +3654,12 @@ function schedRunsHtml(x){
   }
   return `<details class="sch-runs" data-sid="${x.id}" ${open?"open":""}><summary>Запуски расписания · ${x.runs_created}</summary>${body}</details>`;
 }
+function schedRunsBody(x){
+  const rr=(S.intel.schedRuns||{})[x.id];
+  if(!rr)return '<div class="ss" style="padding:4px 0">Загружаем запуски…</div>';
+  const h=schedRunsHtml(x),i=h.indexOf("</summary>"),j=h.lastIndexOf("</details>");
+  return `<div>${h.slice(i+10,j)}</div>`;
+}
 async function loadSchedRuns(id){
   const I=S.intel;I.schedRuns=I.schedRuns||{};
   try{const d=await api("/api/v1/runs",{schedule_id:id,limit:100});I.schedRuns[id]={items:d.items||[],total:d.total||0}}
@@ -3417,22 +3673,35 @@ function schedBanner(){
   const next=live.filter(x=>x.status==="active"&&x.next_run_at).map(x=>x.next_run_at).sort()[0];
   return `<div class="row between" style="gap:10px;align-items:center;background:var(--info-bg);color:var(--info);border-radius:12px;padding:9px 12px;font-size:13px"><span>${ic("calendar-clock",14)} Активных расписаний: <b>${live.length}</b>${next?" · ближайший запуск <b>"+esc(fmtDateTime(next))+"</b>":""}</span><nv-button size="sm" variant="secondary" data-act="schedOpen">Открыть расписания</nv-button></div>`;
 }
+function schedRowHtml(x,showKey){
+  const I=S.intel,pct=x.runs_total?Math.min(100,Math.round(x.runs_created/x.runs_total*100)):0,st=SCHED_STATUS[x.status]||[x.status,"neutral"],live=schedLive(x),open=(I.schedOpen||[]).includes(x.id);
+  const btn=live?(x.status==="active"?`<nv-button size="sm" variant="secondary" icon="pause" icon-only hint="Поставить на паузу" data-act="schedAction" data-id="${x.id}" data-a="pause">Пауза</nv-button>`:`<nv-button size="sm" variant="primary" icon="play" icon-only hint="Продолжить запуски" data-act="schedAction" data-id="${x.id}" data-a="resume">Продолжить</nv-button>`)+`<nv-button size="sm" variant="ghost" icon="x" icon-only hint="Остановить расписание насовсем" data-act="schedAction" data-id="${x.id}" data-a="cancel">Остановить</nv-button>`:"";
+  const nextTxt=x.status==="active"&&x.next_run_at?`Следующий <b>${esc(fmtDateTime(x.next_run_at))}</b>`:x.status==="paused"?"Запуски приостановлены":`Закончено ${esc(fmtDateTime(x.finished_at||x.end_at))}`;
+  return `<details class="schr${live?"":" off"}" data-sid="${x.id}" ${open?"open":""}><summary>
+    <span class="schr-c">${ic("map-pin",13)}<span>${esc(x.city)}${showKey?" · "+esc(x.key_text):""}</span></span>
+    <span class="schr-f">${x.runs_per_day} ${plural(x.runs_per_day,"раз","раза","раз")} в день · ${x.duration_days} дн.</span>
+    <span class="schr-p"><span class="sch-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></span><em>${x.runs_created} из ${x.runs_total}${x.runs_skipped?" · пропущено "+x.runs_skipped:""}</em></span>
+    <span class="schr-n">${nextTxt}</span>
+    <nv-badge tone="${st[1]}">${st[0]}</nv-badge>
+    <span class="schr-a">${btn}</span>
+    <span class="schr-ch">${ic("chevron-right",15)}</span></summary>
+    ${open?`<div class="schr-b"><h5>По дням</h5>${schedTimeline(x)}<h5>Запуски · ${x.runs_created}</h5>${schedRunsBody(x)}</div>`:""}</details>`;
+}
 function schedulesHtml(list){
-  if(!S.intel.schedulesLoaded)return"";
+  if(!S.intel.schedulesLoaded)return '<nv-skeleton count="3"></nv-skeleton>';
   if(S.intel.schedulesError&&!list.length)return `<nv-callout tone="warning" heading="Не удалось загрузить расписания">${esc(S.intel.schedulesError)} <nv-button size="sm" variant="secondary" icon="refresh-cw" data-act="schedReload">Повторить</nv-button></nv-callout>`;
   if(!list.length)return `<nv-card><nv-empty icon="calendar-clock" heading="${S.intel.schedTab==="ended"?"Завершённых расписаний нет":"Активных расписаний нет"}" text="При создании сканирования выберите «Как часто запускать» — например, 3 раза в день на 7 дней."><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>`;
-  const rows=list.map(x=>{
-    const pct=x.runs_total?Math.min(100,Math.round(x.runs_created/x.runs_total*100)):0,st=SCHED_STATUS[x.status]||[x.status,"neutral"],live=x.status==="active"||x.status==="paused";
-    const btn=live?(x.status==="active"?`<nv-button size="sm" variant="secondary" icon="pause" data-act="schedAction" data-id="${x.id}" data-a="pause">Пауза</nv-button>`:`<nv-button size="sm" variant="primary" icon="play" data-act="schedAction" data-id="${x.id}" data-a="resume">Продолжить</nv-button>`)+`<nv-button size="sm" variant="ghost" icon="x" data-act="schedAction" data-id="${x.id}" data-a="cancel" hint="Остановить расписание насовсем">Остановить</nv-button>`:"";
-    const nextTxt=x.status==="active"&&x.next_run_at?`Следующий запуск <b>${esc(fmtDateTime(x.next_run_at))}</b>`:x.status==="paused"?"Запуски приостановлены":`Закончено ${esc(fmtDateTime(x.finished_at||x.end_at))}`;
-    return `<section class="sch-card${live?"":" off"}">
-      <div class="sch-top"><div class="sch-id"><h4>${esc(x.key_text)}</h4><div class="sch-chips"><span>${ic("map-pin",12)} ${esc(x.city)}</span><span>${ic("repeat",12)} ${x.runs_per_day} ${plural(x.runs_per_day,"раз","раза","раз")} в день</span><span>${ic("calendar",12)} ${x.duration_days} дн.</span></div></div>
-        <div class="sch-right"><nv-badge tone="${st[1]}">${st[0]}</nv-badge>${btn}</div></div>
-      <div class="sch-prog"><div class="sch-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
-        <div class="sch-pl"><span>Запущено <b>${x.runs_created}</b> из ${x.runs_total}${x.runs_skipped?" · пропущено "+x.runs_skipped:""}</span><span>${nextTxt}</span></div></div>
-      ${schedTimeline(x)}${schedRunsHtml(x)}</section>`;
-  }).join("");
-  return `<div class="sch-list">${rows}</div>`;
+  // расписания одного запроса (обычно это разные города) собираем в одну группу
+  const groups=[],by={};
+  list.forEach(x=>{const k=String(x.key_text||"").trim().toLowerCase();if(!by[k]){by[k]={key:x.key_text,items:[]};groups.push(by[k])}by[k].items.push(x)});
+  return `<div class="sch-list">${groups.map(g=>{
+    const it=g.items,done=it.reduce((a,x)=>a+(+x.runs_created||0),0),tot=it.reduce((a,x)=>a+(+x.runs_total||0),0);
+    const act=it.filter(x=>x.status==="active"),pau=it.filter(x=>x.status==="paused");
+    const next=act.filter(x=>x.next_run_at).map(x=>x.next_run_at).sort()[0];
+    const ids=l=>l.map(x=>x.id).join(",");
+    return `<section class="schg"><div class="schg-h"><div><h4>${esc(g.key)}</h4><p>${it.length} ${plural(it.length,"город","города","городов")} · запущено ${done} из ${tot}${next?" · ближайший запуск "+esc(fmtDateTime(next)):""}${pau.length?" · на паузе "+pau.length:""}</p></div>
+      <div class="row" style="gap:6px;flex-wrap:wrap">${act.length>1?`<nv-button size="sm" variant="secondary" icon="pause" data-act="schedGroup" data-ids="${ids(act)}" data-a="pause">Пауза для всех</nv-button>`:""}${pau.length>1?`<nv-button size="sm" variant="secondary" icon="play" data-act="schedGroup" data-ids="${ids(pau)}" data-a="resume">Продолжить все</nv-button>`:""}</div></div>
+      ${it.map(x=>schedRowHtml(x,false)).join("")}</section>`}).join("")}</div>`;
 }
 async function openScanDetail(job){
   let data;
@@ -3607,9 +3876,9 @@ function wireAnalyticsTables(r,I){
 }
 
 /* Запуски и расписания — один раздел: расписание лишь создаёт запуски автоматически */
-function scanTabsHtml(cur){
+function scanTabsHtml(cur,right){
   const I=S.intel,run=(I.scans||[]).filter(s=>s.status==="queued"||s.status==="running").length,live=(I.schedules||[]).filter(schedLive).length;
-  return `<nv-tabs items="scans:Запуски${run?" · идёт "+run:""}|schedules:Расписания${live?" · "+live:""}" value="${cur}" data-chg="scanTab"></nv-tabs>`;
+  return `<div class="vsw"><nv-segmented options="scans:Запуски${run?" · идёт "+run:""}|schedules:Расписания${live?" · "+live:""}" value="${cur}" data-chg="scanTab"></nv-segmented>${right||""}</div>`;
 }
 N.chg.scanTab=v=>N.go("intel-"+(v==="schedules"?"schedules":"scans"));
 /* ---------- Экраны ---------- */
@@ -3660,35 +3929,48 @@ library(){
     });
   }}},
 compare(){
-  const I=S.intel,f=I.cmpF,r=cmpFiltered();
-  const advs=[...new Set(CR().map(g=>g.representative.domain).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ru"));
-  const plats=[...new Set(CR().map(g=>realPlatformLabel(g.representative.detection_method)))];
-  return{title:"Сравнение креативов",sub:"Отметьте от 2 до 4 объявлений флажком — ниже появится построчное сравнение, различия подсвечены.",
-  help:{title:"Как сравнивать",steps:["Отфильтруйте список кандидатов внизу, если объявлений много.","Отметьте флажком от 2 до 4 карточек.","В таблице сверху жёлтым подсвечены строки, где значения отличаются."]},
-  body:`<nv-card heading="Результат сравнения" subtitle="${I.cmp.length} из 4 выбрано">${cmpMatrixHtml()}</nv-card>
-  <nv-card heading="Кандидаты на сравнение" subtitle="Список берётся из уже загруженной библиотеки">
-    <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст, домен" value="${esc(f.q)}" data-chg="cmpF" data-key="q"></nv-input><nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="cmpF" data-key="period"></nv-date-range><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="cmpF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="cmpF" data-key="format"></nv-filter-select><nv-filter-select label="Рекламодатель" value="${esc(f.adv)}" options="${advs.map(a=>esc(a)+":"+esc(a)).join("|")}" data-chg="cmpF" data-key="adv"></nv-filter-select></div>
-    <div class="muted" style="font-size:13px;margin:8px 0">Показано <b>${r.length}</b> из ${CR().length}</div>
-    <div id="cmp-candidates">${r.length?`<div class="grid g3">${r.map(g=>cardHtml(g,I.cmp.some(x=>String(x.representative.id)===String(g.representative.id)))).join("")}</div>`:`<nv-empty icon="search-x" heading="По этим фильтрам ничего нет" text="Измените фильтры или откройте библиотеку, чтобы сначала найти рекламу."><nv-button data-go="intel-library" icon="layout-grid">Открыть библиотеку</nv-button></nv-empty>`}</div>
+  const I=S.intel,f=I.cmpF,K=I.collections||[];
+  return{title:"Сравнение объявлений",sub:"Поставьте рядом от 2 до 4 объявлений: увидите, какое сильнее и чем отличаются предложения.",
+  actions:I.cmp.length>=2?`<nv-button variant="secondary" icon="folder-plus" data-act="cmpCollect">Сохранить в подборку</nv-button>`:"",
+  body:`<nv-card heading="${I.cmp.length>=2?"Сравнение":"Как сравнить"}" subtitle="Выбрано ${I.cmp.length} из 4">${cmpMatrixHtml()}</nv-card>
+  <nv-card heading="${I.cmp.length>=4?"Объявления":"Добавить объявления"}" subtitle="${I.cmp.length>=4?"Выбрано максимум — уберите одно, чтобы добавить другое":"Отметьте флажком в углу карточки"}">
+    <div class="k-bar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="cmpF" data-key="q"></nv-input><nv-filter-select label="Тема объявления" value="${esc(f.aiIntent)}" options="${aiIntentOptions()}" placeholder="Любая тема" min-width="300" data-chg="cmpF" data-key="aiIntent" ${f.col?"disabled":""}></nv-filter-select>${K.length?`<nv-filter-select label="Из подборки" value="${esc(f.col)}" options="${K.map(k=>esc(k.id)+":"+esc(k.name)+" ("+(k.items_count||0)+")").join("|")}" placeholder="Вся библиотека" data-chg="cmpF" data-key="col"></nv-filter-select>`:""}<nv-select label="Порядок" value="${esc(f.sort||"recent")}" options="recent:Сначала новые|oldest:Сначала старые" data-chg="cmpF" data-key="sort" ${f.col?"disabled":""}></nv-select></div>
+    <div id="cmp-cnt" class="muted" style="font-size:13px;margin:10px 0">${cmpCountHtml()}</div>
+    <div id="cmp-candidates">${cmpCandidatesHtml()}</div>
   </nv-card>`,
-  after(root){bindCards(root.querySelector("#cmp-candidates"),"cmp")}}},
+  after(root){
+    bindCards(root.querySelector("#cmp-candidates"),"cmp");
+    const b=root.querySelector("#cmp-board");
+    if(b){b.data=cmpData();b.addEventListener("nv-open",e=>openCreative(e.detail.id));b.addEventListener("nv-remove",e=>N.acts.cmpAdd(null,{id:e.detail.id}))}
+    if(!I.cmpC.loaded&&!I.cmpC.loading)loadCmpCandidates();
+    if(!I.collectionsLoaded)loadCollections();
+    if(!I.aiLoaded)loadAiIntents();
+  }}},
 collections(){
   const I=S.intel,K=I.collections,open=K.find(k=>k.id===I.openK);
   if(open){
-    const items=I.collectionItemsCache[open.id];
-    return{title:open.name,sub:open.description||"Пользовательская подборка",
+    const items=I.collectionItemsCache[open.id],f=I.kF,n=items?items.length:0;
+    return{title:open.name,sub:(open.description?open.description+" · ":"")+(items?n+" "+plural(n,"объявление","объявления","объявлений"):"Загружаем…"),
     back:"kBack",backLabel:"Все подборки",
-    actions:`<nv-button variant="secondary" icon="copy" data-act="kDuplicate" data-id="${open.id}">Дублировать</nv-button><nv-button variant="danger" icon="trash-2" data-act="kDel" data-id="${open.id}">Удалить</nv-button>`,
-    body:`<div id="k-res">${!items?'<nv-skeleton count="4"></nv-skeleton>':(items.length?gridOfCollectionItems(items,open.id):'<nv-card><nv-empty icon="folder-open" heading="В подборке пусто" text="Откройте библиотеку, отметьте креативы и нажмите «В подборку»."><nv-button data-go="intel-library" icon="layout-grid">Открыть библиотеку</nv-button></nv-empty></nv-card>')}</div>`,
-    after(root){bindCards(root.querySelector("#k-res"));if(!items)openCollection(open.id)}};
+    actions:`<nv-button variant="secondary" icon="pencil" data-act="kRename" data-id="${open.id}">Изменить</nv-button><nv-button variant="secondary" icon="copy" data-act="kDuplicate" data-id="${open.id}">Дублировать</nv-button><nv-button variant="danger" icon="trash-2" data-act="kDel" data-id="${open.id}">Удалить</nv-button>`,
+    body:`${items&&n?`<div class="k-bar"><nv-input class="grow" icon="search" type="search" label="Поиск в подборке" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="kF" data-key="q"></nv-input><nv-select label="Порядок" value="${esc(f.sort)}" options="added:Недавно добавленные|days:Дольше в открутке|shows:Чаще встречаются|domain:Домен А-Я" data-chg="kF" data-key="sort"></nv-select><nv-button variant="secondary" icon="check-check" data-act="kSelAll"><span id="k-all">Выбрать все</span></nv-button></div>`:""}
+    <div id="k-res">${!items?'<nv-skeleton count="4"></nv-skeleton>':(n?gridOfCollectionItems(items,open.id):'<nv-card><nv-empty icon="folder-open" heading="В подборке пусто" text="Откройте библиотеку, отметьте объявления флажком и нажмите «В подборку»."><nv-button data-go="intel-library" icon="layout-grid">Открыть библиотеку</nv-button></nv-empty></nv-card>')}</div>
+    <div id="k-bulk" class="bulk" hidden></div>`,
+    after(root){bindCards(root.querySelector("#k-res"),"kSel");kBulk();if(!items)openCollection(open.id)}};
   }
-  return{title:"Подборки",sub:"Папки с креативами для команды: конкуренты, идеи, примеры для клиента.",actions:`<nv-button icon="plus" data-act="kNew">Новая подборка</nv-button>`,
-  body:!I.collectionsLoaded?'<nv-skeleton count="3"></nv-skeleton>':`<div class="grid g3">${K.map(k=>`<nv-folder-card name="${esc(k.name)}" desc="${esc(k.description||"")}" count="${k.items_count||0}"><nv-button size="sm" variant="secondary" icon-end="arrow-right" data-act="kOpen" data-id="${k.id}">Открыть</nv-button><nv-menu data-col="${esc(k.id)}" items="dup:Дублировать:copy|del:Удалить:trash-2:danger"></nv-menu></nv-folder-card>`).join("")}${!K.length?'<nv-card><nv-empty icon="folder-heart" heading="Подборок пока нет" text="Создайте подборку, чтобы группировать находки для команды."><nv-button icon="plus" data-act="kNew">Новая подборка</nv-button></nv-empty></nv-card>':""}</div>`,
+  const total=K.reduce((a,k)=>a+(+k.items_count||0),0);
+  return{title:"Подборки",sub:K.length?`${K.length} ${plural(K.length,"подборка","подборки","подборок")} · ${total} ${plural(total,"объявление","объявления","объявлений")}. Папки с находками: конкуренты, идеи, примеры для клиента.`:"Папки с находками: конкуренты, идеи, примеры для клиента.",actions:`<nv-button icon="plus" data-act="kNew">Новая подборка</nv-button>`,
+  body:!I.collectionsLoaded?'<nv-skeleton count="3"></nv-skeleton>':`<div class="grid g3" id="kc-res">${K.map(k=>`<nv-folder-card fid="${esc(k.id)}" name="${esc(k.name)}" desc="${esc(k.description||"")}" count="${k.items_count||0}" thumbs="${esc(JSON.stringify(k.thumbs||[]))}" updated="${k.items_count?"Пополнена "+esc(N.rel(k.updated_at)):"Пока пусто"}" selectable openable ${I.kcSel.includes(k.id)?"selected":""}><nv-button size="sm" variant="secondary" icon-end="arrow-right" data-act="kOpen" data-id="${k.id}">Открыть</nv-button><nv-menu data-col="${esc(k.id)}" items="ren:Изменить:pencil|dup:Дублировать:copy|del:Удалить:trash-2:danger"></nv-menu></nv-folder-card>`).join("")}${!K.length?'<nv-card><nv-empty icon="folder-heart" heading="Подборок пока нет" text="Создайте подборку и складывайте в неё объявления из библиотеки: отметьте их флажком и нажмите «В подборку»."><nv-button icon="plus" data-act="kNew">Новая подборка</nv-button></nv-empty></nv-card>':""}</div>
+  <div id="kc-bulk" class="bulk" hidden></div>`,
   after(root){
     if(!I.collectionsLoaded)loadCollections();
+    I.kcSel=I.kcSel.filter(id=>K.some(k=>k.id===id));kcBulk();
+    root.addEventListener("nv-check",e=>{const id=String(e.detail.id);I.kcSel=I.kcSel.filter(x=>x!==id);if(e.detail.selected)I.kcSel.push(id);kcBulk()});
+    root.addEventListener("nv-open-folder",e=>N.acts.kOpen(null,{id:String(e.detail.id)}));
     root.querySelectorAll("nv-menu[data-col]").forEach(m=>m.addEventListener("nv-select",e=>{
       const id=m.dataset.col;
       if(e.detail.id==="dup")duplicateCollection(id);
+      else if(e.detail.id==="ren")renameCollectionDlg(id);
       else if(e.detail.id==="del")N.acts.kDel(null,{id});
     }));
   }}},
@@ -3717,17 +3999,21 @@ scans(){
     root.querySelectorAll('[data-act="scanToLib"]').forEach(b=>b.onclick=()=>{const s=L.find(x=>String(x.id)===b.dataset.id);if(s)filterByJob(s.id,s.key_text)});
   }}},
 schedules(){
-  const all=S.intel.schedules||[],live=all.filter(schedLive),ended=all.filter(x=>!schedLive(x)),tab=S.intel.schedTab;
-  return{title:"Сканирования",sub:"Расписания запускают сканирование автоматически: сколько раз в день и сколько дней. Каждый запуск появляется во вкладке «Запуски».",actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
-  body:`${scanTabsHtml("schedules")}
-  <div class="tabbed"><nv-tabs items="live:Активные · ${live.length}|ended:Завершённые и остановленные · ${ended.length}" value="${tab}" data-chg="schedTab"></nv-tabs><div class="tab-b" style="padding:12px 16px">${schedulesHtml(tab==="ended"?ended:live)}</div></div>`,
+  const all=S.intel.schedules||[],live=all.filter(schedLive),ended=all.filter(x=>!schedLive(x)),tab=S.intel.schedTab==="ended"?"ended":"live";
+  const next=live.filter(x=>x.status==="active"&&x.next_run_at).map(x=>x.next_run_at).sort()[0],paused=live.filter(x=>x.status==="paused").length;
+  return{title:"Сканирования",sub:"Расписание само запускает сканирование: несколько раз в день, заданное число дней. Каждый запуск виден на вкладке «Запуски».",actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
+  body:`${scanTabsHtml("schedules",`<div class="vsw sub"><nv-segmented options="live:Активные · ${live.length}|ended:Завершённые · ${ended.length}" value="${tab}" data-chg="schedTab"></nv-segmented></div>`)}
+  ${tab==="live"&&live.length?`<p class="muted" style="margin:0;font-size:13px">${next?"Ближайший запуск <b>"+esc(fmtDateTime(next))+"</b>.":"Запусков в ближайшее время нет."}${paused?" На паузе: "+paused+".":""} Нажмите на строку, чтобы увидеть дни и запуски.</p>`:""}
+  ${schedulesHtml(tab==="ended"?ended:live)}`,
   after(root){
     if(!S.intel.schedulesLoaded)loadSchedules();
+    root.querySelectorAll(".schr>summary [data-act]").forEach(b=>b.addEventListener("click",e=>e.preventDefault()));
     root.querySelectorAll("details[data-sid]").forEach(d=>d.addEventListener("toggle",()=>{
       const id=+d.dataset.sid,I=S.intel,was=(I.schedOpen||[]).includes(id);
       if(d.open===was)return;  // событие от перерисовки, а не от клика
       I.schedOpen=(I.schedOpen||[]).filter(x=>x!==id);
       if(d.open){I.schedOpen.push(id);loadSchedRuns(id)}
+      N.refresh();
     }));
   }};
 },
@@ -3905,6 +4191,9 @@ advertisers(){
 Object.assign(N.acts,{
   anaGo(a,d){const A=S.intel.ana;if(d.id==="fresh"&&d.sub)A.freshSub=d.sub;if(d.id==="platforms"&&d.sub)A.platSub=d.sub;if(d.id==="campaigns"&&d.sub)A.campSub=d.sub;if(d.id==="advertisers"&&d.sub)S.intel.advSub=d.sub;N.go("intel-"+d.id)},
   schedAction(a,d){schedAction(d.id,d.a)},
+  schedGroup(a,d){const ids=String(d.ids||"").split(",").filter(Boolean);(async()=>{let ok=0;
+    for(const id of ids){try{await apiPost("/api/v1/schedules/"+id+"/action",{action:d.a});ok++}catch(e){}}
+    await loadSchedules();toast((d.a==="pause"?"Поставлено на паузу: ":"Возобновлено: ")+ok+(ok<ids.length?" из "+ids.length:""),{tone:ok?"success":"danger"})})()},
   schedReload(){loadSchedules()},
   schedOpen(){N.go("intel-schedules")},
   schedRunOpen(a,d){openScanDetail({id:+d.id})},
@@ -3927,13 +4216,38 @@ Object.assign(N.acts,{
   newScan:scanDlg,
   cmpAdd(a,d){const c=S.intel.cmp,id=d.id,i=c.findIndex(g=>String(g.representative.id)===String(id));if(i>=0)c.splice(i,1);else{const g=findGroup(id);if(!g){toast("Карточка не найдена");return}if(c.length<4)c.push(g);else{toast("Сравнить можно до 4 креативов. Сначала уберите один",{tone:"warning"});return}}N.refresh()},
   kOpen(a,d){S.intel.openK=d.id;N.refresh();openCollection(d.id)},
-  kBack(){S.intel.openK=null;N.refresh()},
+  kBack(){S.intel.openK=null;S.intel.kSel=[];S.intel.kF.q="";N.refresh()},
+  kRename(a,d){renameCollectionDlg(d.id)},
+  kSelAll(){const I=S.intel,items=kItemsFiltered(I.collectionItemsCache[I.openK]||[]);I.kSel=I.kSel.length>=items.length?[]:items.map(kGroup);N.refresh()},
+  kSelClear(){S.intel.kSel=[];N.refresh()},
+  kCompare(){S.intel.cmp=S.intel.kSel.slice(0,4);S.intel.kSel=[];N.go("intel-compare")},
+  kMove(a,d){moveDlg(d.mode)},
+  kRemoveSel(){const I=S.intel,sel=I.kSel.slice(),col=I.openK;if(!sel.length)return;
+    confirm({title:"Убрать из подборки "+sel.length+" "+plural(sel.length,"объявление","объявления","объявлений")+"?",text:"Сами объявления останутся в библиотеке.",confirm:"Убрать",danger:true,fn(){(async()=>{
+      try{await apiPost("/api/v1/collections/"+col+"/items/remove",{group_keys:sel.map(g=>g.group_key)});I.kSel=[];await loadCollections();await openCollection(col);toast("Убрано из подборки: "+sel.length,{tone:"success"})}
+      catch(err){toast("Не удалось убрать: "+(err.message||""),{tone:"danger"})}})()}})},
+  kcClear(){S.intel.kcSel=[];N.refresh()},
+  kcDelete(){const I=S.intel,ids=I.kcSel.slice();if(!ids.length)return;
+    confirm({title:"Удалить "+ids.length+" "+plural(ids.length,"подборку","подборки","подборок")+"?",text:"Подборки удалятся без возможности восстановления. Объявления останутся в библиотеке.",confirm:"Удалить",danger:true,fn(){(async()=>{
+      try{await apiPost("/api/v1/collections/bulk-delete",{ids:ids.map(Number)});I.kcSel=[];ids.forEach(id=>delete I.collectionItemsCache[id]);await loadCollections();N.refresh();toast("Удалено подборок: "+ids.length,{tone:"success"})}
+      catch(err){toast("Не удалось удалить: "+(err.message||""),{tone:"danger"})}})()}})},
+  kcMerge(){const I=S.intel,ids=I.kcSel.slice();if(ids.length<2)return;
+    const K=I.collections.filter(k=>ids.includes(k.id));
+    overlay("modal",{title:"Объединить подборки",subtitle:"Объявления соберутся в одной подборке, остальные выбранные удалятся",
+      body:`<nv-select name="k" label="Оставить подборку" options="${K.map(k=>k.id+":"+esc(k.name)+" ("+(k.items_count||0)+")").join("|")}" value="${K[0].id}"></nv-select>`,
+      actions:[{label:"Отмена"},{label:"Объединить",variant:"primary",fn(r,close){const v=formVals(r);(async()=>{
+        try{await apiPost("/api/v1/collections/"+v.k+"/merge",{ids:ids.filter(x=>x!==v.k).map(Number)});I.kcSel=[];I.collectionItemsCache={};await loadCollections();N.refresh();toast("Подборки объединены",{tone:"success"});close()}
+        catch(err){toast("Не удалось объединить: "+(err.message||""),{tone:"danger"})}})();return false}}]})},
+  cmpMore(){loadCmpCandidates(true)},
+  cmpClear(){S.intel.cmp=[];N.refresh()},
+  cmpCollect(){collectDlg(S.intel.cmp.map(g=>({group_key:g.group_key,creative_id:g.representative.id})))},
   kNew:createCollectionDlg,
   kDuplicate(a,d){duplicateCollection(d.id)},
   kRemoveItem(a,d){removeFromCollection(d.col,d.key)},
   kDel(a,d){const k=S.intel.collections.find(x=>x.id===d.id);if(!k)return;confirm({title:"Удалить подборку «"+k.name+"»?",text:"Все элементы подборки удалятся без возможности восстановления.",confirm:"Удалить подборку",danger:true,fn(){(async()=>{try{await apiDelete("/api/v1/collections/"+k.id);S.intel.openK=null;await loadCollections();N.refresh();toast("Подборка удалена")}catch(err){toast("Не удалось удалить: "+(err.message||""),{tone:"danger"})}})()}})}
 });
 N.chg.schedTab=v=>{S.intel.schedTab=v;N.refresh()};
+N.chg.kF=(v,d)=>{S.intel.kF[d.key]=v;const b=document.getElementById("k-res"),I=S.intel;if(b&&d.key==="q"){b.innerHTML=gridOfCollectionItems(I.collectionItemsCache[I.openK]||[],I.openK)}else N.refresh()};
 N.chg.libSrc=v=>{S.intel.f.src=v;if(v==="history"&&S.intel.f.rel==="no")S.intel.f.rel="yes";S.intel.f.page=1;loadLibrary()};
 N.chg.libRel=v=>{S.intel.f.rel=v;S.intel.f.page=1;loadLibrary()};
 N.chg.libF=(v,d)=>{
@@ -3945,7 +4259,8 @@ N.chg.libF=(v,d)=>{
 };
 N.chg.libPage=v=>{S.intel.f.page=+v;const sc=document.getElementById("scroll");if(sc)sc.scrollTop=0;if(S.intel.lib.server)loadLibrary();else libRes()};
 N.chg.advQ=v=>{S.intel.advQ=v;clearTimeout(S.intel._advT);S.intel._advT=setTimeout(()=>loadAdvertisers(v),350)};
-N.chg.cmpF=(v,d)=>{S.intel.cmpF[d.key]=v;N.refresh()};
+N.chg.cmpF=(v,d)=>{const f=S.intel.cmpF,was=f.col;f[d.key]=v;if(d.key==="q"){clearTimeout(S.intel._cmpQ);S.intel._cmpQ=setTimeout(()=>loadCmpCandidates(),350);return}S.intel.cmpC.loaded=false;if((d.key==="col")&&(!!was!==!!v))N.refresh();loadCmpCandidates()};
+N.chg.cmpRows=v=>{S.intel.cmpF.rows=v;N.refresh()};
 N.chg.scanF=(v,d)=>{S.intel.scanF[d.key]=v;N.refresh()};
 N.acts.scanFReset=()=>{S.intel.scanF={q:"",status:""};N.refresh()};
 N.chg.intentSet=v=>{const list=v?v.split(","):[];S.intel.activeIntents=list;setActiveIntents(list);loadLibrary();if(S.intel.ana.loaded)loadAnalytics(true);N.refresh()};
