@@ -5261,6 +5261,7 @@ function openProjectPanel(p){
           ${h.running_job_id?`<nv-button size="sm" variant="secondary" icon="activity" data-proj-job="${h.running_job_id}">Прогресс запуска</nv-button>`:""}
           ${!h.running_job_id&&h.resume?`<nv-button size="sm" variant="primary" icon="play" data-proj-resume="${h.resume.job_id}" hint="Досоздать недостающие кампании с теми же настройками">Продолжить запуск #${h.resume.job_id} (не хватает ${h.resume.remaining}${h.resume.reuse_accounts?", готовых аккаунтов "+h.resume.reuse_accounts:""})</nv-button>`:""}
           ${p.ozon_url?`<a href="${esc(p.ozon_url)}" target="_blank" rel="noopener" style="font-size:13px;align-self:center">Карточка Ozon</a>`:""}</div>
+          <div data-proj-retry></div>
           <div data-proj-crm class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap;margin:0 0 10px"><span class="muted" style="font-size:12.5px">Источник лидов Б24…</span></div>
           <nv-card heading="Аккаунты Директа" subtitle="Где скрипт создал кампании. Статус справа — модерация и показы по Директу, бан — по Click.ru (обновляется раз в 2 минуты). «Проверить» — подробности по API Директа.">
           ${acc.length?`<div class="row between" style="gap:8px;flex-wrap:wrap;margin-bottom:4px"><div class="st-chips" data-acc-st-sum>${accStatusSummary(stCache)}</div><div class="row" style="gap:6px"><nv-button size="sm" variant="secondary" icon="zap" data-acc-kick hint="Найти аккаунты, где показы фактически не идут (нет денег, черновик, выключена), и довести их до показов">Пнуть незапущенные</nv-button><nv-button size="sm" variant="ghost" icon="refresh-cw" data-acc-st-refresh>Обновить статусы</nv-button></div></div>`:""}
@@ -5286,6 +5287,16 @@ function openProjectPanel(p){
         svc("[data-proj-href]","/sync-href",r=>`Ссылки обновлены в объявлениях: ${r.updated}`+((r.items||[]).reduce((a,x)=>a+(x.sitelink_sets||0),0)?`, наборов быстрых ссылок: ${r.items.reduce((a,x)=>a+(x.sitelink_sets||0),0)}`:""));
         svc("[data-proj-grants]","/metrika-grants",r=>`Доступ к Метрике: ${r.ok} из ${r.total}`);
         const jb=el.querySelector("[data-proj-job]");if(jb)jb.onclick=()=>openJobDrawer(p,+jb.dataset.projJob);
+        const rtHost=el.querySelector("[data-proj-retry]");
+        const drawRetry=async()=>{if(!rtHost)return;
+          try{const rt=await api("/api/v1/ads/projects/"+p.id+"/topup-retries",{}),pd=rt.pending||[];
+            if(!pd.length){rtHost.innerHTML="";return}
+            const next=pd.map(x=>x.retry_at).sort()[0],nm=(pd.find(x=>x.retry_at===next)||{}).retry_at_msk||"";
+            rtHost.innerHTML=`<nv-callout tone="info" heading="Автоповтор пополнения: ${pd.length} ${pd.length===1?"аккаунт":"акк."}" style="margin:0 0 10px">Click.ru не дал пополнить новые аккаунты сразу («Пополнение недоступно до …»). Сервер сам пополнит их на ту же сумму и запустит показы — ближайший в ${esc(nm)} МСК: ${pd.map(x=>"#"+x.account_id+" ("+x.amount_rub+" ₽, "+esc(x.retry_at_msk)+")").join(", ")}. Если аккаунт уже пополнили вручную — деньги второй раз не спишутся.
+              <div style="margin-top:8px"><nv-button size="sm" variant="ghost" icon="x" data-retry-cancel>Отменить автоповтор</nv-button></div></nv-callout>`;
+            rtHost.querySelector("[data-retry-cancel]").onclick=async()=>{try{const r=await apiPost("/api/v1/ads/projects/"+p.id+"/topup-retries/cancel",{});toast("Автоповтор отменён: "+r.cancelled,{tone:"success"});drawRetry()}catch(err){toast("Не удалось отменить: "+(err.message||""),{tone:"danger"})}};
+          }catch(e){rtHost.innerHTML=""}};
+        drawRetry();
         const crmHost=el.querySelector("[data-proj-crm]");
         if(crmHost)(async()=>{
           try{
