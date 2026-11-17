@@ -42,6 +42,16 @@ nv-carousel{display:block;min-width:0}
 nv-carousel.cx-fit .cx-dots{display:none}
 @media(max-width:640px){.cx-slide{flex-basis:62%}.cx-nav{display:none}}
 .cx-list{display:flex;flex-direction:column;gap:16px}
+/* карусель «как на площадке»: в окне помещается столько объявлений, сколько было видно сразу */
+nv-carousel[visible] .cx-slide{flex:0 0 210px}
+nv-carousel[visible] .cx-vp{max-width:calc(var(--cx-vis,2)*210px + (var(--cx-vis,2) - 1)*12px + 32px)}
+@media(max-width:640px){nv-carousel[visible] .cx-slide{flex-basis:62%}nv-carousel[visible] .cx-vp{max-width:none}}
+.cx-slide.cx-later .cx-card{border-style:dashed}
+.cx-tag{position:absolute;right:8px;top:8px;border-radius:99px;padding:3px 8px;font:600 11px var(--font-body);background:rgba(14,18,16,.72);color:#fff}
+.cx-tag.now{background:var(--ok);color:#fff}
+.cx-slide.cx-miss .cx-card{cursor:default;border-style:dashed;background:transparent}
+.cx-slide.cx-miss .cx-card:hover{transform:none;box-shadow:none}
+.cx-note{padding:0 16px;font-size:12.5px;color:var(--ink-3)}
 .tab-hint{margin:0;padding:12px 16px 0;font-size:13px;color:var(--ink-2);line-height:1.45}
 .jumps{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
 .jump{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:4px;padding:14px;border:1px solid var(--line);border-radius:var(--r-l);background:var(--surface);transition:border-color .12s,box-shadow .12s,transform .12s}
@@ -1946,11 +1956,14 @@ define("nv-carousel",class extends NvEl{
   get slides(){return this._slides||[]}
   set slides(v){this._slides=v||[];if(this._init)this.update()}
   html(){
-    const sl=this.slides,n=sl.length,plat=this.a("platform");
-    const card=(m,i)=>`<li class="cx-slide" data-i="${i}"><button type="button" class="cx-card" data-id="${esc(m.id)}" aria-label="Слайд ${i+1} из ${n}: ${esc(m.title||m.domain||"")}"><span class="cx-art"><span class="cx-na">${ic("image-off",22)}</span>${m.image?`<img src="${esc(m.image)}" alt="" loading="lazy" draggable="false" onerror="this.remove()">`:""}<span class="cx-n">${esc(m.n!=null?m.n:i+1)}</span></span><span class="cx-b"><span class="cx-d">${esc(m.domain||"—")}</span><span class="cx-t">${esc(m.title||"Без заголовка")}</span></span></button></li>`;
+    const sl=this.slides,n=sl.length,plat=this.a("platform"),vis=Math.max(0,+this.a("visible")||0);
+    if(vis)this.style.setProperty("--cx-vis",String(Math.min(vis,4)));
+    const tag=i=>vis?(i<vis?'<span class="cx-tag now">видно сразу</span>':'<span class="cx-tag">после прокрутки</span>'):"";
+    const card=(m,i)=>m.missing?`<li class="cx-slide cx-miss${vis&&i>=vis?" cx-later":""}" data-i="${i}"><div class="cx-card" aria-label="Объявление ${i+1} из ${n} не распознано"><span class="cx-art"><span class="cx-na">${ic("image-off",22)}</span><span class="cx-n">${esc(m.n!=null?m.n:i+1)}</span>${tag(i)}</span><span class="cx-b"><span class="cx-d">—</span><span class="cx-t">Объявление не распознано</span></span></div></li>`:
+    `<li class="cx-slide${vis&&i>=vis?" cx-later":""}" data-i="${i}"><button type="button" class="cx-card" data-id="${esc(m.id==null?"":m.id)}" aria-label="Объявление ${i+1} из ${n}: ${esc(m.title||m.domain||"")}"><span class="cx-art"><span class="cx-na">${ic("image-off",22)}</span>${m.image?`<img src="${esc(m.image)}" alt="" loading="lazy" draggable="false" onerror="this.remove()">`:""}<span class="cx-n">${esc(m.n!=null?m.n:i+1)}</span>${tag(i)}</span><span class="cx-b"><span class="cx-d">${esc(m.domain||"—")}</span><span class="cx-t">${esc(m.title||"Без заголовка")}</span></span></button></li>`;
     return `<section class="cx" aria-roledescription="карусель"><header class="cx-h"><div class="cx-ht"><b>${esc(this.a("heading"))}</b><span>${esc(this.a("subtitle"))}</span></div><div class="cx-hr">${plat?`<nv-badge>${esc(plat)}</nv-badge>`:""}<span class="cx-ct" aria-live="polite">1 / ${n}</span></div></header>
     <div class="cx-vp"><button type="button" class="cx-nav prev" aria-label="Назад" disabled>${ic("chevron-left",18)}</button><ul class="cx-track" tabindex="0" role="list" aria-label="Слайды карусели">${sl.map(card).join("")}</ul><button type="button" class="cx-nav next" aria-label="Вперёд">${ic("chevron-right",18)}</button></div>
-    ${n>1&&n<=12?`<div class="cx-dots">${sl.map((_,i)=>`<button type="button" class="cx-dot${i?"":" on"}" data-i="${i}" aria-label="К слайду ${i+1}"></button>`).join("")}</div>`:""}</section>`;
+    ${n>1&&n<=12?`<div class="cx-dots">${sl.map((_,i)=>`<button type="button" class="cx-dot${i?"":" on"}" data-i="${i}" aria-label="К слайду ${i+1}"></button>`).join("")}</div>`:""}${this.a("note")?`<div class="cx-note">${esc(this.a("note"))}</div>`:""}</section>`;
   }
   mounted(){
     const tr=this.querySelector(".cx-track");if(!tr)return;
@@ -1969,10 +1982,10 @@ define("nv-carousel",class extends NvEl{
     tr.addEventListener("pointerdown",e=>{if(e.pointerType!=="mouse"||e.button!==0)return;down=true;moved=false;sx=e.clientX;sl0=tr.scrollLeft});
     window.addEventListener("pointermove",e=>{if(!down)return;const dx=e.clientX-sx;if(!moved&&Math.abs(dx)>5){moved=true;tr.classList.add("drag")}if(moved)tr.scrollLeft=sl0-dx});
     window.addEventListener("pointerup",()=>{if(!down)return;down=false;if(moved){setTimeout(()=>{moved=false},0);tr.classList.remove("drag")}});
-    tr.addEventListener("click",e=>{const b=e.target.closest(".cx-card");if(!b)return;if(moved){e.preventDefault();return}this.emit("nv-open",{id:b.dataset.id})},true);
+    tr.addEventListener("click",e=>{const b=e.target.closest(".cx-card");if(!b)return;if(moved){e.preventDefault();return}if(b.dataset.id)this.emit("nv-open",{id:b.dataset.id})},true);
     sync();
   }
-},"Предметные",{desc:"Настоящая карусель рекламы: слайды листаются стрелками, свайпом, перетаскиванием мышью или клавишами ← →. Слайды передаются свойством slides = [{id,image,title,domain,n}]; клик по слайду — событие nv-open.",events:["nv-open {id}"],previewW:640,attrs:{heading:{type:"string",default:"Карусель в Яндекс / РСЯ",desc:"Заголовок"},subtitle:{type:"string",default:"6 слайдов · krosslab.example",desc:"Подпись под заголовком"},platform:{type:"string",default:"Яндекс / РСЯ",desc:"Площадка"}}});
+},"Предметные",{desc:"Настоящая карусель рекламы: слайды листаются стрелками, свайпом, перетаскиванием мышью или клавишами ← →. Слайды передаются свойством slides = [{id,image,title,domain,n,missing}]; клик по слайду — событие nv-open. Атрибут visible — сколько объявлений площадка показывала сразу: столько же помещается в окне, остальные открываются стрелкой и помечены «после прокрутки».",events:["nv-open {id}"],previewW:640,attrs:{visible:{type:"number",default:0,desc:"Сколько объявлений было видно сразу (0 — не задано)"},note:{type:"string",default:"",desc:"Пояснение под каруселью"},heading:{type:"string",default:"Карусель в Яндекс / РСЯ",desc:"Заголовок"},subtitle:{type:"string",default:"6 слайдов · krosslab.example",desc:"Подпись под заголовком"},platform:{type:"string",default:"Яндекс / РСЯ",desc:"Площадка"}}});
 define("nv-service-card",class extends NvEl{
   html(){return `<button type="button" class="svc-c" data-svc="${esc(this.a("service"))}"><span class="ic">${ic(this.a("icon"))}</span><h3>${esc(this.a("name"))}</h3><p>${esc(this.a("description"))}</p><span class="m"><span>${esc(this.a("metric"))}</span><nv-status value="${esc(this.a("status"))}"></nv-status></span></button>`}
 },"Предметные",{desc:"Сервис в каталоге бренда.",previewW:300,attrs:{service:{type:"enum",values:["intel","launch","studio","connect","sites","crm","seo","mail","bots"],default:"launch",desc:"Определяет фирменный цвет"},name:{type:"string",default:"Массовый запуск",desc:"Название"},description:{type:"string",default:"Сотни объявлений на все площадки за один проход.",desc:"Польза в одной фразе"},icon:{type:"string",default:"rocket",desc:"Иконка"},metric:{type:"string",default:"3 кампании активны",desc:"Главный показатель"},status:{type:"enum",values:["ready","soon"],default:"ready",desc:"Состояние"}}});
@@ -3385,7 +3398,7 @@ async function openCreative(id){
       ${cr.discount_percent?`<dt>Скидка</dt><dd>${esc(cr.discount_percent)}%</dd>`:""}
       ${!cr.erid?`<dt>ERID</dt><dd>нет</dd>`:""}
       ${(cr.app_package_id||cr.app_store_id)?`<dt>Приложение</dt><dd class="mono">${esc(cr.app_package_id||cr.app_store_id)}</dd>`:""}
-      ${cr.carousel_id?`<dt>Карусель</dt><dd>Слайд ${cr.carousel_slide_index!=null?"#"+(cr.carousel_slide_index+1):"—"} · смотрите вкладку «Повторы и карусели» в Аналитике</dd>`:""}
+      ${cr.carousel_id&&cr.carousel_total?`<dt>Карусель</dt><dd>Объявление ${cr.carousel_slide_index!=null?(cr.carousel_slide_index+1)+" из "+cr.carousel_total:"—"}${cr.carousel_slide_index!=null&&cr.carousel_visible?(cr.carousel_slide_index<cr.carousel_visible?" · было видно сразу":" · открывалось после прокрутки"):""} · вся карусель — в Аналитике, вкладка «Карусели»</dd>`:cr.carousel_id?`<dt>Карусель</dt><dd>Объявление из рекламного блока-карусели (старые данные, без состава)</dd>`:""}
     </dl>
     ${cr.erid?`<nv-copy-field label="ERID" value="${esc(cr.erid)}" hint="Маркировка интернет-рекламы — пригодится для отчётов по 38-ФЗ"></nv-copy-field>`:""}
     ${links.length?`<div class="sect-t">Другие ссылки объявления</div><dl class="dl">${links.map(l=>`<dt>${esc(l.link_text||l.final_url_domain||"Ссылка")}</dt><dd class="mono">${esc(l.final_url_domain||l.final_url||"—")}${[l.utm_source,l.utm_medium,l.utm_campaign].filter(Boolean).length?"<br>"+esc([l.utm_source,l.utm_medium,l.utm_campaign].filter(Boolean).join(" / ")):""}</dd>`).join("")}</dl>`:""}
@@ -3776,7 +3789,7 @@ async function loadAnalytics(force){
   I.fresh=fresh.items||[];I.freshTotal=fresh.total||I.fresh.length;
   I.discounts=discounts.items||[];I.discTotal=discounts.total||I.discounts.length;
   I.apps=apps.items||[];I.appsTotal=apps.total||I.apps.length;
-  I.cross=cross.items||[];I.carousels=carousels.items||[];I.campaigns=campaigns.items||[];
+  I.cross=cross.items||[];I.carousels=carousels.items||[];I.galleries=carousels.galleries||[];I.campaigns=campaigns.items||[];
   I.keywords=keywords.items||[];I.growing=growing.items||[];I.mismatch=mismatch.items||[];
   I.coverageReport=coverageReport.items||[];
   I.loaded=true;I.loading=false;I.at=Date.now();
@@ -3811,9 +3824,30 @@ function wireTable(r,id,rows,columns,onClick){
 function thumb(c){return c.image_url?`<img src="${esc(c.image_url)}" alt="" style="width:34px;height:34px;border-radius:9px;object-fit:cover;flex-shrink:0">`:`<span style="width:34px;height:34px;border-radius:9px;background:var(--surface-2);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--ink-3)">${ic("image",16)}</span>`}
 function titleCell(c,sub){return `<div class="row" style="gap:9px;align-items:center"><span style="display:inline-flex">${thumb(c)}</span><div><div class="cell-t">${esc(c.title||c.domain||"Без заголовка")}</div><div class="cell-s">${esc(sub)}</div></div></div>`}
 function coverageStatus(pct){return pct>=40?`<nv-badge tone="success">Хорошо</nv-badge>`:pct>0?`<nv-badge tone="warning">Частично</nv-badge>`:`<nv-badge tone="danger">Нет раскрытий</nv-badge>`}
+/* Вкладка «Одно объявление»: галерея картинок одного объявления — порядок картинок и видимая часть как в рекламе. */
+function renderGalleries(host){
+  const I=S.intel.ana,all=I.galleries||[];
+  if(!all.length){host.innerHTML='<nv-empty icon="images" heading="Галерей пока нет" text="Галерея — одно объявление с несколькими картинками, которые листаются внутри него. Они появятся здесь после новых сканирований Дзена и площадок РСЯ."></nv-empty>';return}
+  const plat=I.carPlat||"all",groups=all.filter(g=>plat==="all"||(g.platform||"—")===plat);
+  if(!groups.length){host.innerHTML='<nv-empty icon="filter-x" heading="На этой площадке галерей нет" text="Выберите другую площадку."></nv-empty>';return}
+  host.innerHTML='<div class="cx-list"></div>';const list=host.firstChild;
+  groups.forEach(g=>{
+    const imgs=g.images||[],total=imgs.length,vis=Math.min(g.visible||0,total);
+    const el=document.createElement("nv-carousel");
+    el.setAttribute("heading",g.title||g.domain||"Объявление");
+    el.setAttribute("subtitle",(g.domain?g.domain+" · ":"")+total+" "+plural(total,"картинка","картинки","картинок")+(vis&&vis<total?" · сразу видно "+vis+", остальные "+(total-vis)+" — по стрелке":vis?" · все видны сразу":"")+" · "+fmtDateTime(g.last_seen_at)+(g.key_text?" · запрос «"+g.key_text+"»"+(g.city?", "+g.city:""):""));
+    el.setAttribute("platform",g.platform||"");
+    if(vis)el.setAttribute("visible",String(vis));
+    if(g.description)el.setAttribute("note",g.description);
+    el.slides=imgs.map((u,i)=>({id:g.id,image:u,title:"Картинка "+(i+1)+" из "+total,domain:g.domain,n:i+1}));
+    el.addEventListener("nv-open",e=>{if(e.detail.id)openCreative(e.detail.id)});
+    list.append(el);
+  });
+}
 function renderCarousels(host){
   const I=S.intel.ana,all=I.carousels||[];
-  if(!all.length){host.innerHTML='<nv-empty icon="gallery-horizontal" heading="Каруселей пока нет" text="Карусель — это несколько объявлений, показанных рядом в одном рекламном блоке. Они появятся здесь после сканирований."></nv-empty>';return}
+  if((I.carKind||"ads")==="gallery")return renderGalleries(host);
+  if(!all.length){host.innerHTML='<nv-empty icon="gallery-horizontal" heading="Каруселей пока нет" text="Карусель — это несколько разных объявлений, показанных рядом в одном рекламном блоке. Они появятся здесь после сканирований площадок, где такие блоки есть (например, погодные и новостные сайты)."></nv-empty>';return}
   const plat=I.carPlat||"all",groups=all.filter(g=>plat==="all"||(g.platform||"—")===plat);
   if(!groups.length){host.innerHTML='<nv-empty icon="filter-x" heading="На этой площадке каруселей нет" text="Выберите другую площадку."></nv-empty>';return}
   host.innerHTML='<div class="cx-list"></div>';const list=host.firstChild;
@@ -3821,9 +3855,14 @@ function renderCarousels(host){
     const ms=g.members||[],doms=[...new Set(ms.map(m=>m.domain).filter(Boolean))];
     const el=document.createElement("nv-carousel");
     el.setAttribute("heading",doms.length===1?doms[0]:(doms.slice(0,2).join(", ")+(doms.length>2?" и ещё "+(doms.length-2):"")||"Карусель"));
-    el.setAttribute("subtitle",(g.member_count||ms.length)+" "+plural(g.member_count||ms.length,"слайд","слайда","слайдов")+" · последний показ "+fmtDateTime(g.last_seen_at));
+    const total=Math.max(g.total||0,ms.length),vis=g.visible||0,got=ms.length;
+    el.setAttribute("subtitle",total+" "+plural(total,"объявление","объявления","объявлений")+(vis?" · сразу видно "+vis+", остальные "+(total-vis)+" — по стрелке":"")+" · "+fmtDateTime(g.last_seen_at)+(g.key_text?" · запрос «"+g.key_text+"»"+(g.city?", "+g.city:""):""));
     el.setAttribute("platform",g.platform||"");
-    el.slides=ms.map((m,i)=>({id:m.id,image:m.image_url,title:m.title,domain:m.domain,n:m.carousel_slide_index!=null?m.carousel_slide_index+1:i+1}));
+    if(vis)el.setAttribute("visible",String(vis));
+    if(got<total)el.setAttribute("note","Распознано "+got+" из "+total+" объявлений карусели — остальные площадка не успела подгрузить.");
+    /* слайды строго по местам в карусели; нераспознанные места остаются пустыми карточками */
+    const byIdx={};ms.forEach((m,i)=>{byIdx[m.carousel_slide_index!=null?m.carousel_slide_index:i]=m});
+    el.slides=Array.from({length:total},(_,i)=>{const m=byIdx[i];return m?{id:m.id,image:m.image_url,title:m.title,domain:m.domain,n:i+1}:{missing:true,n:i+1}});
     el.addEventListener("nv-open",e=>openCreative(e.detail.id));
     list.append(el);
   });
@@ -4111,10 +4150,12 @@ carousels(){
   const I=S.intel.ana;
   ensureAna();
   if(I.loading&&!I.loaded)return{title:"Карусели",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="2"></nv-skeleton>'};
-  const all=I.carousels||[],slides=all.reduce((n,g)=>n+(g.member_count||(g.members||[]).length),0),plats=[...new Set(all.map(g=>g.platform||"—"))];
-  return{title:"Карусели",sub:anaSub("Рекламные блоки из нескольких объявлений, показанных рядом."),actions:intentControlHtml(),
-  help:{title:"Как читать",steps:["Каждая карточка — одна карусель, слайды идут в порядке показа.","Листайте стрелками, колесом/свайпом или клавишами ← →.","Нажмите на слайд, чтобы открыть объявление целиком."]},
-  body:`<div class="grid g3">${stat("Каруселей",all.length)}${stat("Слайдов всего",slides)}${stat("Площадок",plats.length)}</div>
+  const kind=I.carKind||"ads",gal=I.galleries||[];
+  const all=kind==="gallery"?gal:(I.carousels||[]),slides=kind==="gallery"?gal.reduce((n,g)=>n+((g.images||[]).length),0):all.reduce((n,g)=>n+(g.member_count||(g.members||[]).length),0),plats=[...new Set(all.map(g=>g.platform||"—"))];
+  return{title:"Карусели",sub:anaSub(kind==="gallery"?"Одно объявление с несколькими картинками — порядок картинок как в рекламе.":"Рекламные блоки из нескольких разных объявлений, показанных рядом."),actions:intentControlHtml(),
+  help:{title:"Как читать",steps:["Две вкладки: «Разные объявления» — блок из нескольких объявлений разных рекламодателей; «Одно объявление» — галерея картинок внутри одного объявления.","Каждый блок — одна карусель с площадки: объявления (или картинки) стоят на тех же местах, что и там.","Сразу видно столько объявлений, сколько показывала площадка (метка «видно сразу»); остальные — «после прокрутки», листайте стрелками, свайпом или клавишами ← →.","Нажмите на объявление, чтобы открыть его целиком."]},
+  body:`<nv-segmented label="Вид карусели" value="${esc(kind)}" options="ads:Разные объявления (${(I.carousels||[]).length})|gallery:Одно объявление — галерея (${gal.length})" data-chg="anaCarKind"></nv-segmented>
+  <div class="grid g3" style="margin-top:12px">${stat(kind==="gallery"?"Объявлений с галереей":"Каруселей",all.length)}${stat(kind==="gallery"?"Картинок в них":"Объявлений в них",slides)}${stat("Площадок",plats.length)}</div>
   ${plats.length>1?`<nv-segmented label="Площадка" value="${esc(I.carPlat||"all")}" options="${["all:Все"].concat(plats.map(p=>esc(p)+":"+esc(p))).join("|")}" data-chg="anaCarPlat"></nv-segmented>`:""}
   <div id="an-carousel"><nv-skeleton count="2"></nv-skeleton></div>`,
   after(root){wireAnalyticsTables(root,I)}}},
@@ -4265,6 +4306,7 @@ N.chg.scanF=(v,d)=>{S.intel.scanF[d.key]=v;N.refresh()};
 N.acts.scanFReset=()=>{S.intel.scanF={q:"",status:""};N.refresh()};
 N.chg.intentSet=v=>{const list=v?v.split(","):[];S.intel.activeIntents=list;setActiveIntents(list);loadLibrary();if(S.intel.ana.loaded)loadAnalytics(true);N.refresh()};
 N.chg.anaCarPlat=v=>{S.intel.ana.carPlat=v;N.refresh()};
+N.chg.anaCarKind=v=>{S.intel.ana.carKind=v;S.intel.ana.carPlat="all";N.refresh()};
 N.chg.anaCampSub=v=>{S.intel.ana.campSub=v;N.refresh()};
 N.chg.anaFreshSub=v=>{S.intel.ana.freshSub=v;N.refresh()};
 N.chg.anaPlatSub=v=>{S.intel.ana.platSub=v;N.refresh()};
@@ -4376,7 +4418,27 @@ async function loadReport(refresh){
   }catch(err){if(seq===r.seq)toast("Не удалось загрузить отчёт: "+(err.message||""),{tone:"danger"})}
   if(seq!==r.seq)return;
   r.loading=false;N.refreshIf("ads-report");
-  if(r.data)loadReportStatuses(refresh,seq);
+  if(r.data){loadReportCrm(refresh,seq);loadReportStatuses(refresh,seq)}
+}
+/* Б24 в рекламе (2026-11-17): источник лидов проекта — вебхук из «Конверсии → Источники Б24».
+   Отчёт: лиды по utm_campaign (ID кампании), клиенты (контакты лидов), договоры (сделки воронки «Продажа»). */
+async function loadCrmSources(force){
+  const A=S.ads;if(A.crmSources&&!force)return A.crmSources;
+  A.crmSources=((await api("/api/v1/ads/crm/sources",{})).items||[]);return A.crmSources;
+}
+function crmSourceOptions(list,cur){
+  return esc(["0:Не подключать"].concat((list||[]).filter(x=>x.enabled||String(x.id)===String(cur)).map(x=>x.id+":"+String(x.name).replace(/[|:]/g," ")+(x.enabled?"":" (выключен)"))).join("|"));
+}
+async function loadReportCrm(refresh,seq){
+  const r=S.ads.rep,d=r.data;if(!d)return;
+  r.crmLoading=true;N.refreshIf("ads-report");
+  try{
+    const per=String(r.period||"30"),cust=per.includes("..")?per.split(".."):null;
+    const res=await withTimeout(api("/api/v1/ads/ads-crm",{date_from:cust?cust[0]:undefined,date_to:cust?cust[1]:undefined,days:cust?undefined:per,project_ids:r.projects||undefined,refresh:refresh?"true":undefined}),100000,"Б24");
+    if(seq!==r.seq||r.data!==d)return;
+    d.crm=res;(res.errors||[]).forEach(e=>toast("Б24: "+e,{tone:"warning"}));
+  }catch(err){if(seq===r.seq)toast("Лиды из Б24: "+(err.message||""),{tone:"warning"})}
+  if(seq===r.seq){r.crmLoading=false;N.refreshIf("ads-report")}
 }
 async function loadReportStatuses(refresh,seq){
   const r=S.ads.rep,d=r.data;if(!d)return;
@@ -4764,6 +4826,7 @@ function projectWizard(existingProject){
       <nv-input name="topup_rub" label="Пополнить каждый аккаунт, ₽ с НДС (0 — не пополнять)" type="number" value="${esc(String(wiz.topupRub??0))}"></nv-input>
       <nv-select name="button_action" searchable label="Кнопка в объявлении — для всех кампаний (варианты Директа)" value="${esc(wiz.buttonAction||"NONE")}" options="${esc(buttonActionOptions())}" style="margin-top:8px"></nv-select>
       ${displayUrlField(wiz.displayUrl,"Отображаемая ссылка — для всех объявлений (необязательно)")}
+      <div id="wiz-crm" style="margin-top:8px">${wiz.crmSources?`<nv-select name="crm_source" label="Источник лидов Б24 — лиды, клиенты и договоры в отчёте (из раздела «Конверсии»)" value="${esc(String(wiz.crmSourceId||0))}" options="${crmSourceOptions(wiz.crmSources,wiz.crmSourceId)}"></nv-select>`:'<span class="muted" style="font-size:12.5px">Загружаю источники Б24…</span>'}</div>
       <label class="row" style="gap:8px;margin-top:8px"><input type="checkbox" name="wizAutoStart" ${wiz.autoStart?"checked":""}><span><b>Сразу запустить показы</b> — объявления на модерацию и включение кампании (нужна маркировка ОРД/ERID в Click.ru)</span></label>
       <div class="muted" id="wiz-fund-total" style="font-size:12.5px;margin-top:6px"></div></nv-card>`;
     const colBtnHtml=`<div class="row" style="gap:8px;align-items:center;margin:8px 0"><nv-button size="sm" variant="secondary" icon="folder-open" data-wiz-from-col>Взять из подборки парсера</nv-button><span class="muted" style="font-size:12.5px">${manual?"Креативы подборки по порядку разложатся по аккаунтам":"Заголовки, тексты и картинки подборки добавятся к списку"}</span></div>`;
@@ -4850,6 +4913,16 @@ function projectWizard(existingProject){
     const fundTotal=()=>{const t=body.querySelector("#wiz-fund-total");if(!t)return;const a=+wiz.topupRub||0;
       t.textContent=a>0?`Итого спишется с баланса Click.ru: ${wiz.count} × ${a.toLocaleString("ru-RU")} ₽ = ${(wiz.count*a).toLocaleString("ru-RU")} ₽ с НДС${wiz.payerId?" (с юрлица, выбранного на шаге 3)":""}.`:"Пополнение выключено — кампании останутся без бюджета."};
     fundTotal();
+    const crmSel=body.querySelector('nv-select[name="crm_source"]');if(crmSel)crmSel.addEventListener("nv-change",e=>{wiz.crmSourceId=+e.detail.value||0;wiz.crmTouched=true});
+    if(!wiz.crmSources&&!wiz.crmLoadingSrc){wiz.crmLoadingSrc=true;(async()=>{
+      try{const list=await loadCrmSources(true);let cur=0;
+        if(wiz.project&&wiz.project.id){try{cur=(await api("/api/v1/ads/projects/"+wiz.project.id+"/crm-source",{})).source_id||0}catch(e){}}
+        wiz.crmSources=list;if(!wiz.crmTouched)wiz.crmSourceId=cur;
+      }catch(e){wiz.crmSources=[]}
+      const host=body.querySelector("#wiz-crm");
+      if(host){host.innerHTML=`<nv-select name="crm_source" label="Источник лидов Б24 — лиды, клиенты и договоры в отчёте (из раздела «Конверсии»)" value="${esc(String(wiz.crmSourceId||0))}" options="${crmSourceOptions(wiz.crmSources,wiz.crmSourceId)}"></nv-select>`;
+        host.querySelector("nv-select").addEventListener("nv-change",e=>{wiz.crmSourceId=+e.detail.value||0;wiz.crmTouched=true})}
+    })()}
     const tr=body.querySelector('nv-input[name="topup_rub"]');if(tr)tr.addEventListener("nv-change",e=>{wiz.topupRub=Math.max(0,+e.detail.value||0);fundTotal()});
     const as=body.querySelector('input[name="wizAutoStart"]');if(as)as.onchange=()=>{wiz.autoStart=as.checked};
     const ba=body.querySelector('nv-select[name="button_action"]');if(ba)ba.addEventListener("nv-change",e=>{wiz.buttonAction=e.detail.value});
@@ -4886,6 +4959,8 @@ function projectWizard(existingProject){
         try{
           // Запущенный проект не сохраняем (сервер 409) — креативы уже в нём.
           if(!wiz.locked)await apiPut("/api/v1/ads/projects/"+wiz.project.id,{...wiz.project,headlines,ad_texts:adTexts,image_urls:imageUrls,callouts_pool:calloutsPool,sitelinks_pool:sitelinksPool});
+          // источник лидов Б24 — отдельная настройка проекта; её сбой запуск не срывает
+          if(wiz.crmSources&&wiz.crmTouched){try{await apiPut("/api/v1/ads/projects/"+wiz.project.id+"/crm-source",{source_id:wiz.crmSourceId||null})}catch(e){toast("Источник Б24 не сохранён: "+(e.message||""),{tone:"warning"})}}
           const job=await apiPost("/api/v1/ads/projects/"+wiz.project.id+"/campaigns/bulk-create",payload);
           close();toast("Запуск начат — отслеживаем прогресс",{tone:"success"});openJobDrawer(wiz.project,job.job_id);
         }catch(err){msg.textContent=err.message||"Не удалось запустить";msg.style.color="var(--bad)"}
@@ -5186,6 +5261,7 @@ function openProjectPanel(p){
           ${h.running_job_id?`<nv-button size="sm" variant="secondary" icon="activity" data-proj-job="${h.running_job_id}">Прогресс запуска</nv-button>`:""}
           ${!h.running_job_id&&h.resume?`<nv-button size="sm" variant="primary" icon="play" data-proj-resume="${h.resume.job_id}" hint="Досоздать недостающие кампании с теми же настройками">Продолжить запуск #${h.resume.job_id} (не хватает ${h.resume.remaining}${h.resume.reuse_accounts?", готовых аккаунтов "+h.resume.reuse_accounts:""})</nv-button>`:""}
           ${p.ozon_url?`<a href="${esc(p.ozon_url)}" target="_blank" rel="noopener" style="font-size:13px;align-self:center">Карточка Ozon</a>`:""}</div>
+          <div data-proj-crm class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap;margin:0 0 10px"><span class="muted" style="font-size:12.5px">Источник лидов Б24…</span></div>
           <nv-card heading="Аккаунты Директа" subtitle="Где скрипт создал кампании. Статус справа — модерация и показы по Директу, бан — по Click.ru (обновляется раз в 2 минуты). «Проверить» — подробности по API Директа.">
           ${acc.length?`<div class="row between" style="gap:8px;flex-wrap:wrap;margin-bottom:4px"><div class="st-chips" data-acc-st-sum>${accStatusSummary(stCache)}</div><div class="row" style="gap:6px"><nv-button size="sm" variant="secondary" icon="zap" data-acc-kick hint="Найти аккаунты, где показы фактически не идут (нет денег, черновик, выключена), и довести их до показов">Пнуть незапущенные</nv-button><nv-button size="sm" variant="ghost" icon="refresh-cw" data-acc-st-refresh>Обновить статусы</nv-button></div></div>`:""}
           ${acc.length?acc.map((a,i)=>`<div style="border-bottom:1px solid var(--line);padding:8px 0">
@@ -5210,6 +5286,23 @@ function openProjectPanel(p){
         svc("[data-proj-href]","/sync-href",r=>`Ссылки обновлены в объявлениях: ${r.updated}`+((r.items||[]).reduce((a,x)=>a+(x.sitelink_sets||0),0)?`, наборов быстрых ссылок: ${r.items.reduce((a,x)=>a+(x.sitelink_sets||0),0)}`:""));
         svc("[data-proj-grants]","/metrika-grants",r=>`Доступ к Метрике: ${r.ok} из ${r.total}`);
         const jb=el.querySelector("[data-proj-job]");if(jb)jb.onclick=()=>openJobDrawer(p,+jb.dataset.projJob);
+        const crmHost=el.querySelector("[data-proj-crm]");
+        if(crmHost)(async()=>{
+          try{
+            const[list,cur]=await Promise.all([loadCrmSources(true),api("/api/v1/ads/projects/"+p.id+"/crm-source",{})]);
+            const draw=curId=>{
+              crmHost.innerHTML=`<nv-select name="crm_source" label="Источник лидов Б24 (для отчёта: лиды, клиенты, договоры)" value="${esc(String(curId||0))}" options="${crmSourceOptions(list,curId)}" style="min-width:280px"></nv-select><nv-button size="sm" variant="secondary" icon="save" data-crm-save>Сохранить источник</nv-button>${list.length?"":'<span class="muted" style="font-size:12.5px">Источников нет — добавьте вебхук в «Конверсии → Источники Б24»</span>'}`;
+              crmHost.querySelector("[data-crm-save]").onclick=async()=>{
+                const v=+crmHost.querySelector("nv-select").value||0;
+                try{const res=await apiPut("/api/v1/ads/projects/"+p.id+"/crm-source",{source_id:v||null});
+                  toast(res.source?"Источник лидов: «"+res.source.name+"» — лиды появятся в отчёте":"Источник лидов отвязан",{tone:"success"});
+                  if(S.ads.rep)S.ads.rep.loaded=false;draw(res.source_id||0)}
+                catch(err){toast("Не удалось сохранить: "+(err.message||""),{tone:"danger"})}
+              };
+            };
+            draw(cur.source_id||0);
+          }catch(err){crmHost.innerHTML=`<span class="muted" style="font-size:12.5px">Источники Б24 не загрузились: ${esc(err.message||"")}</span>`}
+        })();
         const sr=el.querySelector("[data-acc-st-refresh]");if(sr)sr.onclick=()=>loadSt(true);
         const kb=el.querySelector("[data-acc-kick]");if(kb)kb.onclick=()=>kickStuck(p,()=>loadSt(true));
         el.querySelectorAll("[data-acc-check]").forEach(b=>b.onclick=async()=>{
@@ -5349,6 +5442,18 @@ report(){
     const by=sm.by_status||{};
     const chart=(keys,names,type)=>esc(JSON.stringify({labels:(d.daily.labels||[]).map(x=>x.slice(8,10)+"."+x.slice(5,7)),series:keys.map((k,i)=>({name:names[i],values:d.daily[k]||[]}))}));
     const dd=x=>x?x.slice(8,10)+"."+x.slice(5,7)+"."+x.slice(0,4):"";
+    const crm=d.crm,ci=(crm&&crm.items)||{},ct=(crm&&crm.totals)||{},cps=((crm&&crm.projects)||[]);
+    const crmOn=cps.filter(x=>x.source),crmOff=cps.filter(x=>!x.source);
+    const crmOf=a=>ci[a.account_id]||null;
+    const crmBlock=!crm?(r.crmLoading?'<div class="muted" style="font-size:12.5px;margin-top:12px">Подтягиваю лиды, клиентов и договоры из Б24…</div>':""):
+      !crmOn.length?`<nv-callout tone="info" heading="Лиды из Б24 не подключены" style="margin-top:12px">Откройте проект и выберите «Источник лидов Б24» (вебхук из раздела «Конверсии») — в отчёте появятся лиды, клиенты и договоры по каждой кампании.</nv-callout>`:
+      `<div class="dash-g4" style="margin-top:12px">
+        ${stat("Лиды Б24",fmt(ct.leads||0),`note="цена лида ${ct.leads?rub2((t.spend||0)/ct.leads):"—"}" hint="Лиды Битрикс24 за период, у которых utm_campaign заканчивается ID кампании Директа"`)}
+        ${stat("Клиенты",fmt(ct.clients||0),`note="контакты лидов" hint="Лиды, у которых в Б24 появился контакт"`)}
+        ${stat("Договоры",fmt(ct.deals||0),`note="сделки воронки «Продажа»" hint="Сделки воронки «Продажа» по контактам и лидам кампаний"`)}
+        ${stat("Успешные договоры",fmt(ct.won||0),`note="${ct.won_sum?"на "+fmt(Math.round(ct.won_sum))+" ₽":"стадия «успех»"}"`)}
+      </div>
+      <div class="muted" style="font-size:12.5px;margin-top:4px">Б24: ${crmOn.map(x=>esc(x.name)+" → «"+esc(x.source.name)+"»"+(x.error?" (ошибка: "+esc(x.error)+")":"")).join(" · ")}${crmOff.length?" · без источника: "+crmOff.map(x=>esc(x.name)).join(", "):""}</div>`;
     el.innerHTML=`${r.loading?'<nv-progress value="60" label="Обновляю…"></nv-progress>':""}${!r.loading&&r.stLoading?'<div class="muted" style="font-size:12.5px;margin:0 0 6px">Подтягиваю статусы аккаунтов…</div>':""}
       ${d.date_from?`<div class="muted" style="font-size:12.5px;margin:0 0 8px">Период отчёта: ${dd(d.date_from)} – ${dd(d.date_to)}</div>`:""}
       <div class="dash-g4">
@@ -5360,9 +5465,10 @@ report(){
       <div class="dash-g4" style="margin-top:12px">
         ${stat("Показы",fmt(t.impressions||0),`note="CTR ${t.ctr==null?"—":t.ctr+"%"}" spark="${esc(JSON.stringify(d.daily.impressions||[]))}"`)}
         ${stat("Клики",fmt(t.clicks||0),`note="цена клика ${rub2(t.cpc)}" spark="${esc(JSON.stringify(d.daily.clicks||[]))}"`)}
-        ${stat("Лиды",fmt(t.leads||0),`note="цена лида ${rub2(t.cpl)}" spark="${esc(JSON.stringify(d.daily.leads||[]))}"`)}
+        ${stat("Конверсии (цель)",fmt(t.leads||0),`note="цена ${rub2(t.cpl)}" hint="Срабатывания цели lead в Метрике (данные Click.ru)" spark="${esc(JSON.stringify(d.daily.leads||[]))}"`)}
         ${stat("Расход",rub(t.spend),`note="за период" spark="${esc(JSON.stringify(d.daily.spend||[]))}"`)}
       </div>
+      ${crmBlock}
       <nv-card heading="Статусы аккаунтов" style="margin-top:12px"><div class="st-chips">${AD_ST_ORDER.filter(c=>by[c]).map(c=>`<nv-status value="${c}" label="${esc(adStLabel(c))}: ${by[c]}"></nv-status>`).join("")||'<span class="muted">Нет аккаунтов</span>'}</div></nv-card>
       <div class="dash-g2" style="margin-top:12px">
         <nv-card heading="Клики и лиды по дням"><nv-chart type="line" height="220" label="Клики и лиды по дням" data="${chart(["clicks","leads"],["Клики","Лиды"])}"></nv-chart></nv-card>
@@ -5373,7 +5479,9 @@ report(){
           <nv-filter-select label="Статус" value="${esc(r.status)}" options="${esc(stOpts)}" placeholder="Все статусы" data-chg="adsRepStatus"></nv-filter-select></div>
         ${items.length?`<nv-table id="ads-rep-t" page-size="25" clickable></nv-table>`:`<nv-empty icon="bar-chart-3" heading="Нет аккаунтов" text="Измените проекты, период или фильтры."></nv-empty>`}
       </nv-card>`;
-    if(items.length)wireTable(root,"ads-rep-t",items.map(a=>({id:a.account_id,...a,st:(a.status||{}).code||"unknown"})),
+    const cnum=(a,k)=>{const c=crmOf(a);return c?(c[k]||0):-1};
+    const ccell=(a,k)=>{const c=crmOf(a);return c?fmt(c[k]||0):'<span class="muted">—</span>'};
+    if(items.length)wireTable(root,"ads-rep-t",items.map(a=>({id:a.account_id,...a,st:(a.status||{}).code||"unknown",crm_leads:cnum(a,"leads"),crm_clients:cnum(a,"clients"),crm_deals:cnum(a,"deals"),crm_cpl:(crmOf(a)&&crmOf(a).leads)?a.spend/crmOf(a).leads:null})),
       [{key:"pool_login",label:"Аккаунт",sort:true,render:a=>`<b>${esc(a.pool_login||"—")}</b><br><span class="muted" style="font-size:12px">#${a.account_id} · ${esc(a.project_name||"")}</span>${a.campaign_id?`<br><span class="muted" style="font-size:12px">Кампания Директа: <b class="num" style="user-select:all">${esc(String(a.campaign_id))}</b></span>`:""}`},
        {key:"st",label:"Статус",sort:true,render:a=>accStatusHtml(a.status||{code:"unknown"})},
        {key:"impressions",label:"Показы",align:"right",sort:true,render:a=>fmt(a.impressions)},
@@ -5381,8 +5489,11 @@ report(){
        {key:"ctr",label:"CTR",align:"right",sort:true,render:a=>a.ctr==null?"—":a.ctr+"%"},
        {key:"spend",label:"Расход",align:"right",sort:true,render:a=>rub(a.spend)},
        {key:"cpc",label:"Цена клика",align:"right",sort:true,render:a=>rub2(a.cpc)},
-       {key:"leads",label:"Лиды",align:"right",sort:true,render:a=>fmt(a.leads)},
-       {key:"cpl",label:"Цена лида",align:"right",sort:true,render:a=>rub2(a.cpl)},
+       {key:"leads",label:"Конверсии (цель)",align:"right",sort:true,render:a=>fmt(a.leads)},
+       {key:"crm_leads",label:"Лиды Б24",align:"right",sort:true,render:a=>ccell(a,"leads")},
+       {key:"crm_cpl",label:"Цена лида",align:"right",sort:true,render:a=>a.crm_cpl==null?"—":rub2(a.crm_cpl)},
+       {key:"crm_clients",label:"Клиенты",align:"right",sort:true,render:a=>ccell(a,"clients")},
+       {key:"crm_deals",label:"Договоры",align:"right",sort:true,render:a=>{const c=crmOf(a);return c?(c.deals?`<b>${fmt(c.won||0)}</b> <span class="muted">из ${fmt(c.deals)}</span>`:"0"):'<span class="muted">—</span>'}},
        {key:"trend",label:"Клики по дням",render:a=>`<nv-sparkline-cell values="${esc(JSON.stringify(a.series.clicks))}"></nv-sparkline-cell>`}],
       row=>{const pr=(A.projects||[]).find(x=>x.id===row.project_id)||{id:row.project_id,name:row.project_name};openProjectPanel(pr)});
   }}
