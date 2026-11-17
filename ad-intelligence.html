@@ -5262,6 +5262,7 @@ function openProjectPanel(p){
           ${!h.running_job_id&&h.resume?`<nv-button size="sm" variant="primary" icon="play" data-proj-resume="${h.resume.job_id}" hint="Досоздать недостающие кампании с теми же настройками">Продолжить запуск #${h.resume.job_id} (не хватает ${h.resume.remaining}${h.resume.reuse_accounts?", готовых аккаунтов "+h.resume.reuse_accounts:""})</nv-button>`:""}
           ${p.ozon_url?`<a href="${esc(p.ozon_url)}" target="_blank" rel="noopener" style="font-size:13px;align-self:center">Карточка Ozon</a>`:""}</div>
           <div data-proj-retry></div>
+          <div data-proj-life class="row" style="gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 10px"></div>
           <div data-proj-crm class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap;margin:0 0 10px"><span class="muted" style="font-size:12.5px">Источник лидов Б24…</span></div>
           <nv-card heading="Аккаунты Директа" subtitle="Где скрипт создал кампании. Статус справа — модерация и показы по Директу, бан — по Click.ru (обновляется раз в 2 минуты). «Проверить» — подробности по API Директа.">
           ${acc.length?`<div class="row between" style="gap:8px;flex-wrap:wrap;margin-bottom:4px"><div class="st-chips" data-acc-st-sum>${accStatusSummary(stCache)}</div><div class="row" style="gap:6px"><nv-button size="sm" variant="secondary" icon="zap" data-acc-kick hint="Найти аккаунты, где показы фактически не идут (нет денег, черновик, выключена), и довести их до показов">Пнуть незапущенные</nv-button><nv-button size="sm" variant="ghost" icon="refresh-cw" data-acc-st-refresh>Обновить статусы</nv-button></div></div>`:""}
@@ -5287,6 +5288,22 @@ function openProjectPanel(p){
         svc("[data-proj-href]","/sync-href",r=>`Ссылки обновлены в объявлениях: ${r.updated}`+((r.items||[]).reduce((a,x)=>a+(x.sitelink_sets||0),0)?`, наборов быстрых ссылок: ${r.items.reduce((a,x)=>a+(x.sitelink_sets||0),0)}`:""));
         svc("[data-proj-grants]","/metrika-grants",r=>`Доступ к Метрике: ${r.ok} из ${r.total}`);
         const jb=el.querySelector("[data-proj-job]");if(jb)jb.onclick=()=>openJobDrawer(p,+jb.dataset.projJob);
+        const lfHost=el.querySelector("[data-proj-life]");
+        if(lfHost)(async()=>{
+          try{
+            const st=await api("/api/v1/ads/projects/"+p.id+"/autoreplace",{});
+            lfHost.innerHTML=`<nv-switch name="ar_on" label="Автозамена умерших аккаунтов" description="0 показов за сутки → остановить, завести новый с теми же настройками, через 2 суток — возврат денег на Click.ru" ${st.enabled?"checked":""}></nv-switch>
+              <nv-input name="ar_max" type="number" label="Замен в день, не больше" value="${esc(String(st.max_per_day||5))}" style="max-width:170px"></nv-input>
+              <nv-button size="sm" variant="ghost" icon="play" data-ar-run hint="План за вчера по этому проекту, выполнение — по кнопке">Проверить сейчас</nv-button>`;
+            const save=async()=>{const on=lfHost.querySelector('[name="ar_on"]').checked,mx=+lfHost.querySelector('[name="ar_max"]').value||5;
+              try{const r=await apiPut("/api/v1/ads/projects/"+p.id+"/autoreplace",{enabled:on,max_per_day:mx});
+                toast(r.enabled?`Автозамена включена: до ${r.max_per_day} в день`:"Автозамена выключена",{tone:r.enabled?"success":"info"});S.ads.lifeLoaded=false}
+              catch(err){toast("Не удалось сохранить: "+(err.message||""),{tone:"danger"})}};
+            lfHost.querySelector('[name="ar_on"]').addEventListener("nv-change",save);
+            lfHost.querySelector('[name="ar_max"]').addEventListener("nv-change",save);
+            lfHost.querySelector("[data-ar-run]").onclick=()=>lifeRunDlg([p.id]);
+          }catch(e){lfHost.innerHTML=""}
+        })();
         const rtHost=el.querySelector("[data-proj-retry]");
         const drawRetry=async()=>{if(!rtHost)return;
           try{const rt=await api("/api/v1/ads/projects/"+p.id+"/topup-retries",{}),pd=rt.pending||[];
@@ -5343,7 +5360,83 @@ function openProjectPanel(p){
       draw();
     }});
 }
+/* Жизнь аккаунтов и автозамена (2026-11-17): GET /lifecycle/dashboard, ручной прогон POST /lifecycle/run. */
+const LIFE_ST={active:["live","Работает"],dead:["failed","0 показов — ждёт замены"],stopped:["paused","Остановлен, ждёт возврата"],
+  refund_requested:["review","Заявка на возврат"],refunded:["ready","Деньги возвращены"],closed:["archived","Закрыт"],refund_failed:["failed","Возврат не удался"]};
+async function loadLife(){
+  const A=S.ads;A.lifeLoading=true;N.refreshIf("ads-life");
+  try{A.life=await withTimeout(api("/api/v1/ads/lifecycle/dashboard",{days:A.lifeDays||30,project_ids:A.lifeProjects||undefined}),60000,"Жизнь аккаунтов")}
+  catch(err){toast("Не удалось загрузить: "+(err.message||""),{tone:"danger"})}
+  A.lifeLoaded=true;A.lifeLoading=false;N.refreshIf("ads-life");
+}
+async function lifeRunDlg(projectIds){
+  let plan;
+  try{toast("Проверяю показы за вчера…");plan=await apiPost("/api/v1/ads/lifecycle/run",{dry_run:true,project_ids:projectIds||[]})}
+  catch(err){toast("Проверка не удалась: "+(err.message||""),{tone:"danger"});return}
+  const dead=plan.dead||[],rf=(plan.refunds||[]).filter(x=>/заявк|вернул|закрыт/.test(x.action)),act=dead.filter(x=>x.action==="остановить и заменить");
+  overlay("modal",{title:"Проверка за "+(plan.yesterday||"").split("-").reverse().join("."),subtitle:`Проверено аккаунтов: ${plan.checked}. Сейчас ничего не сделано — это план.`,
+    body:`${dead.length?`<div class="stack" style="gap:6px">${dead.map(x=>`<div style="border-bottom:1px solid var(--line);padding:6px 0"><b>${esc(x.pool_login||"—")}</b> <span class="muted" style="font-size:12px">#${x.account_id} · ${esc(x.project_name||"")} · баланс ${x.balance??"—"} ₽</span>
+      <div style="font-size:12.5px">${esc(x.reason)} → <b>${esc(x.action)}</b></div></div>`).join("")}</div>`:'<nv-empty icon="check" heading="Умерших аккаунтов нет" text="У всех вчера были показы (или им меньше 2 суток)."></nv-empty>'}
+      ${(plan.refunds||[]).length?`<div style="margin-top:10px;font-size:12.5px"><b>Возвраты:</b> ${(plan.refunds||[]).map(x=>"#"+x.account_id+" — "+esc(x.action)).join("; ")}</div>`:""}
+      ${(plan.errors||[]).length?`<nv-callout tone="warning" heading="Ошибки" style="margin-top:10px">${(plan.errors||[]).map(esc).join("<br>")}</nv-callout>`:""}`,
+    actions:[{label:"Закрыть"},...(act.length||rf.length?[{label:`Выполнить: заменить ${act.length}${rf.length?", возвраты "+rf.length:""}`,variant:"primary",fn(r,close){
+      (async()=>{try{const res=await apiPost("/api/v1/ads/lifecycle/run",{dry_run:false,project_ids:projectIds||[]});close();toast("Готово: "+res.summary,{tone:"success"});S.ads.lifeLoaded=false;loadLife()}
+        catch(err){toast("Не удалось: "+(err.message||""),{tone:"danger"})}})();return false}}]:[])]});
+}
+N.acts.lifeLoad=()=>loadLife();
+N.acts.lifeRun=()=>lifeRunDlg(S.ads.lifeProjects?S.ads.lifeProjects.split(",").map(Number):[]);
+N.chg.lifeDays=v=>{S.ads.lifeDays=+v||30;loadLife()};
+N.chg.lifeProjects=v=>{S.ads.lifeProjects=v==="_"?"":v;loadLife()};
+N.chg.lifeState=v=>{S.ads.lifeState=v;N.refreshIf("ads-life")};
 const views_ads={
+life(){
+  const A=S.ads,L=A.life,f=A.lifeState||"all";
+  const projOpts="_:Все проекты|"+(A.projects||[]).map(p=>p.id+":"+String(p.name).replace(/[|:]/g," ")).join("|");
+  return{title:"Жизнь аккаунтов",sub:"Сколько живёт рекламный аккаунт, кто «умер» (0 показов за сутки), автозамена и возврат денег на Click.ru.",
+  body:`<div class="toolbar"><nv-select label="Проект" value="${esc(A.lifeProjects||"_")}" options="${esc(projOpts)}" data-chg="lifeProjects" style="min-width:220px"></nv-select>
+    <nv-segmented value="${esc(String(A.lifeDays||30))}" options="7:7 дней|30:30 дней|90:90 дней" data-chg="lifeDays"></nv-segmented>
+    <nv-button icon="refresh-cw" data-act="lifeLoad">Обновить</nv-button>
+    <nv-button variant="secondary" icon="play" data-act="lifeRun" hint="Проверить показы за вчера сейчас: сначала план, потом — по кнопке — остановка, замены и возвраты">Проверить сейчас</nv-button></div>
+    <div id="ads-life-res">${!A.lifeLoaded?'<nv-skeleton count="6"></nv-skeleton>':""}</div>`,
+  after(root){
+    if(!A.lifeLoaded&&!A.lifeLoading){loadLife();return}
+    const el=root.querySelector("#ads-life-res");if(!el||!L)return;
+    const sm=L.summary||{},rub=v=>v==null?"—":fmt(Math.round(v))+" ₽",dl=L.daily||{labels:[]},lab=(dl.labels||[]).map(x=>x.slice(8,10)+"."+x.slice(5,7));
+    const sets=L.settings||{},onIds=Object.keys(sets).filter(k=>sets[k].enabled);
+    const items=(L.items||[]).filter(a=>f==="all"||a.state===f||(f==="dead"&&["dead","stopped"].includes(a.state))||(f==="money"&&["stopped","refund_requested","refunded"].includes(a.state)));
+    const lastRun=(L.runs||[])[0];
+    el.innerHTML=`${A.lifeLoading?'<nv-progress value="60" label="Обновляю…"></nv-progress>':""}
+      <nv-callout tone="${onIds.length?"info":"warning"}" heading="${onIds.length?"Автозамена включена в проектах: "+onIds.length:"Автозамена нигде не включена"}" style="margin-bottom:12px">
+        Каждый день в ${L.hour_msk}:00 МСК: показы за вчера; аккаунт старше 2 суток с 0 показов — «умер». В проектах с автозаменой его кампания останавливается и заводится новый аккаунт с теми же настройками и креативами (пополнение и автозапуск — как в прошлом запуске). Через 2 суток после остановки подаётся заявка на возврат остатка на баланс Click.ru (обработка до 7 рабочих дней). Включается в панели проекта.
+        ${lastRun?`<div class="muted" style="font-size:12.5px;margin-top:6px">Последняя проверка: ${esc(fmtDateTime(lastRun.started_at))} — ${esc(lastRun.summary)}</div>`:""}</nv-callout>
+      <div class="dash-g4">
+        <nv-share-stat label="Работают" value="${sm.alive||0}" total="${sm.accounts||0}" tone="ok" note="средний возраст ${sm.avg_age_alive_days??"—"} дн."></nv-share-stat>
+        <nv-share-stat label="Умерли (0 показов)" value="${(sm.dead||0)+(sm.stopped||0)+(sm.refund_requested||0)+(sm.refunded||0)+(sm.closed||0)}" total="${sm.accounts||0}" tone="bad" note="заменено ${sm.replaced||0}"></nv-share-stat>
+        ${stat("Срок жизни",sm.avg_lifetime_days==null?"—":sm.avg_lifetime_days+" дн.",`note="медиана ${sm.median_lifetime_days??"—"} дн." hint="От создания аккаунта до первых суток без показов"`)}
+        ${stat("Деньги на возврате",rub(sm.money_waiting),`note="возвращено ${rub(sm.money_refunded)}" hint="Остаток на остановленных аккаунтах: ждёт 2 суток или заявка уже у Click.ru"`)}
+      </div>
+      <div class="dash-g2" style="margin-top:12px">
+        <nv-card heading="Новые и умершие аккаунты по дням"><nv-chart type="bar" height="220" label="Аккаунтов в день" data="${esc(JSON.stringify({labels:lab,series:[{name:"Заведено",values:dl.born||[]},{name:"Умерло",values:dl.died||[]}]}))}"></nv-chart></nv-card>
+        <nv-card heading="Сколько дней прожили умершие"><nv-chart type="bar" height="220" label="Аккаунтов" data="${esc(JSON.stringify({labels:(L.lifetime_hist||{}).labels||[],series:[{name:"Аккаунтов",values:(L.lifetime_hist||{}).values||[]}]}))}"></nv-chart></nv-card>
+      </div>
+      <nv-card heading="Аккаунты" subtitle="Жизнь каждого аккаунта. Клик по строке — проект." style="margin-top:12px">
+        <div class="toolbar"><nv-segmented value="${esc(f)}" options="all:Все ${(L.items||[]).length}|active:Работают ${sm.alive||0}|dead:Умершие ${(sm.dead||0)+(sm.stopped||0)}|money:Возвраты ${(sm.stopped||0)+(sm.refund_requested||0)+(sm.refunded||0)}" data-chg="lifeState"></nv-segmented></div>
+        ${items.length?'<nv-table id="ads-life-t" page-size="25" clickable></nv-table>':'<nv-empty icon="activity" heading="Нет аккаунтов" text="Измените фильтр."></nv-empty>'}
+      </nv-card>`;
+    if(items.length)wireTable(root,"ads-life-t",items.map(a=>({id:a.account_id,...a})),
+      [{key:"pool_login",label:"Аккаунт",sort:true,render:a=>`<b>${esc(a.pool_login||"—")}</b><br><span class="muted" style="font-size:12px">#${a.account_id} · ${esc(a.project_name||"")} · кампания ${esc(String(a.campaign_id||"—"))}</span>`},
+       {key:"state",label:"Состояние",sort:true,render:a=>{const s=LIFE_ST[a.state]||["unknown",a.state_label];return `<nv-status value="${s[0]}" label="${esc(s[1])}" hint="${esc([a.death_reason,a.refund_note,a.replacement_note].filter(Boolean).join(" · "))}"></nv-status>`}},
+       {key:"lifetime_days",label:"Живёт, дн.",align:"right",sort:true,render:a=>a.lifetime_days==null?"—":fmt(a.lifetime_days)},
+       {key:"created_at",label:"Заведён",sort:true,render:a=>a.created_at?fmtDateTime(a.created_at):"—"},
+       {key:"last_impression_day",label:"Последние показы",sort:true,render:a=>a.last_impression_day?a.last_impression_day.split("-").reverse().join("."):"—"},
+       {key:"impressions",label:"Показы",align:"right",sort:true,render:a=>fmt(a.impressions||0)},
+       {key:"clicks",label:"Клики",align:"right",sort:true,render:a=>fmt(a.clicks||0)},
+       {key:"spend",label:"Расход",align:"right",sort:true,render:a=>rub(a.spend||0)},
+       {key:"balance_at_stop",label:"Остаток / возврат",align:"right",sort:true,render:a=>a.balance_at_stop==null?"—":rub(a.balance_at_stop)},
+       {key:"replacement_job_id",label:"Замена",sort:true,render:a=>a.replacement_job_id?"запуск #"+a.replacement_job_id:(a.replacement_note?`<span class="muted" style="font-size:12px">${esc(a.replacement_note)}</span>`:"—")}],
+      row=>{const pr=(A.projects||[]).find(x=>x.id===row.project_id)||{id:row.project_id,name:row.project_name};openProjectPanel(pr)});
+  }}
+},
 projects(){
   const A=S.ads;
   return{title:"Проекты",sub:"Проекты массового запуска кампаний Яндекс.Директа через Click.ru.",
@@ -5554,7 +5647,8 @@ N.register({id:"ads",name:"Реклама",short:"Реклама",tag:"Ad Automa
     {id:"projects",label:"Проекты",icon:"rocket"},
     {id:"accounts",label:"Аккаунты",icon:"users"},
     {id:"clickru",label:"Клик.ру",icon:"link"},
-    {id:"report",label:"Отчётность",icon:"bar-chart-3"}
+    {id:"report",label:"Отчётность",icon:"bar-chart-3"},
+    {id:"life",label:"Жизнь аккаунтов",icon:"activity"}
   ]}],
   views:views_ads,seed:adsSeed});
 /* S.ads живёт внутри общего блока localStorage (NEON.save()) наравне с S.intel —
