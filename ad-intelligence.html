@@ -5453,6 +5453,14 @@ report(){
     const by=sm.by_status||{};
     const chart=(keys,names,type)=>esc(JSON.stringify({labels:(d.daily.labels||[]).map(x=>x.slice(8,10)+"."+x.slice(5,7)),series:keys.map((k,i)=>({name:names[i],values:d.daily[k]||[]}))}));
     const dd=x=>x?x.slice(8,10)+"."+x.slice(5,7)+"."+x.slice(0,4):"";
+    // Лиды по дням (2026-11-17): из Б24 по дате создания лида; цель Метрики — отдельной линией, только если не пустая
+    const dLab=d.daily.labels||[],crmD=(d.crm&&d.crm.daily)||null;
+    const crmDay=crmD?Object.fromEntries((crmD.labels||[]).map((x,i)=>[x,(crmD.leads||[])[i]||0])):null;
+    const b24Leads=crmDay?dLab.map(x=>crmDay[x]||0):null,goalLeads=d.daily.leads||[];
+    const clChart=esc(JSON.stringify({labels:dLab.map(x=>x.slice(8,10)+"."+x.slice(5,7)),series:[{name:"Клики",values:d.daily.clicks||[]}]
+      .concat(b24Leads?[{name:"Лиды Б24",values:b24Leads}]:[])
+      .concat(!b24Leads||goalLeads.some(v=>v)?[{name:b24Leads?"Конверсии (цель)":"Лиды",values:goalLeads}]:[])}));
+    const leadsBar=b24Leads?esc(JSON.stringify({labels:dLab.map(x=>x.slice(8,10)+"."+x.slice(5,7)),series:[{name:"Лиды Б24",values:b24Leads}]})):"";
     const crm=d.crm,ci=(crm&&crm.items)||{},ct=(crm&&crm.totals)||{},cps=((crm&&crm.projects)||[]);
     const crmOn=cps.filter(x=>x.source),crmOff=cps.filter(x=>!x.source);
     const crmOf=a=>ci[a.account_id]||null;
@@ -5482,9 +5490,10 @@ report(){
       ${crmBlock}
       <nv-card heading="Статусы аккаунтов" style="margin-top:12px"><div class="st-chips">${AD_ST_ORDER.filter(c=>by[c]).map(c=>`<nv-status value="${c}" label="${esc(adStLabel(c))}: ${by[c]}"></nv-status>`).join("")||'<span class="muted">Нет аккаунтов</span>'}</div></nv-card>
       <div class="dash-g2" style="margin-top:12px">
-        <nv-card heading="Клики и лиды по дням"><nv-chart type="line" height="220" label="Клики и лиды по дням" data="${chart(["clicks","leads"],["Клики","Лиды"])}"></nv-chart></nv-card>
+        <nv-card heading="Клики и лиды по дням"><nv-chart type="line" height="220" label="Клики и лиды по дням" data="${clChart}"></nv-chart></nv-card>
         <nv-card heading="Расход по дням"><nv-chart type="bar" height="220" unit="₽" label="Расход по дням" data="${chart(["spend"],["Расход"])}"></nv-chart></nv-card>
       </div>
+      ${leadsBar?`<nv-card heading="Лиды Б24 по дням" subtitle="По дате создания лида в Битрикс24" style="margin-top:12px"><nv-chart type="bar" height="200" label="Лиды Б24 по дням" data="${leadsBar}"></nv-chart></nv-card>`:""}
       <nv-card heading="Аккаунты" subtitle="Нажмите строку — откроется проект." style="margin-top:12px">
         <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Логин, ID аккаунта, проект" value="${esc(r.q)}" data-chg="adsRepQ"></nv-input>
           <nv-filter-select label="Статус" value="${esc(r.status)}" options="${esc(stOpts)}" placeholder="Все статусы" data-chg="adsRepStatus"></nv-filter-select></div>
