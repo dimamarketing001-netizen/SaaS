@@ -5560,7 +5560,7 @@ report(){
     const crmBlock=!crm?(r.crmLoading?'<div class="muted" style="font-size:12.5px;margin-top:12px">Подтягиваю лиды, клиентов и договоры из Б24…</div>':""):
       !crmOn.length?`<nv-callout tone="info" heading="Лиды из Б24 не подключены" style="margin-top:12px">Откройте проект и выберите «Источник лидов Б24» (вебхук из раздела «Конверсии») — в отчёте появятся лиды, клиенты и договоры по каждой кампании.</nv-callout>`:
       `<div class="dash-g4" style="margin-top:12px">
-        ${stat("Лиды Б24",fmt(ct.leads||0),`note="цена лида ${ct.leads?rub2((t.spend||0)/ct.leads):"—"}" hint="Лиды Битрикс24 за период, у которых utm_campaign заканчивается ID кампании Директа"`)}
+        ${stat("Лиды Б24",fmt(ct.leads||0),`note="CR клик → лид ${t.clicks?(Math.round((ct.leads||0)/t.clicks*1000)/10).toLocaleString("ru-RU")+"%":"—"} · цена лида ${ct.leads?rub2((t.spend||0)/ct.leads):"—"}" hint="Лиды Битрикс24 за период, у которых utm_campaign заканчивается ID кампании Директа"`)}
         ${stat("Клиенты",fmt(ct.clients||0),`note="контакты лидов" hint="Лиды, у которых в Б24 появился контакт"`)}
         ${stat("Договоры",fmt(ct.deals||0),`note="сделки воронки «Продажа»" hint="Сделки воронки «Продажа» по контактам и лидам кампаний"`)}
         ${stat("Успешные договоры",fmt(ct.won||0),`note="${ct.won_sum?"на "+fmt(Math.round(ct.won_sum))+" ₽":"стадия «успех»"}"`)}
@@ -5594,7 +5594,7 @@ report(){
       </nv-card>`;
     const cnum=(a,k)=>{const c=crmOf(a);return c?(c[k]||0):-1};
     const ccell=(a,k)=>{const c=crmOf(a);return c?fmt(c[k]||0):'<span class="muted">—</span>'};
-    if(items.length)wireTable(root,"ads-rep-t",items.map(a=>({id:a.account_id,...a,st:(a.status||{}).code||"unknown",crm_leads:cnum(a,"leads"),crm_clients:cnum(a,"clients"),crm_deals:cnum(a,"deals"),crm_cpl:(crmOf(a)&&crmOf(a).leads)?a.spend/crmOf(a).leads:null})),
+    if(items.length)wireTable(root,"ads-rep-t",items.map(a=>({id:a.account_id,...a,st:(a.status||{}).code||"unknown",crm_leads:cnum(a,"leads"),crm_clients:cnum(a,"clients"),crm_deals:cnum(a,"deals"),crm_cpl:(crmOf(a)&&crmOf(a).leads)?a.spend/crmOf(a).leads:null,crm_cr:(crmOf(a)&&a.clicks)?(crmOf(a).leads||0)/a.clicks*100:null})),
       [{key:"pool_login",label:"Аккаунт",sort:true,render:a=>`<b>${esc(a.pool_login||"—")}</b><br><span class="muted" style="font-size:12px">#${a.account_id} · ${esc(a.project_name||"")}</span>${a.campaign_id?`<br><span class="muted" style="font-size:12px">Кампания Директа: <b class="num" style="user-select:all">${esc(String(a.campaign_id))}</b></span>`:""}`},
        {key:"st",label:"Статус",sort:true,render:a=>accStatusHtml(a.status||{code:"unknown"})},
        {key:"impressions",label:"Показы",align:"right",sort:true,render:a=>fmt(a.impressions)},
@@ -5604,6 +5604,7 @@ report(){
        {key:"cpc",label:"Цена клика",align:"right",sort:true,render:a=>rub2(a.cpc)},
        {key:"leads",label:"Конверсии (цель)",align:"right",sort:true,render:a=>fmt(a.leads)},
        {key:"crm_leads",label:"Лиды Б24",align:"right",sort:true,render:a=>ccell(a,"leads")},
+       {key:"crm_cr",label:"CR клик → лид",align:"right",sort:true,render:a=>a.crm_cr==null?"—":(Math.round(a.crm_cr*10)/10).toLocaleString("ru-RU")+"%"},
        {key:"crm_cpl",label:"Цена лида",align:"right",sort:true,render:a=>a.crm_cpl==null?"—":rub2(a.crm_cpl)},
        {key:"crm_clients",label:"Клиенты",align:"right",sort:true,render:a=>ccell(a,"clients")},
        {key:"crm_deals",label:"Договоры",align:"right",sort:true,render:a=>{const c=crmOf(a);return c?(c.deals?`<b>${fmt(c.won||0)}</b> <span class="muted">из ${fmt(c.deals)}</span>`:"0"):'<span class="muted">—</span>'}},
