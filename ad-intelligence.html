@@ -3336,7 +3336,10 @@ async function openCreative(id){
   const destHist=(data.destination_history||[]).slice(0,10);
   /* Поля из разметки объявления (creative_details, 17.11.2026) */
   const DT=data.details||null,FMT_L={text_image:"Текст и картинка",gallery:"Галерея картинок",video:"Видео",offers:"Товары в плитке",app:"Реклама приложения",text:"Только текст"};
-  const detHtml=!DT?"":[
+  /* Показы за запуски (creative_impressions, 18.11.2026) — пока только лента Дзена */
+  const IMP=data.impressions||null;
+  const impHtml=!IMP?"":`<dt>Показы</dt><dd><b>${fmt(IMP.total)}</b> ${plural(IMP.total,"показ","показа","показов")} в ${fmt(IMP.runs)} ${plural(IMP.runs,"запуске","запусках","запусках")}${IMP.best_pos?` <span class="muted">· лучшее место в ленте: ${fmt(IMP.best_pos)}</span>`:""}</dd>`;
+  const detHtml=impHtml+(!DT?"":[
     DT.ad_format?`<dt>Формат</dt><dd>${esc(FMT_L[DT.ad_format]||DT.ad_format)}</dd>`:"",
     DT.is_social?`<dt>Тип</dt><dd>Социальная реклама</dd>`:"",
     DT.age_label?`<dt>Возрастная метка</dt><dd>${esc(DT.age_label)}</dd>`:"",
@@ -3352,7 +3355,7 @@ async function openCreative(id){
     DT.ad_id?`<dt>Номер объявления РСЯ</dt><dd class="mono">${esc(DT.ad_id)}${DT.ad_id_runs?` <span class="muted">· встречено в ${DT.ad_id_runs} ${plural(DT.ad_id_runs,"запуске","запусках","запусках")}, ${esc(fmtDateTime(DT.ad_id_first_seen))} – ${esc(fmtDateTime(DT.ad_id_last_seen))}</span>`:""}</dd>`:"",
     DT.rsya_creative_id?`<dt>Номер креатива</dt><dd class="mono">${esc(DT.rsya_creative_id)}</dd>`:"",
     DT.direct_campaign_id?`<dt>Кампания Директа</dt><dd class="mono">${esc(DT.direct_campaign_id)}${DT.direct_group_id?" · группа "+esc(DT.direct_group_id):""}${DT.direct_ad_id?" · объявление "+esc(DT.direct_ad_id):""}</dd>`:""
-  ].join("");
+  ].join(""));
   const byType={};(data.identifiers||[]).forEach(i=>{(byType[i.identifier_type]=byType[i.identifier_type]||[]).push(i.identifier_value)});
   const idsHtml=Object.keys(ID_LABELS).map(t=>{const v=byType[t];return v&&v.length?`<dt>${esc(ID_LABELS[t])} (${v.length})</dt><dd class="mono">${v.map(esc).join(", ")}</dd>`:""}).join("");
   const utmBits=[["utm_source","Источник"],["utm_medium","Канал"],["utm_campaign","Кампания"],["utm_content","Контент"],["utm_term","Ключевое слово"]].filter(([k])=>utm[k]).map(([k,l])=>`<dt>${esc(l)}</dt><dd class="mono">${esc(utm[k])}</dd>`).join("");
@@ -5594,15 +5597,16 @@ async function loadSites(refresh){
   const A=S.ads,st=A.sites||(A.sites={filter:"free",q:""});st.loading=true;N.refreshIf("ads-sites");
   const [t,d,l,ig]=await Promise.allSettled([api("/api/v1/ads/site-templates",{}),api("/api/v1/sites/domains",refresh?{refresh:true}:{}),api("/api/v1/ads/sites/leads",{}),api("/api/v1/ads/lead-integrations",{})]);
   if(ig.status==="fulfilled"){st.integs=ig.value.items||[];const I=S.ads.integ||(S.ads.integ={});if(!I.loaded)Object.assign(I,{items:st.integs,kinds:ig.value.kinds||{},defaults:ig.value.defaults||{},portals:ig.value.b24_sources||[],loaded:true})}
-  if(t.status==="fulfilled"){st.tpls=t.value.items||[];st.defaults=t.value.defaults||{};st.bundles=t.value.bundles||[];st.brandFields=t.value.brand_fields||null}else toast("Шаблоны: "+(t.reason&&t.reason.message||""),{tone:"danger"});
+  if(t.status==="fulfilled"){st.tpls=t.value.items||[];st.defaults=t.value.defaults||{};st.bundles=t.value.bundles||[];st.brandFields=t.value.brand_fields||null;st.designs=t.value.designs||{};st.directions=t.value.directions||{}}else toast("Шаблоны: "+(t.reason&&t.reason.message||""),{tone:"danger"});
   if(d.status==="fulfilled"){st.domains=d.value.items||[];st.ip=d.value.ip;st.domErr=""}else st.domErr=d.reason&&d.reason.message||"не загрузились";
   if(l.status==="fulfilled")st.leads=l.value.items||[];
   st.loaded=true;st.loading=false;N.refreshIf("ads-sites");
   clearTimeout(N._sitesPoll);
   if((st.domains||[]).some(x=>x.job&&x.job.state==="running"))N._sitesPoll=setTimeout(()=>{if(location.hash==="#ads-sites")loadSites()},15000);
 }
+const DESIGN_SKIP=["design","direction","integration_id","brand","legal_name","inn","ogrn","address","phone","email","worktime"];
 function siteTplEditor(tpl){
-  const st=S.ads.sites||{},bundles=st.bundles||[],integs=st.integs||[],BF=st.brandFields||{brand:"Бренд",legal_name:"Юрлицо",inn:"ИНН",ogrn:"ОГРН",address:"Адрес",phone:"Телефон",email:"Email",worktime:"Часы работы"};
+  const st=S.ads.sites||{},bundles=st.bundles||[],integs=st.integs||[],designs=st.designs||{},directions=st.directions||{bfl:"БФЛ",pension:"Пенсия",legal:"Юр. услуги"},BF=st.brandFields||{brand:"Бренд",legal_name:"Юрлицо",inn:"ИНН",ogrn:"ОГРН",address:"Адрес",phone:"Телефон",email:"Email",worktime:"Часы работы"};
   const kind0=tpl?tpl.kind:"landing",cfg0={...((st.defaults||{})[kind0]||{}),...(tpl?tpl.config:{})};
   if(cfg0.legal_name==null&&cfg0.company)cfg0.legal_name=cfg0.company;
   const bOpts=bundles.map(b=>b.id+":"+String(b.title).replace(/[|:]/g," ")).join("|");
@@ -5612,12 +5616,18 @@ function siteTplEditor(tpl){
   const brandHtml=(c)=>`<div class="row" style="gap:10px;flex-wrap:wrap">${Object.entries(BF).map(([k,l])=>`<nv-input name="b_${k}" label="${esc(l)}" value="${esc(c[k]||"")}" style="flex:1 1 ${k==="address"||k==="legal_name"?"320px":"200px"}"></nv-input>`).join("")}</div>`;
   const imgHtml=(b,c)=>!b||!(b.images||[]).length?"":`<nv-card heading="Картинки страницы" subtitle="Пусто — как в оригинале. Можно вставить local:… из «Креативов»" style="margin-top:8px"><div class="row" style="gap:10px;flex-wrap:wrap">${b.images.map(k=>`<nv-input name="i_${k}" label="${esc({logo_image:"Логотип",hero_image:"Картинка первого экрана",lawyer_image:"Фото юриста"}[k]||k)}" value="${esc(c[k]||"")}" style="flex:1 1 220px"></nv-input>`).join("")}</div></nv-card>`;
   const body=k=>`<div class="row" style="gap:10px;flex-wrap:wrap"><nv-input name="name" label="Название шаблона" value="${esc(tpl?tpl.name:"")}" style="flex:1 1 260px" required></nv-input>
-    <nv-select name="kind" label="Тип" value="${k}" options="landing:Лендинг|quiz:Квиз${bundles.length?"|bundle:Копия страницы (квиз МЮ)":""}" style="min-width:220px"></nv-select></div>
+    <nv-select name="kind" label="Тип" value="${k}" options="design:Квиз-лендинг (10 дизайнов)|landing:Лендинг|quiz:Квиз${bundles.length?"|bundle:Копия страницы (квиз МЮ)":""}" style="min-width:220px"></nv-select></div>
+    <div data-kind="design"${k==="design"?"":" hidden"}><div class="row" style="gap:10px;flex-wrap:wrap">
+      <nv-select name="design" label="Дизайн и форма" value="${esc(cfg0.design||"tiles")}" options="${esc(Object.entries(designs).map(([id,d])=>id+":"+String(d.title+" — "+d.form).replace(/[|:]/g," ")).join("|"))}" style="flex:1 1 320px"></nv-select>
+      <nv-select name="direction" label="Направление" value="${esc(cfg0.direction||"bfl")}" options="${esc(Object.entries(directions).map(([id,t])=>id+":"+t).join("|"))}" style="min-width:160px"></nv-select></div>
+      ${cfg0.angle?`<div class="muted" style="font-size:12.5px;margin:4px 0">Угол оффера (A/B): ${esc(cfg0.angle)}</div>`:""}
+      <nv-textarea name="content_json" label="Тексты страницы (JSON): заголовок, вопросы и варианты, FAQ, этапы, тексты формы и чата" rows="12" value="${esc(JSON.stringify(Object.fromEntries(Object.entries(cfg0).filter(([x])=>!DESIGN_SKIP.includes(x))),null,1))}"></nv-textarea>
+      <div class="muted" data-json-msg style="font-size:12.5px"></div></div>
     <div data-kind="bundle"${k==="bundle"?"":" hidden"}>
       ${bundles.length?`<nv-select name="bundle" label="Страница-образец" value="${esc(cfg0.bundle||bundles[0].id)}" options="${esc(bOpts)}"></nv-select>`:""}
       <div class="muted" data-bundle-desc style="font-size:12.5px;margin:4px 0 0">${esc((bundleOf(cfg0.bundle||(bundles[0]||{}).id)||{}).description||"")}</div>
       <div data-bundle-imgs>${imgHtml(bundleOf(cfg0.bundle||(bundles[0]||{}).id),cfg0)}</div></div>
-    <div data-kind="landing quiz"${k==="bundle"?" hidden":""}>
+    <div data-kind="landing quiz"${k==="bundle"||k==="design"?" hidden":""}>
     <nv-card heading="ИИ" style="margin:8px 0"><div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap"><nv-input name="ai_topic" label="Оффер / тематика" placeholder="Например: банкротство физлиц, списание долгов" style="flex:1 1 300px"></nv-input>
       <nv-button size="sm" variant="secondary" icon="zap" data-tpl-ai>ИИ: заполнить тексты</nv-button></div><div class="muted" data-tpl-ai-msg style="font-size:12.5px;margin-top:4px"></div></nv-card>
     <nv-input name="title" label="Заголовок" value="${esc(cfg0.title||"")}"></nv-input>
@@ -5637,7 +5647,9 @@ function siteTplEditor(tpl){
   const collect=r=>{const v=formVals(r),k=v.kind||"landing",lines=x=>(x||"").split("\n").map(y=>y.trim()).filter(Boolean);
     const cfg={};Object.keys(BF).forEach(f=>{cfg[f]=(v["b_"+f]||"").trim()});
     cfg.integration_id=+v.integration_id||null;
-    if(k==="bundle"){cfg.bundle=v.bundle||(bundles[0]||{}).id;const b=bundleOf(cfg.bundle);(b&&b.images||[]).forEach(i=>{if((v["i_"+i]||"").trim())cfg[i]=v["i_"+i].trim()})}
+    if(k==="design"){let j={};try{j=JSON.parse(v.content_json||"{}")}catch(e){throw new Error("Тексты (JSON): ошибка разбора — "+e.message)}
+      Object.assign(cfg,j,{design:v.design||"tiles",direction:v.direction||"bfl"});Object.keys(BF).forEach(f=>{cfg[f]=(v["b_"+f]||"").trim()});cfg.integration_id=+v.integration_id||null}
+    else if(k==="bundle"){cfg.bundle=v.bundle||(bundles[0]||{}).id;const b=bundleOf(cfg.bundle);(b&&b.images||[]).forEach(i=>{if((v["i_"+i]||"").trim())cfg[i]=v["i_"+i].trim()})}
     else{Object.assign(cfg,{title:v.title||"",subtitle:v.subtitle||"",cta:v.cta||"",color:v.color||"#2563eb",image:v.image||"",thanks:v.thanks||""});
       if(k==="quiz")cfg.questions=lines(v.questions).map(l=>{const[q,o]=l.split("|");return{q:(q||"").trim(),options:(o||"").split(";").map(x=>x.trim()).filter(Boolean)}}).filter(q=>q.q);
       else cfg.bullets=lines(v.bullets)}
@@ -5652,7 +5664,7 @@ function siteTplEditor(tpl){
       if(bs)bs.addEventListener("nv-change",e=>{const b=bundleOf(e.detail.value);r.querySelector("[data-bundle-desc]").textContent=(b||{}).description||"";r.querySelector("[data-bundle-imgs]").innerHTML=imgHtml(b,collect(r).config)});
       if(!tpl&&kind0==="bundle"){const b=bundleOf((bundles[0]||{}).id);if(b)r.querySelector("[data-brand]").innerHTML=brandHtml(b.defaults||{})}
       const m=r.querySelector("[data-tpl-msg]");
-      r.querySelector("[data-tpl-prev]").onclick=async()=>{const c=collect(r);m.style.color="";m.textContent="Собираю…";
+      r.querySelector("[data-tpl-prev]").onclick=async()=>{let c;try{c=collect(r)}catch(err){m.textContent=err.message;m.style.color="var(--bad)";return}m.style.color="";m.textContent="Собираю…";
         try{const res=await apiPost("/api/v1/ads/site-templates/preview",{kind:c.kind,config:c.config,domain:"example.ru"});const f=r.querySelector("[data-tpl-frame]");f.hidden=false;f.srcdoc=res.html;m.textContent=""}
         catch(err){m.textContent=err.message||"Не удалось";m.style.color="var(--bad)"}};
       r.querySelector("[data-tpl-ai]").onclick=async()=>{const v=formVals(r),am=r.querySelector("[data-tpl-ai-msg]"),b=r.querySelector("[data-tpl-ai]");
@@ -5667,7 +5679,9 @@ function siteTplEditor(tpl){
         b.removeAttribute("disabled")};
     },
     actions:[...(tpl?[{label:"Удалить",variant:"ghost",fn(r,close){(async()=>{try{await apiDelete("/api/v1/ads/site-templates/"+tpl.id);close();toast("Шаблон удалён",{tone:"success"});loadSites()}catch(err){toast(err.message||"Не удалось",{tone:"danger"})}})();return false}}]:[]),
-      {label:"Отмена"},{label:"Сохранить",variant:"primary",fn(r,close){const c=collect(r),m=r.querySelector("[data-tpl-msg]");
+      ...(tpl?[{label:"Дублировать",variant:"secondary",fn(r,close){const m=r.querySelector("[data-tpl-msg]");let c;try{c=collect(r)}catch(err){m.textContent=err.message;m.style.color="var(--bad)";return false}
+        c.name=(c.name+" (копия)").slice(0,120);(async()=>{try{await apiPost("/api/v1/ads/site-templates",c);close();toast("Копия создана — меняйте дизайн или тексты для A/B",{tone:"success"});loadSites()}catch(err){m.textContent=err.message||"Не удалось";m.style.color="var(--bad)"}})();return false}}]:[]),
+      {label:"Отмена"},{label:"Сохранить",variant:"primary",fn(r,close){const m=r.querySelector("[data-tpl-msg]");let c;try{c=collect(r)}catch(err){m.textContent=err.message;m.style.color="var(--bad)";return false}
         if(!c.name){m.textContent="Введите название";m.style.color="var(--bad)";return false}
         (async()=>{try{tpl?await apiPut("/api/v1/ads/site-templates/"+tpl.id,c):await apiPost("/api/v1/ads/site-templates",c);close();toast("Шаблон сохранён",{tone:"success"});loadSites()}
           catch(err){m.textContent=err.message||"Не удалось";m.style.color="var(--bad)"}})();return false}}]});
@@ -5691,7 +5705,7 @@ function siteLeadDlg(x){
 }
 function siteDomainDlg(d){
   const st=S.ads.sites||{},tpls=st.tpls||[],site=d.site,job=d.job,dns=SITE_DNS(d);
-  const tOpts=tpls.map(t=>t.id+":"+String(t.name).replace(/[|:]/g," ")+(t.kind==="quiz"?" (квиз)":t.kind==="bundle"?" (копия МЮ)":" (лендинг)")).join("|");
+  const tOpts=tpls.map(t=>t.id+":"+String(t.name).replace(/[|:]/g," ")+(t.kind==="quiz"?" (квиз)":t.kind==="bundle"?" (копия МЮ)":t.kind==="design"?" ("+((t.config||{}).design||"")+")":" (лендинг)")).join("|");
   const pOpts="0:— без проекта —|"+(S.ads.projects||[]).map(p=>p.id+":"+String(p.name).replace(/[|:]/g," ")).join("|");
   overlay("modal",{title:d.name||d.domain,subtitle:`DNS: ${dns[1]}${site?" · сайт: "+(site.status_label||site.status):""}`,
     body:`${d.occupied?`<nv-callout tone="warning" heading="Домен занят">A-запись ведёт на ${esc((d.a||[]).join(", "))} — там может работать другой сайт. Разместить можно только с галочкой ниже: A-запись перезапишется на ${esc(st.ip||"")}.</nv-callout>`:""}
@@ -5842,7 +5856,7 @@ sites(){
       </nv-card>`;
     if(tpls.length)wireTable(root,"ads-sites-tpl",tpls,[
       {key:"name",label:"Шаблон",sort:true,render:t=>`<b>${esc(t.name)}</b><br><span class="muted" style="font-size:12px">${esc((t.config||{}).brand||(t.config||{}).title||"")}${(t.config||{}).phone?" · "+esc(t.config.phone):""}</span>`},
-      {key:"kind",label:"Тип",sort:true,render:t=>t.kind==="quiz"?"Квиз · "+((t.config||{}).questions||[]).length+" вопр.":t.kind==="bundle"?"Копия: "+esc(((st.bundles||[]).find(b=>b.id===(t.config||{}).bundle)||{}).title||(t.config||{}).bundle):"Лендинг"},
+      {key:"kind",label:"Тип",sort:true,render:t=>t.kind==="quiz"?"Квиз · "+((t.config||{}).questions||[]).length+" вопр.":t.kind==="design"?esc(((st.directions||{})[(t.config||{}).direction]||"")+" · "+(((st.designs||{})[(t.config||{}).design]||{}).title||(t.config||{}).design)):t.kind==="bundle"?"Копия: "+esc(((st.bundles||[]).find(b=>b.id===(t.config||{}).bundle)||{}).title||(t.config||{}).bundle):"Лендинг"},
       {key:"integ",label:"Интеграция",render:t=>{const i=(st.integs||[]).find(i=>i.id===(t.config||{}).integration_id);return i?esc(i.name):'<span class="muted">Б24 проекта</span>'}},
       {key:"used",label:"Сайтов",align:"right",render:t=>fmt(doms.filter(d=>d.site&&d.site.template_id===t.id).length)},
       {key:"updated_at",label:"Изменён",sort:true,render:t=>t.updated_at?fmtDateTime(t.updated_at):"—"}],t=>siteTplEditor(t));
