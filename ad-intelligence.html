@@ -42,14 +42,6 @@ nv-carousel{display:block;min-width:0}
 nv-carousel.cx-fit .cx-dots{display:none}
 @media(max-width:640px){.cx-slide{flex-basis:62%}.cx-nav{display:none}}
 .cx-list{display:flex;flex-direction:column;gap:16px}
-.sig-row{all:unset;box-sizing:border-box;display:flex;gap:12px;justify-content:space-between;align-items:center;width:100%;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer}
-.sig-row:last-child{border-bottom:0}
-.sig-row[disabled]{cursor:default}
-.sig-row:not([disabled]):hover .sig-m b{text-decoration:underline}
-.sig-m{display:flex;flex-direction:column;gap:2px;min-width:0}
-.sig-m b{font-weight:600;font-size:13.5px}
-.sig-m span{font-size:12px}
-.sig-r{flex-shrink:0;font-size:12.5px;color:var(--ink-2);text-align:right}
 /* карусель «как на площадке»: в окне помещается столько объявлений, сколько было видно сразу */
 nv-carousel[visible] .cx-slide{flex:0 0 210px}
 nv-carousel[visible] .cx-vp{max-width:calc(var(--cx-vis,2)*210px + (var(--cx-vis,2) - 1)*12px + 32px)}
@@ -3138,7 +3130,6 @@ async function loadLibrary(extra){
   if(f.q)params.q=f.q;
   if(f.platform)params.platform_label=f.platform;
   if(f.format)params.format=f.format;
-  if(f.feature)params.feature=f.feature;
   if(f.saved==="yes")params.ids=I.savedIds.join(",")||"0";
   if(f.saved==="no"&&I.savedIds.length)params.exclude_ids=I.savedIds.join(",");
   // Выбран запуск: показываем его креативы, без сужения по «ключевому слову запуска»
@@ -3334,28 +3325,6 @@ async function openCreative(id){
   const adv=(data.advertisers||[])[0],utm=data.utm||{};
   const links=(data.secondary_links||[]).slice(0,5),occ=(data.occurrences||[]).slice(0,20),intents=cr.intents||[];
   const destHist=(data.destination_history||[]).slice(0,10);
-  /* Поля из разметки объявления (creative_details, 17.11.2026) */
-  const DT=data.details||null,FMT_L={text_image:"Текст и картинка",gallery:"Галерея картинок",video:"Видео",offers:"Товары в плитке",app:"Реклама приложения",text:"Только текст"};
-  /* Показы за запуски (creative_impressions, 18.11.2026) — пока только лента Дзена */
-  const IMP=data.impressions||null;
-  const impHtml=!IMP?"":`<dt>Показы</dt><dd><b>${fmt(IMP.total)}</b> ${plural(IMP.total,"показ","показа","показов")} в ${fmt(IMP.runs)} ${plural(IMP.runs,"запуске","запусках","запусках")}${IMP.best_pos?` <span class="muted">· лучшее место в ленте: ${fmt(IMP.best_pos)}</span>`:""}</dd>`;
-  const detHtml=impHtml+(!DT?"":[
-    DT.ad_format?`<dt>Формат</dt><dd>${esc(FMT_L[DT.ad_format]||DT.ad_format)}</dd>`:"",
-    DT.is_social?`<dt>Тип</dt><dd>Социальная реклама</dd>`:"",
-    DT.age_label?`<dt>Возрастная метка</dt><dd>${esc(DT.age_label)}</dd>`:"",
-    DT.promo_text?`<dt>Акция / промокод</dt><dd><b>${esc(DT.promo_text)}</b></dd>`:"",
-    DT.price_old?`<dt>Цена</dt><dd>${esc(DT.price_current||"—")} <span class="muted" style="text-decoration:line-through">${esc(DT.price_old)}</span>${DT.discount_text?" · "+esc(DT.discount_text):""}</dd>`:"",
-    DT.warning?`<dt>Предупреждение</dt><dd>${esc(DT.warning)}</dd>`:"",
-    (DT.callouts||[]).length?`<dt>Уточнения</dt><dd>${DT.callouts.map(esc).join(" · ")}</dd>`:"",
-    (DT.sitelinks||[]).length?`<dt>Быстрые ссылки</dt><dd>${DT.sitelinks.map(esc).join(" · ")}</dd>`:"",
-    DT.cta_text?`<dt>Кнопка</dt><dd>${esc(DT.cta_text)}</dd>`:"",
-    DT.packshot_title?`<dt>Финальный кадр видео</dt><dd>${esc(DT.packshot_title)}</dd>`:"",
-    DT.app_name?`<dt>Приложение</dt><dd>${esc(DT.app_name)}</dd>`:"",
-    (DT.offers||[]).length?`<dt>Товары в плитке (${DT.offers.length})</dt><dd>${DT.offers.map(o=>esc(o.name)+(o.price?" — <b>"+esc(o.price)+"</b>":"")).join("<br>")}</dd>`:"",
-    DT.ad_id?`<dt>Номер объявления РСЯ</dt><dd class="mono">${esc(DT.ad_id)}${DT.ad_id_runs?` <span class="muted">· встречено в ${DT.ad_id_runs} ${plural(DT.ad_id_runs,"запуске","запусках","запусках")}, ${esc(fmtDateTime(DT.ad_id_first_seen))} – ${esc(fmtDateTime(DT.ad_id_last_seen))}</span>`:""}</dd>`:"",
-    DT.rsya_creative_id?`<dt>Номер креатива</dt><dd class="mono">${esc(DT.rsya_creative_id)}</dd>`:"",
-    DT.direct_campaign_id?`<dt>Кампания Директа</dt><dd class="mono">${esc(DT.direct_campaign_id)}${DT.direct_group_id?" · группа "+esc(DT.direct_group_id):""}${DT.direct_ad_id?" · объявление "+esc(DT.direct_ad_id):""}</dd>`:""
-  ].join(""));
   const byType={};(data.identifiers||[]).forEach(i=>{(byType[i.identifier_type]=byType[i.identifier_type]||[]).push(i.identifier_value)});
   const idsHtml=Object.keys(ID_LABELS).map(t=>{const v=byType[t];return v&&v.length?`<dt>${esc(ID_LABELS[t])} (${v.length})</dt><dd class="mono">${v.map(esc).join(", ")}</dd>`:""}).join("");
   const utmBits=[["utm_source","Источник"],["utm_medium","Канал"],["utm_campaign","Кампания"],["utm_content","Контент"],["utm_term","Ключевое слово"]].filter(([k])=>utm[k]).map(([k,l])=>`<dt>${esc(l)}</dt><dd class="mono">${esc(utm[k])}</dd>`).join("");
@@ -3433,7 +3402,6 @@ async function openCreative(id){
     </dl>
     ${cr.erid?`<nv-copy-field label="ERID" value="${esc(cr.erid)}" hint="Маркировка интернет-рекламы — пригодится для отчётов по 38-ФЗ"></nv-copy-field>`:""}
     ${links.length?`<div class="sect-t">Другие ссылки объявления</div><dl class="dl">${links.map(l=>`<dt>${esc(l.link_text||l.final_url_domain||"Ссылка")}</dt><dd class="mono">${esc(l.final_url_domain||l.final_url||"—")}${[l.utm_source,l.utm_medium,l.utm_campaign].filter(Boolean).length?"<br>"+esc([l.utm_source,l.utm_medium,l.utm_campaign].filter(Boolean).join(" / ")):""}</dd>`).join("")}</dl>`:""}
-    ${detHtml?`<div class="sect-t">Что ещё есть в объявлении</div><dl class="dl">${detHtml}</dl>`:""}
     ${idsHtml?`<div class="sect-t">Идентификаторы кампаний</div><dl class="dl">${idsHtml}</dl>`:""}
     ${destHist.length?`<div class="sect-t">История изменений посадочной страницы</div><dl class="dl">${destHist.map(d=>`<dt>${esc(d.final_url_domain||d.final_url||"—")}</dt><dd>${esc((d.first_seen_at||"").slice(0,10))} — ${esc((d.last_seen_at||"").slice(0,10))}${[d.utm_source,d.utm_medium,d.utm_campaign].filter(Boolean).length?" · "+esc([d.utm_source,d.utm_medium,d.utm_campaign].filter(Boolean).join(" / ")):""}</dd>`).join("")}</dl>`:""}
     ${occ.length?`<div class="sect-t">Последние показы</div><nv-timeline items="${esc(JSON.stringify(occ.map(o=>({title:(o.platform||"")+" · "+(o.observed_at||"").replace("T"," ").slice(0,16)+(o.source_page_url?" · "+o.source_page_url:"")}))))}"></nv-timeline>`:""}`,
@@ -3876,12 +3844,6 @@ function renderGalleries(host){
     list.append(el);
   });
 }
-async function loadSignals(){
-  const G=S.intel.sig=S.intel.sig||{};const seq=G.seq=(G.seq||0)+1;G.loading=true;
-  try{const d=await api("/api/v1/analytics/ad-signals",{});if(seq!==G.seq)return;G.data=d;G.kw=(S.intel.activeIntents||[]).join(",");G.at=Date.now()}
-  catch(err){if(seq===G.seq){toast("Не удалось загрузить пометки: "+(err.message||""),{tone:"danger"});G.data=G.data||{totals:{}};G.at=Date.now()}}
-  G.loading=false;N.refreshIf("intel-signals");
-}
 function renderCarousels(host){
   const I=S.intel.ana,all=I.carousels||[];
   if((I.carKind||"ads")==="gallery")return renderGalleries(host);
@@ -3972,7 +3934,7 @@ library(){
   help:{title:"С чего начать",steps:["Запустите сканирование по своему запросу и городу.","Откройте креатив — там цена, ERID и ссылка.","Сохраняйте находки или собирайте их в подборки."]},
   body:`<div class="grid g4">${stat("Найдено объявлений",fmt(I.lib.server?(I.lib.total||0):r.length),'note="по текущим фильтрам"')}${libMatchTile()}${stat("С кодом ERID",erid,'note="на этой странице"')}${stat("В избранном",savedN,'note="всего сохранено"')}</div>
   <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-select label="Запуск" value="${esc(f.job||"")}" options="${esc(jobFilterOptions())}" data-chg="libF" data-key="job"></nv-select><nv-filter-select label="Тема объявления" value="${esc(f.aiIntent)}" options="${esc(aiIntentOptions()||"_:Пока не определены")}" placeholder="Все темы" min-width="320" data-chg="libF" data-key="aiIntent"></nv-filter-select><nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-button variant="${moreN||I.fMore?"secondary":"ghost"}" icon="sliders-horizontal" data-act="libMore">Ещё фильтры${moreN?" · "+moreN:""}</nv-button></div>
-  ${I.fMore||moreN?`<div class="toolbar"><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-filter-select label="Пометки" value="${esc(f.feature||"")}" options="promo:Акция или промокод|old_price:Старая цена|warning:Предупреждение|age:Возрастная метка|social:Соцреклама|callouts:Уточнения|offers:Товары в плитке|gallery:Галерея картинок|app:Реклама приложения|ad_id:С номером объявления РСЯ" data-chg="libF" data-key="feature"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select>${intentControlHtml()}</div>`:""}
+  ${I.fMore||moreN?`<div class="toolbar"><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select>${intentControlHtml()}</div>`:""}
   ${jobBannerHtml()}
   <nv-saved-views id="lib-views" views="${esc(JSON.stringify(I.savedViews.map(v=>({id:v.id,name:v.name}))))}" value="${esc(activeViewId())}" can-save></nv-saved-views>
   <div class="row between" style="gap:10px;align-items:center;flex-wrap:wrap"><div id="lib-count" class="muted" style="font-size:13px"></div><div class="row" style="gap:8px;flex-wrap:wrap"><nv-select label="Сортировка" value="${f.sort}" options="recent:Сначала новые|oldest:Сначала старые|name:Домен А-Я" data-chg="libF" data-key="sort"></nv-select><nv-select label="На странице" value="${+f.pageSize||25}" options="25:25|50:50|100:100|200:200" data-chg="libF" data-key="pageSize"></nv-select></div></div></div><div id="lib-res">${I.lib.loading&&!I.lib.loaded?'<nv-skeleton count="6"></nv-skeleton>':""}</div><div id="lib-page" class="row" style="justify-content:center;margin-top:16px"></div><div class="bulk" id="lib-bulk" hidden></div>`,
@@ -4184,33 +4146,6 @@ sources(){
   body:`<nv-card heading="Источники"><nv-chart id="an-brk-chart" type="hbar" label="Источники"></nv-chart></nv-card>
   <nv-card flush><nv-table id="an-brk" empty-text="Пока нет данных"></nv-table></nv-card>`,
   after(root){wireAnalyticsTables(root,I)}}},
-signals(){
-  const G=S.intel.sig=S.intel.sig||{},kw=(S.intel.activeIntents||[]).join(",");
-  if(!G.loading&&(!G.data||G.kw!==kw||Date.now()-(G.at||0)>120000))setTimeout(()=>loadSignals(),0);
-  const D=G.data;
-  if(!D)return{title:"Промокоды и пометки",sub:"Загружаем…",actions:intentControlHtml(),body:'<nv-skeleton count="4"></nv-skeleton>'};
-  const T=D.totals||{},tot=T.total||0,pct=n=>tot?Math.round(100*n/tot)+"%":"—";
-  const FMT_L={text_image:"Текст и картинка",gallery:"Галерея картинок",video:"Видео",offers:"Товары в плитке",app:"Приложения",text:"Только текст"};
-  const row=(id,main,sub,right)=>`<button type="button" class="sig-row" data-sig-open="${esc(id==null?"":id)}"><span class="sig-m"><b>${main}</b>${sub?`<span class="muted">${sub}</span>`:""}</span>${right?`<span class="sig-r">${right}</span>`:""}</button>`;
-  const empty=t=>`<div class="muted" style="font-size:13px;padding:8px 0">${t}</div>`;
-  return{title:"Промокоды и пометки",sub:anaSub("Что рекламодатели пишут в объявлениях помимо заголовка: акции и промокоды, старые цены, предупреждения, возрастные метки, товары в плитке. Данные — из разметки самих объявлений."),actions:intentControlHtml(),
-  help:{title:"Как читать",steps:["Цифры сверху — сколько объявлений с каждой пометкой (доля от всех объявлений выбранного запроса).","«Акции и промокоды» — готовые офферы конкурентов с датой, когда их видели последний раз.","Нажмите на строку, чтобы открыть объявление целиком."]},
-  body:`<div class="dash-g4">${stat("Объявлений разобрано",fmt(tot))}${stat("С акцией или промокодом",fmt(T.promo||0),`note="${pct(T.promo||0)}"`)}${stat("Со старой ценой",fmt(T.old_price||0),`note="${pct(T.old_price||0)}"`)}${stat("С предупреждением",fmt(T.warning||0),`note="${pct(T.warning||0)}"`)}</div>
-  <div class="dash-g4" style="margin-top:12px">${stat("С возрастной меткой",fmt(T.age||0),`note="${pct(T.age||0)}"`)}${stat("Социальная реклама",fmt(T.social||0),`note="${pct(T.social||0)}"`)}${stat("С уточнениями",fmt(T.callouts||0),`note="${pct(T.callouts||0)}"`)}${stat("С номером объявления РСЯ",fmt(T.with_ad_id||0),`note="${pct(T.with_ad_id||0)}"`)}</div>
-  <div class="dash-g2" style="margin-top:12px">
-    <nv-card heading="Акции и промокоды" subtitle="Свежие сверху">${(D.promos||[]).length?D.promos.map(p=>row(p.id,esc(p.text),esc(p.domain||"")+" · "+esc(fmtDateTime(p.last_seen_at)),p.n>1?p.n+" "+plural(p.n,"показ","показа","показов"):"")).join(""):empty("В объявлениях выбранного запроса акций и промокодов не найдено.")}</nv-card>
-    <nv-card heading="Снижение цены" subtitle="Объявления со старой и новой ценой">${(D.price_drops||[]).length?D.price_drops.slice(0,20).map(p=>row(p.id,esc(p.title||p.domain||""),esc(p.domain||""),`<b>${esc(p.price_current||"")}</b> <s class="muted">${esc(p.price_old||"")}</s> ${esc(p.discount_text||"")}`)).join(""):empty("Нет объявлений со старой ценой.")}</nv-card>
-  </div>
-  <div class="dash-g2" style="margin-top:12px">
-    <nv-card heading="Форматы объявлений">${(D.formats||[]).map(f=>row(null,esc(FMT_L[f.format]||f.format||"—"),"",fmt(f.n)+" · "+pct(f.n))).join("")||empty("Нет данных.")}</nv-card>
-    <nv-card heading="Предупреждения и возрастные метки">${(D.warnings||[]).map(w=>row(null,esc(w.text),w.domains+" "+plural(w.domains,"сайт","сайта","сайтов"),fmt(w.n))).join("")}${(D.ages||[]).length?`<div class="muted" style="font-size:12.5px;margin-top:8px">Возраст: ${D.ages.map(a=>esc(a.label)+" — "+fmt(a.n)).join(" · ")}</div>`:""}${!(D.warnings||[]).length&&!(D.ages||[]).length?empty("Нет данных."):""}</nv-card>
-  </div>
-  <div class="dash-g2" style="margin-top:12px">
-    <nv-card heading="Частые уточнения" subtitle="Короткие преимущества под объявлением">${(D.callouts||[]).length?D.callouts.slice(0,20).map(c=>row(null,esc(c.text),"",fmt(c.n))).join(""):empty("Уточнений не найдено.")}</nv-card>
-    <nv-card heading="Дольше всех в показах" subtitle="По номеру объявления РСЯ — сколько дней и запусков его встречали">${(D.longest_ads||[]).length?D.longest_ads.slice(0,15).map(a=>row(a.id,esc(a.title||a.domain||""),esc(a.domain||"")+" · "+esc(fmtDateTime(a.first_seen_at))+" – "+esc(fmtDateTime(a.last_seen_at)),a.runs+" "+plural(a.runs,"запуск","запуска","запусков"))).join(""):empty("Номер объявления есть только у части площадок РСЯ; повторных встреч пока нет.")}</nv-card>
-  </div>
-  ${(D.offers||[]).length?`<nv-card heading="Товары в плитке" subtitle="Блоки с несколькими товарами и ценами" style="margin-top:12px">${D.offers.slice(0,10).map(o=>row(o.id,esc(o.domain||"")+" — "+o.items.length+" "+plural(o.items.length,"товар","товара","товаров"),o.items.slice(0,4).map(i=>esc(i.name)+(i.price?" "+esc(i.price):"")).join(" · "),"")).join("")}</nv-card>`:""}`,
-  after(root){root.querySelectorAll("[data-sig-open]").forEach(b=>{if(!b.dataset.sigOpen){b.disabled=true;return}b.onclick=()=>openCreative(b.dataset.sigOpen)})}}},
 carousels(){
   const I=S.intel.ana;
   ensureAna();
@@ -4396,14 +4331,13 @@ N.register({id:"intel",name:"Разведка рекламы",short:"Разве�
     {id:"overview",label:"Обзор",icon:"layout-dashboard"},
     {id:"leaders",label:"Сильные объявления",icon:"trophy"},
     {id:"fresh",label:"Новое и акции",icon:"sparkles",count:()=>S.intel.ana.freshTotal||""},
-    {id:"signals",label:"Промокоды и пометки",icon:"badge-percent"},
-    {id:"carousels",label:"Карусели",icon:"gallery-horizontal"},
     {id:"advertisers",label:"Рекламодатели",icon:"building-2"}
   ]},
   // Технические отчёты о качестве сбора — пользователю они ничего не говорят, оставлены администратору
   ...(session&&session.role==="admin"?[{group:"Служебное",items:[
     {id:"platforms",label:"Качество данных",icon:"radar"},
-    {id:"campaigns",label:"Кампании и слова",icon:"target"}
+    {id:"campaigns",label:"Кампании и слова",icon:"target"},
+    {id:"carousels",label:"Карусели",icon:"gallery-horizontal"}
   ]}]:[])
  ],
  views,seed,
