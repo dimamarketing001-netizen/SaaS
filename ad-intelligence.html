@@ -5529,8 +5529,9 @@ const SITE_DNS=d=>d.ours?["live","Наш сервер"]:d.occupied?["archived","
 const SITE_ST={new:"unknown",dns:"review",ssl:"review",live:"live",error:"failed"};
 async function loadSites(refresh){
   const A=S.ads,st=A.sites||(A.sites={filter:"free",q:""});st.loading=true;N.refreshIf("ads-sites");
-  const [t,d,l]=await Promise.allSettled([api("/api/v1/ads/site-templates",{}),api("/api/v1/sites/domains",refresh?{refresh:true}:{}),api("/api/v1/ads/sites/leads",{})]);
-  if(t.status==="fulfilled"){st.tpls=t.value.items||[];st.defaults=t.value.defaults||{}}else toast("Шаблоны: "+(t.reason&&t.reason.message||""),{tone:"danger"});
+  const [t,d,l,ig]=await Promise.allSettled([api("/api/v1/ads/site-templates",{}),api("/api/v1/sites/domains",refresh?{refresh:true}:{}),api("/api/v1/ads/sites/leads",{}),api("/api/v1/ads/lead-integrations",{})]);
+  if(ig.status==="fulfilled"){st.integs=ig.value.items||[];const I=S.ads.integ||(S.ads.integ={});if(!I.loaded)Object.assign(I,{items:st.integs,kinds:ig.value.kinds||{},defaults:ig.value.defaults||{},portals:ig.value.b24_sources||[],loaded:true})}
+  if(t.status==="fulfilled"){st.tpls=t.value.items||[];st.defaults=t.value.defaults||{};st.bundles=t.value.bundles||[];st.brandFields=t.value.brand_fields||null}else toast("Шаблоны: "+(t.reason&&t.reason.message||""),{tone:"danger"});
   if(d.status==="fulfilled"){st.domains=d.value.items||[];st.ip=d.value.ip;st.domErr=""}else st.domErr=d.reason&&d.reason.message||"не загрузились";
   if(l.status==="fulfilled")st.leads=l.value.items||[];
   st.loaded=true;st.loading=false;N.refreshIf("ads-sites");
@@ -5538,10 +5539,22 @@ async function loadSites(refresh){
   if((st.domains||[]).some(x=>x.job&&x.job.state==="running"))N._sitesPoll=setTimeout(()=>{if(location.hash==="#ads-sites")loadSites()},15000);
 }
 function siteTplEditor(tpl){
-  const st=S.ads.sites||{},kind0=tpl?tpl.kind:"landing",cfg0={...((st.defaults||{})[kind0]||{}),...(tpl?tpl.config:{})};
+  const st=S.ads.sites||{},bundles=st.bundles||[],integs=st.integs||[],BF=st.brandFields||{brand:"Бренд",legal_name:"Юрлицо",inn:"ИНН",ogrn:"ОГРН",address:"Адрес",phone:"Телефон",email:"Email",worktime:"Часы работы"};
+  const kind0=tpl?tpl.kind:"landing",cfg0={...((st.defaults||{})[kind0]||{}),...(tpl?tpl.config:{})};
+  if(cfg0.legal_name==null&&cfg0.company)cfg0.legal_name=cfg0.company;
+  const bOpts=bundles.map(b=>b.id+":"+String(b.title).replace(/[|:]/g," ")).join("|");
+  const iOpts="0:— простой лид в источник Б24 проекта —|"+integs.map(i=>i.id+":"+String(i.name+" · "+(i.kind_label||i.kind)).replace(/[|:]/g," ")).join("|");
+  const bundleOf=id=>bundles.find(b=>b.id===id)||null;
   const qText=c=>(c.questions||[]).map(q=>q.q+" | "+(q.options||[]).join("; ")).join("\n");
+  const brandHtml=(c)=>`<div class="row" style="gap:10px;flex-wrap:wrap">${Object.entries(BF).map(([k,l])=>`<nv-input name="b_${k}" label="${esc(l)}" value="${esc(c[k]||"")}" style="flex:1 1 ${k==="address"||k==="legal_name"?"320px":"200px"}"></nv-input>`).join("")}</div>`;
+  const imgHtml=(b,c)=>!b||!(b.images||[]).length?"":`<nv-card heading="Картинки страницы" subtitle="Пусто — как в оригинале. Можно вставить local:… из «Креативов»" style="margin-top:8px"><div class="row" style="gap:10px;flex-wrap:wrap">${b.images.map(k=>`<nv-input name="i_${k}" label="${esc({logo_image:"Логотип",hero_image:"Картинка первого экрана",lawyer_image:"Фото юриста"}[k]||k)}" value="${esc(c[k]||"")}" style="flex:1 1 220px"></nv-input>`).join("")}</div></nv-card>`;
   const body=k=>`<div class="row" style="gap:10px;flex-wrap:wrap"><nv-input name="name" label="Название шаблона" value="${esc(tpl?tpl.name:"")}" style="flex:1 1 260px" required></nv-input>
-    <nv-select name="kind" label="Тип" value="${k}" options="landing:Лендинг|quiz:Квиз" style="min-width:160px"></nv-select></div>
+    <nv-select name="kind" label="Тип" value="${k}" options="landing:Лендинг|quiz:Квиз${bundles.length?"|bundle:Копия страницы (квиз МЮ)":""}" style="min-width:220px"></nv-select></div>
+    <div data-kind="bundle"${k==="bundle"?"":" hidden"}>
+      ${bundles.length?`<nv-select name="bundle" label="Страница-образец" value="${esc(cfg0.bundle||bundles[0].id)}" options="${esc(bOpts)}"></nv-select>`:""}
+      <div class="muted" data-bundle-desc style="font-size:12.5px;margin:4px 0 0">${esc((bundleOf(cfg0.bundle||(bundles[0]||{}).id)||{}).description||"")}</div>
+      <div data-bundle-imgs>${imgHtml(bundleOf(cfg0.bundle||(bundles[0]||{}).id),cfg0)}</div></div>
+    <div data-kind="landing quiz"${k==="bundle"?" hidden":""}>
     <nv-card heading="ИИ" style="margin:8px 0"><div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap"><nv-input name="ai_topic" label="Оффер / тематика" placeholder="Например: банкротство физлиц, списание долгов" style="flex:1 1 300px"></nv-input>
       <nv-button size="sm" variant="secondary" icon="zap" data-tpl-ai>ИИ: заполнить тексты</nv-button></div><div class="muted" data-tpl-ai-msg style="font-size:12.5px;margin-top:4px"></div></nv-card>
     <nv-input name="title" label="Заголовок" value="${esc(cfg0.title||"")}"></nv-input>
@@ -5549,30 +5562,40 @@ function siteTplEditor(tpl){
     <div data-kind="landing"${k==="landing"?"":" hidden"}><nv-textarea name="bullets" label="Преимущества — по одному на строку" rows="4" value="${esc((cfg0.bullets||[]).join("\n"))}"></nv-textarea></div>
     <div data-kind="quiz"${k==="quiz"?"":" hidden"}><nv-textarea name="questions" label="Вопросы квиза — «Вопрос | вариант; вариант; вариант», по одному на строку" rows="5" value="${esc(qText(cfg0))}"></nv-textarea></div>
     <div class="row" style="gap:10px;flex-wrap:wrap"><nv-input name="cta" label="Текст кнопки" value="${esc(cfg0.cta||"")}" style="flex:1 1 200px"></nv-input>
-      <nv-input name="phone" label="Телефон в шапке (необязательно)" value="${esc(cfg0.phone||"")}" style="flex:1 1 200px"></nv-input>
       <nv-input name="color" label="Цвет (#rrggbb)" value="${esc(cfg0.color||"#2563eb")}" style="width:150px"></nv-input></div>
     <nv-input name="image" label="Картинка (ссылка или local:… из креативов, необязательно)" value="${esc(cfg0.image||"")}"></nv-input>
-    <nv-input name="company" label="Подвал: компания, ИНН (необязательно)" value="${esc(cfg0.company||"")}"></nv-input>
-    <nv-input name="thanks" label="Текст после заявки" value="${esc(cfg0.thanks||"")}"></nv-input>
+    <nv-input name="thanks" label="Текст после заявки" value="${esc(cfg0.thanks||"")}"></nv-input></div>
+    <nv-card heading="Бренд и контакты" subtitle="Подставляются на страницу: шапка, подвал, реквизиты, ссылки tel: и mailto:" style="margin-top:8px"><div data-brand>${brandHtml(cfg0)}</div></nv-card>
+    <nv-card heading="Интеграция — куда уходят заявки" subtitle="Своя логика портала: МЮ или ЮДЛ (тип лида, источник, отдел, поля). Настраиваются во вкладке «Интеграции»." style="margin-top:8px">
+      <div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap"><nv-select name="integration_id" label="Интеграция" value="${esc(String(cfg0.integration_id||0))}" options="${esc(iOpts)}" style="flex:1 1 320px"></nv-select>
+      <nv-button size="sm" variant="ghost" icon="plug-zap" data-go="ads-integrations">Интеграции</nv-button></div></nv-card>
     <div class="row" style="gap:8px;margin-top:8px"><nv-button size="sm" variant="secondary" icon="external-link" data-tpl-prev>Превью</nv-button><span class="muted" data-tpl-msg style="font-size:12.5px"></span></div>
-    <iframe data-tpl-frame title="Превью" style="width:100%;height:560px;border:1px solid var(--line);border-radius:10px;margin-top:8px;background:#fff" hidden></iframe>`;
+    <iframe data-tpl-frame title="Превью" style="width:100%;height:640px;border:1px solid var(--line);border-radius:10px;margin-top:8px;background:#fff" hidden></iframe>`;
   const collect=r=>{const v=formVals(r),k=v.kind||"landing",lines=x=>(x||"").split("\n").map(y=>y.trim()).filter(Boolean);
-    const cfg={title:v.title||"",subtitle:v.subtitle||"",cta:v.cta||"",phone:v.phone||"",color:v.color||"#2563eb",image:v.image||"",company:v.company||"",thanks:v.thanks||""};
-    if(k==="quiz")cfg.questions=lines(v.questions).map(l=>{const[q,o]=l.split("|");return{q:(q||"").trim(),options:(o||"").split(";").map(x=>x.trim()).filter(Boolean)}}).filter(q=>q.q);
-    else cfg.bullets=lines(v.bullets);
+    const cfg={};Object.keys(BF).forEach(f=>{cfg[f]=(v["b_"+f]||"").trim()});
+    cfg.integration_id=+v.integration_id||null;
+    if(k==="bundle"){cfg.bundle=v.bundle||(bundles[0]||{}).id;const b=bundleOf(cfg.bundle);(b&&b.images||[]).forEach(i=>{if((v["i_"+i]||"").trim())cfg[i]=v["i_"+i].trim()})}
+    else{Object.assign(cfg,{title:v.title||"",subtitle:v.subtitle||"",cta:v.cta||"",color:v.color||"#2563eb",image:v.image||"",thanks:v.thanks||""});
+      if(k==="quiz")cfg.questions=lines(v.questions).map(l=>{const[q,o]=l.split("|");return{q:(q||"").trim(),options:(o||"").split(";").map(x=>x.trim()).filter(Boolean)}}).filter(q=>q.q);
+      else cfg.bullets=lines(v.bullets)}
     return{name:(v.name||"").trim(),kind:k,config:cfg}};
-  overlay("modal",{title:tpl?"Шаблон «"+tpl.name+"»":"Новый шаблон сайта",subtitle:"Сайт собирается программно: адаптивная вёрстка, форма заявки → лид в Б24 с UTM, цель Метрики «lead».",size:"lg",
+  overlay("modal",{title:tpl?"Шаблон «"+tpl.name+"»":"Новый шаблон сайта",subtitle:"Лендинг/квиз собирается программно; «Копия страницы» — квиз мойюрист24.рф с вашими брендом, контактами и интеграцией. Метрика — счётчики аккаунтов домена, цель «lead».",size:"lg",
     body:body(kind0),
     mount(r){
-      r.querySelector('nv-select[name="kind"]').addEventListener("nv-change",e=>{r.querySelectorAll("[data-kind]").forEach(x=>x.hidden=x.dataset.kind!==e.detail.value)});
+      const showKind=k=>r.querySelectorAll("[data-kind]").forEach(x=>x.hidden=!x.dataset.kind.split(" ").includes(k));
+      r.querySelector('nv-select[name="kind"]').addEventListener("nv-change",e=>{showKind(e.detail.value);
+        if(e.detail.value==="bundle"&&!tpl){const b=bundleOf((formVals(r).bundle)||(bundles[0]||{}).id);if(b){const cur=collect(r).config;if(!Object.keys(BF).some(f=>cur[f]))r.querySelector("[data-brand]").innerHTML=brandHtml(b.defaults||{})}}});
+      const bs=r.querySelector('nv-select[name="bundle"]');
+      if(bs)bs.addEventListener("nv-change",e=>{const b=bundleOf(e.detail.value);r.querySelector("[data-bundle-desc]").textContent=(b||{}).description||"";r.querySelector("[data-bundle-imgs]").innerHTML=imgHtml(b,collect(r).config)});
+      if(!tpl&&kind0==="bundle"){const b=bundleOf((bundles[0]||{}).id);if(b)r.querySelector("[data-brand]").innerHTML=brandHtml(b.defaults||{})}
       const m=r.querySelector("[data-tpl-msg]");
-      r.querySelector("[data-tpl-prev]").onclick=async()=>{const c=collect(r);m.textContent="Собираю…";
+      r.querySelector("[data-tpl-prev]").onclick=async()=>{const c=collect(r);m.style.color="";m.textContent="Собираю…";
         try{const res=await apiPost("/api/v1/ads/site-templates/preview",{kind:c.kind,config:c.config,domain:"example.ru"});const f=r.querySelector("[data-tpl-frame]");f.hidden=false;f.srcdoc=res.html;m.textContent=""}
         catch(err){m.textContent=err.message||"Не удалось";m.style.color="var(--bad)"}};
       r.querySelector("[data-tpl-ai]").onclick=async()=>{const v=formVals(r),am=r.querySelector("[data-tpl-ai-msg]"),b=r.querySelector("[data-tpl-ai]");
         if((v.ai_topic||"").trim().length<3){am.textContent="Опишите оффер";am.style.color="var(--bad)";return}
         b.setAttribute("disabled","");am.style.color="";am.textContent="ИИ пишет… 20–60 секунд";
-        try{const c=await apiPost("/api/v1/ads/site-templates/ai-fill",{kind:v.kind||"landing",topic:v.ai_topic});
+        try{const c=await apiPost("/api/v1/ads/site-templates/ai-fill",{kind:v.kind==="quiz"?"quiz":"landing",topic:v.ai_topic});
           const set=(n,val)=>{const e=r.querySelector(`[name="${n}"]`);if(e&&val!=null)e.value=val};
           set("title",c.title);set("subtitle",c.subtitle);set("cta",c.cta);set("thanks",c.thanks);
           if(c.bullets)set("bullets",c.bullets.join("\n"));if(c.questions)set("questions",qText(c));
@@ -5586,14 +5609,31 @@ function siteTplEditor(tpl){
         (async()=>{try{tpl?await apiPut("/api/v1/ads/site-templates/"+tpl.id,c):await apiPost("/api/v1/ads/site-templates",c);close();toast("Шаблон сохранён",{tone:"success"});loadSites()}
           catch(err){m.textContent=err.message||"Не удалось";m.style.color="var(--bad)"}})();return false}}]});
 }
+const LEAD_ST={sent:["live","Лид #"],skipped:["paused","Пропущен"],spam:["archived","Бот"],error:["failed","Ошибка"]};
+function siteLeadDlg(x){
+  const d=x.data||{},ans=d.answers||[],utm=d.utm||{},s=LEAD_ST[x.b24_status]||["unknown",x.b24_status||"—"];
+  overlay("modal",{title:(x.name||"Без имени")+" · "+x.phone,subtitle:x.domain+" · "+fmtDateTime(x.created_at),size:"lg",
+    body:`<div class="row" style="gap:8px;align-items:center"><nv-status value="${s[0]}" label="${esc(s[1]+(x.b24_status==="sent"?(x.b24_lead_id||""):""))}"></nv-status>${x.error?`<span class="muted" style="font-size:12.5px">${esc(x.error)}</span>`:""}</div>
+      ${d.quiz_title?`<div style="margin-top:8px"><b>Квиз:</b> ${esc(d.quiz_title)}</div>`:""}
+      ${d.region||d.city?`<div><b>Регион:</b> ${esc([d.city,d.region].filter(Boolean).join(", "))}${d.method?" · связь: "+esc(d.method):""}${d.quality?" · оценка: "+esc(d.quality):""}</div>`:""}
+      ${ans.length?`<nv-card heading="Ответы" style="margin-top:8px">${ans.map(a=>`<div style="padding:3px 0"><span class="muted">${esc(a.q)}</span><br><b>${esc(a.a)}</b></div>`).join("")}</nv-card>`:""}
+      <div class="muted" style="font-size:12.5px;margin-top:8px">${Object.entries(utm).map(([k,v])=>esc(k)+"="+esc(v)).join(" · ")||"без UTM"}</div>
+      <pre data-lead-prev hidden style="white-space:pre-wrap;font-size:12px;background:var(--surface-2);padding:8px;border-radius:8px;max-height:260px;overflow:auto;margin-top:8px"></pre>`,
+    actions:[{label:"Закрыть"},
+      ...(d.template_id?[{label:"Что уйдёт в CRM",variant:"secondary",fn(r){const t=((S.ads.sites||{}).tpls||[]).find(t=>t.id===d.template_id),iid=t&&(t.config||{}).integration_id,pre=r.querySelector("[data-lead-prev]");
+        if(!iid){pre.hidden=false;pre.textContent="У шаблона нет интеграции — простой лид в источник Б24 проекта.";return false}
+        (async()=>{try{const res=await apiPost("/api/v1/ads/lead-integrations/"+iid+"/preview",{lead_id:x.id});pre.hidden=false;pre.textContent=JSON.stringify(res.fields,null,1)}catch(err){pre.hidden=false;pre.textContent=err.message||"Не удалось"}})();return false}}]:[]),
+      ...(x.b24_status!=="sent"?[{label:"Отправить повторно",variant:"primary",fn(r,close){(async()=>{try{const res=await apiPost("/api/v1/ads/sites/leads/"+x.id+"/resend",{});
+        toast(res.b24_status==="sent"?"Лид #"+res.b24_lead_id+" создан":"Не ушёл: "+(res.error||res.b24_status),{tone:res.b24_status==="sent"?"success":"warning"});close();loadSites()}catch(err){toast(err.message||"Не удалось",{tone:"danger"})}})();return false}}]:[])]});
+}
 function siteDomainDlg(d){
   const st=S.ads.sites||{},tpls=st.tpls||[],site=d.site,job=d.job,dns=SITE_DNS(d);
-  const tOpts=tpls.map(t=>t.id+":"+String(t.name).replace(/[|:]/g," ")+(t.kind==="quiz"?" (квиз)":" (лендинг)")).join("|");
+  const tOpts=tpls.map(t=>t.id+":"+String(t.name).replace(/[|:]/g," ")+(t.kind==="quiz"?" (квиз)":t.kind==="bundle"?" (копия МЮ)":" (лендинг)")).join("|");
   const pOpts="0:— без проекта —|"+(S.ads.projects||[]).map(p=>p.id+":"+String(p.name).replace(/[|:]/g," ")).join("|");
   overlay("modal",{title:d.name||d.domain,subtitle:`DNS: ${dns[1]}${site?" · сайт: "+(site.status_label||site.status):""}`,
     body:`${d.occupied?`<nv-callout tone="warning" heading="Домен занят">A-запись ведёт на ${esc((d.a||[]).join(", "))} — там может работать другой сайт. Разместить можно только с галочкой ниже: A-запись перезапишется на ${esc(st.ip||"")}.</nv-callout>`:""}
       ${tpls.length?`<nv-select name="template" label="Шаблон" value="${esc(String(site&&site.template_id||tpls[0].id))}" options="${esc(tOpts)}"></nv-select>`:'<nv-callout tone="warning" heading="Нет шаблонов">Сначала создайте шаблон сайта или квиза.</nv-callout>'}
-      <nv-select name="project" label="Проект — заявки уйдут в его источник Б24" value="${esc(String(site&&site.project_id||0))}" options="${esc(pOpts)}" style="margin-top:8px"></nv-select>
+      <nv-select name="project" label="Проект — счётчики Метрики; заявки в его источник Б24, если в шаблоне нет интеграции" value="${esc(String(site&&site.project_id||0))}" options="${esc(pOpts)}" style="margin-top:8px"></nv-select>
       ${d.occupied?`<label class="row" style="gap:8px;margin-top:8px"><input type="checkbox" name="force"><span>Всё равно занять домен (перезаписать A-запись)</span></label>`:""}
       ${job?`<div style="margin-top:10px"><b>Размещение:</b> ${esc(job.state==="running"?"идёт…":job.state==="done"?"готово":"ошибка")}<pre style="white-space:pre-wrap;font-size:12px;background:var(--surface-2);padding:8px;border-radius:8px;max-height:180px;overflow:auto">${esc((job.log||[]).join("\n"))}</pre></div>`:""}
       ${site&&site.note?`<div class="muted" style="font-size:12.5px;margin-top:6px">${esc(site.note)}</div>`:""}`,
@@ -5608,11 +5648,110 @@ function siteDomainDlg(d){
           close();toast("Размещение начато: DNS → nginx → SSL (до 30–45 минут)",{tone:"success"});loadSites()}
           catch(err){toast(err.message||"Не удалось",{tone:"danger"})}})();return false}}]:[])]});
 }
+
+/* ── Интеграции заявок: МЮ / ЮДЛ / простой Б24 (addAvto /api/lead-integrations) ── */
+async function loadIntegs(){
+  const st=S.ads.integ||(S.ads.integ={});st.loading=true;N.refreshIf("ads-integrations");
+  try{const r=await api("/api/v1/ads/lead-integrations",{});Object.assign(st,{items:r.items||[],kinds:r.kinds||{},defaults:r.defaults||{},portals:r.b24_sources||[],err:""});
+    (S.ads.sites||(S.ads.sites={})).integs=st.items}
+  catch(err){st.err=err.message||"не загрузились"}
+  st.loaded=true;st.loading=false;N.refreshIf("ads-integrations");
+}
+const optSafe=s=>String(s).replace(/[|:]/g," ");
+function integEditor(it){
+  const st=S.ads.integ||{},kinds=st.kinds||{mu:"МЮ",ydl:"ЮДЛ",b24:"Б24"},portals=st.portals||[],D=st.defaults||{};
+  let kind=it?it.kind:"mu",meta=null,s={...(D[kind]||{}),...(it?it.settings:{})};
+  const opt=(list,empty)=>(empty?"_:"+empty+"|":"")+list.filter(x=>!/[|:]/.test(String(x.id))).map(x=>x.id+":"+optSafe(x.name+" ("+x.id+")")).join("|");
+  const sel=(name,label,val,list,empty,style)=>list&&list.length?`<nv-select name="${name}" label="${esc(label)}" value="${esc(String(val||"_"))}" options="${esc(opt(list,empty))}" style="${style||"flex:1 1 240px"}"></nv-select>`
+    :`<nv-input name="${name}" label="${esc(label)} — код" value="${esc(String(val||""))}" style="${style||"flex:1 1 240px"}" hint="Нажмите «Загрузить из Б24», чтобы выбрать из списка"></nv-input>`;
+  const chk=(name,label,on)=>`<label class="row" style="gap:8px;margin-top:6px"><input type="checkbox" name="${name}"${on?" checked":""}><span>${esc(label)}</span></label>`;
+  const fields=()=>{const m=meta||{};
+    if(kind==="mu")return `<div class="row" style="gap:10px;flex-wrap:wrap"><nv-input name="title_prefix" label="Заголовок лида: «<Тип> | <Имя>»" value="${esc(s.title_prefix||"")}" style="flex:1 1 200px"></nv-input>
+      ${sel("lead_type_id","Тип лида",s.lead_type_id,m.lead_types)}${sel("b24_source","Источник (SOURCE_ID)",s.b24_source,m.sources,"— не задавать —")}</div>
+      <div class="row" style="gap:10px;flex-wrap:wrap">${sel("dept_default","Отдел продаж по умолчанию",s.dept_default,m.departments,"— не задавать —")}
+      <nv-textarea name="dept_rules" label="Отдел по региону: «часть названия региона/города = код отдела», по строке" rows="3" value="${esc((s.dept_rules||[]).map(x=>x.match+" = "+x.value).join("\n"))}" style="flex:1 1 300px"></nv-textarea></div>
+      <nv-input name="quiz_title" label="Название квиза в комментарии (пусто — из шаблона)" value="${esc(s.quiz_title||"")}"></nv-input>
+      <div class="muted" style="font-size:12.5px">Как у квизов МЮ: SOURCE_DESCRIPTION «По региону из формы: …», комментарий «Name / city / region / ═══ ОТВЕТЫ ═══», поле «Город».</div>`;
+    if(kind==="ydl")return `<div class="row" style="gap:10px;flex-wrap:wrap"><nv-input name="title_prefix" label="Заголовок: «<Тип> | <Город> | <Имя> 7XXX***XXXX»" value="${esc(s.title_prefix||"")}" style="flex:1 1 220px"></nv-input>
+      ${sel("lead_type_id","Тип лида",s.lead_type_id,m.lead_types)}${sel("origin_id","Источник лида (поле)",s.origin_id,m.origins,"— не задавать —")}</div>
+      ${chk("source_by_city","Источник (офис) — по городу из заявки: «Волгоград», «Владивосток 2»…",s.source_by_city)}
+      <div class="row" style="gap:10px;flex-wrap:wrap">${sel("b24_source","Источник, если город не найден",s.b24_source,m.sources,"— не задавать —")}</div>
+      ${chk("hot","«Горячий лид»",s.hot)}${chk("work","«Рабочий лид»",s.work)}
+      <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:6px">${["utm_product","utm_manager","utm_account","utm_campaign_type"].map(k=>`<nv-input name="${k}" label="${k} (если нет в ссылке)" value="${esc(s[k]||"")}" style="flex:1 1 160px"></nv-input>`).join("")}</div>
+      <div class="muted" style="font-size:12.5px">Как у сайтов ЮДЛ: SOURCE_DESCRIPTION — полный адрес с UTM, ответы в поле «Комментарий» («Вопрос: — ответ»), ClientID Метрики, UF_UTM_*.</div>`;
+    return `<div class="row" style="gap:10px;flex-wrap:wrap"><nv-input name="title_prefix" label="Заголовок лида" value="${esc(s.title_prefix||"")}" style="flex:1 1 220px"></nv-input>${sel("b24_source","Источник (SOURCE_ID)",s.b24_source,m.sources,"— не задавать —")}</div>`};
+  const portalOpts="_:— выберите —|"+[...portals,...(it&&it.source_id&&!portals.some(p=>p.id===it.source_id)?[{id:it.source_id,name:"Источник #"+it.source_id}]:[])].map(p=>p.id+":"+optSafe(p.name)).join("|");
+  const body=`<div class="row" style="gap:10px;flex-wrap:wrap"><nv-input name="name" label="Название" value="${esc(it?it.name:"")}" placeholder="Например: МЮ — Пенсия" style="flex:1 1 240px" required></nv-input>
+      <nv-select name="kind" label="Логика" value="${kind}" options="${esc(Object.entries(kinds).map(([k,l])=>k+":"+optSafe(l)).join("|"))}" style="min-width:220px"></nv-select>
+      <nv-select name="source_id" label="Портал Б24 (вебхук из «Источники Б24»)" value="${esc(String(it&&it.source_id||"_"))}" options="${esc(portalOpts)}" style="min-width:220px"></nv-select></div>
+    <div class="row" style="gap:8px;align-items:center;margin:6px 0"><nv-button size="sm" variant="secondary" icon="download" data-meta>Загрузить списки из Б24</nv-button><span class="muted" data-meta-msg style="font-size:12.5px"></span></div>
+    <div data-ik>${fields()}</div>
+    <details style="margin-top:8px"><summary class="muted">Коды полей Б24 (если в портале поменяют поля)</summary><nv-textarea name="fields_json" rows="6" value="${esc(JSON.stringify(s.fields||{},null,1))}"></nv-textarea></details>
+    <pre data-prev hidden style="white-space:pre-wrap;font-size:12px;background:var(--surface-2);padding:8px;border-radius:8px;max-height:300px;overflow:auto;margin-top:8px"></pre>
+    <div class="muted" data-msg style="font-size:12.5px"></div>`;
+  const read=r=>{const v=formVals(r),o={},cb=n=>!!(r.querySelector(`input[name="${n}"]`)||{}).checked,val=x=>x==="_"?"":(x||"").trim();
+    ["title_prefix","lead_type_id","b24_source","dept_default","quiz_title","origin_id","utm_product","utm_manager","utm_account","utm_campaign_type"].forEach(k=>{if(v[k]!==undefined)o[k]=val(v[k])});
+    if(v.dept_rules!==undefined)o.dept_rules=(v.dept_rules||"").split("\n").map(l=>l.split("=")).filter(p=>p.length===2&&p[0].trim()&&p[1].trim()).map(p=>({match:p[0].trim(),value:p[1].trim()}));
+    if(kind==="ydl"){o.source_by_city=cb("source_by_city");o.hot=cb("hot");o.work=cb("work")}
+    try{o.fields=JSON.parse(v.fields_json||"{}")}catch(e){o.fields=s.fields||{}}
+    return{name:(v.name||"").trim(),kind,source_id:+(v.source_id)||null,settings:o}};
+  overlay("modal",{title:it?"Интеграция «"+it.name+"»":"Новая интеграция",subtitle:"Своя логика лида для каждого портала — повторяет, как лиды заводят сайты МЮ и ЮДЛ.",size:"lg",body,
+    mount(r){
+      const rerender=()=>{s={...s,...read(r).settings};r.querySelector("[data-ik]").innerHTML=fields()};
+      r.querySelector('nv-select[name="kind"]').addEventListener("nv-change",e=>{const keep=read(r).settings;kind=e.detail.value;s={...(D[kind]||{}),title_prefix:keep.title_prefix||(D[kind]||{}).title_prefix};meta=null;
+        r.querySelector('nv-textarea[name="fields_json"]').value=JSON.stringify(s.fields||{},null,1);r.querySelector("[data-ik]").innerHTML=fields()});
+      const mm=r.querySelector("[data-meta-msg]");
+      const loadMeta=async()=>{const sid=+formVals(r).source_id||(it&&it.source_id)||0;if(!sid){mm.textContent="Выберите портал Б24";return}
+        mm.style.color="";mm.textContent="Загружаю из Б24…";
+        try{meta=await api("/api/v1/ads/lead-integrations/meta",{source_id:sid,kind});rerender();mm.textContent=`Типов лида: ${meta.lead_types.length} · источников: ${meta.sources.length}${meta.departments.length?" · отделов: "+meta.departments.length:""}`;mm.style.color="var(--good)"}
+        catch(err){mm.textContent="Б24: "+(err.message||"");mm.style.color="var(--bad)"}};
+      r.querySelector("[data-meta]").onclick=loadMeta;
+      if(it&&it.source_id)loadMeta();
+    },
+    actions:[...(it?[{label:"Удалить",variant:"ghost",fn(r,close){(async()=>{try{await apiDelete("/api/v1/ads/lead-integrations/"+it.id);close();toast("Интеграция удалена",{tone:"success"});loadIntegs()}catch(err){toast(err.message||"Не удалось",{tone:"danger"})}})();return false}},
+        {label:"Проверить (без отправки)",variant:"secondary",fn(r){const pre=r.querySelector("[data-prev]");(async()=>{try{const res=await apiPost("/api/v1/ads/lead-integrations/"+it.id+"/preview",{});pre.hidden=false;pre.textContent="Сохранённые настройки, пример заявки (Иван, Екатеринбург):\n"+JSON.stringify(res.fields,null,1)}catch(err){pre.hidden=false;pre.textContent=err.message||"Не удалось"}})();return false}},
+        {label:"Тестовый лид в Б24",variant:"secondary",fn(r){const m=r.querySelector("[data-msg]");
+          if(!r._armed){r._armed=true;m.style.color="var(--warn)";m.textContent="Создаст настоящий лид «ТЕСТ ParsYa — удалить» (тел. 70000000000) в портале. Нажмите ещё раз, чтобы отправить.";return false}
+          r._armed=false;m.style.color="";m.textContent="Отправляю…";
+          (async()=>{try{const res=await apiPost("/api/v1/ads/lead-integrations/"+it.id+"/test",{});m.style.color="var(--good)";m.textContent="Создан лид #"+res.b24_lead_id+" — удалите его в Б24 после проверки"}catch(err){m.style.color="var(--bad)";m.textContent=err.message||"Не удалось"}})();return false}}]:[]),
+      {label:"Отмена"},{label:"Сохранить",variant:"primary",fn(r,close){const c=read(r),m=r.querySelector("[data-msg]");
+        if(!c.name){m.textContent="Введите название";m.style.color="var(--bad)";return false}
+        if(!c.source_id){m.textContent="Выберите портал Б24";m.style.color="var(--bad)";return false}
+        (async()=>{try{it?await apiPut("/api/v1/ads/lead-integrations/"+it.id,c):await apiPost("/api/v1/ads/lead-integrations",c);close();toast("Интеграция сохранена",{tone:"success"});loadIntegs()}
+          catch(err){m.textContent=err.message||"Не удалось";m.style.color="var(--bad)"}})();return false}}]});
+}
+N.acts.integNew=()=>integEditor(null);
+N.acts.integLoad=()=>loadIntegs();
 N.acts.sitesLoad=()=>loadSites(true);
 N.acts.sitesNewTpl=()=>siteTplEditor(null);
 N.chg.sitesFilter=v=>{(S.ads.sites||(S.ads.sites={})).filter=v;N.refreshIf("ads-sites")};
 N.chg.sitesQ=v=>{(S.ads.sites||(S.ads.sites={})).q=v;clearTimeout(N._sitesQ);N._sitesQ=setTimeout(()=>N.refreshIf("ads-sites"),250)};
 const views_ads={
+integrations(){
+  const st=S.ads.integ||(S.ads.integ={});
+  return{title:"Интеграции",sub:"Куда и как уходят заявки с сайтов. У каждого портала своя логика: МЮ («Мой юрист») и ЮДЛ («Юрист для людей») — не просто вебхук.",
+  actions:`<nv-button icon="plus" data-act="integNew">Новая интеграция</nv-button>`,
+  body:`<div id="ads-integ-res">${!st.loaded?'<nv-skeleton count="4"></nv-skeleton>':""}</div>`,
+  after(root){
+    if(!st.loaded&&!st.loading){loadIntegs();return}
+    const el=root.querySelector("#ads-integ-res");if(!el||!st.loaded)return;
+    const items=st.items||[],portals=Object.fromEntries((st.portals||[]).map(p=>[p.id,p.name]));
+    el.innerHTML=`${st.err?`<nv-callout tone="danger" heading="Не загрузились">${esc(st.err)}</nv-callout>`:""}
+      <nv-card heading="Интеграции" subtitle="Выбираются в шаблоне сайта («Сайты» → шаблон → «Интеграция»). Клик — настройки, проверка без отправки, тестовый лид.">
+        ${items.length?'<nv-table id="ads-integ-t" clickable></nv-table>':'<nv-empty icon="plug-zap" heading="Интеграций пока нет" text="Создайте МЮ или ЮДЛ — тип лида, источник и отдел подтянутся из портала Б24."><nv-button icon="plus" data-act="integNew">Новая интеграция</nv-button></nv-empty>'}
+      </nv-card>
+      <nv-card heading="Чем отличаются" style="margin-top:12px"><div style="font-size:13.5px;line-height:1.55">
+        <b>МЮ</b> — «Тип | Имя», источник LeadGen, «По региону из формы», отдел продаж по региону (Челябинск / Екатеринбург), «Город», комментарий с ответами квиза.<br>
+        <b>ЮДЛ</b> — «Тип | Город | Имя 7XXX***XXXX», источник = офис по городу, «Источник лида: Сайт», «Горячий» и «Рабочий» лид, ответы в поле «Комментарий», ClientID Метрики, UTM-поля (product, manager, account).<br>
+        <b>Б24 — простой лид</b> — заголовок, имя, телефон, ответы, UTM.</div></nv-card>`;
+    if(items.length)wireTable(root,"ads-integ-t",items,[
+      {key:"name",label:"Интеграция",sort:true,render:i=>`<b>${esc(i.name)}</b><br><span class="muted" style="font-size:12px">${esc(i.kind_label||i.kind)}</span>`},
+      {key:"source_id",label:"Портал Б24",render:i=>esc(portals[i.source_id]||("#"+(i.source_id||"—")))},
+      {key:"type",label:"Тип лида / источник",render:i=>esc([i.settings.title_prefix,i.settings.kind==="ydl"&&i.settings.source_by_city?"офис по городу":i.settings.b24_source].filter(Boolean).join(" · ")||"—")},
+      {key:"templates",label:"Шаблоны",render:i=>(i.templates||[]).length?esc(i.templates.join(", ")):'<span class="muted">не выбрана</span>'},
+      {key:"updated_at",label:"Изменена",sort:true,render:i=>fmtDateTime(i.updated_at)}],i=>integEditor(i));
+  }}
+},
 sites(){
   const A=S.ads,st=A.sites||(A.sites={filter:"free",q:""}),f=st.filter||"free";
   return{title:"Сайты",sub:"Шаблоны сайтов и квизов, домены из reg.ru (свободные и занятые) и размещение на нашем сервере. Заявки — лидами в Б24 проекта.",
@@ -5635,12 +5774,13 @@ sites(){
           <nv-button icon="refresh-cw" data-act="sitesLoad">Обновить из reg.ru</nv-button></div>
         ${st.domErr?`<nv-callout tone="danger" heading="Домены не загрузились">${esc(st.domErr)}</nv-callout>`:shown.length?'<nv-table id="ads-sites-dom" page-size="25" clickable></nv-table>':'<nv-empty icon="search-x" heading="Нет доменов" text="Измените фильтр."></nv-empty>'}
       </nv-card>
-      <nv-card heading="Заявки с сайтов" subtitle="Последние 200. Б24: отправлена / пропущена (у проекта нет источника) / ошибка." style="margin-top:12px">
-        ${leads.length?'<nv-table id="ads-sites-leads" page-size="20"></nv-table>':'<nv-empty icon="users" heading="Заявок пока нет" text="Появятся, когда сайты начнут получать трафик."></nv-empty>'}
+      <nv-card heading="Заявки с сайтов" subtitle="Последние 200. Клик — ответы, что ушло в CRM, «Отправить повторно»." style="margin-top:12px">
+        ${leads.length?'<nv-table id="ads-sites-leads" page-size="20" clickable></nv-table>':'<nv-empty icon="users" heading="Заявок пока нет" text="Появятся, когда сайты начнут получать трафик."></nv-empty>'}
       </nv-card>`;
     if(tpls.length)wireTable(root,"ads-sites-tpl",tpls,[
-      {key:"name",label:"Шаблон",sort:true,render:t=>`<b>${esc(t.name)}</b><br><span class="muted" style="font-size:12px">${esc((t.config||{}).title||"")}</span>`},
-      {key:"kind",label:"Тип",sort:true,render:t=>t.kind==="quiz"?"Квиз · "+((t.config||{}).questions||[]).length+" вопр.":"Лендинг"},
+      {key:"name",label:"Шаблон",sort:true,render:t=>`<b>${esc(t.name)}</b><br><span class="muted" style="font-size:12px">${esc((t.config||{}).brand||(t.config||{}).title||"")}${(t.config||{}).phone?" · "+esc(t.config.phone):""}</span>`},
+      {key:"kind",label:"Тип",sort:true,render:t=>t.kind==="quiz"?"Квиз · "+((t.config||{}).questions||[]).length+" вопр.":t.kind==="bundle"?"Копия: "+esc(((st.bundles||[]).find(b=>b.id===(t.config||{}).bundle)||{}).title||(t.config||{}).bundle):"Лендинг"},
+      {key:"integ",label:"Интеграция",render:t=>{const i=(st.integs||[]).find(i=>i.id===(t.config||{}).integration_id);return i?esc(i.name):'<span class="muted">Б24 проекта</span>'}},
       {key:"used",label:"Сайтов",align:"right",render:t=>fmt(doms.filter(d=>d.site&&d.site.template_id===t.id).length)},
       {key:"updated_at",label:"Изменён",sort:true,render:t=>t.updated_at?fmtDateTime(t.updated_at):"—"}],t=>siteTplEditor(t));
     if(shown.length&&!st.domErr)wireTable(root,"ads-sites-dom",shown.map(d=>({id:d.domain,...d})),[
@@ -5654,7 +5794,7 @@ sites(){
       {key:"name",label:"Имя",render:x=>esc(x.name||"—")},
       {key:"phone",label:"Телефон"},
       {key:"utm",label:"Кампания",render:x=>esc(((x.data||{}).utm||{}).utm_campaign||"—")},
-      {key:"b24_status",label:"Б24",sort:true,render:x=>x.b24_status==="sent"?`<nv-status value="live" label="Лид #${x.b24_lead_id||""}"></nv-status>`:x.b24_status==="skipped"?`<nv-status value="paused" label="Пропущен" hint="${esc(x.error)}"></nv-status>`:`<nv-status value="failed" label="Ошибка" hint="${esc(x.error)}"></nv-status>`}]);
+      {key:"b24_status",label:"Б24",sort:true,render:x=>{const s=LEAD_ST[x.b24_status]||["unknown",x.b24_status||"—"];return `<nv-status value="${s[0]}" label="${esc(s[1]+(x.b24_status==="sent"?(x.b24_lead_id||""):""))}" hint="${esc(x.error||"")}"></nv-status>`}}],x=>siteLeadDlg(x));
   }}
 },
 life(){
@@ -5918,7 +6058,8 @@ N.register({id:"ads",name:"Реклама",short:"Реклама",tag:"Ad Automa
     {id:"clickru",label:"Клик.ру",icon:"link"},
     {id:"report",label:"Отчётность",icon:"bar-chart-3"},
     {id:"life",label:"Жизнь аккаунтов",icon:"activity"},
-    {id:"sites",label:"Сайты",icon:"layout-grid"}
+    {id:"sites",label:"Сайты",icon:"layout-grid"},
+    {id:"integrations",label:"Интеграции",icon:"plug-zap"}
   ]}],
   views:views_ads,seed:adsSeed});
 /* S.ads живёт внутри общего блока localStorage (NEON.save()) наравне с S.intel —
