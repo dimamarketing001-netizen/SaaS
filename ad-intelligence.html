@@ -3636,7 +3636,7 @@ function schedSummary(freq,days){
 }
 function scanDlg(){
   overlay("modal",{title:"Новое сканирование",subtitle:"Воркер подберёт задание при следующем опросе и начнёт собирать креативы.",size:"md",
-    body:'<nv-tag-input name="key" label="Что ищем" value="" placeholder="Например, кроссовки" hint="Введите запрос и нажмите Enter. На каждый запрос создаётся отдельное задание" required></nv-tag-input><nv-input name="city" label="Город" value="Москва"></nv-input><nv-select name="freq" label="Как часто запускать" value="once" options="'+FREQ_OPTS+'"></nv-select><div data-sch-days hidden><nv-select name="days" label="Повторять каждый день в течение" value="7" options="'+DAYS_OPTS+'"></nv-select></div><div class="sch-sum" data-sch-sum>'+esc(schedSummary("once","7"))+'</div>',
+    body:'<nv-tag-input name="key" label="Что ищем" value="" placeholder="Например, кроссовки" hint="Введите запрос и нажмите Enter. На каждый запрос создаётся отдельное задание" required></nv-tag-input><nv-input name="city" label="Город" value="Москва"></nv-input><nv-select name="source" label="Где ищем" value="yandex" options="yandex:Яндекс — РСЯ и Дзен|vk:VK — реклама в поиске по запросу|vk+feed:VK — поиск и лента" hint="VK: поиск находит «Рекламу от автора» по запросу; лента — вся реклама, что VK показывает аккаунту, без привязки к запросу"></nv-select><nv-select name="freq" label="Как часто запускать" value="once" options="'+FREQ_OPTS+'"></nv-select><div data-sch-days hidden><nv-select name="days" label="Повторять каждый день в течение" value="7" options="'+DAYS_OPTS+'"></nv-select></div><div class="sch-sum" data-sch-sum>'+esc(schedSummary("once","7"))+'</div>',
     mount(r){
       const upd=()=>{const f=r.querySelector('[name="freq"]').value,d=r.querySelector('[name="days"]').value;r.querySelector("[data-sch-days]").hidden=f==="once";r.querySelector("[data-sch-sum]").textContent=schedSummary(f,d)};
       r.addEventListener("nv-change",upd);
@@ -3646,11 +3646,13 @@ function scanDlg(){
       if(!keyRaw){r.querySelector('[name="key"]').setAttribute("error","Введите хотя бы один запрос");return false}
       const keys=keyRaw.split(",").map(x=>x.trim()).filter(Boolean),city=(v.city||"").trim()||"Москва";
       const sched=v.freq&&v.freq!=="once"?{runs_per_day:+v.freq,duration_days:+v.days}:null;
+      const source=v.source||"yandex";
+      if(sched&&source!=="yandex"){toast("Расписание пока только для Яндекса — для VK выберите «Один раз»",{tone:"danger"});return false}
       (async()=>{
         try{
           for(const k of keys){
             if(sched)await apiPost("/api/v1/schedules",{city,key_text:k,...sched});
-            else await apiPost("/api/v1/runs",{city,key_text:k});
+            else await apiPost("/api/v1/runs",{city,key_text:k,source});
           }
           await Promise.all([loadScans(),loadSchedules()]);N.go("intel-scans");
           toast(sched?(keys.length>1?"Создано расписаний: "+keys.length:"Расписание создано, первый запуск уже в очереди"):(keys.length>1?"Создано заданий: "+keys.length:"Задание создано"),{tone:"success"});
