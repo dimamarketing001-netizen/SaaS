@@ -7280,30 +7280,111 @@ async function studioAiCritique(){
     }catch(e){msg.textContent="";toast(e.message||"ИИ не ответил",{tone:"danger"})}
   });
 }
+/* Генерация изображений (2026-11-19): «по промту» — описание текстом, «по примеру» —
+   образец (файл, текущий холст или выбранная картинка) + что поменять. Промт может
+   написать ИИ по брифу. Провайдер выбирает сервер; если ни один не включён — показываем
+   причину как есть (например, «нужно включить оплату»). */
+function studioAiImage(){
+  const d=studioDesign(),sel=studioSelected();
+  let mode="prompt",example="",results=[];
+  overlay("modal",{title:"Сгенерировать изображение",subtitle:"Фото или фон для креатива. Формат — как у текущего дизайна ("+STUDIO_FMT[d.format].label+").",size:"lg",service:"studio",
+    body:`<div class="stack" style="gap:12px">
+      <div class="stud-seg2" data-mode><button type="button" class="on" data-m="prompt">По промту</button><button type="button" data-m="example">По примеру</button></div>
+      <div data-ex hidden class="stack" style="gap:8px">
+        <div class="row" style="gap:6px;flex-wrap:wrap"><label class="nv-btn v-secondary s-sm" for="stud-gen-ex">${ic("upload",14)}Загрузить пример</label><input type="file" id="stud-gen-ex" accept="image/*" class="sr">
+          <button type="button" class="nv-btn v-secondary s-sm" data-exsrc="canvas">${ic("image",14)}Текущий холст</button>
+          ${sel&&sel.type==="image"&&sel.src?`<button type="button" class="nv-btn v-secondary s-sm" data-exsrc="layer">${ic("image",14)}Выбранная картинка</button>`:""}
+          ${d.bg.type==="image"&&d.bg.image?`<button type="button" class="nv-btn v-secondary s-sm" data-exsrc="bg">${ic("image",14)}Фон дизайна</button>`:""}</div>
+        <div data-expreview class="muted" style="font-size:12.5px">Пример не выбран</div>
+      </div>
+      ${studioBriefField()}
+      <nv-textarea label="Что изобразить / что изменить в примере" rows="2" data-wish placeholder="Например: юрист в светлом офисе, место слева под текст"></nv-textarea>
+      <div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end"><nv-button variant="secondary" icon="sparkles" data-sprompt>ИИ: написать промт</nv-button><span class="muted" data-pmsg style="font-size:12.5px"></span></div>
+      <nv-textarea label="Промт для генерации" rows="4" data-prompt placeholder="Можно своими словами или нажать «ИИ: написать промт»"></nv-textarea>
+      <div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end"><nv-select label="Сколько" data-cnt options="1:1|2:2|4:4" value="2"></nv-select><nv-button icon="image" data-sgen>Сгенерировать</nv-button><span class="muted" data-msg style="font-size:12.5px"></span></div>
+      <div class="stud-ai-grid" data-out></div></div>`,
+    actions:[{label:"Закрыть"}],
+    mount(root,close){
+      const $=q=>root.querySelector(q),val=q=>{const e=$(q);return((e&&(e.value!=null?e.value:e.getAttribute("value")))||"").trim()};
+      const showEx=()=>{$("[data-expreview]").innerHTML=example?`<img src="${example}" alt="" style="max-height:110px;border-radius:8px;border:1px solid var(--line)">`:"Пример не выбран"};
+      $("[data-mode]").addEventListener("click",e=>{const b=e.target.closest("[data-m]");if(!b)return;mode=b.dataset.m;$("[data-mode]").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));$("[data-ex]").hidden=mode!=="example"});
+      $("#stud-gen-ex").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{example=(await fileToDataUrl(f,1400)).dataUrl;showEx()}catch(err){toast(err.message,{tone:"danger"})}});
+      root.addEventListener("click",async e=>{
+        const src=e.target.closest("[data-exsrc]");
+        if(src){const k=src.dataset.exsrc;
+          if(k==="canvas"){try{const f=STUDIO_FMT[d.format];example=(await studioRenderCanvas(d,Math.min(1,1200/Math.max(f.w,f.h)))).toDataURL("image/jpeg",0.88)}catch(err){toast("Не удалось собрать холст",{tone:"danger"})}}
+          if(k==="layer")example=sel.src;if(k==="bg")example=d.bg.image;showEx();return}
+        if(e.target.closest("[data-sprompt]")){
+          const m=$("[data-pmsg]");m.textContent="ИИ пишет промт… 5–20 секунд";
+          try{const r=await apiPost("/api/v1/studio/ai/image-prompt",{brief:studioReadBrief(root),wish:val("[data-wish]"),example:mode==="example"?example:"",format:d.format});
+            const t=$("[data-prompt]");t.value=r.prompt;m.textContent=r.prompt_ru?("Смысл: "+r.prompt_ru):""}
+          catch(err){m.textContent="";toast(err.message,{tone:"danger"})}
+          return}
+        if(e.target.closest("[data-sgen]")){
+          const prompt=val("[data-prompt]")||val("[data-wish]");
+          if(prompt.length<3){toast("Напишите промт или нажмите «ИИ: написать промт»",{tone:"warning"});return}
+          if(mode==="example"&&!example){toast("Выберите пример картинки",{tone:"warning"});return}
+          const m=$("[data-msg]");m.textContent="Генерирую… обычно 15–60 секунд";$("[data-out]").innerHTML="";
+          try{const r=await apiPost("/api/v1/studio/ai/image",{prompt,example:mode==="example"?example:"",format:d.format,count:+(val("[data-cnt]")||2)});
+            results=r.images||[];m.textContent="";
+            $("[data-out]").innerHTML=results.map((x,i)=>`<figure><img src="${x.data_url}" alt=""><div class="row" style="gap:6px;flex-wrap:wrap"><nv-button size="sm" data-use="bg" data-i="${i}">Фоном</nv-button><nv-button size="sm" variant="secondary" data-use="layer" data-i="${i}">Слоем</nv-button><nv-button size="sm" variant="ghost" icon="download" icon-only hint="Скачать" data-use="dl" data-i="${i}">Скачать</nv-button></div></figure>`).join("");
+          }catch(err){m.textContent="";$("[data-out]").innerHTML=`<div class="stud-issue high" style="grid-column:1/-1">${esc(err.message||"Не удалось")}</div>`}
+          return}
+        const use=e.target.closest("[data-use]");
+        if(use){const x=results[+use.dataset.i];if(!x)return;const k=use.dataset.use;
+          if(k==="dl"){const blob=await (await fetch(x.data_url)).blob();studioDownload(blob,"generated_"+(+use.dataset.i+1)+(blob.type==="image/png"?".png":".jpg"));return}
+          studioBeforeChange();const dd=studioDesign();
+          if(k==="bg")dd.bg={type:"image",image:x.data_url};
+          else{const l=studioLayerDefaults("image");l.src=x.data_url;const f=STUDIO_FMT[dd.format];l.w=60;l.h=Math.max(6,Math.min(95,f.w*0.6*(x.height/x.width)/f.h*100));l.x=20;l.y=Math.max(0,(100-l.h)/2);
+            const ph=dd.layers.find(y=>y.type==="image"&&!y.src);if(ph){ph.src=x.data_url;delete ph.placeholder}else dd.layers.push(l)}
+          N.refresh();NEON.save();toast(k==="bg"?"Картинка поставлена фоном":"Картинка добавлена на холст",{tone:"success"});close()}
+      });
+    }});
+}
 /* «В рекламу»: дизайн → картинка в проект «Рекламы» (тот же upload, что в визарде;
    addAvto подгоняет картинку под Директ). Директ берёт соотношения 3:4…4:3 и 16:9. */
 async function studioToAds(){
-  const d=studioDesign();if(!d.layers.length){toast("Сначала соберите макет",{tone:"warning"});return}
-  const f=STUDIO_FMT[d.format],ratio=f.w/f.h,okRatio=ratio>=0.74&&ratio<=1.8;
+  const cur=studioDesign();
+  if(!cur.layers.length&&!(S.studio.list||[]).length){toast("Сначала соберите макет",{tone:"warning"});return}
+  if(cur.layers.length&&studioSave.state!=="saved")await studioPersist({silent:true});
   let projects=[];
   try{projects=((await api("/api/v1/ads/projects",{})).items||[])}catch(e){toast("Не удалось загрузить проекты рекламы: "+(e.message||""),{tone:"danger"});return}
-  if(!projects.length){toast("В «Рекламе» пока нет проектов — создайте проект, потом добавьте в него картинку",{tone:"warning"});return}
-  overlay("modal",{title:"Отправить в рекламу",subtitle:"Картинка добавится в креативы проекта — её возьмут следующие запуски.",service:"studio",
-    body:`<div class="stack" style="gap:10px">${okRatio?"":`<div class="stud-issue high">Формат «${esc(f.label)}» Директ в объявлениях не примет (нужно от 3:4 до 16:9). Смените формат на «Квадрат», «Директ 16:9» или «4:3».</div>`}
-      <nv-select label="Проект" data-proj options="${projects.map(p=>p.id+":"+String(p.name||("Проект "+p.id)).replace(/[|:]/g," ")+" · картинок "+((p.image_urls||[]).length)).join("|")}" value="${projects[0].id}"></nv-select></div>`,
-    actions:[{label:"Отмена"},{label:"Отправить",variant:"primary",fn:async()=>{
-      const sel=document.querySelector(".ov [data-proj]"),pid=+(sel&&sel.value),p=projects.find(x=>x.id===pid);if(!p)return;
-      const urls=(p.image_urls||[]).slice();if(urls.length>=20){toast("В проекте уже 20 картинок — уберите лишние в визарде",{tone:"warning"});return}
+  if(!projects.length){toast("В «Рекламе» пока нет проектов — создайте проект, потом добавьте в него картинки",{tone:"warning"});return}
+  if(S.studio.listState!=="ok")await studioLoadList();
+  const ratioOk=fmt=>{const f=STUDIO_FMT[fmt]||STUDIO_FMT.square,r=f.w/f.h;return r>=0.74&&r<=1.8};
+  const list=(S.studio.list||[]).slice(0,40);
+  overlay("modal",{title:"Креативы в рекламу",subtitle:"Выбранные дизайны станут картинками проекта. «Добавить и запустить» сразу откроет мастер запуска кампаний.",size:"lg",service:"studio",
+    body:`<div class="stack" style="gap:12px">
+      <nv-select label="Проект" data-proj options="${projects.map(p=>p.id+":"+String(p.name||("Проект "+p.id)).replace(/[|:]/g," ")+" · картинок "+((p.image_urls||[]).length)).join("|")}" value="${projects[0].id}"></nv-select>
+      <div class="sect-t">Какие дизайны</div>
+      <div class="stud-ai-grid">${list.map(x=>`<label style="display:flex;flex-direction:column;gap:6px;cursor:pointer;opacity:${ratioOk(x.format)?1:.45}"><img src="${esc(x.thumb||"")}" alt="" style="aspect-ratio:${(STUDIO_FMT[x.format]||STUDIO_FMT.square).w}/${(STUDIO_FMT[x.format]||STUDIO_FMT.square).h};object-fit:cover"><span style="font-size:12.5px;display:flex;gap:6px;align-items:flex-start"><input type="checkbox" data-pick="${x.id}" ${x.id===cur.id&&ratioOk(x.format)?"checked":""} ${ratioOk(x.format)?"":"disabled"}> ${esc(x.name)}${ratioOk(x.format)?"":" — формат не для Директа"}</span></label>`).join("")}</div>
+      <p class="muted" style="font-size:12.5px;margin:0">Директ берёт картинки от 3:4 до 16:9 — сторис и 4:5 в объявления не пойдут. В проекте не больше 20 картинок.</p>
+      <div class="muted" data-msg style="font-size:12.5px"></div></div>`,
+    actions:[{label:"Отмена"},{label:"Только добавить",variant:"secondary",fn:r=>{go(false,r)}},{label:"Добавить и запустить",variant:"primary",fn:r=>{go(true,r)}}]});
+  async function go(launch,root){
+    const sel=root?root.querySelector("[data-proj]"):null,pid=+(sel&&sel.value),p=projects.find(x=>x.id===pid);
+    const ids=root?[...root.querySelectorAll("[data-pick]:checked")].map(x=>+x.dataset.pick):[];
+    if(!p)return;if(!ids.length){toast("Отметьте хотя бы один дизайн",{tone:"warning"});return}
+    const urls=(p.image_urls||[]).slice(),room=20-urls.length;
+    if(room<=0){toast("В проекте уже 20 картинок — уберите лишние в мастере запуска",{tone:"warning"});if(launch)projectWizard(p);return}
+    toast(`Готовлю картинки: ${Math.min(room,ids.length)}…`);let added=0,failed=0;
+    for(const id of ids.slice(0,room)){
       try{
-        const c=await studioRenderCanvas(d,1);
+        const dsg=id===cur.id?cur:Object.assign(studioNewDesign(),(await api("/api/v1/studio/designs/"+id)).data||{});
+        const c=await studioRenderCanvas(dsg,1);
         let blob=await new Promise(r=>c.toBlob(r,"image/png"));
         if(!blob||blob.size>9.5*1024*1024)blob=await new Promise(r=>c.toBlob(r,"image/jpeg",0.9));
-        const file=new File([blob],(d.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+(blob.type==="image/png"?".png":".jpg"),{type:blob.type});
-        const ref=await uploadCreativeImage(file);
-        urls.push(ref);await apiPut("/api/v1/ads/projects/"+p.id,{...p,image_urls:urls});
-        toast(`Картинка добавлена в проект «${p.name||p.id}»`,{tone:"success"});
-      }catch(e){toast("Не удалось отправить: "+(e.message||""),{tone:"danger"})}
-    }}]});
+        const file=new File([blob],(dsg.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+(blob.type==="image/png"?".png":".jpg"),{type:blob.type});
+        urls.push(await uploadCreativeImage(file));added++;
+      }catch(e){failed++}
+    }
+    if(!added){toast("Не удалось подготовить картинки",{tone:"danger"});return}
+    try{const full={...p,image_urls:urls};await apiPut("/api/v1/ads/projects/"+p.id,full);
+      toast(`В проект «${p.name||p.id}» добавлено картинок: ${added}`+(failed?` · не получилось: ${failed}`:""),{tone:failed?"warning":"success"});
+      if(S.ads&&Array.isArray(S.ads.projects)){const i=S.ads.projects.findIndex(x=>x.id===p.id);if(i>=0)S.ads.projects[i]=full}
+      if(launch)projectWizard(full);
+    }catch(e){toast("Не удалось сохранить проект: "+(e.message||""),{tone:"danger"})}
+  }
 }
 async function studioFetchImage(url,maxDim){const r=await apiPost("/api/v1/studio/fetch-image",{url,max_dim:maxDim||1600});return r}
 function studioImageByUrl(){
@@ -7355,6 +7436,7 @@ editor(){
       <nv-button variant="secondary" size="sm" icon="sparkles" data-act="studAiDesign">Макет по брифу</nv-button>
       <nv-button variant="secondary" size="sm" icon="type" data-act="studAiTexts">Тексты: варианты, A/B</nv-button>
       <nv-button variant="secondary" size="sm" icon="scan-search" data-act="studAiCritique">Разбор креатива</nv-button>
+      <nv-button variant="secondary" size="sm" icon="image-plus" data-act="studAiImage">Сгенерировать изображение</nv-button>
       ${studioBrandHtml()}
       <input type="file" id="stud-img-file" accept="image/*" class="sr">
       ${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Клик — точка. Клик+тяни — плавная точка. Клик по первой точке — замкнуть. Enter/двойной клик — закончить открытой. Esc — отмена.</p>':""}
@@ -7797,6 +7879,7 @@ Object.assign(N.acts,{
   studExportAll:studioExportAll,
   studImgUrl:studioImageByUrl,
   studToAds:studioToAds,
+  studAiImage:studioAiImage,
   studZoom(a,d){const steps=[0.5,0.75,1,1.25,1.5,2];let i=steps.indexOf(studioZoom);if(i<0)i=2;studioZoom=d.z==="fit"?1:steps[Math.max(0,Math.min(steps.length-1,i+(d.z==="+"?1:-1)))];N.refresh()},
   studZones(){S.studio.zones=!S.studio.zones;N.refresh();NEON.save()},
   studAiTexts:studioAiTexts,
