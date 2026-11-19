@@ -6172,6 +6172,122 @@ N.chg.adsRepThreshold=v=>{S.ads.rep.threshold=Math.max(0,Math.round(+v||0));save
 N.chg.adsRepStatus=v=>{S.ads.rep.status=v;saveRep();N.refreshIf("ads-report")};
 N.chg.adsRepQ=v=>{S.ads.rep.q=v;clearTimeout(N._repQ);N._repQ=setTimeout(()=>N.refreshIf("ads-report"),250)};
 N.acts.adsRepLoad=()=>loadReport(true);
+/* ---------- Сервис «ВКонтакте» (19.11.2026): площадки VK, мониторинг стен; реклама VK живёт в Разведке ---------- */
+const vkSeed=()=>({ov:null,ovLoaded:false,comm:[],commTotal:0,commLoaded:false,commQ:""});
+async function vkLoadOverview(){
+  try{S.vk.ov=await api("/api/v1/vk/overview",{})}catch(err){toast("ВКонтакте: "+(err.message||""),{tone:"danger"})}
+  S.vk.ovLoaded=true;N.refreshIf("vk-overview");
+}
+async function vkLoadCommunities(){
+  try{const d=await api("/api/v1/vk/communities",{q:S.vk.commQ||"",limit:200});S.vk.comm=d.items||[];S.vk.commTotal=d.total||0}
+  catch(err){toast("Площадки VK: "+(err.message||""),{tone:"danger"})}
+  S.vk.commLoaded=true;N.refreshIf("vk-communities");
+}
+/* Реклама VK показывается в Разведке: туда ведут все «открыть в Разведке» */
+async function vkOpenInIntel(){
+  Object.assign(S.intel.f,{q:"",platform:"VK · Реклама от автора",format:"",saved:"",period:"",aiIntent:"",job:"",page:1});
+  await loadLibrary();N.go("intel-library");
+  toast("Разведка: реклама ВКонтакте. Сбросить фильтр — кнопка над списком",{tone:"success"});
+}
+async function vkOpenCommunity(oid,name){
+  try{const d=await api("/api/v1/vk/communities/"+oid+"/creative-ids",{});
+    if(!(d.ids||[]).length){toast("В этом паблике реклама ещё не собрана",{tone:"info"});return}
+    jumpToLibrary({ids:d.ids.join(","),sort:"recent",limit:200},"Разведка: реклама в паблике «"+name+"»");
+  }catch(err){toast("Не удалось открыть: "+(err.message||""),{tone:"danger"})}
+}
+function vkSoon(title,icon,text,items){
+  return{title,sub:"Раздел в разработке — следующий этап проекта ВКонтакте.",
+  body:`<nv-card><nv-empty icon="${icon}" heading="Скоро" text="${esc(text)}"></nv-empty>
+    <ul style="margin:8px 24px 18px;line-height:1.7;color:var(--ink-2)">${items.map(i=>`<li>${esc(i)}</li>`).join("")}</ul></nv-card>`}
+}
+const views_vk={
+overview(){
+  const V=S.vk,o=V.ov;
+  if(!V.ovLoaded||!o)return{title:"ВКонтакте",sub:"Реклама и площадки ВКонтакте.",body:'<nv-skeleton count="4"></nv-skeleton>',after(){if(!V.ovLoaded)vkLoadOverview()}};
+  const run=j=>j?`#${esc(j.id)} · ${esc({queued:"в очереди",running:"идёт",succeeded:"готово",failed:"ошибка"}[j.status]||j.status)}${j.finished_at?" · "+esc(fmtDateTime(j.finished_at)):""}${j.total_creatives!=null?" · креативов "+esc(j.total_creatives):""}`:"ещё не было";
+  const acc=o.account||{};
+  return{title:"ВКонтакте",sub:"Реклама ВКонтакте: поиск «Рекламы от автора» по запросу и мониторинг пабликов, где её размещают. Сами объявления — в Разведке.",
+  actions:`<nv-button icon="radar" data-act="vkIntel">Открыть рекламу VK в Разведке</nv-button><nv-button variant="secondary" icon="search" data-act="vkSearch">Новый поиск в VK</nv-button>`,
+  body:`<div class="grid g3">
+      ${stat("Объявлений VK",fmt(o.creatives||0),`hint="за неделю: ${esc(fmt(o.creatives_week||0))}"`)}
+      ${stat("С рекламодателем (ИНН)",fmt(o.with_advertiser||0),`hint="по ERID через ОРД VK"`)}
+      ${stat("Площадок-пабликов",fmt(o.communities||0),`hint="на мониторинге: ${esc(fmt(o.monitored||0))}"`)}
+      ${stat("Рекламодателей в VK",fmt(o.advertisers||0))}
+      ${stat("И в VK, и в Яндексе",fmt(o.advertisers_both||0),`hint="одно юрлицо рекламируется на обеих площадках"`)}
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <nv-card heading="Сбор" subtitle="Поиск по запросу и обход стен пабликов">
+        <dl class="dl">
+          <dt>Последний поиск</dt><dd>${o.last_search?`«${esc(o.last_search.key_text)}» · `:""}${run(o.last_search)}</dd>
+          <dt>Обход стен</dt><dd>${run(o.last_walls)} <span class="muted">· автоматически каждые ${esc(o.walls_every_hours)} ч</span></dd>
+          <dt>Аккаунт парсера</dt><dd>${acc.cookies_saved_at?`вход сохранён · куки обновлены ${esc(fmtDateTime(acc.cookies_saved_at))}`:'<nv-badge tone="danger">нет сохранённого входа</nv-badge>'}</dd>
+        </dl>
+        <div class="row" style="gap:8px;margin-top:10px"><nv-button size="sm" variant="secondary" icon="refresh-cw" data-act="vkWallsRun">Обойти стены сейчас</nv-button></div>
+      </nv-card>
+      <nv-card heading="Кто рекламируется" subtitle="Рекламодатели VK по числу объявлений">
+        ${(o.top_advertisers||[]).length?`<dl class="dl">${o.top_advertisers.map(a=>`<dt><button type="button" class="run-link" data-act="vkAdv" data-inn="${esc(a.inn)}">${esc(a.name||"ИНН "+a.inn)}</button></dt><dd>${esc(fmt(a.ads))} объявл.${a.communities>1?` · в ${esc(a.communities)} пабликах`:""}</dd>`).join("")}</dl>
+          <div style="margin-top:10px"><nv-button size="sm" variant="secondary" icon="building-2" data-act="vkAdvAll">Все рекламодатели VK</nv-button></div>`:'<span class="muted">Пока нет</span>'}
+      </nv-card>
+    </div>
+    <nv-card heading="Где больше всего рекламы" subtitle="Паблики-площадки «Рекламы от автора»" style="margin-top:14px">
+      ${(o.top_communities||[]).length?`<dl class="dl">${o.top_communities.map(c=>`<dt><button type="button" class="run-link" data-act="vkComm" data-id="${esc(c.owner_id)}" data-name="${esc(c.name||"")}">${esc(c.name||c.screen_name||c.owner_id)}</button></dt><dd>${esc(fmt(c.ads))} объявл.${c.members?` · ${esc(fmt(c.members))} подписчиков`:""}</dd>`).join("")}</dl>
+        <div style="margin-top:10px"><nv-button size="sm" variant="secondary" icon="list" data-act="vkGo" data-v="communities">Все площадки</nv-button></div>`:'<span class="muted">Площадки появятся после первого поиска в VK</span>'}
+    </nv-card>`,
+  after(){}}
+},
+communities(){
+  const V=S.vk;
+  return{title:"Площадки",sub:"Паблики, где нашли «Рекламу от автора». Стены тех, что на мониторинге, парсер обходит по расписанию и собирает всю рекламу в них — без ключевых слов.",
+  actions:`<nv-input icon="search" type="search" placeholder="Название паблика" value="${esc(V.commQ)}" data-chg="vkCommQ"></nv-input><nv-button variant="secondary" icon="refresh-cw" data-act="vkWallsRun">Обойти стены сейчас</nv-button>`,
+  body:`<nv-card flush><nv-table id="vk-comm-t" clickable page-size="20" empty-text="${V.commLoaded?"Площадок пока нет — запустите поиск в VK":"Загружаю…"}"></nv-table></nv-card>`,
+  after(root){
+    if(!V.commLoaded)vkLoadCommunities();
+    const t=root.querySelector("#vk-comm-t");
+    t.columns=[
+      {key:"name",label:"Паблик",sort:true,render:c=>`<div style="min-width:0;max-width:300px"><div class="cell-t" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.name||c.screen_name||c.owner_id)}</div><div class="cell-s"><a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.screen_name||"открыть в VK")}</a></div></div>`},
+      {key:"members",label:"Подписчики",align:"right",sort:true,render:c=>c.members?fmt(c.members):"—"},
+      {key:"ads_total",label:"Объявлений",align:"right",sort:true},
+      {key:"advertisers",label:"Рекламодателей",align:"right",sort:true},
+      {key:"last_post_at",label:"Последняя реклама",sort:true,render:c=>c.last_post_at?N.rel(c.last_post_at):"—"},
+      {key:"last_checked_at",label:"Стена проверена",sort:true,render:c=>c.last_checked_at?N.rel(c.last_checked_at)+(c.last_error?` <nv-badge tone="warning" title="${esc(c.last_error)}">ошибка</nv-badge>`:""):'<span class="muted">ещё нет</span>'},
+      {key:"monitor",label:"Мониторинг",render:c=>`<nv-button size="sm" variant="${c.monitor?"secondary":"ghost"}" icon="${c.monitor?"eye":"eye-off"}" data-act="vkMonitor" data-id="${esc(c.owner_id)}" data-on="${c.monitor?0:1}">${c.monitor?"Следим":"Выключен"}</nv-button>`}];
+    t.rows=V.comm.map(c=>({...c,id:String(c.owner_id)}));
+    t.addEventListener("nv-row-click",e=>{const c=V.comm.find(x=>String(x.owner_id)===e.detail.id);if(c)vkOpenCommunity(c.owner_id,c.name||"")});
+  }}
+},
+intel(){return{title:"Объявления VK",sub:"Открываю Разведку с фильтром ВКонтакте…",body:'<nv-skeleton count="2"></nv-skeleton>',after(){vkOpenInIntel()}}},
+audiences(){return vkSoon("Сообщества и аудитории","users","Парсер ВКонтакте: поиск сообществ и сбор аудитории для таргета.",
+  ["Поиск сообществ по запросу и городу: подписчики, активность, частота постов, доля рекламы","Сбор аудитории: участники, активные (лайки и комментарии за N дней), пересечения сообществ","Выгрузка списка ID в «Аудитории» VK Рекламы","Мониторинг сообществ конкурентов: новые посты, охваты, рекламные посты"])},
+cabinet(){return vkSoon("Кабинет VK Рекламы","megaphone","Работа со своими кабинетами VK Рекламы через официальное API.",
+  ["Статистика кампаний VK рядом с Директом в отчётах","Загрузка аудиторий из раздела «Сообщества и аудитории»","Автоправила: пауза и ставки по условиям","Офлайн-конверсии из Битрикс24"])}
+};
+Object.assign(N.acts,{
+  vkIntel(){vkOpenInIntel()},
+  vkSearch(){N.go("intel-scans");setTimeout(()=>{scanDlg();setTimeout(()=>{const sel=document.querySelector('nv-select[name="source"]');if(sel){sel.setAttribute("value","vk");sel.value="vk"}},60)},60)},
+  vkGo(a,d){N.go("vk-"+d.v)},
+  vkComm(a,d){vkOpenCommunity(d.id,d.name)},
+  vkAdv(a,d){filterByAdvertiserInn(d.inn)},
+  vkAdvAll(){S.intel.advSrc="vk";S.intel.advSub="all";S.intel.advertisersLoaded=false;N.go("intel-advertisers")},
+  async vkWallsRun(){try{const r=await apiPost("/api/v1/vk/walls/run",{});toast(r.already?"Обход стен уже идёт (#"+r.id+")":"Обход стен поставлен в очередь (#"+r.id+")",{tone:"success"});S.vk.ovLoaded=false;N.refreshIf("vk-overview")}catch(err){toast("Не удалось: "+(err.message||""),{tone:"danger"})}},
+  async vkMonitor(a,d){try{await apiPost("/api/v1/vk/communities/"+d.id+"/monitor",{monitor:d.on==="1"});const c=S.vk.comm.find(x=>String(x.owner_id)===String(d.id));if(c)c.monitor=d.on==="1"?1:0;N.refreshIf("vk-communities")}catch(err){toast("Не удалось: "+(err.message||""),{tone:"danger"})}}
+});
+N.chg.vkCommQ=v=>{S.vk.commQ=v;clearTimeout(S.vk._t);S.vk._t=setTimeout(()=>{S.vk.commLoaded=false;vkLoadCommunities()},350)};
+N.register({id:"vk",name:"ВКонтакте",short:"ВКонтакте",tag:"VK",icon:"users-round",rail:"main",status:"ready",
+  desc:"Реклама и площадки ВКонтакте; объявления открываются в Разведке",
+  metric:()=>S.vk&&S.vk.ov?fmt(S.vk.ov.creatives||0)+" объявлений VK":"Реклама ВКонтакте",
+  nav:[
+    {group:"Реклама в VK",items:[
+      {id:"overview",label:"Обзор",icon:"layout-dashboard"},
+      {id:"communities",label:"Площадки",icon:"newspaper",count:()=>S.vk&&S.vk.ov?S.vk.ov.communities||"":""},
+      {id:"intel",label:"Объявления → Разведка",icon:"radar"}
+    ]},
+    {group:"Скоро",items:[
+      {id:"audiences",label:"Сообщества и аудитории",icon:"users"},
+      {id:"cabinet",label:"Кабинет VK Рекламы",icon:"megaphone"}
+    ]}
+  ],
+  views:views_vk,seed:vkSeed});
+Object.assign(S.vk,{ov:null,ovLoaded:false,comm:[],commLoaded:false});
 N.register({id:"ads",name:"Реклама",short:"Реклама",tag:"Ad Automation",icon:"megaphone",rail:"main",status:"ready",
   desc:"Массовый запуск рекламных кампаний Яндекс.Директа через Click.ru",
   metric:()=>(S.ads.projects.length||0)+" проектов",
