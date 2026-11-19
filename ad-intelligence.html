@@ -1583,7 +1583,16 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stud-tools{display:flex;flex-direction:column;gap:9px;position:sticky;top:8px}
 .stud-tools nv-button,.stud-tools nv-input,.stud-tools nv-segmented{width:100%}
 .stud-tools .nv-btn{width:100%;justify-content:flex-start}
-.stud-stage-wrap{text-align:center}
+.stud-stage-wrap{text-align:center;overflow:auto;max-height:calc(100vh - 150px);padding:4px}
+.stud-zoom{display:inline-flex;align-items:center;gap:4px;margin-bottom:8px;font-size:12px;color:var(--ink-3)}
+.stud-zoom button{border:1px solid var(--line);background:var(--surface);border-radius:7px;height:26px;min-width:26px;padding:0 7px;cursor:pointer;color:var(--ink-2);font-size:12px}
+.stud-zoom button.on{border-color:var(--svc-ink);color:var(--svc-ink);background:var(--svc-soft)}
+.stud-zones{position:absolute;inset:0;pointer-events:none;z-index:5}
+.stud-zones .m{position:absolute;inset:5%;border:1px dashed rgba(255,45,120,.75);border-radius:4px}
+.stud-zones .ui{position:absolute;left:0;right:0;background:repeating-linear-gradient(45deg,rgba(255,45,120,.16) 0 8px,rgba(255,45,120,.06) 8px 16px);color:#ff2d78;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;text-shadow:0 0 3px #fff}
+.stud-contrast{font-size:12.5px;padding:6px 9px;border-radius:8px;background:var(--surface-2)}
+.stud-contrast.bad{background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad)}
+.stud-contrast.ok{color:var(--good,#16a34a)}
 .stud-stage{position:relative;display:block;width:100%;max-width:560px;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-2);background-size:cover!important;background-position:center!important;user-select:none;margin:0 auto;text-align:left}
 .stud-layer{position:absolute;cursor:move}
 .stud-layer.on{outline:2px solid var(--svc-ink);outline-offset:1px}
@@ -2710,7 +2719,7 @@ let saveT;
    сохраняется как есть, чтобы перенос не потерял их. Переполнение — предупреждаем. */
 let saveWarned=false;
 NEON.save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{
-  const st=S.studio,snap=st?{...S,studio:{lastId:st.lastId,migrated:st.migrated,brief:st.brief,q:st.q,fmtF:st.fmtF,tplFmt:st.tplFmt,brand:st.brand,
+  const st=S.studio,snap=st?{...S,studio:{lastId:st.lastId,migrated:st.migrated,brief:st.brief,q:st.q,fmtF:st.fmtF,tplFmt:st.tplFmt,brand:st.brand,zones:st.zones,
     ...(!st.migrated&&saved.studio&&saved.studio.designs?{designs:saved.studio.designs,editor:saved.studio.editor}:{})}}:S;
   try{localStorage.setItem(KEY,JSON.stringify(snap))}
   catch(e){if(!saveWarned){saveWarned=true;toast("Браузер не смог сохранить настройки кабинета (переполнено хранилище)",{tone:"warning"})}}
@@ -6208,13 +6217,13 @@ N.chg.adsRepStatus=v=>{S.ads.rep.status=v;saveRep();N.refreshIf("ads-report")};
 N.chg.adsRepQ=v=>{S.ads.rep.q=v;clearTimeout(N._repQ);N._repQ=setTimeout(()=>N.refreshIf("ads-report"),250)};
 N.acts.adsRepLoad=()=>loadReport(true);
 /* ---------- Сервис «ВКонтакте» (19.11.2026): площадки VK, мониторинг стен; реклама VK живёт в Разведке ---------- */
-const vkSeed=()=>({ov:null,ovLoaded:false,comm:[],commTotal:0,commLoaded:false,commQ:""});
+const vkSeed=()=>({ov:null,ovLoaded:false,comm:[],commTotal:0,commLoaded:false,commQ:"",commKind:""});
 async function vkLoadOverview(){
   try{S.vk.ov=await api("/api/v1/vk/overview",{})}catch(err){toast("ВКонтакте: "+(err.message||""),{tone:"danger"})}
   S.vk.ovLoaded=true;N.refreshIf("vk-overview");
 }
 async function vkLoadCommunities(){
-  try{const d=await api("/api/v1/vk/communities",{q:S.vk.commQ||"",limit:200});S.vk.comm=d.items||[];S.vk.commTotal=d.total||0}
+  try{const d=await api("/api/v1/vk/communities",{q:S.vk.commQ||"",kind:S.vk.commKind||"",limit:200});S.vk.comm=d.items||[];S.vk.commTotal=d.total||0}
   catch(err){toast("Площадки VK: "+(err.message||""),{tone:"danger"})}
   S.vk.commLoaded=true;N.refreshIf("vk-communities");
 }
@@ -6246,7 +6255,7 @@ overview(){
   body:`<div class="grid g3">
       ${stat("Объявлений VK",fmt(o.creatives||0),`hint="за неделю: ${esc(fmt(o.creatives_week||0))}"`)}
       ${stat("С рекламодателем (ИНН)",fmt(o.with_advertiser||0),`hint="по ERID через ОРД VK"`)}
-      ${stat("Площадок-пабликов",fmt(o.communities||0),`hint="на мониторинге: ${esc(fmt(o.monitored||0))}"`)}
+      ${stat("Площадок-пабликов",fmt(o.communities||0),`hint="на мониторинге: ${esc(fmt(o.monitored||0))}${o.candidates?` · кандидатов из поиска: ${esc(fmt(o.candidates))}${o.discovered_with_ads?`, с рекламой: ${esc(fmt(o.discovered_with_ads))}`:""}`:""}"`)}
       ${stat("Рекламодателей в VK",fmt(o.advertisers||0))}
       ${stat("И в VK, и в Яндексе",fmt(o.advertisers_both||0),`hint="одно юрлицо рекламируется на обеих площадках"`)}
     </div>
@@ -6273,8 +6282,8 @@ overview(){
 communities(){
   const V=S.vk;
   return{title:"Площадки",sub:"Паблики, где нашли «Рекламу от автора». Стены тех, что на мониторинге, парсер обходит по расписанию и собирает всю рекламу в них — без ключевых слов.",
-  actions:`<nv-input icon="search" type="search" placeholder="Название паблика" value="${esc(V.commQ)}" data-chg="vkCommQ"></nv-input><nv-button variant="secondary" icon="refresh-cw" data-act="vkWallsRun">Обойти стены сейчас</nv-button>`,
-  body:`<nv-card flush><nv-table id="vk-comm-t" clickable page-size="20" empty-text="${V.commLoaded?"Площадок пока нет — запустите поиск в VK":"Загружаю…"}"></nv-table></nv-card>`,
+  actions:`<nv-segmented options=":С рекламой|candidates:Кандидаты" value="${esc(V.commKind||"")}" data-chg="vkCommKind"></nv-segmented><nv-input icon="search" type="search" placeholder="Название паблика" value="${esc(V.commQ)}" data-chg="vkCommQ"></nv-input><nv-button variant="secondary" icon="refresh-cw" data-act="vkWallsRun">Обойти стены сейчас</nv-button>`,
+  body:`<nv-card flush><nv-table id="vk-comm-t" clickable page-size="20" empty-text="${!V.commLoaded?"Загружаю…":V.commKind==="candidates"?"Кандидатов нет — их находит поиск пабликов при обходе стен":"Площадок пока нет — запустите поиск в VK"}"></nv-table></nv-card>`,
   after(root){
     if(!V.commLoaded)vkLoadCommunities();
     const t=root.querySelector("#vk-comm-t");
@@ -6284,7 +6293,7 @@ communities(){
       {key:"ads_total",label:"Объявлений",align:"right",sort:true},
       {key:"advertisers",label:"Рекламодателей",align:"right",sort:true},
       {key:"last_post_at",label:"Последняя реклама",sort:true,render:c=>c.last_post_at?N.rel(c.last_post_at):"—"},
-      {key:"last_checked_at",label:"Стена проверена",sort:true,render:c=>c.last_checked_at?N.rel(c.last_checked_at)+(c.last_error?` <nv-badge tone="warning" title="${esc(c.last_error)}">ошибка</nv-badge>`:""):'<span class="muted">ещё нет</span>'},
+      {key:"last_checked_at",label:"Стена проверена",sort:true,render:c=>c.last_checked_at?N.rel(c.last_checked_at)+(V.commKind==="candidates"&&!c.monitor&&!c.last_error?' <nv-badge tone="neutral">рекламы нет</nv-badge>':"")+(c.last_error?` <nv-badge tone="warning" title="${esc(c.last_error)}">ошибка</nv-badge>`:""):'<span class="muted">ещё нет</span>'},
       {key:"monitor",label:"Мониторинг",render:c=>`<nv-button size="sm" variant="${c.monitor?"secondary":"ghost"}" icon="${c.monitor?"eye":"eye-off"}" data-act="vkMonitor" data-id="${esc(c.owner_id)}" data-on="${c.monitor?0:1}">${c.monitor?"Следим":"Выключен"}</nv-button>`}];
     t.rows=V.comm.map(c=>({...c,id:String(c.owner_id)}));
     t.addEventListener("nv-row-click",e=>{const c=V.comm.find(x=>String(x.owner_id)===e.detail.id);if(c)vkOpenCommunity(c.owner_id,c.name||"")});
@@ -6306,6 +6315,7 @@ Object.assign(N.acts,{
   async vkWallsRun(){try{const r=await apiPost("/api/v1/vk/walls/run",{});toast(r.already?"Обход стен уже идёт (#"+r.id+")":"Обход стен поставлен в очередь (#"+r.id+")",{tone:"success"});S.vk.ovLoaded=false;N.refreshIf("vk-overview")}catch(err){toast("Не удалось: "+(err.message||""),{tone:"danger"})}},
   async vkMonitor(a,d){try{await apiPost("/api/v1/vk/communities/"+d.id+"/monitor",{monitor:d.on==="1"});const c=S.vk.comm.find(x=>String(x.owner_id)===String(d.id));if(c)c.monitor=d.on==="1"?1:0;N.refreshIf("vk-communities")}catch(err){toast("Не удалось: "+(err.message||""),{tone:"danger"})}}
 });
+N.chg.vkCommKind=v=>{S.vk.commKind=v||"";S.vk.commLoaded=false;S.vk.comm=[];N.refreshIf("vk-communities");vkLoadCommunities()};
 N.chg.vkCommQ=v=>{S.vk.commQ=v;clearTimeout(S.vk._t);S.vk._t=setTimeout(()=>{S.vk.commLoaded=false;vkLoadCommunities()},350)};
 N.register({id:"vk",name:"ВКонтакте",short:"VK",tag:"VK",icon:"users-round",rail:"main",status:"ready",
   desc:"Реклама и площадки ВКонтакте; объявления открываются в Разведке",
@@ -6718,7 +6728,44 @@ function studioEditOverlayHtml(){
 }
 function studioStageHtml(){
   const d=studioDesign(),fmt=STUDIO_FMT[d.format],bgStyle=d.bg.type==="image"&&d.bg.image?`background-image:url('${esc(d.bg.image)}')`:`background:${esc(d.bg.color||"#fff")}`;
-  return`<div class="stud-stage${studioTool==="pen"?" pen-on":studioTool==="eyedrop"?" eyedrop-on":""}" style="aspect-ratio:${fmt.w}/${fmt.h};width:min(100%,560px,calc((100vh - 190px)*${fmt.w}/${fmt.h}));${bgStyle}">${d.layers.map(l=>studioLayerHtml(l,l.id===d.selectedId,studioMultiSel.includes(l.id))).join("")}${studioPenPreviewHtml()}${studioEditOverlayHtml()}</div>`;
+  const z=studioZoom;return`<div class="stud-stage${studioTool==="pen"?" pen-on":studioTool==="eyedrop"?" eyedrop-on":""}" style="aspect-ratio:${fmt.w}/${fmt.h};width:${z===1?`min(100%,560px,calc((100vh - 220px)*${fmt.w}/${fmt.h}))`:`calc(min(560px,(100vh - 220px)*${fmt.w}/${fmt.h})*${z})`};max-width:none;${bgStyle}">${d.layers.map(l=>studioLayerHtml(l,l.id===d.selectedId,studioMultiSel.includes(l.id))).join("")}${studioPenPreviewHtml()}${studioEditOverlayHtml()}${studioZonesHtml(d)}</div>`;
+}
+/* Безопасные зоны: поля 5% (текст ближе к краю режут превью площадок) и, для
+   вертикальных форматов, полосы под интерфейс сторис (шапка ~14%, низ ~20%). */
+let studioZoom=1;
+function studioZonesHtml(d){
+  if(!S.studio.zones)return"";
+  const f=STUDIO_FMT[d.format],tall=f.h/f.w>1.5;
+  return`<div class="stud-zones"><div class="m"></div>${tall?`<div class="ui" style="top:0;height:14%">Шапка сторис — сюда не ставьте текст</div><div class="ui" style="bottom:0;height:20%">Кнопка и подпись площадки</div>`:""}</div>`;
+}
+function studioZoomHtml(){
+  const z=studioZoom;
+  return`<div class="stud-zoom"><button type="button" data-act="studZoom" data-z="-">−</button><button type="button" data-act="studZoom" data-z="fit" class="${z===1?"on":""}">${z===1?"По экрану":Math.round(z*100)+"%"}</button><button type="button" data-act="studZoom" data-z="+">+</button><button type="button" data-act="studZones" class="${S.studio.zones?"on":""}" data-tip="Поля 5% и зоны интерфейса сторис">${ic("scan",13)} Зоны</button></div>`;
+}
+/* Контраст выбранного текста с тем, что реально под ним (WCAG): рисуем макет без
+   этого слоя и усредняем пиксели в его рамке. Для текста на плашке — с плашкой. */
+function studioLum(r,g,b){const f=v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)};return 0.2126*f(r)+0.7152*f(g)+0.0722*f(b)}
+function studioHexRgb(h){const m=/^#?([0-9a-f]{6})$/i.exec(h||"");if(!m)return null;const n=parseInt(m[1],16);return[n>>16&255,n>>8&255,n&255]}
+async function studioContrast(l){
+  const fg=studioHexRgb(l.color);if(!fg)return null;
+  let bg=l.bgColor?studioHexRgb(l.bgColor):null;
+  if(!bg){
+    const d=studioDesign(),copy={...d,layers:d.layers.filter(x=>x.id!==l.id)},sc=0.25,c=await studioRenderCanvas(copy,sc);
+    const x=Math.max(0,Math.round(l.x/100*c.width)),y=Math.max(0,Math.round(l.y/100*c.height)),w=Math.max(1,Math.min(c.width-x,Math.round(l.w/100*c.width))),h=Math.max(1,Math.min(c.height-y,Math.round(l.h/100*c.height)));
+    const px=c.getContext("2d").getImageData(x,y,w,h).data;let r=0,g=0,b=0,n=0,lo=1,hi=0;
+    for(let i=0;i<px.length;i+=4){r+=px[i];g+=px[i+1];b+=px[i+2];n++;const L=studioLum(px[i],px[i+1],px[i+2]);if(L<lo)lo=L;if(L>hi)hi=L}
+    bg=[r/n,g/n,b/n];l._bgSpread=hi-lo;
+  }
+  const a=studioLum(...fg),b2=studioLum(...bg);return(Math.max(a,b2)+0.05)/(Math.min(a,b2)+0.05);
+}
+async function studioPaintContrast(root){
+  const el=(root||document).querySelector("#stud-contrast"),l=studioSelected();if(!el||!l||l.type!=="text")return;
+  try{
+    const r=await studioContrast(l);if(r==null){el.textContent="";return}
+    const big=(+l.fontSize||0)>=5,need=big?3:4.5,ok=r>=need,busy=(l._bgSpread||0)>0.45&&!l.bgColor;
+    el.className="stud-contrast "+(ok&&!busy?"ok":"bad");
+    el.textContent=`Контраст ${r.toFixed(1)}:1 — `+(ok?(busy?"фон пёстрый: добавьте плашку или тень":"читается хорошо"):`низкий (нужно ≥ ${need}:1): смените цвет или добавьте плашку`);
+  }catch(e){el.textContent=""}
 }
 function studioLayersListHtml(){
   const d=studioDesign();
@@ -6789,6 +6836,7 @@ function studioPropsHtml(){
   if(!l)return'<p class="muted" style="font-size:12.5px">Выберите слой на холсте или в списке, чтобы изменить его.</p>';
   if(l.type==="text")return`<div class="stack" style="gap:10px">
     <nv-textarea label="Текст" rows="2" value="${esc(l.text)}" data-prop="text"></nv-textarea>
+    <div id="stud-contrast" class="stud-contrast">Проверяю контраст…</div>
     <div class="fld"><span class="lbl">Размер</span><div class="rng"><input type="range" min="2" max="18" step="0.5" value="${l.fontSize}" style="--rng-p:${rngPct(l.fontSize,2,18)}" data-prop="fontSize"><output>${l.fontSize}</output></div></div>
     <div class="stud-color"><span class="lbl">Цвет</span><nv-color-picker value="${esc(l.color)}" data-prop="color"></nv-color-picker></div>
     <div class="row" style="gap:6px"><button type="button" class="nv-btn ${l.weight==="700"?"v-primary":"v-secondary"} s-sm" data-prop-set="weight" data-val="700">Жирный</button><button type="button" class="nv-btn ${l.weight==="400"?"v-primary":"v-secondary"} s-sm" data-prop-set="weight" data-val="400">Обычный</button></div>
@@ -6882,6 +6930,7 @@ function studioToBoxPct(stagePct,boxDim){return stagePct/Math.max(1,boxDim)*100}
 function studioRenderSidebar(root){
   const lp=root.querySelector("#stud-layers");if(lp)lp.innerHTML=studioLayersListHtml();
   const pp=root.querySelector("#stud-props");if(pp)pp.innerHTML=studioPropsHtml();
+  studioPaintContrast(root);
 }
 function fileToDataUrl(file,maxDim){
   return new Promise((resolve,reject)=>{
@@ -7310,7 +7359,7 @@ editor(){
       <input type="file" id="stud-img-file" accept="image/*" class="sr">
       ${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Клик — точка. Клик+тяни — плавная точка. Клик по первой точке — замкнуть. Enter/двойной клик — закончить открытой. Esc — отмена.</p>':""}
     </div>
-    <div class="stud-stage-wrap"><div id="stud-stage-host">${studioStageHtml()}</div></div>
+    <div class="stud-stage-wrap">${studioZoomHtml()}<div id="stud-stage-host">${studioStageHtml()}</div></div>
     <div class="stud-panel">
       <div class="sect-t">Слои</div>
       <div id="stud-layers">${studioLayersListHtml()}</div>
@@ -7319,7 +7368,7 @@ editor(){
     </div>
   </div>`,
   after(root){
-    studioLayoutStage(root);
+    studioLayoutStage(root);studioPaintContrast(root);
     const stageHost=root.querySelector("#stud-stage-host");
     if(stageHost&&!this._ro){const ro=new ResizeObserver(()=>studioLayoutStage(root));ro.observe(stageHost)}
     const stage=root.querySelector(".stud-stage");
@@ -7451,7 +7500,7 @@ editor(){
         const l=studioSelected();if(!l)return;const k=e.target.dataset.prop;if(!k)return;
         studioSetPath(l,k,e.detail.value);
         studioPatchLayerDom(l);
-        if(e.target.tagName!=="NV-COLOR-PICKER")studioRenderSidebar(root);
+        if(e.target.tagName!=="NV-COLOR-PICKER")studioRenderSidebar(root);else studioPaintContrast(root);
         NEON.save();
       });
       pp.addEventListener("click",e=>{
@@ -7748,6 +7797,8 @@ Object.assign(N.acts,{
   studExportAll:studioExportAll,
   studImgUrl:studioImageByUrl,
   studToAds:studioToAds,
+  studZoom(a,d){const steps=[0.5,0.75,1,1.25,1.5,2];let i=steps.indexOf(studioZoom);if(i<0)i=2;studioZoom=d.z==="fit"?1:steps[Math.max(0,Math.min(steps.length-1,i+(d.z==="+"?1:-1)))];N.refresh()},
+  studZones(){S.studio.zones=!S.studio.zones;N.refresh();NEON.save()},
   studAiTexts:studioAiTexts,
   studAiDesign:studioAiDesign,
   studAiCritique:studioAiCritique,
