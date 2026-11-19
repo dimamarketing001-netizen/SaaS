@@ -4906,17 +4906,33 @@ function projectWizard(existingProject){
       body.querySelectorAll('input[name="wizLaunchType"]').forEach(inp=>inp.onchange=()=>{wiz.launchType=inp.value;drawStep4(body)});
       if(multi)(async()=>{
         try{
-          if(!wiz.siteDomains)wiz.siteDomains=(await api("/api/v1/sites/domains",{})).items||[];
+          if(!wiz.siteDomains){const r=await api("/api/v1/sites/domains",{});wiz.siteDomains=r.items||[];wiz.regruAccounts=r.accounts||[]}
           if(!wiz.siteTemplates)wiz.siteTemplates=(await api("/api/v1/ads/site-templates",{})).items||[];
         }catch(err){const h=body.querySelector("#wiz-launch-type");if(h)h.innerHTML=`<nv-callout tone="danger" heading="Не удалось загрузить">${esc(err.message||"")}</nv-callout>`;return}
         const h=body.querySelector("#wiz-launch-type");if(!h)return;
-        const usable=wiz.siteDomains.filter(d=>!d.occupied),busy=wiz.siteDomains.length-usable.length;
-        const dItems=usable.map(d=>({value:d.domain,label:(d.name||d.domain)+(d.ours?" — наш сервер":" — свободен")+(d.site&&d.site.template_name?" · "+d.site.template_name:"")}));
-        const tItems=wiz.siteTemplates.map(t=>({value:String(t.id),label:t.name+" ("+(t.kind==="quiz"?"квиз":"лендинг")+")"}));
-        h.innerHTML=`<nv-tree-select name="domains" label="Домены (1 домен = 1 аккаунт, до 20)" items="${esc(JSON.stringify(dItems))}" value="${esc(wiz.domains.join(","))}" placeholder="Выберите домены" hint="Показаны свободные и уже наши. Занятых (A-запись на другой сервер): ${busy} — их можно забрать в разделе «Сайты»." multiple search min-width="340" style="margin-top:10px"></nv-tree-select>
+        // аккаунты reg.ru (2026-11-19): домены можно брать из любого — выбор с логином
+        const drawDomains=()=>{
+        const accs=wiz.regruAccounts||[],acc=wiz.regruAcc||"_",multiAcc=accs.length>1;
+        const pool=wiz.siteDomains.filter(d=>acc==="_"||String(d.account)===acc);
+        wiz.domains=wiz.domains.filter(x=>pool.some(d=>d.domain===x));
+        const usable=pool.filter(d=>!d.occupied),busy=pool.length-usable.length;
+        const dItems=usable.map(d=>({value:d.domain,label:(d.name||d.domain)+(d.ours?" — наш сервер":" — свободен")+(multiAcc&&acc==="_"&&d.account_login?" · "+d.account_login:"")+(d.site&&d.site.template_name?" · "+d.site.template_name:"")}));
+        const tItems=wiz.siteTemplates.map(t=>({value:String(t.id),label:t.name+" ("+(t.kind==="quiz"?"квиз":t.kind==="design"?"квиз-лендинг":t.kind==="bundle"?"копия МЮ":"лендинг")+")"}));
+        const accBad=accs.filter(a=>!a.ok);
+        const accHtml=multiAcc?`<nv-select name="regru_acc" label="Аккаунт reg.ru — откуда брать домены" value="${esc(acc)}" options="${esc("_:Все аккаунты|"+accs.map(a=>a.id+":"+String(a.login+(a.ok?" — доменов "+a.count:" — нет доступа к API")).replace(/[|:]/g," ")).join("|"))}" style="margin-top:10px;max-width:520px"></nv-select>`
+          :accs[0]?`<div class="muted" style="font-size:12.5px;margin-top:10px">Аккаунт reg.ru: <b>${esc(accs[0].login)}</b></div>`:"";
+        h.innerHTML=accHtml+(accBad.length?`<nv-callout tone="warning" heading="Аккаунт reg.ru недоступен" style="margin-top:8px">${accBad.map(a=>esc(a.login+": "+(a.error||""))).join("<br>")}</nv-callout>`:"")+`<nv-tree-select name="domains" label="Домены (1 домен = 1 аккаунт, до 20)" items="${esc(JSON.stringify(dItems))}" value="${esc(wiz.domains.join(","))}" placeholder="Выберите домены" hint="Показаны свободные и уже наши. Занятых (A-запись на другой сервер): ${busy} — их можно забрать в разделе «Сайты»." multiple search min-width="340" style="margin-top:10px"></nv-tree-select>
           ${tItems.length?`<nv-tree-select name="templates" label="Шаблон(ы) сайта — по кругу на домены" items="${esc(JSON.stringify(tItems))}" value="${esc(wiz.templateIds.join(","))}" placeholder="Выберите шаблон" multiple min-width="340" style="margin-top:8px"></nv-tree-select>`
             :'<nv-callout tone="warning" heading="Шаблонов нет" style="margin-top:8px">Создайте шаблон сайта или квиза в разделе «Сайты».</nv-callout>'}
-          <div class="muted" style="font-size:12.5px;margin-top:6px">При запуске на каждом домене: A-запись → наш сервер, сайт по шаблону, SSL; в объявлениях аккаунта — его домен с теми же UTM. Заявки с сайтов уходят лидами в Б24 источника проекта.</div>`;
+          <div class="muted" style="font-size:12.5px;margin-top:6px">При запуске на каждом домене: A-запись → наш сервер (в том аккаунте reg.ru, где лежит домен), сайт по шаблону, SSL; в объявлениях аккаунта — его домен с теми же UTM. Заявки с сайтов уходят лидами в Б24 источника проекта.</div>`;
+        const sel=h.querySelector('nv-select[name="regru_acc"]');
+        if(sel)sel.addEventListener("nv-change",e=>{
+          const dv=h.querySelector('nv-tree-select[name="domains"]'),tv=h.querySelector('nv-tree-select[name="templates"]');
+          if(dv)wiz.domains=String(dv.value||"").split(",").map(x=>x.trim()).filter(Boolean);
+          if(tv)wiz.templateIds=String(tv.value||"").split(",").map(x=>x.trim()).filter(Boolean).map(Number);
+          wiz.regruAcc=e.detail.value;drawDomains()});
+        };
+        drawDomains();
       })();
       body.querySelector("[data-wiz-back]").onclick=()=>setStep(3);
       body.querySelector("[data-wiz-next]").onclick=()=>{
@@ -5160,7 +5176,7 @@ function projectWizard(existingProject){
             // сайты: A-запись, nginx и SSL — фоном на сервере; запуск кампаний не ждёт SSL
             for(let i=0;i<wiz.domains.length;i++){
               msg.textContent=`Размещаю сайты: ${i+1} из ${wiz.domains.length}…`;
-              await apiPost("/api/v1/sites/deploy",{domain:wiz.domains[i],template_id:wiz.templateIds[i%wiz.templateIds.length],project_id:wiz.project.id});
+              await apiPost("/api/v1/sites/deploy",{domain:wiz.domains[i],account:((wiz.siteDomains||[]).find(x=>x.domain===wiz.domains[i])||{}).account||null,template_id:wiz.templateIds[i%wiz.templateIds.length],project_id:wiz.project.id});
             }
           }
           const job=await apiPost("/api/v1/ads/projects/"+wiz.project.id+"/campaigns/bulk-create",payload);
@@ -5599,7 +5615,7 @@ async function loadSites(refresh){
   const [t,d,l,ig]=await Promise.allSettled([api("/api/v1/ads/site-templates",{}),api("/api/v1/sites/domains",refresh?{refresh:true}:{}),api("/api/v1/ads/sites/leads",{}),api("/api/v1/ads/lead-integrations",{})]);
   if(ig.status==="fulfilled"){st.integs=ig.value.items||[];const I=S.ads.integ||(S.ads.integ={});if(!I.loaded)Object.assign(I,{items:st.integs,kinds:ig.value.kinds||{},defaults:ig.value.defaults||{},portals:ig.value.b24_sources||[],loaded:true})}
   if(t.status==="fulfilled"){st.tpls=t.value.items||[];st.defaults=t.value.defaults||{};st.bundles=t.value.bundles||[];st.brandFields=t.value.brand_fields||null;st.designs=t.value.designs||{};st.directions=t.value.directions||{}}else toast("Шаблоны: "+(t.reason&&t.reason.message||""),{tone:"danger"});
-  if(d.status==="fulfilled"){st.domains=d.value.items||[];st.ip=d.value.ip;st.domErr=""}else st.domErr=d.reason&&d.reason.message||"не загрузились";
+  if(d.status==="fulfilled"){st.domains=d.value.items||[];st.accounts=d.value.accounts||[];st.ip=d.value.ip;st.domErr=""}else st.domErr=d.reason&&d.reason.message||"не загрузились";
   if(l.status==="fulfilled")st.leads=l.value.items||[];
   st.loaded=true;st.loading=false;N.refreshIf("ads-sites");
   clearTimeout(N._sitesPoll);
@@ -5708,7 +5724,7 @@ function siteDomainDlg(d){
   const st=S.ads.sites||{},tpls=st.tpls||[],site=d.site,job=d.job,dns=SITE_DNS(d);
   const tOpts=tpls.map(t=>t.id+":"+String(t.name).replace(/[|:]/g," ")+(t.kind==="quiz"?" (квиз)":t.kind==="bundle"?" (копия МЮ)":t.kind==="design"?" ("+((t.config||{}).design||"")+")":" (лендинг)")).join("|");
   const pOpts="0:— без проекта —|"+(S.ads.projects||[]).map(p=>p.id+":"+String(p.name).replace(/[|:]/g," ")).join("|");
-  overlay("modal",{title:d.name||d.domain,subtitle:`DNS: ${dns[1]}${site?" · сайт: "+(site.status_label||site.status):""}`,
+  overlay("modal",{title:d.name||d.domain,subtitle:`DNS: ${dns[1]}${d.account_login?" · reg.ru: "+d.account_login:""}${site?" · сайт: "+(site.status_label||site.status):""}`,
     body:`${d.occupied?`<nv-callout tone="warning" heading="Домен занят">A-запись ведёт на ${esc((d.a||[]).join(", "))} — там может работать другой сайт. Разместить можно только с галочкой ниже: A-запись перезапишется на ${esc(st.ip||"")}.</nv-callout>`:""}
       ${tpls.length?`<nv-select name="template" label="Шаблон" value="${esc(String(site&&site.template_id||tpls[0].id))}" options="${esc(tOpts)}"></nv-select>`:'<nv-callout tone="warning" heading="Нет шаблонов">Сначала создайте шаблон сайта или квиза.</nv-callout>'}
       <nv-select name="project" label="Проект — счётчики Метрики; заявки в его источник Б24, если в шаблоне нет интеграции" value="${esc(String(site&&site.project_id||0))}" options="${esc(pOpts)}" style="margin-top:8px"></nv-select>
@@ -5722,7 +5738,7 @@ function siteDomainDlg(d){
       ...(tpls.length?[{label:site&&site.status==="live"?"Разместить заново":"Разместить сайт",variant:"primary",fn(r,close){
         const v=formVals(r),force=!!(r.querySelector('input[name="force"]')||{}).checked;
         if(d.occupied&&!force){toast("Домен занят — отметьте «Всё равно занять»",{tone:"warning"});return false}
-        (async()=>{try{await apiPost("/api/v1/sites/deploy",{domain:d.domain,force,template_id:+v.template||null,project_id:+v.project||null});
+        (async()=>{try{await apiPost("/api/v1/sites/deploy",{domain:d.domain,force,account:d.account||null,template_id:+v.template||null,project_id:+v.project||null});
           close();toast("Размещение начато: DNS → nginx → SSL (до 30–45 минут)",{tone:"success"});loadSites()}
           catch(err){toast(err.message||"Не удалось",{tone:"danger"})}})();return false}}]:[])]});
 }
@@ -5802,6 +5818,11 @@ N.acts.integNew=()=>integEditor(null);
 N.acts.integLoad=()=>loadIntegs();
 N.acts.sitesLoad=()=>loadSites(true);
 N.acts.sitesNewTpl=()=>siteTplEditor(null);
+N.chg.sitesAcc=v=>{(S.ads.sites||(S.ads.sites={})).acc=v;N.refreshIf("ads-sites")};
+N.acts.sitesAccCheck=async()=>{
+  try{const r=await api("/api/v1/sites/regru-accounts",{}),st=S.ads.sites||(S.ads.sites={});st.accounts=r.accounts||[];
+    toast((r.accounts||[]).map(a=>a.login+": "+(a.ok?"доступ есть, доменов "+a.count:a.error)).join(" · ")||"Аккаунтов нет",{tone:(r.accounts||[]).every(a=>a.ok)?"success":"warning"});N.refreshIf("ads-sites")}
+  catch(err){toast(err.message||"Не удалось",{tone:"danger"})}};
 N.chg.sitesFilter=v=>{(S.ads.sites||(S.ads.sites={})).filter=v;N.refreshIf("ads-sites")};
 N.chg.sitesQ=v=>{(S.ads.sites||(S.ads.sites={})).q=v;clearTimeout(N._sitesQ);N._sitesQ=setTimeout(()=>N.refreshIf("ads-sites"),250)};
 const views_ads={
@@ -5838,7 +5859,8 @@ sites(){
   after(root){
     if(!st.loaded&&!st.loading){loadSites();return}
     const el=root.querySelector("#ads-sites-res");if(!el||!st.loaded)return;
-    const doms=st.domains||[],q=(st.q||"").toLowerCase();
+    const accs=st.accounts||[],multiAcc=accs.length>1,acc=multiAcc?(st.acc||"_"):"_",accBad=accs.filter(a=>!a.ok);
+    const doms=(st.domains||[]).filter(d=>acc==="_"||String(d.account)===acc),q=(st.q||"").toLowerCase();
     const cnt={free:doms.filter(d=>!d.occupied&&!d.ours).length,ours:doms.filter(d=>d.ours||d.site).length,busy:doms.filter(d=>d.occupied).length};
     const shown=doms.filter(d=>(f==="all"||(f==="free"&&!d.occupied&&!d.ours)||(f==="ours"&&(d.ours||d.site))||(f==="busy"&&d.occupied))&&(!q||(d.name||d.domain).includes(q)||d.domain.includes(q)));
     const tpls=st.tpls||[],leads=st.leads||[];
@@ -5846,10 +5868,12 @@ sites(){
       <nv-card heading="Шаблоны сайтов и квизов" subtitle="Клик — редактировать. Тип задаётся в шаблоне; в визарде выбираете домены и шаблон(ы).">
         ${tpls.length?'<nv-table id="ads-sites-tpl" clickable></nv-table>':'<nv-empty icon="layout-grid" heading="Шаблонов пока нет" text="Создайте лендинг или квиз — тексты может написать ИИ."><nv-button icon="plus" data-act="sitesNewTpl">Новый шаблон</nv-button></nv-empty>'}
       </nv-card>
-      <nv-card heading="Домены reg.ru" subtitle="Занят — у домена A-запись на другой сервер. Клик по строке — разместить сайт." style="margin-top:12px">
-        <div class="toolbar"><nv-segmented value="${esc(f)}" options="free:Свободные ${cnt.free}|ours:Наши ${cnt.ours}|busy:Занятые ${cnt.busy}|all:Все ${doms.length}" data-chg="sitesFilter"></nv-segmented>
+      <nv-card heading="Домены reg.ru" subtitle="${esc((accs.length?"Аккаунты: "+accs.map(a=>a.login).join(", ")+". ":"")+"Занят — у домена A-запись на другой сервер. Клик по строке — разместить сайт.")}" style="margin-top:12px">
+        ${accBad.length?`<nv-callout tone="warning" heading="Аккаунт reg.ru недоступен" style="margin-bottom:8px">${accBad.map(a=>esc(a.login+": "+(a.error||""))).join("<br>")}</nv-callout>`:""}
+        <div class="toolbar">${multiAcc?`<nv-select label="Аккаунт reg.ru" value="${esc(acc)}" options="${esc("_:Все аккаунты|"+accs.map(a=>a.id+":"+String(a.login+(a.ok?" ("+a.count+")":" — нет доступа")).replace(/[|:]/g," ")).join("|"))}" data-chg="sitesAcc" style="min-width:260px"></nv-select>`:""}<nv-segmented value="${esc(f)}" options="free:Свободные ${cnt.free}|ours:Наши ${cnt.ours}|busy:Занятые ${cnt.busy}|all:Все ${doms.length}" data-chg="sitesFilter"></nv-segmented>
           <nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="домен" value="${esc(st.q||"")}" data-chg="sitesQ"></nv-input>
-          <nv-button icon="refresh-cw" data-act="sitesLoad">Обновить из reg.ru</nv-button></div>
+          <nv-button icon="refresh-cw" data-act="sitesLoad">Обновить из reg.ru</nv-button>
+          <nv-button variant="secondary" icon="key-round" data-act="sitesAccCheck" hint="Проверить доступ к API каждого аккаунта reg.ru с сервера">Проверить аккаунты</nv-button></div>
         ${st.domErr?`<nv-callout tone="danger" heading="Домены не загрузились">${esc(st.domErr)}</nv-callout>`:shown.length?'<nv-table id="ads-sites-dom" page-size="25" clickable></nv-table>':'<nv-empty icon="search-x" heading="Нет доменов" text="Измените фильтр."></nv-empty>'}
       </nv-card>
       <nv-card heading="Заявки с сайтов" subtitle="Последние 200. Клик — ответы, что ушло в CRM, «Отправить повторно»." style="margin-top:12px">
@@ -5863,6 +5887,7 @@ sites(){
       {key:"updated_at",label:"Изменён",sort:true,render:t=>t.updated_at?fmtDateTime(t.updated_at):"—"}],t=>siteTplEditor(t));
     if(shown.length&&!st.domErr)wireTable(root,"ads-sites-dom",shown.map(d=>({id:d.domain,...d})),[
       {key:"domain",label:"Домен",sort:true,render:d=>`<b>${esc(d.name||d.domain)}</b>${d.expires?`<br><span class="muted" style="font-size:12px">до ${esc(String(d.expires).split("-").reverse().join("."))}</span>`:""}`},
+      ...(multiAcc?[{key:"account_login",label:"reg.ru",sort:true,render:d=>`<span class="muted" style="font-size:12.5px">${esc(d.account_login||"—")}</span>`}]:[]),
       {key:"occupied",label:"DNS (A-запись)",sort:true,render:d=>{const s=SITE_DNS(d);return `<nv-status value="${s[0]}" label="${esc(s[1])}"></nv-status>`}},
       {key:"site",label:"Сайт",render:d=>d.site?`<nv-status value="${SITE_ST[d.site.status]||"unknown"}" label="${esc(d.site.status_label||d.site.status)}" hint="${esc(d.site.note||"")}"></nv-status><br><span class="muted" style="font-size:12px">${esc(d.site.template_name||"без шаблона")} · заявок ${fmt(d.site.leads||0)}</span>`:(d.job&&d.job.state==="running"?"размещается…":"—")}],
       d=>siteDomainDlg(d));
