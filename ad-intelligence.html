@@ -6272,7 +6272,7 @@ Object.assign(N.acts,{
   async vkMonitor(a,d){try{await apiPost("/api/v1/vk/communities/"+d.id+"/monitor",{monitor:d.on==="1"});const c=S.vk.comm.find(x=>String(x.owner_id)===String(d.id));if(c)c.monitor=d.on==="1"?1:0;N.refreshIf("vk-communities")}catch(err){toast("Не удалось: "+(err.message||""),{tone:"danger"})}}
 });
 N.chg.vkCommQ=v=>{S.vk.commQ=v;clearTimeout(S.vk._t);S.vk._t=setTimeout(()=>{S.vk.commLoaded=false;vkLoadCommunities()},350)};
-N.register({id:"vk",name:"ВКонтакте",short:"ВКонтакте",tag:"VK",icon:"users-round",rail:"main",status:"ready",
+N.register({id:"vk",name:"ВКонтакте",short:"VK",tag:"VK",icon:"users-round",rail:"main",status:"ready",
   desc:"Реклама и площадки ВКонтакте; объявления открываются в Разведке",
   metric:()=>S.vk&&S.vk.ov?fmt(S.vk.ov.creatives||0)+" объявлений VK":"Реклама ВКонтакте",
   nav:[
