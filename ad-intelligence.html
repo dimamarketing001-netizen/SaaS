@@ -2928,6 +2928,8 @@ function fmtDateTime(iso){
 }
 function realPlatformLabel(m){
   m=m||"";
+  if(m.startsWith("vk-search"))return"VK · Реклама от автора";
+  if(m.startsWith("vk-feed"))return"VK · лента";
   if(m.startsWith("vk-native"))return"VK Ads";
   if(m.startsWith("google-ads"))return"Google Ads";
   if(m.startsWith("taboola"))return"Taboola";
@@ -3075,6 +3077,11 @@ function cmpMatrixHtml(){
 const AI_UNKNOWN="не определён";
 function realAiIntent(c){return c&&c.ai_intent&&c.ai_intent!==AI_UNKNOWN?c.ai_intent:""}
 function fmtDays(n){n=+n||0;const a=n%10,b=n%100;return n+" "+(a===1&&b!==11?"день":(a>=2&&a<=4&&(b<10||b>=20)?"дня":"дней"))}
+/* VK-пост: дата публикации и сколько висит (vk_posts, 19.11.2026) */
+function vkLine(v){
+  if(!v||!v.posted_at)return"";
+  return "опубликован "+fmtDateTime(v.posted_at)+(v.days_live!=null?" · висит "+fmtDays(Math.max(1,v.days_live)):"")+(v.views?" · "+fmt(v.views)+" просм.":"");
+}
 function statsLine(st){
   if(!st)return"";
   return (st.days_active?fmtDays(st.days_active)+" в открутке":"")+(st.shows?(st.days_active?" · ":"")+"встречено "+st.shows+" раз":"");
@@ -3090,7 +3097,7 @@ function cardHtml(g,selected){
   const otherPlatforms=[...new Set((g.platforms||[]).map(realPlatformLabel))].filter(l=>l!==primary);
   const fmt=formatOf(rep);
   const mediaAttrs=(fmt==="video"&&rep.video_src)?`video="${esc(rep.video_src)}" poster="${esc(rep.video_poster||"")}"`:`image="${esc(rep.image_url||"")}"`;
-  return `<nv-creative-card cid="${esc(rep.id)}" headline="${esc(rep.title||rep.domain||"Без заголовка")}" advertiser="${esc(rep.domain||"—")}" domain="${esc(rep.domain||"")}" platform="${esc(primary)}" ${rep.from_history?"history":""} format="${fmt}" date="${esc(fmtDateTime(g.last_seen_at||rep.captured_at))}" discount="${rep.discount_percent||""}" cta="${esc(rep.cta_text||"")}" ${mediaAttrs} colls="${esc(JSON.stringify((rep.collections||[]).map(c=>c.name)))}" ai-intent="${esc(realAiIntent(rep))}" stats="${esc(statsLine(rep.stats))}" keyword="${esc((rep.intents||[]).join("; "))}" copy="${esc((rep.description||"").slice(0,180))}" desc-full="${esc(rep.description||"")}" platforms="${esc(otherPlatforms.join(","))}" ${saved?"saved":""} selectable ${selected?"selected":""}></nv-creative-card>`;
+  return `<nv-creative-card cid="${esc(rep.id)}" headline="${esc(rep.title||rep.domain||"Без заголовка")}" advertiser="${esc((rep.vk&&rep.vk.owner&&rep.vk.owner.name)||rep.domain||"—")}" domain="${esc(rep.domain||"")}" platform="${esc(primary)}" ${rep.from_history?"history":""} format="${fmt}" date="${esc(fmtDateTime(g.last_seen_at||rep.captured_at))}" discount="${rep.discount_percent||""}" cta="${esc(rep.cta_text||"")}" ${mediaAttrs} colls="${esc(JSON.stringify((rep.collections||[]).map(c=>c.name)))}" ai-intent="${esc(realAiIntent(rep))}" stats="${esc(rep.vk&&rep.vk.posted_at?vkLine(rep.vk):statsLine(rep.stats))}" keyword="${esc((rep.intents||[]).join("; "))}" copy="${esc((rep.description||"").slice(0,180))}" desc-full="${esc(rep.description||"")}" platforms="${esc(otherPlatforms.join(","))}" ${saved?"saved":""} selectable ${selected?"selected":""}></nv-creative-card>`;
 }
 function bindCards(root,target){
   target=target||"sel";
@@ -3319,7 +3326,7 @@ function libBulk(){
 }
 
 /* ---------- Креатив: подробности ---------- */
-const ID_LABELS={campaign_id_candidate:"Campaign ID",banner_id_candidate:"Banner ID",client_id_candidate:"Client ID",creative_id_candidate:"Creative ID"};
+const ID_LABELS={vk_post:"Пост VK",campaign_id_candidate:"Campaign ID",banner_id_candidate:"Banner ID",client_id_candidate:"Client ID",creative_id_candidate:"Creative ID"};
 function copyBtn(value,label,text){return value?`<nv-button size="sm" variant="secondary" icon="copy" data-act="copyField" data-value="${esc(value)}" data-label="${esc(label)}">${esc(text)}</nv-button>`:""}
 async function openCreative(id){
   let data;
@@ -3383,9 +3390,21 @@ async function openCreative(id){
       ${(LG.other_inns||[]).length?`<dt>Другие ИНН на сайте</dt><dd class="mono">${LG.other_inns.slice(0,6).map(esc).join(", ")}</dd>`:""}
       `:(LG&&LG.status==="platform"?"":`<dt>Юрлицо на сайте</dt><dd>реквизиты на сайте не найдены</dd>`)}
     </dl>`}`;
-  overlay("drawer",{title:cr.domain||"Креатив",subtitle:plat,size:"md",
+  const VK=cr.vk||null,VO=(VK&&VK.owner)||{};
+  const vkNum=(n,a,b,c)=>n==null?"":fmt(n)+" "+plural(n,a,b,c);
+  const vkHtml=!VK?"":`<div class="sect-t">Пост VK</div>
+    <dl class="dl">
+      <dt>Где размещено</dt><dd>${VO.url?`<a href="${esc(VO.url)}" target="_blank" rel="noopener noreferrer">${esc(VO.name||VO.screen_name||"сообщество")}</a>`:esc(VO.name||"—")}${VO.members?` <span class="muted">· ${esc(vkNum(VO.members,"подписчик","подписчика","подписчиков"))}</span>`:""}</dd>
+      <dt>Формат</dt><dd>${VK.format==="A"?"Реклама в ленте VK":"«Реклама от автора» — сообщество само разместило пост, VK его не модерировал"}</dd>
+      ${VK.posted_at?`<dt>Опубликован</dt><dd><b>${esc(fmtDateTime(VK.posted_at))}</b>${VK.days_since_post!=null?` <span class="muted">· ${esc(VK.days_since_post?fmtDays(VK.days_since_post)+" назад":"сегодня")}</span>`:""}</dd>`:""}
+      ${VK.days_live!=null?`<dt>Висит</dt><dd><b>${esc(fmtDays(Math.max(1,VK.days_live)))}</b> <span class="muted">· от публикации до последнего раза в выдаче (${esc(fmtDateTime(VK.last_seen_at))})</span></dd>`:""}
+      ${[VK.views,VK.likes,VK.reposts,VK.comments].some(x=>x!=null)?`<dt>Реакция</dt><dd>${[vkNum(VK.views,"просмотр","просмотра","просмотров"),vkNum(VK.likes,"лайк","лайка","лайков"),vkNum(VK.reposts,"репост","репоста","репостов"),vkNum(VK.comments,"комментарий","комментария","комментариев")].filter(Boolean).map(esc).join(" · ")}</dd>`:""}
+      ${VK.post_url?`<dt>Пост</dt><dd><a href="${esc(VK.post_url)}" target="_blank" rel="noopener noreferrer">открыть в VK</a></dd>`:""}
+    </dl>`;
+  overlay("drawer",{title:VO.name||cr.domain||"Креатив",subtitle:plat,size:"md",
     body:`${media}
     ${statsTiles(cr.stats)}
+    ${vkHtml}
     <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">${copyBtn(cr.title,"Заголовок объявления","Заголовок")}${copyBtn(cr.description,"Текст объявления","Текст")}${copyBtn(cr.domain,"Домен","Домен")}</div>
     ${cr.recognition_status==="partial"?'<nv-callout tone="warning" heading="Распознано не полностью">Часть полей не удалось прочитать.</nv-callout>':""}
     ${utm.landing_domain_mismatch?'<nv-callout tone="warning" heading="Домен не совпадает">Посадочная страница отличается от сайта рекламодателя.</nv-callout>':""}
@@ -3776,7 +3795,7 @@ async function openScanDetail(job){
 /* ---------- Рекламодатели ---------- */
 async function loadAdvertisers(q){
   try{
-    const data=await api("/api/v1/advertisers",{q:q||"",limit:50});
+    const data=await api("/api/v1/advertisers",{q:q||"",limit:50,source:S.intel.advSrc||""});
     S.intel.advertisers=(data.items||[]).sort((a,b)=>b.creatives_count-a.creatives_count);
     S.intel.advertisersLoaded=true;
     N.refreshIf("intel-advertisers");
@@ -4282,13 +4301,13 @@ advertisers(){
   };
   const advHints={all:"Компании, чьё юрлицо удалось раскрыть. Нажмите на строку — в библиотеке откроются все их объявления.",growth:"Кто за эту неделю нашёл больше объявлений, чем за прошлую: рост активности конкурента.",mismatch:"Объявления, где сайт рекламодателя и посадочная страница — разные домены (партнёрки, чужие лендинги)."};
   return{title:"Рекламодатели",sub:"Компании с раскрытым юрлицом из найденной рекламы.",
-  actions:sub==="all"?`<nv-input icon="search" type="search" placeholder="Название или ИНН" value="${esc(I.advQ)}" data-chg="advQ"></nv-input>`:intentControlHtml(),
+  actions:sub==="all"?`<nv-segmented options=":Все|both:Яндекс и VK|yandex:Яндекс|vk:VK" value="${esc(I.advSrc||"")}" data-chg="advSrc"></nv-segmented><nv-input icon="search" type="search" placeholder="Название или ИНН" value="${esc(I.advQ)}" data-chg="advQ"></nv-input>`:intentControlHtml(),
   body:`<div class="tabbed"><nv-tabs items="all:Все|growth:Рост|mismatch:Несовпадение посадочной" value="${esc(sub)}" data-chg="advSub"></nv-tabs><p class="tab-hint">${esc(advHints[sub]||advHints.all)}</p><div class="tab-b" style="padding:16px">${bodies[sub]||bodies.all}</div></div>`,
   after(root){
     if(sub==="all"){
       if(!I.advertisersLoaded)loadAdvertisers(I.advQ);
       const t=root.querySelector("#ad-t");
-      t.columns=[{key:"name",label:"Рекламодатель",sort:true,render:a=>`<div class="row" style="gap:9px;align-items:center;min-width:0;max-width:280px;flex-wrap:nowrap"><nv-avatar name="${esc(a.name||a.inn||"?")}" size="28" src="${esc(favUrl(hostOf(a.website_url)))}"></nv-avatar><div style="min-width:0"><div class="cell-t" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(a.name||"Без названия")}">${esc(a.name||"Без названия")}</div><div class="cell-s mono">ИНН ${esc(a.inn)}</div></div></div>`},{key:"contacts",label:"Контакты",render:a=>{const bits=[];const cut="max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";if(a.website_url)bits.push(`<div class="cell-t mono" style="${cut}" title="${esc(a.website_url)}">${esc(hostOf(a.website_url)||a.website_url)}</div>`);if(a.phone)bits.push(`<div class="cell-s mono" style="${cut}">${esc(a.phone)}</div>`);if(a.address)bits.push(`<div class="cell-s" style="${cut}" title="${esc(a.address)}">${esc(a.address)}</div>`);return bits.join("")||'<span class="muted">не раскрыты</span>'}},{key:"creatives_count",label:"Креативов",align:"right",sort:true},{key:"first_seen_at",label:"Впервые",sort:true,render:a=>a.first_seen_at?N.rel(a.first_seen_at):"—"},{key:"last_seen_at",label:"Последний раз",sort:true,render:a=>a.last_seen_at?N.rel(a.last_seen_at):"—"}];
+      t.columns=[{key:"name",label:"Рекламодатель",sort:true,render:a=>`<div class="row" style="gap:9px;align-items:center;min-width:0;max-width:280px;flex-wrap:nowrap"><nv-avatar name="${esc(a.name||a.inn||"?")}" size="28" src="${esc(favUrl(hostOf(a.website_url)))}"></nv-avatar><div style="min-width:0"><div class="cell-t" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(a.name||"Без названия")}">${esc(a.name||"Без названия")}</div><div class="cell-s mono">ИНН ${esc(a.inn)}</div></div></div>`},{key:"contacts",label:"Контакты",render:a=>{const bits=[];const cut="max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";if(a.website_url)bits.push(`<div class="cell-t mono" style="${cut}" title="${esc(a.website_url)}">${esc(hostOf(a.website_url)||a.website_url)}</div>`);if(a.phone)bits.push(`<div class="cell-s mono" style="${cut}">${esc(a.phone)}</div>`);if(a.address)bits.push(`<div class="cell-s" style="${cut}" title="${esc(a.address)}">${esc(a.address)}</div>`);return bits.join("")||'<span class="muted">не раскрыты</span>'}},{key:"creatives_count",label:"Креативов",align:"right",sort:true},{key:"sources",label:"Где реклама",render:a=>{const y=a.yandex_count??a.creatives_count,v=a.vk_count||0;return `<div class="row" style="gap:4px;flex-wrap:wrap">${y?`<nv-badge tone="${v?"success":"neutral"}">Яндекс ${esc(y)}</nv-badge>`:""}${v?`<nv-badge tone="${y?"success":"info"}">VK ${esc(v)}</nv-badge>`:""}</div>`}},{key:"first_seen_at",label:"Впервые",sort:true,render:a=>a.first_seen_at?N.rel(a.first_seen_at):"—"},{key:"last_seen_at",label:"Последний раз",sort:true,render:a=>a.last_seen_at?N.rel(a.last_seen_at):"—"}];
       t.rows=I.advertisers.map(a=>({...a,id:a.inn}));
       t.addEventListener("nv-row-click",e=>{const a=I.advertisers.find(x=>x.inn===e.detail.id);if(a)filterByAdvertiser(a.inn,a.name||a.inn)});
     }else wireAnalyticsTables(root,A);
@@ -4365,6 +4384,7 @@ N.chg.libF=(v,d)=>{
   else loadLibrary();
 };
 N.chg.libPage=v=>{S.intel.f.page=+v;const sc=document.getElementById("scroll");if(sc)sc.scrollTop=0;if(S.intel.lib.server)loadLibrary();else libRes()};
+N.chg.advSrc=v=>{S.intel.advSrc=v||"";loadAdvertisers(S.intel.advQ)};
 N.chg.advQ=v=>{S.intel.advQ=v;clearTimeout(S.intel._advT);S.intel._advT=setTimeout(()=>loadAdvertisers(v),350)};
 N.chg.cmpF=(v,d)=>{const f=S.intel.cmpF,was=f.col;f[d.key]=v;if(d.key==="q"){clearTimeout(S.intel._cmpQ);S.intel._cmpQ=setTimeout(()=>loadCmpCandidates(),350);return}S.intel.cmpC.loaded=false;if((d.key==="col")&&(!!was!==!!v))N.refresh();loadCmpCandidates()};
 N.chg.cmpRows=v=>{S.intel.cmpF.rows=v;N.refresh()};
