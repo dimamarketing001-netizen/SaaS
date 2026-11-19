@@ -6837,7 +6837,7 @@ function studioPropsHtml(){
   if(l.type==="text")return`<div class="stack" style="gap:10px">
     <nv-textarea label="Текст" rows="2" value="${esc(l.text)}" data-prop="text"></nv-textarea>
     <div id="stud-contrast" class="stud-contrast">Проверяю контраст…</div>
-    <div class="fld"><span class="lbl">Размер</span><div class="rng"><input type="range" min="2" max="18" step="0.5" value="${l.fontSize}" style="--rng-p:${rngPct(l.fontSize,2,18)}" data-prop="fontSize"><output>${l.fontSize}</output></div></div>
+    <div class="fld"><span class="lbl">Размер</span><div class="rng"><input type="range" min="2" max="18" step="0.5" value="${l.fontSize}" style="--rng-p:${rngPct(l.fontSize,2,18)}" data-prop="fontSize"><output>${Math.round(l.fontSize*100)/100}</output></div></div>
     <div class="stud-color"><span class="lbl">Цвет</span><nv-color-picker value="${esc(l.color)}" data-prop="color"></nv-color-picker></div>
     <div class="row" style="gap:6px"><button type="button" class="nv-btn ${l.weight==="700"?"v-primary":"v-secondary"} s-sm" data-prop-set="weight" data-val="700">Жирный</button><button type="button" class="nv-btn ${l.weight==="400"?"v-primary":"v-secondary"} s-sm" data-prop-set="weight" data-val="400">Обычный</button></div>
     <div class="row" style="gap:6px"><button type="button" class="nv-btn ${l.align==="left"?"v-primary":"v-secondary"} s-sm" icon-only data-prop-set="align" data-val="left">${ic("align-left",14)}</button><button type="button" class="nv-btn ${l.align==="center"?"v-primary":"v-secondary"} s-sm" icon-only data-prop-set="align" data-val="center">${ic("align-center",14)}</button><button type="button" class="nv-btn ${l.align==="right"?"v-primary":"v-secondary"} s-sm" icon-only data-prop-set="align" data-val="right">${ic("align-right",14)}</button></div>
@@ -7150,7 +7150,7 @@ function studioRefit(design,fmt){
       if(L&&R){l.x=ox;l.w=ow}else if(L)l.x=ox;else if(R)l.x=100-l.w-(100-ox-ow);
       if(T&&Bt){l.y=oy;l.h=oh}else if(T)l.y=oy;else if(Bt)l.y=100-l.h-(100-oy-oh);
     }
-    if(l.type==="text")l.fontSize=l.fontSize*A.h*k/B.h;
+    if(l.type==="text")l.fontSize=Math.round(l.fontSize*A.h*k/B.h*100)/100;
   });
   return out;
 }
