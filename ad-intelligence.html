@@ -3647,11 +3647,10 @@ function scanDlg(){
       const keys=keyRaw.split(",").map(x=>x.trim()).filter(Boolean),city=(v.city||"").trim()||"Москва";
       const sched=v.freq&&v.freq!=="once"?{runs_per_day:+v.freq,duration_days:+v.days}:null;
       const source=v.source||"yandex";
-      if(sched&&source!=="yandex"){toast("Расписание пока только для Яндекса — для VK выберите «Один раз»",{tone:"danger"});return false}
       (async()=>{
         try{
           for(const k of keys){
-            if(sched)await apiPost("/api/v1/schedules",{city,key_text:k,...sched});
+            if(sched)await apiPost("/api/v1/schedules",{city,key_text:k,source,...sched});
             else await apiPost("/api/v1/runs",{city,key_text:k,source});
           }
           await Promise.all([loadScans(),loadSchedules()]);N.go("intel-scans");
@@ -3725,7 +3724,7 @@ function schedRowHtml(x,showKey){
   const btn=live?(x.status==="active"?`<nv-button size="sm" variant="secondary" icon="pause" icon-only hint="Поставить на паузу" data-act="schedAction" data-id="${x.id}" data-a="pause">Пауза</nv-button>`:`<nv-button size="sm" variant="primary" icon="play" icon-only hint="Продолжить запуски" data-act="schedAction" data-id="${x.id}" data-a="resume">Продолжить</nv-button>`)+`<nv-button size="sm" variant="ghost" icon="x" icon-only hint="Остановить расписание насовсем" data-act="schedAction" data-id="${x.id}" data-a="cancel">Остановить</nv-button>`:"";
   const nextTxt=x.status==="active"&&x.next_run_at?`Следующий <b>${esc(fmtDateTime(x.next_run_at))}</b>`:x.status==="paused"?"Запуски приостановлены":`Закончено ${esc(fmtDateTime(x.finished_at||x.end_at))}`;
   return `<details class="schr${live?"":" off"}" data-sid="${x.id}" ${open?"open":""}><summary>
-    <span class="schr-c">${ic("map-pin",13)}<span>${esc(x.city)}${showKey?" · "+esc(x.key_text):""}</span></span>
+    <span class="schr-c">${ic("map-pin",13)}<span>${x.source&&x.source!=="yandex"?"VK · ":""}${esc(x.city)}${showKey?" · "+esc(x.key_text):""}</span></span>
     <span class="schr-f">${x.runs_per_day} ${plural(x.runs_per_day,"раз","раза","раз")} в день · ${x.duration_days} дн.</span>
     <span class="schr-p"><span class="sch-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></span><em>${x.runs_created} из ${x.runs_total}${x.runs_skipped?" · пропущено "+x.runs_skipped:""}</em></span>
     <span class="schr-n">${nextTxt}</span>
