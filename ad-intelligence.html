@@ -1850,7 +1850,7 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .shell.immersive .crumbs{display:flex;align-items:center;gap:8px;overflow:visible;min-width:0;flex:0 1 auto}
 .shell.immersive .top-ed{display:flex;align-items:center;gap:6px;margin-left:auto;flex:none}
 .shell.immersive .top-sp{margin-left:0}
-.ed-back{display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 12px 0 8px;border:0;border-radius:999px;background:var(--l2,var(--surface-2));color:var(--ink);font-size:12.5px;cursor:pointer;flex:none}
+.ed-back{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:34px;width:34px;padding:0;border:0;border-radius:999px;background:var(--l2,var(--surface-2));color:var(--ink);font-size:12.5px;cursor:pointer;flex:none}
 .ed-back:hover{color:var(--svc-ink)}
 .ed-name{height:34px;width:clamp(120px,18vw,240px);border:1px solid transparent;border-radius:9px;background:none;padding:0 10px;font-size:14px;font-weight:600;color:var(--ink);text-overflow:ellipsis}
 .ed-name:hover{border-color:var(--line)}
@@ -8297,7 +8297,7 @@ editor(){
   const start=!d.layers.length&&!d.id&&!studioStartDismissed,tabNow=S.studio.tab;
   const l=studioSelected(),propsTitle=studioMultiSel.length>1?"Несколько элементов":l?{text:"Текст",image:"Фото",shape:"Фигура",icon:"Иконка",path:"Кривая"}[l.type]||"Элемент":"Дизайн";
   return{title:d.name||"Новый дизайн",sub:"",immersive:true,
-  topLeft:`<button type="button" class="ed-back" data-go="studio-library" data-tip="Мои дизайны">${ic("chevron-left",16)}<span>Дизайны</span></button>
+  topLeft:`<button type="button" class="ed-back" data-go="studio-library" data-tip="Назад к моим дизайнам" aria-label="Назад к моим дизайнам">${ic("arrow-left",17)}</button>
     <input class="ed-name" data-chg-name value="${esc(d.name)}" aria-label="Название дизайна" spellcheck="false">
     <button type="button" class="tb-fmt" data-act="studFmtMenu" data-tip="Формат: ${esc(fmt.label)} — сменить">${ic("frame",14)}<span>${fmt.w}×${fmt.h}</span>${ic("chevron-down",12)}</button>
     <div class="tb-ctx" id="stud-ctx">${start?"":`<span class="tb-div"></span>`}<div class="tb-in" id="stud-ctx-sel">${start?"":studioCtxHtml()}</div></div>`,
@@ -9097,11 +9097,11 @@ N.register({id:"studio",name:"Студия креативов",short:"Студи
   desc:"Собирайте рекламные креативы на холсте: текст, картинки, фигуры",
   metric:()=>((S.studio.list||[]).length||0)+" дизайнов на сервере",
   nav:[{items:[
-    {id:"editor",label:"Редактор",icon:"square-pen"},
-    {id:"templates",label:"Шаблоны",icon:"layout-template"},
-    {id:"library",label:"Мои дизайны",icon:"images",count:()=>(S.studio.list||[]).length||""}
+    {id:"library",label:"Мои дизайны",icon:"images",count:()=>(S.studio.list||[]).length||""},
+    {id:"editor",label:"Редактор",icon:"square-pen"}
   ]}],
-  views:views_studio,seed:studioSeed,
+  /* Первый экран сервиса — «Мои дизайны» (клик по «Студии» в рельсе); шаблоны — вкладкой внутри редактора. */
+  views:{library:views_studio.library,editor:views_studio.editor,templates:views_studio.templates},seed:studioSeed,
   commands:[{label:"Новый дизайн",icon:"plus",run(){N.acts.studNew()}}]});
 
 NEON.loadNotifications();
