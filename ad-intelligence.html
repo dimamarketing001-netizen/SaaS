@@ -626,6 +626,9 @@ nv-table{display:block;min-width:0}
 .cell-t{font-weight:600}.cell-s{font-size:12.5px;color:var(--ink-3)}
 
 /* ---------- Графики ---------- */
+.vkc-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:14px}
+.vkc-t{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--surface)}
+.vkc-l{font-size:12px;color:var(--ink-3)}.vkc-v{font-size:19px;font-weight:650;margin-top:2px;font-variant-numeric:tabular-nums}.vkc-h{font-size:11.5px;color:var(--ink-3);margin-top:2px}
 nv-chart{display:block;min-width:0}
 .chart-w{position:relative}
 .chart-w svg{display:block;width:100%;overflow:visible}
@@ -6239,6 +6242,41 @@ async function vkOpenCommunity(oid,name){
     jumpToLibrary({ids:d.ids.join(","),sort:"recent",limit:200},"Разведка: реклама в паблике «"+name+"»");
   }catch(err){toast("Не удалось открыть: "+(err.message||""),{tone:"danger"})}
 }
+/* Карточка паблика (20.11.2026): подписчики, частота постов и доля рекламы по ленте, рекламодатели, реклама по неделям */
+async function vkCommunityCard(oid,name){
+  let d;
+  try{d=await api("/api/v1/vk/communities/"+oid,{})}catch(err){toast("Карточка паблика: "+(err.message||""),{tone:"danger"});return}
+  const pct=v=>v==null?"—":(v*100).toFixed(v<0.1?1:0)+"%";
+  const tile=(l,v,h)=>`<div class="vkc-t"><div class="vkc-l">${esc(l)}</div><div class="vkc-v">${v}</div>${h?`<div class="vkc-h">${esc(h)}</div>`:""}</div>`;
+  const weeks=d.weeks||[];
+  const chart=weeks.length>1?`<div class="sect-t">Реклама по неделям</div><nv-chart type="bar" height="150" label="Рекламных постов в неделю" data="${esc(JSON.stringify({labels:weeks.map(w=>{const x=new Date(w.day);return isNaN(x)?w.w:x.toLocaleDateString("ru-RU",{day:"2-digit",month:"2-digit"})}),series:[{name:"Рекламных постов",values:weeks.map(w=>w.ads)}]}))}"></nv-chart>`:"";
+  const advs=d.advertisers||[];
+  const advHtml=advs.length?`<dl class="dl">${advs.map(a=>`<dt>${a.inn?`<button type="button" class="run-link" data-vkc-adv="${esc(a.inn)}" data-name="${esc(a.name||"")}">${esc(a.name||a.inn)}</button>`:esc(a.name||"—")}</dt><dd>${esc(fmt(a.ads))} объявл.${a.inn?` · ИНН ${esc(a.inn)}`:""}${a.communities>1?` · в ${esc(fmt(a.communities))} пабликах`:""}${a.last_post?` · последнее ${esc(N.rel(a.last_post))}`:""}</dd>`).join("")}</dl>`:'<p class="muted">Рекламодатели не определены</p>';
+  const status=d.monitor?"Следим":"Мониторинг выключен";
+  overlay("drawer",{title:d.name||name||d.screen_name||("club"+Math.abs(oid)),subtitle:"Паблик VK · "+status,size:"md",service:"vk",
+    body:`<div class="vkc-g">
+      ${tile("Подписчики",d.members?fmt(d.members):"—")}
+      ${tile("Постов в день",d.posts_per_day==null?"—":String(d.posts_per_day).replace(".",","),d.feed_days?`по ленте за ${Math.round(d.feed_days)} дн.`:"появится после обходов")}
+      ${tile("Доля рекламы",pct(d.ad_share),d.feed_posts?`${fmt(d.feed_ads)} из ${fmt(d.feed_posts)} постов`:"")}
+      ${tile("Объявлений",fmt(d.ads||0),`за 30 дней: ${fmt(d.ads_30d||0)}`)}
+      ${tile("Просмотров в среднем",d.avg_views?fmt(Math.round(d.avg_views)):"—",d.avg_likes?`лайков: ${fmt(Math.round(d.avg_likes))}`:"")}
+      ${tile("Рекламодателей",fmt(advs.length))}
+    </div>
+    <dl class="dl">
+      <dt>Ссылка</dt><dd><a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.screen_name||d.url)}</a></dd>
+      <dt>Первая реклама</dt><dd>${d.first_post?esc(fmtDateTime(d.first_post)):"—"}</dd>
+      <dt>Последняя реклама</dt><dd>${d.last_post?esc(N.rel(d.last_post)):"—"}</dd>
+      <dt>Стена проверена</dt><dd>${d.last_checked_at?esc(N.rel(d.last_checked_at)):"ещё нет"}${d.last_error?` · <span class="muted">${esc(d.last_error)}</span>`:""}</dd>
+      <dt>Откуда в списке</dt><dd>${d.source==="discover"?"найден поиском пабликов":"нашли в нём рекламу"}</dd>
+    </dl>
+    ${chart}
+    <div class="sect-t">Рекламодатели</div>${advHtml}`,
+    actions:[
+      {label:d.monitor?"Выключить мониторинг":"Включить мониторинг",icon:d.monitor?"eye-off":"eye",fn:()=>{apiPost("/api/v1/vk/communities/"+oid+"/monitor",{monitor:!d.monitor}).then(()=>{const c=S.vk.comm.find(x=>String(x.owner_id)===String(oid));if(c)c.monitor=d.monitor?0:1;N.refreshIf("vk-communities");toast(d.monitor?"Мониторинг выключен":"Мониторинг включён",{tone:"success"})}).catch(err=>toast("Не удалось: "+(err.message||""),{tone:"danger"}))}},
+      {label:"Объявления в Разведке",variant:"primary",icon:"radar",fn:()=>{vkOpenCommunity(oid,d.name||name||"")}}],
+    mount(root,close){root.querySelectorAll("[data-vkc-adv]").forEach(b=>b.addEventListener("click",()=>{close();filterByAdvertiser(b.dataset.vkcAdv,b.dataset.name)}))}
+  });
+}
 function vkSoon(title,icon,text,items){
   return{title,sub:"Раздел в разработке — следующий этап проекта ВКонтакте.",
   body:`<nv-card><nv-empty icon="${icon}" heading="Скоро" text="${esc(text)}"></nv-empty>
@@ -6296,7 +6334,7 @@ communities(){
       {key:"last_checked_at",label:"Стена проверена",sort:true,render:c=>c.last_checked_at?N.rel(c.last_checked_at)+(V.commKind==="candidates"&&!c.monitor&&!c.last_error?' <nv-badge tone="neutral">рекламы нет</nv-badge>':"")+(c.last_error?` <nv-badge tone="warning" title="${esc(c.last_error)}">ошибка</nv-badge>`:""):'<span class="muted">ещё нет</span>'},
       {key:"monitor",label:"Мониторинг",render:c=>`<nv-button size="sm" variant="${c.monitor?"secondary":"ghost"}" icon="${c.monitor?"eye":"eye-off"}" data-act="vkMonitor" data-id="${esc(c.owner_id)}" data-on="${c.monitor?0:1}">${c.monitor?"Следим":"Выключен"}</nv-button>`}];
     t.rows=V.comm.map(c=>({...c,id:String(c.owner_id)}));
-    t.addEventListener("nv-row-click",e=>{const c=V.comm.find(x=>String(x.owner_id)===e.detail.id);if(c)vkOpenCommunity(c.owner_id,c.name||"")});
+    t.addEventListener("nv-row-click",e=>{const c=V.comm.find(x=>String(x.owner_id)===e.detail.id);if(c)vkCommunityCard(c.owner_id,c.name||"")});
   }}
 },
 intel(){return{title:"Объявления VK",sub:"Открываю Разведку с фильтром ВКонтакте…",body:'<nv-skeleton count="2"></nv-skeleton>',after(){vkOpenInIntel()}}},
@@ -6309,7 +6347,7 @@ Object.assign(N.acts,{
   vkIntel(){vkOpenInIntel()},
   vkSearch(){N.go("intel-scans");setTimeout(()=>{scanDlg();setTimeout(()=>{const sel=document.querySelector('nv-select[name="source"]');if(sel){sel.setAttribute("value","vk");sel.value="vk"}},60)},60)},
   vkGo(a,d){N.go("vk-"+d.v)},
-  vkComm(a,d){vkOpenCommunity(d.id,d.name)},
+  vkComm(a,d){vkCommunityCard(d.id,d.name)},
   vkAdv(a,d){filterByAdvertiserInn(d.inn)},
   vkAdvAll(){S.intel.advSrc="vk";S.intel.advSub="all";S.intel.advertisersLoaded=false;N.go("intel-advertisers")},
   async vkWallsRun(){try{const r=await apiPost("/api/v1/vk/walls/run",{});toast(r.already?"Обход стен уже идёт (#"+r.id+")":"Обход стен поставлен в очередь (#"+r.id+")",{tone:"success"});S.vk.ovLoaded=false;N.refreshIf("vk-overview")}catch(err){toast("Не удалось: "+(err.message||""),{tone:"danger"})}},
