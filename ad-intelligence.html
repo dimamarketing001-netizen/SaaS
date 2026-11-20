@@ -1805,10 +1805,21 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .pp-chips button:hover{border-color:var(--svc-ink);color:var(--ink)}
 .pp-chips button.on{background:var(--svc-soft);border-color:color-mix(in srgb,var(--svc-ink) 45%,transparent);color:var(--svc-ink)}
 .pp-hint{font-size:11.5px;color:var(--ink-3);margin:0;line-height:1.4}
+.pp-cap{font-size:11px;color:var(--ink-3);margin:2px 0 -4px}
+.pp-full{width:100%}
+.pp-ibs.wide{flex-wrap:wrap}
+.pp-ibs.wide>.pp-btn{flex:1 1 auto;min-width:fit-content}
+.pp-seg.pp-seg-ic button{height:28px}
+.pp-seg.pp-seg-ic svg{display:block}
 .pp-empty{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:28px 18px;color:var(--ink-3);font-size:12px;line-height:1.45}
 .pp-empty p{margin:0}
 .pp-empty kbd,.pp-acts kbd{background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:0 4px;font:10px var(--font-mono)}
-.s2-props .stud-color nv-color-picker{min-width:0}
+.s2-props .stud-color nv-color-picker{min-width:0;display:block;justify-self:start;max-width:100%}
+.s2-props .cpk-trig{max-width:100%;min-width:0;gap:6px;padding:4px 10px 4px 4px}
+.s2-props .cpk-trig>nv-icon{display:none}
+.s2-props .cpk-hex{min-width:0;font:11.5px var(--font-mono);white-space:nowrap}
+.s2-props .stud-presets{grid-template-columns:repeat(3,minmax(0,1fr))}
+.s2-props .stud-presets button{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .s2-props .stud-contrast{font-size:11.5px;padding:5px 8px;border-radius:8px}
 .s2-props .stud-icon-pick{grid-template-columns:repeat(6,1fr);gap:4px}
 .s2-props .stud-icon-pick button{height:30px;border-radius:8px}
@@ -7357,6 +7368,11 @@ const ppColor=(lb,k,v)=>`<div class="pp-row stud-color"><span class="pp-l">${lb}
 /* items: [содержимое, атрибуты, активна?, подсказка] */
 const ppSeg=(items,cls)=>`<div class="pp-seg${cls?" "+cls:""}">${items.map(([c,a,on,tip])=>`<button type="button" class="${on?"on":""}" ${a}${tip?` data-tip="${esc(tip)}" aria-label="${esc(tip)}"`:""}>${c}</button>`).join("")}</div>`;
 const ppIb=(icon,attrs,on,tip)=>`<button type="button" class="pp-ib${on?" on":""}" ${attrs} data-tip="${esc(tip)}" aria-label="${esc(tip)}">${ic(icon,15)}</button>`;
+/* Мини-картинки вместо длинных слов в узких переключателях (подпись — во всплывающей подсказке). */
+const ppSvg=d=>`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const PP_DASH={solid:'<path d="M3 12h18"/>',dashed:'<path d="M3 12h18" stroke-dasharray="4.5 3.5" stroke-linecap="butt"/>',dotted:'<path d="M3.5 12h17" stroke-dasharray="0 4.2" stroke-width="2.6"/>'};
+const PP_MASK={none:'<rect x="5" y="5" width="14" height="14" rx="1.5"/>',circle:'<circle cx="12" cy="12" r="7.5"/>',arch:'<path d="M6 20v-9a6 6 0 0 1 12 0v9z"/>',hexagon:'<path d="M12 3.5 19.4 7.75v8.5L12 20.5 4.6 16.25v-8.5z"/>',star:'<path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/>'};
+const ppCap=t=>`<div class="pp-cap">${t}</div>`;
 const ppOnOff=(title,on,offA,onA)=>`<div class="pp-row"><span class="pp-l">${title}</span>${ppSeg([["Нет",offA,!on],["Есть",onA,on]])}</div>`;
 
 function studioPosHtml(l){
@@ -7377,11 +7393,11 @@ function studioShadowSecHtml(l){
   const sh=studioShadowOf(l),t=l.type==="text",base=t?"shadowSet":"effect.shadow";
   return ppSec("shadow","Тень",`${t?ppOnOff("Тень",!!sh,'data-prop-set="shadow" data-val=""','data-prop-set="shadow" data-val="1"'):ppOnOff("Тень",!!sh,'data-act-fxshadow=""','data-act-fxshadow="1"')}
     ${sh?ppColor("Цвет",base+".color",sh.color)+ppRng("Прозрачность",base+".op",sh.op,0,100,1)+ppRng("Размытие",base+".blur",sh.blur,0,40,1)+ppRng("Сдвиг по X",base+".x",sh.x,-30,30,1)+ppRng("Сдвиг по Y",base+".y",sh.y,-30,30,1)
-      +`<div class="pp-row"><span class="pp-l">Пресеты</span>${ppSeg([["Мягкая",`data-act-shpre="soft"`],["Резкая",`data-act-shpre="hard"`],["Свечение",`data-act-shpre="glow"`]],"tight")}</div>`:""}`,sh?"вкл":"");
+      +ppCap("Быстрые варианты")+ppSeg([["Мягкая",`data-act-shpre="soft"`],["Резкая",`data-act-shpre="hard"`],["Свечение",`data-act-shpre="glow"`]]):""}`,sh?"вкл":"");
 }
 function studioFillSecHtml(l){
   const f=studioFillOf(l);
-  return ppSec("fill","Заливка",`${ppSeg([["Цвет","solid"],["Линейный","gradient"],["Круговой","radial"],["Нет","none"]].map(([lb,v])=>[lb,`data-prop-set="fill.type" data-val="${v}"`,f.type===v]))}
+  return ppSec("fill","Заливка",`<nv-select class="pp-full" options="solid:Сплошной цвет|gradient:Линейный градиент|radial:Радиальный градиент|none:Без заливки" value="${esc(f.type)}" data-prop="fill.type" aria-label="Тип заливки"></nv-select>
     ${f.type!=="none"?ppColor(f.type==="solid"?"Цвет":"Цвет 1","fill.color",f.color):""}
     ${f.type==="gradient"||f.type==="radial"?ppColor("Цвет 2","fill.color2",f.color2):""}
     ${f.type==="gradient"?ppRng("Угол","fill.angle",f.angle||90,0,360,5):""}`);
@@ -7389,7 +7405,7 @@ function studioFillSecHtml(l){
 function studioStrokeSecHtml(l){
   const s=studioStrokeOf(l);
   return ppSec("stroke","Обводка",`${ppOnOff("Обводка",s.enabled,'data-prop-set="stroke.enabled" data-val=""','data-prop-set="stroke.enabled" data-val="1"')}
-    ${s.enabled?ppColor("Цвет","stroke.color",s.color)+ppRng("Толщина","stroke.width",s.width,1,20,1)+`<div class="pp-row"><span class="pp-l">Тип</span>${ppSeg([["Линия","solid"],["Штрих","dashed"],["Точки","dotted"]].map(([lb,v])=>[lb,`data-prop-set="stroke.dash" data-val="${v}"`,s.dash===v]))}</div>`:""}`,s.enabled?"вкл":"");
+    ${s.enabled?ppColor("Цвет","stroke.color",s.color)+ppRng("Толщина","stroke.width",s.width,1,20,1)+`<div class="pp-row"><span class="pp-l">Линия</span>${ppSeg([["Сплошная","solid"],["Штрих","dashed"],["Точки","dotted"]].map(([lb,v])=>[ppSvg(PP_DASH[v]),`data-prop-set="stroke.dash" data-val="${v}"`,s.dash===v,lb]),"pp-seg-ic")}</div>`:""}`,s.enabled?"вкл":"");
 }
 function studioSelBox(){
   const d=studioDesign(),ls=d.layers.filter(x=>studioMultiSel.includes(x.id));if(!ls.length)return null;
@@ -7465,9 +7481,9 @@ function studioPropsHtml(){
       <div class="pp-ibs wide"><label class="pp-btn${l.src?"":" pri"}" for="stud-img-replace">${ic("upload",14)}${l.src?"Заменить":"Загрузить фото"}</label><button type="button" class="pp-btn" data-act-imgurl>${ic("link",14)}По ссылке</button></div>
       ${l.src?`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studRemoveBg">${ic("scissors",14)}Удалить фон</button><button type="button" class="pp-btn${st?" on":""}" data-act-sticker="${st?"":"1"}">${ic("sticker",14)}Стикер</button></div>
       ${st?ppColor("Цвет обводки","sticker.color",l.sticker.color||"#ffffff")+ppRng("Толщина","sticker.width",l.sticker.width||5,1,16,1):""}`:""}`)
-    +ppSec("crop","Кадрирование",`${l.src?`<div class="pp-row"><span class="pp-l">Рамка</span>${ppSeg([["Фото","orig"],["1:1","1"],["4:5","0.8"],["16:9","1.7778"],["3:4","0.75"]].map(([lb,v])=>[lb,`data-act-ratio="${v}"`,false,lb==="Фото"?"Как у фото":"Пропорции "+lb]),"tight")}</div>`:""}
-      ${ppRng("По горизонтали","fx",l.fx==null?50:l.fx,0,100,1)}${ppRng("По вертикали","fy",l.fy==null?50:l.fy,0,100,1)}${ppRng("Масштаб","zoom",l.zoom||1,1,3,0.05)}`)
-    +ppSec("mask","Форма и рамка",`${ppSeg([["Прямо","none"],["Круг","circle"],["Арка","arch"],["Соты","hexagon"],["Звезда","star"]].map(([lb,v])=>[lb,`data-prop-set="mask" data-val="${v}"`,mask===v]),"tight")}
+    +ppSec("crop","Кадрирование",`${l.src?ppCap("Пропорции рамки")+ppSeg([["Фото","orig"],["1:1","1"],["4:5","0.8"],["16:9","1.7778"],["3:4","0.75"]].map(([lb,v])=>[lb,`data-act-ratio="${v}"`,false,lb==="Фото"?"Как у исходного фото":"Пропорции "+lb])):""}
+      ${ppRng("Смещение X","fx",l.fx==null?50:l.fx,0,100,1)}${ppRng("Смещение Y","fy",l.fy==null?50:l.fy,0,100,1)}${ppRng("Масштаб","zoom",l.zoom||1,1,3,0.05)}`)
+    +ppSec("mask","Форма и рамка",`${ppCap("Форма фото")+ppSeg([["Прямоугольник","none"],["Круг","circle"],["Арка","arch"],["Соты","hexagon"],["Звезда","star"]].map(([lb,v])=>[ppSvg(PP_MASK[v]),`data-prop-set="mask" data-val="${v}"`,mask===v,lb]),"pp-seg-ic")}
       ${mask==="none"?ppRng("Скругление","radius",l.radius||0,0,120,2):""}
       ${ppOnOff("Рамка",bd,'data-act-border=""','data-act-border="1"')}
       ${bd?ppColor("Цвет рамки","border.color",l.border.color||"#ffffff")+ppRng("Толщина","border.width",l.border.width||4,1,20,1):""}`)
