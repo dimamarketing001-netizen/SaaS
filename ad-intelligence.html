@@ -1715,6 +1715,54 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s2-kbd kbd{background:var(--surface-2);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-size:12px;font-family:inherit;white-space:nowrap}
 @media (max-width:1250px){.s2{grid-template-columns:64px auto minmax(0,1fr)}.s2-props{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);max-height:none}}
 @media (max-width:900px){.s2-panel{width:240px}}
+/* Редактор на всю рабочую область: вместо меню раздела — панель редактора, шапка — в верхней строке */
+.top-ed{display:none}
+.shell.immersive{grid-template-columns:78px minmax(0,1fr)}
+.shell.immersive .side{display:none}
+.shell.immersive .top{padding-block:8px;gap:8px}
+.shell.immersive .crumbs{display:flex;align-items:center;gap:8px;overflow:visible;min-width:0;flex:0 1 auto}
+.shell.immersive .top-ed{display:flex;align-items:center;gap:6px;margin-left:auto;flex:none}
+.shell.immersive .top-sp{margin-left:0}
+.ed-back{display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 12px 0 8px;border:0;border-radius:999px;background:var(--l2,var(--surface-2));color:var(--ink);font-size:12.5px;cursor:pointer;flex:none}
+.ed-back:hover{color:var(--svc-ink)}
+.ed-name{height:34px;width:clamp(120px,18vw,240px);border:1px solid transparent;border-radius:9px;background:none;padding:0 10px;font-size:14px;font-weight:600;color:var(--ink);text-overflow:ellipsis}
+.ed-name:hover{border-color:var(--line)}
+.ed-name:focus{border-color:var(--svc-ink);background:var(--surface);outline:0}
+.ed-fmt{min-width:190px}
+.shell.immersive .scroll{overflow:hidden;scrollbar-gutter:auto}
+.shell.immersive .view{max-width:none;margin:0;height:100%;padding:0 10px 10px 0;gap:0}
+.shell.immersive .s2{height:100%;min-height:0;grid-template-rows:minmax(0,1fr);grid-template-columns:72px auto minmax(0,1fr) 270px}
+.shell.immersive .s2-panel,.shell.immersive .s2-props{max-height:none;min-height:0}
+.shell.immersive .s2-main{min-height:0;overflow:hidden}
+.shell.immersive .s2-main>.s2-start{overflow:auto;flex:1;min-height:0;max-width:none;width:100%;margin:0;padding:24px max(16px,calc((100% - 760px)/2))}
+.s2-panel{position:relative}
+.s2>.s2-rail{grid-column:1}.s2>.s2-panel{grid-column:2}.s2>.s2-main{grid-column:3}.s2>.s2-props{grid-column:4}
+.s2-ctx:has(#stud-ctx-sel:empty){display:none}
+.s2-panel-x{position:absolute;right:8px;top:10px;width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--ink-3);cursor:pointer;display:grid;place-items:center}
+.s2-panel-x:hover{background:var(--surface-2);color:var(--ink)}
+.s2-main .stud-stage-wrap{display:flex;flex-direction:column;align-items:center}
+.shell.immersive .s2-main .stud-stage-wrap{flex:1;min-height:0;max-height:none;padding:10px 0 0}
+.shell.immersive #stud-stage-host{flex:1;min-height:0;width:100%;container-type:size;overflow:auto;display:flex}
+.shell.immersive #stud-stage-host>.stud-stage{margin:auto;flex:none}
+.shell.immersive .stud-zoom{margin-bottom:0}
+@media (max-width:1250px){.shell.immersive .s2{grid-template-columns:64px auto minmax(0,1fr) 230px}.shell.immersive .s2-props{grid-column:auto;border-top:0;border-left:1px solid var(--line)}}
+@media (max-width:980px){
+  .shell.immersive{grid-template-columns:minmax(0,1fr)}
+  .shell.immersive .top{flex-wrap:wrap}
+  .shell.immersive .top-ed{flex-wrap:wrap;flex:1 1 100%;order:5;margin-left:0}
+  .shell.immersive .crumbs{flex:1 1 auto}
+  .shell.immersive .ed-name{width:auto;flex:1;min-width:0}
+  .shell.immersive .ed-fmt{min-width:0}
+  .shell.immersive .scroll{overflow-y:auto}
+  .shell.immersive .view{height:auto;padding:0 8px 16px}
+  .shell.immersive .s2{height:auto;grid-template-columns:minmax(0,1fr);grid-template-rows:auto}
+  .shell.immersive .s2-rail{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .shell.immersive .s2-rail button{flex:none;min-width:64px;margin-top:0!important}
+  .shell.immersive .s2-panel{width:auto;max-height:50vh;border-right:0;border-bottom:1px solid var(--line)}
+  .shell.immersive .s2>*{grid-column:1/-1!important}
+  .shell.immersive .s2-props{border-left:0;border-top:1px solid var(--line)}
+  .shell.immersive #stud-stage-host{height:min(70vh,560px);flex:none}
+}
 .s2-pages{display:flex;gap:8px;align-items:center;padding:8px 12px;border-top:1px solid var(--line);background:var(--surface);overflow-x:auto}
 .s2-pages .pg{position:relative;flex:none;border:2px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;background:var(--surface-2);height:64px;display:flex;align-items:center;justify-content:center}
 .s2-pages .pg.on{border-color:var(--svc-ink)}
@@ -2871,6 +2919,7 @@ function shell(){
   <div class="main"><header class="top">
     <nv-button class="burger" variant="ghost" icon="menu" icon-only data-act="navOpen">Открыть меню</nv-button>
     <div class="crumbs" id="crumbs"></div>
+    <div class="top-ed" id="top-ed"></div>
     <span class="top-sp"></span>
     <nv-button variant="ghost" icon="bell" icon-only data-act="notifOpen" id="bell" hint="Уведомления">Уведомления</nv-button>
     <button type="button" class="top-av" data-act="account" aria-label="Профиль" data-tip="Профиль"><nv-avatar name="${esc(PROFILE.name||session.email||"?")}" src="${esc(PROFILE.avatarDataUrl||"")}" size="34"></nv-avatar></button>
@@ -2888,8 +2937,14 @@ function renderView(keepScroll){
   const{s,v,svc}=route(),old=document.getElementById("view"),sc=document.getElementById("scroll");if(!old)return;const root=old.cloneNode(false);old.replaceWith(root);
   const y=sc.scrollTop,d=svc.views[v]();
   NEON.curHelp=d.help||null;
+  const imm=!!d.immersive,sh=document.getElementById("shell"),ted=document.getElementById("top-ed");
+  sh&&sh.classList.toggle("immersive",imm);
+  if(imm){root.innerHTML=d.body||"";document.getElementById("crumbs").innerHTML=d.topLeft||"";if(ted)ted.innerHTML=d.actions||""}
+  else{
+  if(ted)ted.innerHTML="";
   root.innerHTML=`<nv-page-header heading="${esc(d.title)}" subtitle="${esc(d.sub||"")}"${d.back?` back="${esc(d.back)}" back-label="${esc(d.backLabel||"")}"`:""}>${d.help?'<nv-button variant="ghost" icon="help-circle" data-act="helpOpen">Как это работает</nv-button>':""}${d.actions||""}</nv-page-header>${d.body||""}`;
   document.getElementById("crumbs").innerHTML=`<nv-breadcrumbs items="${esc(s+"-"+Object.keys(svc.views)[0]+":"+svc.name+"|cur:"+d.title)}"></nv-breadcrumbs>`;
+  }
   document.getElementById("side-nav").innerHTML=sideNav();
   d.after&&d.after(root);
   sc.scrollTop=keepScroll?y:0;
@@ -6950,7 +7005,7 @@ function studioEditOverlayHtml(){
 }
 function studioStageHtml(){
   const d=studioDesign(),fmt=STUDIO_FMT[d.format],bgStyle=d.bg.type==="image"&&d.bg.image?`background-image:url('${esc(d.bg.image)}')`:`background:${esc(d.bg.color||"#fff")}`;
-  const z=studioZoom;return`<div class="stud-stage${studioTool==="pen"?" pen-on":studioTool==="eyedrop"?" eyedrop-on":""}" style="aspect-ratio:${fmt.w}/${fmt.h};width:${z===1?`min(100%,560px,calc((100vh - 220px)*${fmt.w}/${fmt.h}))`:`calc(min(560px,(100vh - 220px)*${fmt.w}/${fmt.h})*${z})`};max-width:none;${bgStyle}">${d.layers.map(l=>studioLayerHtml(l,l.id===d.selectedId,studioMultiSel.includes(l.id))).join("")}${studioPenPreviewHtml()}${studioEditOverlayHtml()}${studioZonesHtml(d)}</div>`;
+  const z=studioZoom;return`<div class="stud-stage${studioTool==="pen"?" pen-on":studioTool==="eyedrop"?" eyedrop-on":""}" style="aspect-ratio:${fmt.w}/${fmt.h};width:${z===1?`min(100cqw - 40px,(100cqh - 40px)*${fmt.w}/${fmt.h})`:`calc(min(100cqw - 40px,(100cqh - 40px)*${fmt.w}/${fmt.h})*${z})`};max-width:none;${bgStyle}">${d.layers.map(l=>studioLayerHtml(l,l.id===d.selectedId,studioMultiSel.includes(l.id))).join("")}${studioPenPreviewHtml()}${studioEditOverlayHtml()}${studioZonesHtml(d)}</div>`;
 }
 /* Безопасные зоны: поля 5% (текст ближе к краю режут превью площадок) и, для
    вертикальных форматов, полосы под интерфейс сторис (шапка ~14%, низ ~20%). */
@@ -7819,7 +7874,7 @@ function studioIconList(){
   return[...new Set(en.concat(all.filter(n=>n.includes(q)||en.some(e=>n.includes(e)))))].slice(0,90);
 }
 async function studioLoadUploads(force){if(studioUploads&&!force)return;try{studioUploads=(await api("/api/v1/studio/uploads")).uploads||[]}catch(e){studioUploads=[]}studioRefreshPanel()}
-function studioRefreshPanel(){const p=document.getElementById("s2-panel");if(p&&S.studio.tab)p.innerHTML=studioPanelHtml(S.studio.tab)}
+function studioRefreshPanel(){const p=document.getElementById("s2-panel");if(p&&S.studio.tab)p.innerHTML=`<button type="button" class="s2-panel-x" data-act="studTab" data-tab="${S.studio.tab}" data-tip="Скрыть панель">${ic("chevrons-left",16)}</button>`+studioPanelHtml(S.studio.tab)}
 function studioPanelHtml(tab){
   const d=studioDesign();
   if(tab==="templates"){if(studioUserTpls===null)studioLoadUserTpls();
@@ -8005,23 +8060,28 @@ async function studioPaintTplThumbs(root){
     try{await studioFontsReady(d);d.layers.forEach(l=>studioFitText(l,d));img.src=(await studioRenderCanvas(d,260/STUDIO_FMT[d.format].w)).toDataURL("image/jpeg",0.82)}catch(e){}
   }
 }
-let studioStartDismissed=false;
+let studioStartDismissed=false,studioLeftEditor=true;
+window.addEventListener("hashchange",()=>{const r=NEON.route();if(r.s!=="studio"||r.v!=="editor")studioLeftEditor=true});
+document.addEventListener("change",e=>{if(e.target.matches&&e.target.matches(".ed-name[data-chg-name]")){studioDesign().name=e.target.value.trim()||"Новый дизайн";NEON.save()}});
+document.addEventListener("keydown",e=>{if(e.target.matches&&e.target.matches(".ed-name")&&e.key==="Enter"){e.preventDefault();e.target.blur()}},true);
 const views_studio={
 editor(){
   const d=studioDesign(),fmt=STUDIO_FMT[d.format];
   studioBoot();
+  if(studioLeftEditor){S.studio.tab="";studioLeftEditor=false}
   const start=!d.layers.length&&!d.id&&!studioStartDismissed,tabNow=S.studio.tab;
   const l=studioSelected(),propsTitle=studioMultiSel.length>1?"Несколько элементов":l?{text:"Текст",image:"Фото",shape:"Фигура",icon:"Иконка",path:"Кривая"}[l.type]||"Элемент":"Дизайн";
-  return{title:d.name||"Новый дизайн",sub:"",
+  return{title:d.name||"Новый дизайн",sub:"",immersive:true,
+  topLeft:`<button type="button" class="ed-back" data-go="studio-library" data-tip="Мои дизайны">${ic("chevron-left",16)}<span>Дизайны</span></button>
+    <input class="ed-name" data-chg-name value="${esc(d.name)}" aria-label="Название дизайна" spellcheck="false">
+    <nv-select class="ed-fmt" value="${d.format}" options="${Object.entries(STUDIO_FMT).map(([k,v])=>k+":"+v.label.replace(/:/g,"∶")+" · "+v.w+"×"+v.h).join("|")}" data-chg="studFormat"></nv-select>`,
   actions:`<span id="stud-save" class="stud-save">${esc(studioSaveLabel())}</span><nv-button variant="ghost" size="sm" icon="undo-2" icon-only hint="Отменить (Ctrl+Z)" data-act="studUndo"></nv-button><nv-button variant="ghost" size="sm" icon="redo-2" icon-only hint="Повторить (Ctrl+Shift+Z)" data-act="studRedo"></nv-button><nv-button variant="ghost" size="sm" icon="more-horizontal" icon-only hint="История версий, дублировать, горячие клавиши" data-act="studMore"></nv-button><nv-button variant="secondary" icon="download" icon-end="chevron-down" data-act="studDownload">Скачать</nv-button><nv-button icon="megaphone" hint="Картинки в проект «Рекламы» и запуск" data-act="studToAds">В рекламу</nv-button>`,
   body:`<div class="s2">
-    <nav class="s2-rail">${STUDIO_TABS.map(([k,i,lb])=>`<button type="button" class="${tabNow===k?"on":""}" data-act="studTab" data-tab="${k}">${ic(i,20)}<span>${lb}</span></button>`).join("")}<button type="button" data-act="studShortcuts" style="margin-top:auto">${ic("keyboard",18)}<span>Клавиши</span></button></nav>
-    <aside class="s2-panel" id="s2-panel" ${tabNow?"":"hidden"}>${tabNow?studioPanelHtml(tabNow):""}</aside>
+    <nav class="s2-rail">${STUDIO_TABS.map(([k,i,lb])=>`<button type="button" class="${tabNow===k?"on":""}" data-act="studTab" data-tab="${k}">${ic(i,20)}<span>${lb}</span></button>`).join("")}<button type="button" data-go="studio-library" style="margin-top:auto">${ic("images",18)}<span>Дизайны</span></button><button type="button" data-act="studShortcuts">${ic("keyboard",18)}<span>Клавиши</span></button></nav>
+    <aside class="s2-panel" id="s2-panel" ${tabNow?"":"hidden"}>${tabNow?`<button type="button" class="s2-panel-x" data-act="studTab" data-tab="${tabNow}" data-tip="Скрыть панель">${ic("chevrons-left",16)}</button>`+studioPanelHtml(tabNow):""}</aside>
     <section class="s2-main">
       <div class="s2-ctx" id="stud-ctx">
-        <input class="num" data-chg-name value="${esc(d.name)}" style="width:190px;text-align:left;padding:0 10px;font-weight:600" aria-label="Название дизайна">
-        <nv-select value="${d.format}" options="${Object.entries(STUDIO_FMT).map(([k,v])=>k+":"+v.label+" · "+v.w+"×"+v.h).join("|")}" data-chg="studFormat" style="min-width:190px"></nv-select>
-        <span class="sep"></span><span id="stud-ctx-sel" style="display:contents">${start?"":studioCtxHtml()}</span>
+        <span id="stud-ctx-sel" style="display:contents">${start?"":studioCtxHtml()}</span>
       </div>
       <input type="file" id="stud-bg-file" accept="image/*" class="sr"><input type="file" id="stud-img-file" accept="image/*" class="sr"><input type="file" id="stud-img-replace" accept="image/*" class="sr">
       ${start?studioStartHtml():`<div class="stud-stage-wrap">${studioZoomHtml()}<div id="stud-stage-host">${studioStageHtml()}</div>${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Перо: клик — точка, клик+тяни — плавная, клик по первой — замкнуть, Enter — закончить, Esc — отмена.</p>':""}</div>${studioPagesHtml()}`}
