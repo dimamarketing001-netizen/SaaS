@@ -1715,6 +1715,101 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s2-kbd kbd{background:var(--surface-2);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-size:12px;font-family:inherit;white-space:nowrap}
 @media (max-width:1250px){.s2{grid-template-columns:64px auto minmax(0,1fr)}.s2-props{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);max-height:none}}
 @media (max-width:900px){.s2-panel{width:240px}}
+
+/* ---------- Студия: слои деревом ---------- */
+.lt{display:flex;flex-direction:column;gap:1px;user-select:none}
+.lr{position:relative;display:flex;align-items:center;gap:6px;height:32px;padding:0 6px 0 4px;border-radius:9px;cursor:pointer;font-size:12.5px;color:var(--ink-2)}
+.lr:hover{background:var(--l2,var(--surface-2))}
+.lr.on{background:var(--svc-soft);color:var(--ink)}
+.lr.on .lr-n{font-weight:500}
+.lr.hid .lr-n,.lr.hid .lr-th{opacity:.45}
+.lr button{border:0;background:none;color:inherit;cursor:pointer;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;flex:none;padding:0}
+.lr button:hover{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}
+.lr-eye{opacity:.55}.lr:hover .lr-eye,.lr-eye.off{opacity:1}.lr-eye.off{color:var(--ink-3)}
+.lr-th{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);flex:none}
+.lr-th.g{background:var(--svc-soft);border-color:color-mix(in srgb,var(--svc-ink) 30%,transparent);color:var(--svc-ink)}
+.lr-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lr-c{font:10.5px var(--font-mono);color:var(--ink-3);background:color-mix(in srgb,var(--ink) 6%,transparent);border-radius:5px;padding:0 5px;flex:none}
+.lr-ac{display:flex;gap:0;flex:none}
+.lr-ac button{display:none}
+.lr-ac button.pin,.lr:hover .lr-ac button,.lr:focus-within .lr-ac button{display:grid}
+.lr-ac button.pin{color:var(--svc-ink)}
+.lr.grp{font-weight:500;color:var(--ink)}
+.lr-tw{width:16px!important;margin-left:-4px;color:var(--ink-3)!important}
+.lg-kids{position:relative;padding-left:22px}
+.lg-kids::before{content:"";position:absolute;left:15px;top:0;bottom:6px;width:1px;background:var(--line-2)}
+.lr.kid::before{content:"";position:absolute;left:-7px;top:50%;width:7px;height:1px;background:var(--line-2)}
+.lr.dragging{opacity:.4}
+.lr.drop-b{box-shadow:inset 0 2px 0 var(--svc-ink)}
+.lr.drop-a{box-shadow:inset 0 -2px 0 var(--svc-ink)}
+.lr.drop-in{background:var(--svc-soft);box-shadow:inset 0 0 0 1.5px var(--svc-ink)}
+
+/* ---------- Студия: правая панель свойств ---------- */
+.s2-props{padding:0!important;gap:0!important}
+#stud-props{display:flex;flex-direction:column}
+.pp-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:2}
+.pp-head b{display:block;font-weight:500;font-size:13.5px;line-height:1.25}
+.pp-head small{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.3;margin-top:1px}
+.pp-tile{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--svc-soft);color:var(--svc-ink);flex:none}
+.pp-acts{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.pp-acts kbd{font:10px var(--font-mono);opacity:.7;margin-left:2px}
+.pp-sec{border-bottom:1px solid var(--line)}
+.pp-sec>summary{list-style:none;display:flex;align-items:center;gap:6px;padding:11px 14px 9px;cursor:pointer;font:500 10.5px var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);user-select:none}
+.pp-sec[open]>summary{color:var(--ink)}
+.pp-sec>summary::-webkit-details-marker{display:none}
+.pp-sec>summary span{flex:1}
+.pp-sec>summary em{font:normal 10px var(--font-mono);text-transform:none;letter-spacing:0;color:var(--svc-ink);background:var(--svc-soft);border-radius:5px;padding:1px 6px}
+.pp-sec>summary nv-icon{color:var(--ink-3);transition:transform .15s}
+.pp-sec:not([open])>summary nv-icon{transform:rotate(-90deg)}
+.pp-sec>summary:hover{background:color-mix(in srgb,var(--ink) 3%,transparent)}
+.pp-body{display:flex;flex-direction:column;gap:9px;padding:0 14px 14px}
+.pp-row{display:grid;grid-template-columns:86px minmax(0,1fr);align-items:center;gap:8px;min-height:28px}
+.pp-l{font-size:11.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-row .rng{gap:8px}
+.pp-row .rng output{font:11px var(--font-mono);min-width:38px;color:var(--ink);font-weight:400}
+.pp-row .rng input[type="range"]{height:4px}
+.pp-row .rng input[type="range"]::-webkit-slider-thumb{width:14px;height:14px;border-width:2px}
+.pp-row .rng input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-width:2px}
+.pp-grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pp-in{display:flex;align-items:center;gap:6px;height:30px;padding:0 8px;border:1px solid var(--line-2);border-radius:9px;background:var(--l2,var(--surface-2));min-width:0}
+.pp-in:focus-within{border-color:var(--svc-ink);box-shadow:0 0 0 3px var(--svc-soft)}
+.pp-in span{font:10.5px var(--font-mono);color:var(--ink-3);flex:none;display:flex}
+.pp-in input{flex:1;min-width:0;width:100%;border:0;background:none;outline:0;font:12px var(--font-mono);color:var(--ink);-moz-appearance:textfield}
+.pp-in input::-webkit-outer-spin-button,.pp-in input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.pp-ibs{display:flex;gap:4px;align-items:center;min-width:0}
+.pp-ibs.wide>*{flex:1}
+.pp-ibs.wide>.pp-ib{flex:none}
+.pp-ib{width:30px;height:30px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--ink-2);display:grid;place-items:center;cursor:pointer;flex:none;padding:0}
+.pp-ib:hover{border-color:var(--svc-ink);color:var(--ink)}
+.pp-ib.on{background:var(--svc-soft);border-color:color-mix(in srgb,var(--svc-ink) 45%,transparent);color:var(--svc-ink)}
+.pp-btn{height:30px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px;font-size:12px;cursor:pointer;white-space:nowrap;min-width:0}
+.pp-btn:hover{border-color:var(--svc-ink)}
+.pp-btn.on{background:var(--svc-soft);border-color:color-mix(in srgb,var(--svc-ink) 45%,transparent);color:var(--svc-ink)}
+.pp-btn.pri{background:var(--svc);border-color:transparent;color:#0d1211;font-weight:500}
+.pp-seg{display:flex;gap:2px;padding:2px;border-radius:999px;background:color-mix(in srgb,var(--ink) 7%,transparent);min-width:0}
+.pp-seg button{flex:1;min-width:0;height:26px;border:0;border-radius:999px;background:none;color:var(--ink-2);font-size:11.5px;cursor:pointer;display:grid;place-items:center;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-seg button:hover{color:var(--ink)}
+.pp-seg button.on{background:var(--surface);color:var(--ink);font-weight:500;box-shadow:var(--shadow-1)}
+.pp-seg.pp-seg-ic button{padding:0}
+.pp-seg.tight button{font-size:11px;padding:0 2px}
+.pp-tools{display:flex;align-items:center;gap:4px}
+.pp-tools .pp-sp{flex:1}
+.pp-tools .pp-seg{flex:none;width:96px}
+.pp-chips{display:flex;flex-wrap:wrap;gap:6px}
+.pp-chips button{height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 10px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);color:var(--ink-2);font-size:12px;cursor:pointer}
+.pp-chips button:hover{border-color:var(--svc-ink);color:var(--ink)}
+.pp-chips button.on{background:var(--svc-soft);border-color:color-mix(in srgb,var(--svc-ink) 45%,transparent);color:var(--svc-ink)}
+.pp-hint{font-size:11.5px;color:var(--ink-3);margin:0;line-height:1.4}
+.pp-empty{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:28px 18px;color:var(--ink-3);font-size:12px;line-height:1.45}
+.pp-empty p{margin:0}
+.pp-empty kbd,.pp-acts kbd{background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:0 4px;font:10px var(--font-mono)}
+.s2-props .stud-color nv-color-picker{min-width:0}
+.s2-props .stud-contrast{font-size:11.5px;padding:5px 8px;border-radius:8px}
+.s2-props .stud-icon-pick{grid-template-columns:repeat(6,1fr);gap:4px}
+.s2-props .stud-icon-pick button{height:30px;border-radius:8px}
+.s2-props .stud-presets{gap:5px}
+.s2-props .stud-presets button{border-radius:9px;padding:3px 3px 4px}
+.s2-props nv-textarea textarea{font-size:12.5px}
 /* Редактор на всю рабочую область: вместо меню раздела — панель редактора, шапка — в верхней строке */
 .top-ed{display:none}
 .shell.immersive{grid-template-columns:78px minmax(0,1fr)}
@@ -7070,156 +7165,214 @@ function studioPaintCurved(el,l){
   const g=cv.getContext("2d");g.scale(dpr,dpr);if(l.shadow){g.shadowColor="rgba(0,0,0,.55)";g.shadowBlur=8}
   studioDrawCurved(g,l,w0*0.5,h0,w0,h0,Math.max(8,H*l.fontSize/100));
 }
+/* ---------- Слои: дерево как в Photoshop/Illustrator ----------
+   Сверху списка — верхний слой (последний в d.layers). Группа — это общий l.group у
+   слоёв; в массиве слои группы держим подряд (studioNormGroups), чтобы группа была
+   одним «блоком» и при перестановке двигалась целиком. */
+let studioGrpClosed=new Set();
+const studioPPClosed=new Set(["xform","filters"]);
+function studioNormGroups(d){
+  const seen=new Set(),out=[];
+  for(let i=d.layers.length-1;i>=0;i--){const l=d.layers[i];
+    if(!l.group){out.unshift(l);continue}
+    if(seen.has(l.group))continue;seen.add(l.group);
+    out.unshift(...d.layers.filter(x=>x.group===l.group));
+  }
+  /* группа из одного слоя — уже не группа */
+  const cnt={};out.forEach(l=>{if(l.group)cnt[l.group]=(cnt[l.group]||0)+1});
+  out.forEach(l=>{if(l.group&&cnt[l.group]<2)delete l.group});
+  d.layers.splice(0,d.layers.length,...out);
+  if(d.groupNames)for(const g of Object.keys(d.groupNames))if(!cnt[g]||cnt[g]<2)delete d.groupNames[g];
+}
+function studioGroupName(d,g){
+  if(d.groupNames&&d.groupNames[g])return d.groupNames[g];
+  const order=[];d.layers.forEach(l=>{if(l.group&&!order.includes(l.group))order.push(l.group)});
+  return"Группа "+(order.indexOf(g)+1);
+}
+/* «Блоки» в порядке массива: отдельный слой или группа целиком */
+function studioUnits(d){const u=[];d.layers.forEach(l=>{if(l.group){const last=u[u.length-1];if(last&&last.g===l.group)last.ids.push(l.id);else u.push({g:l.group,ids:[l.id]})}else u.push({id:l.id,ids:[l.id]})});return u}
+function studioLayerRowHtml(l,d,inGrp){
+  const on=l.id===d.selectedId&&studioMultiSel.length<2||studioMultiSel.includes(l.id);
+  return`<div class="lr${on?" on":""}${inGrp?" kid":""}${l.hidden?" hid":""}" data-sel="${esc(l.id)}" draggable="true" data-drag="${esc(l.id)}">
+    <button type="button" class="lr-eye${l.hidden?" off":""}" data-vis="${esc(l.id)}" aria-label="${l.hidden?"Показать":"Скрыть"}">${ic(l.hidden?"eye-off":"eye",13)}</button>
+    <span class="lr-th">${ic(studioLayerIcon(l),13)}</span><span class="lr-n">${esc(studioLayerLabel(l))}</span>
+    <span class="lr-ac"><button type="button" class="${l.locked?"pin":""}" data-lock="${esc(l.id)}" aria-label="${l.locked?"Открепить":"Закрепить"}" data-tip="${l.locked?"Открепить":"Закрепить"}">${ic(l.locked?"lock":"unlock",13)}</button><button type="button" data-mv="${esc(l.id)}" data-dir="1" aria-label="Выше" data-tip="Выше">${ic("chevron-up",13)}</button><button type="button" data-mv="${esc(l.id)}" data-dir="-1" aria-label="Ниже" data-tip="Ниже">${ic("chevron-down",13)}</button><button type="button" data-del="${esc(l.id)}" aria-label="Удалить слой" data-tip="Удалить">${ic("trash-2",13)}</button></span>
+  </div>`;
+}
 function studioLayersListHtml(){
   const d=studioDesign();
-  if(!d.layers.length)return'<p class="muted" style="font-size:12.5px">Выберите инструмент слева, чтобы добавить первый слой.</p>';
-  return`<div class="stud-layers">${d.layers.map((l,i)=>`<div class="stud-layer-row${l.id===d.selectedId?" on":""}" data-sel="${esc(l.id)}">${ic(studioLayerIcon(l),14)}<span>${esc(studioLayerLabel(l))}</span><span class="row-ic"><button type="button" class="${l.hidden?"off":""}" data-vis="${esc(l.id)}" aria-label="${l.hidden?"Показать":"Скрыть"}" data-tip="${l.hidden?"Показать":"Скрыть"}">${ic(l.hidden?"eye-off":"eye",13)}</button><button type="button" class="${l.locked?"off":""}" data-lock="${esc(l.id)}" aria-label="${l.locked?"Открепить":"Закрепить"}" data-tip="${l.locked?"Открепить":"Закрепить"}">${ic(l.locked?"lock":"unlock",13)}</button><button type="button" data-mv="${esc(l.id)}" data-dir="-1" aria-label="Выше" ${i===0?"disabled":""}>${ic("chevron-up",13)}</button><button type="button" data-mv="${esc(l.id)}" data-dir="1" aria-label="Ниже" ${i===d.layers.length-1?"disabled":""}>${ic("chevron-down",13)}</button><button type="button" data-del="${esc(l.id)}" aria-label="Удалить слой">${ic("trash-2",13)}</button></span></div>`).join("")}</div>`;
+  if(!d.layers.length)return'<p class="muted" style="font-size:12.5px">Пока пусто — добавьте текст, фигуру или фото во вкладках слева.</p>';
+  const units=studioUnits(d).reverse();
+  return`<div class="lt">${units.map(u=>{
+    if(!u.g)return studioLayerRowHtml(d.layers.find(x=>x.id===u.id),d,false);
+    const ls=u.ids.map(id=>d.layers.find(x=>x.id===id)).reverse(),closed=studioGrpClosed.has(u.g);
+    const allSel=u.ids.every(id=>studioMultiSel.includes(id)),hid=ls.every(x=>x.hidden),lck=ls.every(x=>x.locked);
+    return`<div class="lg${closed?" closed":""}"><div class="lr grp${allSel?" on":""}${hid?" hid":""}" data-gsel="${esc(u.g)}" draggable="true" data-gdrag="${esc(u.g)}">
+      <button type="button" class="lr-eye${hid?" off":""}" data-gvis="${esc(u.g)}" aria-label="${hid?"Показать группу":"Скрыть группу"}">${ic(hid?"eye-off":"eye",13)}</button>
+      <button type="button" class="lr-tw" data-gtog="${esc(u.g)}" aria-label="${closed?"Развернуть":"Свернуть"}" aria-expanded="${!closed}">${ic(closed?"chevron-right":"chevron-down",13)}</button>
+      <span class="lr-th g">${ic(closed?"folder":"folder-open",13)}</span><span class="lr-n">${esc(studioGroupName(d,u.g))}</span><span class="lr-c">${ls.length}</span>
+      <span class="lr-ac"><button type="button" class="${lck?"pin":""}" data-glock="${esc(u.g)}" aria-label="${lck?"Открепить группу":"Закрепить группу"}" data-tip="${lck?"Открепить":"Закрепить"}">${ic(lck?"lock":"unlock",13)}</button><button type="button" data-gmv="${esc(u.g)}" data-dir="1" aria-label="Выше" data-tip="Выше">${ic("chevron-up",13)}</button><button type="button" data-gmv="${esc(u.g)}" data-dir="-1" aria-label="Ниже" data-tip="Ниже">${ic("chevron-down",13)}</button><button type="button" data-gun="${esc(u.g)}" aria-label="Разгруппировать" data-tip="Разгруппировать">${ic("ungroup",13)}</button></span>
+    </div>${closed?"":`<div class="lg-kids">${ls.map(l=>studioLayerRowHtml(l,d,true)).join("")}</div>`}</div>`;
+  }).join("")}</div>`;
 }
-function studioStepperHtml(label,key,value,min){
-  return`<label class="fld"><span>${label}</span><div class="stud-stepper"><button type="button" tabindex="-1" data-step="${key}" data-dir="-1" aria-label="Уменьшить">${ic("minus",12)}</button><input type="number" step="1" ${min!=null?`min="${min}"`:""} value="${value}" data-prop="${key}"><button type="button" tabindex="-1" data-step="${key}" data-dir="1" aria-label="Увеличить">${ic("plus",12)}</button></div></label>`;
+/* Перестановка: слой внутри группы ходит только внутри неё; одиночный слой и
+   группа перепрыгивают соседний блок целиком. dir=+1 — выше (к концу массива). */
+function studioMoveLayer(d,id,dir){
+  studioNormGroups(d);
+  const l=d.layers.find(x=>x.id===id);if(!l)return false;
+  if(l.group){const i=d.layers.indexOf(l),j=i+dir,n=d.layers[j];if(!n||n.group!==l.group)return false;[d.layers[i],d.layers[j]]=[n,l];return true}
+  return studioMoveUnit(d,u=>u.id===id,dir);
 }
-function studioPropsCommonHtml(l){
+function studioMoveUnit(d,match,dir){
+  const U=studioUnits(d),k=U.findIndex(match),j=k+dir;if(k<0||j<0||j>=U.length)return false;
+  [U[k],U[j]]=[U[j],U[k]];const by=Object.fromEntries(d.layers.map(x=>[x.id,x]));
+  d.layers.splice(0,d.layers.length,...U.flatMap(u=>u.ids.map(id=>by[id])));return true;
+}
+/* Перетаскивание в списке: pos — "before" (выше цели в списке), "after" (ниже) или "into" (в группу). */
+function studioDropLayers(d,drag,target,pos){
+  studioNormGroups(d);
+  const by=Object.fromEntries(d.layers.map(x=>[x.id,x]));
+  const moving=drag.g?d.layers.filter(x=>x.group===drag.g):[by[drag.id]].filter(Boolean);
+  if(!moving.length)return false;
+  if(target.g&&drag.g===target.g)return false;
+  if(target.id&&moving.some(x=>x.id===target.id))return false;
+  const rest=d.layers.filter(x=>!moving.includes(x));
+  let idx,newGroup=null;
+  if(target.g){
+    const gi=rest.map((x,i)=>x.group===target.g?i:-1).filter(i=>i>=0);if(!gi.length)return false;
+    if(pos==="into"&&!drag.g){idx=gi[gi.length-1]+1;newGroup=target.g}
+    else idx=pos==="after"?gi[0]:gi[gi.length-1]+1;
+  }else{
+    const t=rest.find(x=>x.id===target.id);if(!t)return false;const ti=rest.indexOf(t);
+    idx=pos==="after"?ti:ti+1;
+    if(!drag.g)newGroup=t.group||null;
+    else if(t.group){const gi=rest.map((x,i)=>x.group===t.group?i:-1).filter(i=>i>=0);idx=pos==="after"?gi[0]:gi[gi.length-1]+1}
+  }
+  if(!drag.g){if(newGroup)moving[0].group=newGroup;else delete moving[0].group}
+  rest.splice(idx,0,...moving);d.layers.splice(0,d.layers.length,...rest);
+  studioNormGroups(d);return true;
+}
+
+/* ---------- Правая панель свойств: разделы как в Figma ---------- */
+function studioOutFmt(k,v){
+  if(k==="rotation"||k==="fill.angle"||k==="grad.angle"||k==="skewX"||k==="skewY")return v+"°";
+  if(k==="opacity"||k==="fx"||k==="fy"||k==="innerRadius")return v+"%";
+  if(k==="zoom")return Math.round(v*100)+"%";
+  if(k==="stroke.width")return v+"px";
+  return String(Math.round(v*100)/100);
+}
+const ppSec=(k,title,body,badge)=>`<details class="pp-sec" data-sec="${k}" ${studioPPClosed.has(k)?"":"open"}><summary><span>${title}</span>${badge?`<em>${badge}</em>`:""}${ic("chevron-down",14)}</summary><div class="pp-body">${body}</div></details>`;
+const ppRng=(lb,k,v,min,max,step)=>`<div class="pp-row"><span class="pp-l">${lb}</span><div class="rng"><input type="range" min="${min}" max="${max}" step="${step}" value="${v}" style="--rng-p:${rngPct(v,min,max)}" data-prop="${k}"><output>${studioOutFmt(k,v)}</output></div></div>`;
+const ppColor=(lb,k,v)=>`<div class="pp-row stud-color"><span class="pp-l">${lb}</span><nv-color-picker value="${esc(v)}" data-prop="${k}"></nv-color-picker></div>`;
+/* items: [содержимое, атрибуты, активна?, подсказка] */
+const ppSeg=(items,cls)=>`<div class="pp-seg${cls?" "+cls:""}">${items.map(([c,a,on,tip])=>`<button type="button" class="${on?"on":""}" ${a}${tip?` data-tip="${esc(tip)}" aria-label="${esc(tip)}"`:""}>${c}</button>`).join("")}</div>`;
+const ppIb=(icon,attrs,on,tip)=>`<button type="button" class="pp-ib${on?" on":""}" ${attrs} data-tip="${esc(tip)}" aria-label="${esc(tip)}">${ic(icon,15)}</button>`;
+const ppOnOff=(title,on,offA,onA)=>`<div class="pp-row"><span class="pp-l">${title}</span>${ppSeg([["Нет",offA,!on],["Есть",onA,on]])}</div>`;
+
+function studioPosHtml(l){
   const F=STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square,px=(k,base)=>Math.round(l[k]/100*base);
-  const inp=(lb,k,base)=>`<label class="fld"><span>${lb}</span><input type="number" step="1" value="${px(k,base)}" data-pxprop="${k}" data-base="${base}"></label>`;
-  return`<div class="stud-num-row">${inp("X, px","x",F.w)}${inp("Y, px","y",F.h)}${inp("Ширина, px","w",F.w)}${inp("Высота, px","h",F.h)}
-    <label class="fld"><span>Угол, °</span><input type="number" step="1" value="${Math.round(l.rotation||0)}" data-pxprop="rotation" data-base="0"></label>
-    <label class="fld" style="justify-content:flex-end"><span>&nbsp;</span><button type="button" class="nv-btn ${l.lockRatio?"v-primary":"v-secondary"} s-sm" data-prop-set="lockRatio" data-val="${l.lockRatio?"":"1"}" data-tip="Сохранять пропорции при вводе размера">${ic(l.lockRatio?"link":"unlink",14)}</button></label>
-  </div>
-  <div class="stud-quick-row">
-    <button type="button" class="nv-btn v-secondary s-sm" icon-only data-tip="По центру по горизонтали" data-act-center="h">${ic("align-horizontal-justify-center",14)}</button>
-    <button type="button" class="nv-btn v-secondary s-sm" icon-only data-tip="По центру по вертикали" data-act-center="v">${ic("align-vertical-justify-center",14)}</button>
-    <button type="button" class="nv-btn v-secondary s-sm" icon-only data-tip="Дублировать" data-act-dup>${ic("copy",14)}</button>
-  </div>
-  <div class="fld"><span class="lbl">Поворот</span><div class="rng"><input type="range" min="0" max="360" step="1" value="${l.rotation||0}" style="--rng-p:${rngPct(l.rotation||0,0,360)}" data-prop="rotation"><output>${l.rotation||0}°</output></div></div>
-  <div class="fld"><span class="lbl">Прозрачность</span><div class="rng"><input type="range" min="0" max="100" step="1" value="${studioOpacityOf(l)}" style="--rng-p:${rngPct(studioOpacityOf(l),0,100)}" data-prop="opacity"><output>${studioOpacityOf(l)}%</output></div></div>
-  <div class="stud-quick-row">
-    <button type="button" class="nv-btn ${l.flipH?"v-primary":"v-secondary"} s-sm" icon-only data-tip="Отразить по горизонтали" data-act-flip="flipH">${ic("flip-horizontal-2",14)}</button>
-    <button type="button" class="nv-btn ${l.flipV?"v-primary":"v-secondary"} s-sm" icon-only data-tip="Отразить по вертикали" data-act-flip="flipV">${ic("flip-vertical-2",14)}</button>
-  </div>
-  <div class="fld"><span class="lbl">Наклон по X</span><div class="rng"><input type="range" min="-60" max="60" step="1" value="${l.skewX||0}" style="--rng-p:${rngPct(l.skewX||0,-60,60)}" data-prop="skewX"><output>${l.skewX||0}°</output></div></div>
-  <div class="fld"><span class="lbl">Наклон по Y</span><div class="rng"><input type="range" min="-60" max="60" step="1" value="${l.skewY||0}" style="--rng-p:${rngPct(l.skewY||0,-60,60)}" data-prop="skewY"><output>${l.skewY||0}°</output></div></div>
-  <nv-select label="Режим наложения" options="normal:Обычный|multiply:Умножение|screen:Экран|overlay:Перекрытие|darken:Затемнение|lighten:Осветление|difference:Разница|color-dodge:Выбеливание|color-burn:Затемнение цвета" value="${esc(l.blendMode||"normal")}" data-prop="blendMode"></nv-select>`;
+  const inp=(lb,k,base,tip)=>`<label class="pp-in" data-tip="${tip}"><span>${lb}</span><input type="number" step="1" value="${px(k,base)}" data-pxprop="${k}" data-base="${base}"></label>`;
+  return ppSec("pos","Положение и размер",`
+    <div class="pp-grid2">${inp("X","x",F.w,"X, px")}${inp("Y","y",F.h,"Y, px")}${inp("Ш","w",F.w,"Ширина, px")}${inp("В","h",F.h,"Высота, px")}</div>
+    <div class="pp-grid2"><label class="pp-in" data-tip="Угол поворота"><span>${ic("rotate-cw",12)}</span><input type="number" step="1" value="${Math.round(l.rotation||0)}" data-pxprop="rotation" data-base="0"></label>
+      <div class="pp-ibs">${ppIb(l.lockRatio?"link":"unlink",`data-prop-set="lockRatio" data-val="${l.lockRatio?"":"1"}"`,l.lockRatio,"Сохранять пропорции")}${ppIb("flip-horizontal-2",'data-act-flip="flipH"',l.flipH,"Отразить по горизонтали")}${ppIb("flip-vertical-2",'data-act-flip="flipV"',l.flipV,"Отразить по вертикали")}</div></div>
+    <div class="pp-row"><span class="pp-l">На холсте</span><div class="pp-ibs">${ppIb("align-horizontal-justify-center",'data-act-center="h"',false,"По центру по горизонтали")}${ppIb("align-vertical-justify-center",'data-act-center="v"',false,"По центру по вертикали")}${ppIb("copy","data-act-dup",false,"Дублировать")}</div></div>`);
 }
-function studioFillStrokeHtml(l){
-  const f=studioFillOf(l),s=studioStrokeOf(l);
-  return`<div class="sect-t" style="margin-top:2px">Заливка</div>
-  <div class="stud-seg2">${[["solid","Цвет"],["gradient","Градиент"],["radial","Радиальный"],["none","Нет"]].map(([v,lb])=>`<button type="button" class="${f.type===v?"on":""}" data-prop-set="fill.type" data-val="${v}">${lb}</button>`).join("")}</div>
-  ${f.type!=="none"?`<div class="stud-color"><span class="lbl">Цвет${f.type!=="solid"?" 1":""}</span><nv-color-picker value="${esc(f.color)}" data-prop="fill.color"></nv-color-picker></div>`:""}
-  ${f.type==="gradient"||f.type==="radial"?`<div class="stud-color"><span class="lbl">Цвет 2</span><nv-color-picker value="${esc(f.color2)}" data-prop="fill.color2"></nv-color-picker></div>`:""}
-  ${f.type==="gradient"?`<div class="fld"><span class="lbl">Угол градиента</span><div class="rng"><input type="range" min="0" max="360" step="5" value="${f.angle||90}" style="--rng-p:${rngPct(f.angle||90,0,360)}" data-prop="fill.angle"><output>${f.angle||90}°</output></div></div>`:""}
-  <div class="sect-t" style="margin-top:2px">Обводка</div>
-  <div class="stud-seg2"><button type="button" class="${!s.enabled?"on":""}" data-prop-set="stroke.enabled" data-val="">Нет</button><button type="button" class="${s.enabled?"on":""}" data-prop-set="stroke.enabled" data-val="1">Есть</button></div>
-  ${s.enabled?`<div class="stud-color"><span class="lbl">Цвет обводки</span><nv-color-picker value="${esc(s.color)}" data-prop="stroke.color"></nv-color-picker></div>
-  <div class="fld"><span class="lbl">Толщина</span><div class="rng"><input type="range" min="1" max="20" step="1" value="${s.width}" style="--rng-p:${rngPct(s.width,1,20)}" data-prop="stroke.width"><output>${s.width}px</output></div></div>
-  <div class="stud-seg2">${[["solid","Линия"],["dashed","Штрих"],["dotted","Точки"]].map(([v,lb])=>`<button type="button" class="${s.dash===v?"on":""}" data-prop-set="stroke.dash" data-val="${v}">${lb}</button>`).join("")}</div>`:""}`;
+function studioLayerSecHtml(l){
+  return ppSec("look","Слой",`${ppRng("Прозрачность","opacity",studioOpacityOf(l),0,100,1)}
+    <div class="pp-row"><span class="pp-l">Наложение</span><nv-select options="normal:Обычный|multiply:Умножение|screen:Экран|overlay:Перекрытие|darken:Затемнение|lighten:Осветление|difference:Разница|color-dodge:Выбеливание|color-burn:Затемнение цвета" value="${esc(l.blendMode||"normal")}" data-prop="blendMode"></nv-select></div>`)
+  +ppSec("xform","Наклон",`${ppRng("По X","skewX",l.skewX||0,-60,60,1)}${ppRng("По Y","skewY",l.skewY||0,-60,60,1)}`,(l.skewX||l.skewY)?"вкл":"");
 }
-function studioAlignDistributeHtml(){
-  return`<p class="muted" style="font-size:12.5px">Выбрано слоёв: ${studioMultiSel.length}. Перетаскивайте любой из них — сдвинутся все.</p>
-  <div class="row" style="gap:6px"><button type="button" class="nv-btn v-secondary s-sm" data-act="studGroup" data-on="1">${ic("group",14)}Сгруппировать (Ctrl+G)</button><button type="button" class="nv-btn v-ghost s-sm" data-act="studGroup" data-on="">Разгруппировать</button></div>
-  <div class="sect-t">Выравнивание</div>
-  <div class="stud-align-row">
-    <button type="button" data-act-align="left" data-tip="Слева">${ic("align-horizontal-justify-start",16)}</button>
-    <button type="button" data-act-align="ch" data-tip="По центру">${ic("align-horizontal-justify-center",16)}</button>
-    <button type="button" data-act-align="right" data-tip="Справа">${ic("align-horizontal-justify-end",16)}</button>
-    <button type="button" data-act-align="top" data-tip="Сверху">${ic("align-vertical-justify-start",16)}</button>
-    <button type="button" data-act-align="cv" data-tip="По центру">${ic("align-vertical-justify-center",16)}</button>
-    <button type="button" data-act-align="bottom" data-tip="Снизу">${ic("align-vertical-justify-end",16)}</button>
-  </div>
-  ${studioMultiSel.length>=3?`<div class="sect-t">Распределение</div>
-  <div class="row" style="gap:6px"><button type="button" class="nv-btn v-secondary s-sm" data-act-dist="h">По горизонтали</button><button type="button" class="nv-btn v-secondary s-sm" data-act-dist="v">По вертикали</button></div>`:""}`;
-}
-function studioPointPanelHtml(l){
-  if(studioEditingPointIndex==null||!l.points[studioEditingPointIndex])return"";
-  const p=l.points[studioEditingPointIndex];
-  return`<div class="sect-t">Выбранная точка</div>
-  <div class="row" style="gap:6px"><button type="button" class="nv-btn ${p.type==="corner"?"v-primary":"v-secondary"} s-sm" data-act-pttype="corner">Излом</button><button type="button" class="nv-btn ${p.type==="smooth"?"v-primary":"v-secondary"} s-sm" data-act-pttype="smooth">Плавная</button><button type="button" class="nv-btn v-danger s-sm" icon="trash-2" icon-only hint="Удалить точку" data-act-ptdel></button></div>`;
-}
-function studioEffectsHtml(l){
+function studioShadowSecHtml(l){
   const sh=l.effect&&l.effect.shadow;
-  let h=`<div class="sect-t" style="margin-top:2px">Эффекты</div>`;
-  if(l.type!=="text"){
-    h+=`<div class="stud-seg2"><button type="button" class="${!sh?"on":""}" data-act-fxshadow="">Без тени</button><button type="button" class="${sh?"on":""}" data-act-fxshadow="1">Тень</button></div>`;
-    if(sh)h+=`<div class="fld"><span class="lbl">Размытие тени</span><div class="rng"><input type="range" min="0" max="40" step="1" value="${sh.blur==null?14:sh.blur}" style="--rng-p:${rngPct(sh.blur==null?14:sh.blur,0,40)}" data-prop="effect.shadow.blur"><output>${sh.blur==null?14:sh.blur}</output></div></div>
-      <div class="fld"><span class="lbl">Смещение вниз</span><div class="rng"><input type="range" min="-20" max="30" step="1" value="${sh.y==null?6:sh.y}" style="--rng-p:${rngPct(sh.y==null?6:sh.y,-20,30)}" data-prop="effect.shadow.y"><output>${sh.y==null?6:sh.y}</output></div></div>`;
-  }
-  if(l.type==="image"&&l.src){
-    h+=`<div class="sect-t" style="margin-top:2px">Объект</div><div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="nv-btn v-primary s-sm" data-act="studRemoveBg">${ic("scissors",14)}Удалить фон</button><button type="button" class="nv-btn ${l.sticker&&l.sticker.enabled?"v-primary":"v-secondary"} s-sm" data-act-sticker="${l.sticker&&l.sticker.enabled?"":"1"}">Обводка-стикер</button></div>
-      ${l.sticker&&l.sticker.enabled?`<div class="stud-color"><span class="lbl">Цвет обводки</span><nv-color-picker value="${esc(l.sticker.color||"#ffffff")}" data-prop="sticker.color"></nv-color-picker></div><div class="fld"><span class="lbl">Толщина</span><div class="rng"><input type="range" min="1" max="16" step="1" value="${l.sticker.width||5}" style="--rng-p:${rngPct(l.sticker.width||5,1,16)}" data-prop="sticker.width"><output>${l.sticker.width||5}</output></div></div>`:""}
-      <div class="sect-t" style="margin-top:2px">Пропорции рамки</div><div class="stud-seg2" style="flex-wrap:wrap">${[["orig","Как фото"],["1","1:1"],["0.8","4:5"],["1.7778","16:9"],["0.75","3:4"]].map(([v,lb])=>`<button type="button" data-act-ratio="${v}">${lb}</button>`).join("")}</div>`;
-  }
-  if(l.type==="image"){
-    h+=`<div class="sect-t" style="margin-top:2px">Форма фото</div><div class="stud-seg2" style="flex-wrap:wrap">${[["none","Прямо"],["circle","Круг"],["arch","Арка"],["hexagon","Соты"],["star","Звезда"]].map(([v,lb])=>`<button type="button" class="${(l.mask||"none")===v?"on":""}" data-prop-set="mask" data-val="${v}">${lb}</button>`).join("")}</div>
-      ${(l.mask||"none")==="none"?`<div class="fld"><span class="lbl">Скругление углов</span><div class="rng"><input type="range" min="0" max="120" step="2" value="${l.radius||0}" style="--rng-p:${rngPct(l.radius||0,0,120)}" data-prop="radius"><output>${l.radius||0}</output></div></div>`:""}
-      <div class="stud-seg2"><button type="button" class="${!(l.border&&l.border.enabled)?"on":""}" data-act-border="">Без рамки</button><button type="button" class="${l.border&&l.border.enabled?"on":""}" data-act-border="1">Рамка</button></div>
-      ${l.border&&l.border.enabled?`<div class="stud-color"><span class="lbl">Цвет рамки</span><nv-color-picker value="${esc(l.border.color||"#ffffff")}" data-prop="border.color"></nv-color-picker></div><div class="fld"><span class="lbl">Толщина</span><div class="rng"><input type="range" min="1" max="20" step="1" value="${l.border.width||4}" style="--rng-p:${rngPct(l.border.width||4,1,20)}" data-prop="border.width"><output>${l.border.width||4}</output></div></div>`:""}
-      <div class="sect-t" style="margin-top:2px">Фильтр</div>
-      <div class="stud-presets">${Object.keys(STUDIO_FILTERS).map(k=>`<button type="button" class="${(l.filterName||"none")===k?"on":""}" data-act-filter="${k}"><i style="filter:${studioFilterCss(STUDIO_FILTERS[k])}"></i>${STUDIO_FILTER_LABELS[k]}</button>`).join("")}</div>
-      ${["brightness:Яркость:50:150","contrast:Контраст:50:160","saturate:Насыщенность:0:200","blur:Размытие:0:12"].map(x=>{const[k,lb,mn,mx]=x.split(":"),v=(l.filter||{})[k]!=null?(l.filter||{})[k]:(k==="blur"?0:100);return`<div class="fld"><span class="lbl">${lb}</span><div class="rng"><input type="range" min="${mn}" max="${mx}" step="1" value="${v}" style="--rng-p:${rngPct(v,+mn,+mx)}" data-prop="filter.${k}"><output>${v}</output></div></div>`}).join("")}`;
-  }
-  if(l.type==="text"){
-    h+=`<div class="stud-seg2"><button type="button" class="${!(l.grad&&l.grad.enabled)?"on":""}" data-act-tgrad="">Цвет</button><button type="button" class="${l.grad&&l.grad.enabled?"on":""}" data-act-tgrad="1">Градиент</button></div>
-      ${l.grad&&l.grad.enabled?`<div class="stud-color"><span class="lbl">Цвет 2</span><nv-color-picker value="${esc(l.grad.color2||"#0ea5e9")}" data-prop="grad.color2"></nv-color-picker></div><div class="fld"><span class="lbl">Угол градиента</span><div class="rng"><input type="range" min="0" max="360" step="5" value="${+l.grad.angle||90}" style="--rng-p:${rngPct(+l.grad.angle||90,0,360)}" data-prop="grad.angle"><output>${+l.grad.angle||90}°</output></div></div>`:""}`;
-    h+=`<div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="nv-btn ${l.neon?"v-primary":"v-secondary"} s-sm" data-prop-set="neon" data-val="${l.neon?"":"1"}">Неон</button><button type="button" class="nv-btn ${l.outline&&l.outline.enabled?"v-primary":"v-secondary"} s-sm" data-act-outline="${l.outline&&l.outline.enabled?"":"1"}">Обводка</button></div>
-      ${l.outline&&l.outline.enabled?`<div class="stud-color"><span class="lbl">Цвет обводки</span><nv-color-picker value="${esc(l.outline.color||"#000000")}" data-prop="outline.color"></nv-color-picker></div><div class="fld"><span class="lbl">Толщина обводки</span><div class="rng"><input type="range" min="1" max="10" step="1" value="${l.outline.width||2}" style="--rng-p:${rngPct(l.outline.width||2,1,10)}" data-prop="outline.width"><output>${l.outline.width||2}</output></div></div>`:""}`;
-  }
-  return h;
+  return ppSec("shadow","Тень",`${ppOnOff("Тень",!!sh,'data-act-fxshadow=""','data-act-fxshadow="1"')}
+    ${sh?ppRng("Размытие","effect.shadow.blur",sh.blur==null?14:sh.blur,0,40,1)+ppRng("Сдвиг вниз","effect.shadow.y",sh.y==null?6:sh.y,-20,30,1):""}`,sh?"вкл":"");
+}
+function studioFillSecHtml(l){
+  const f=studioFillOf(l);
+  return ppSec("fill","Заливка",`${ppSeg([["Цвет","solid"],["Линейный","gradient"],["Круговой","radial"],["Нет","none"]].map(([lb,v])=>[lb,`data-prop-set="fill.type" data-val="${v}"`,f.type===v]))}
+    ${f.type!=="none"?ppColor(f.type==="solid"?"Цвет":"Цвет 1","fill.color",f.color):""}
+    ${f.type==="gradient"||f.type==="radial"?ppColor("Цвет 2","fill.color2",f.color2):""}
+    ${f.type==="gradient"?ppRng("Угол","fill.angle",f.angle||90,0,360,5):""}`);
+}
+function studioStrokeSecHtml(l){
+  const s=studioStrokeOf(l);
+  return ppSec("stroke","Обводка",`${ppOnOff("Обводка",s.enabled,'data-prop-set="stroke.enabled" data-val=""','data-prop-set="stroke.enabled" data-val="1"')}
+    ${s.enabled?ppColor("Цвет","stroke.color",s.color)+ppRng("Толщина","stroke.width",s.width,1,20,1)+`<div class="pp-row"><span class="pp-l">Тип</span>${ppSeg([["Линия","solid"],["Штрих","dashed"],["Точки","dotted"]].map(([lb,v])=>[lb,`data-prop-set="stroke.dash" data-val="${v}"`,s.dash===v]))}</div>`:""}`,s.enabled?"вкл":"");
+}
+function studioPropsHeadHtml(icon,title,sub){
+  return`<div class="pp-head"><span class="pp-tile">${ic(icon,16)}</span><div><b>${esc(title)}</b>${sub?`<small>${esc(sub)}</small>`:""}</div></div>`;
 }
 function studioPropsHtml(){
-  if(studioMultiSel.length>1)return`<div class="stack" style="gap:10px">${studioAlignDistributeHtml()}</div>`;
+  const d=studioDesign();
+  if(studioMultiSel.length>1){
+    const gs=new Set(d.layers.filter(x=>studioMultiSel.includes(x.id)).map(x=>x.group)),one=gs.size===1&&[...gs][0];
+    return studioPropsHeadHtml(one?"folder-open":"layers",one?studioGroupName(d,one):"Несколько элементов",`Выбрано слоёв: ${studioMultiSel.length} · тяните любой — сдвинутся все`)
+    +`<div class="pp-acts">${one?`<button type="button" class="nv-btn v-secondary s-sm" data-act="studGroup" data-on="">${ic("ungroup",14)}Разгруппировать</button><button type="button" class="nv-btn v-ghost s-sm" data-act-grename="${esc(one)}">${ic("pencil",14)}Переименовать</button>`:`<button type="button" class="nv-btn v-soft s-sm" data-act="studGroup" data-on="1">${ic("group",14)}Сгруппировать <kbd>Ctrl G</kbd></button>${[...gs].some(Boolean)?`<button type="button" class="nv-btn v-ghost s-sm" data-act="studGroup" data-on="">Разгруппировать</button>`:""}`}</div>`
+    +ppSec("align","Выравнивание",`<div class="pp-seg pp-seg-ic six">${[["left","align-horizontal-justify-start","Слева"],["ch","align-horizontal-justify-center","По центру"],["right","align-horizontal-justify-end","Справа"],["top","align-vertical-justify-start","Сверху"],["cv","align-vertical-justify-center","По середине"],["bottom","align-vertical-justify-end","Снизу"]].map(([v,i,t])=>`<button type="button" data-act-align="${v}" data-tip="${t}" aria-label="${t}">${ic(i,15)}</button>`).join("")}</div>
+      ${studioMultiSel.length>=3?`<div class="pp-row"><span class="pp-l">Распределить</span>${ppSeg([["По гориз.",'data-act-dist="h"'],["По верт.",'data-act-dist="v"']])}</div>`:'<p class="pp-hint">Выделите 3 и больше слоёв, чтобы распределить их равномерно.</p>'}`);
+  }
   const l=studioSelected();
-  if(!l)return'<p class="muted" style="font-size:12.5px">Выберите слой на холсте или в списке, чтобы изменить его.</p>';
-  if(l.type==="text")return`<div class="stack" style="gap:10px">
-    <nv-textarea label="Текст" rows="2" value="${esc(l.text)}" data-prop="text"></nv-textarea>
-    <div id="stud-contrast" class="stud-contrast">Проверяю контраст…</div>
-    <div class="fld"><span class="lbl">Размер</span><div class="rng"><input type="range" min="2" max="18" step="0.5" value="${l.fontSize}" style="--rng-p:${rngPct(l.fontSize,2,18)}" data-prop="fontSize"><output>${Math.round(l.fontSize*100)/100}</output></div></div>
-    <div class="stud-color"><span class="lbl">Цвет</span><nv-color-picker value="${esc(l.color)}" data-prop="color"></nv-color-picker></div>
-    <div class="row" style="gap:6px"><button type="button" class="nv-btn ${l.weight==="700"?"v-primary":"v-secondary"} s-sm" data-prop-set="weight" data-val="700">Жирный</button><button type="button" class="nv-btn ${l.weight==="400"?"v-primary":"v-secondary"} s-sm" data-prop-set="weight" data-val="400">Обычный</button></div>
-    <div class="row" style="gap:6px"><button type="button" class="nv-btn ${l.align==="left"?"v-primary":"v-secondary"} s-sm" icon-only data-prop-set="align" data-val="left">${ic("align-left",14)}</button><button type="button" class="nv-btn ${l.align==="center"?"v-primary":"v-secondary"} s-sm" icon-only data-prop-set="align" data-val="center">${ic("align-center",14)}</button><button type="button" class="nv-btn ${l.align==="right"?"v-primary":"v-secondary"} s-sm" icon-only data-prop-set="align" data-val="right">${ic("align-right",14)}</button></div>
-    <div class="row" style="gap:6px"><button type="button" class="nv-btn v-secondary s-sm" data-act-fit="1" data-tip="Подобрать кегль, чтобы текст точно влез в рамку">${ic("scaling",14)}Вписать текст</button><button type="button" class="nv-btn v-secondary s-sm" icon-only data-act-fit="grow" data-tip="Увеличить до максимума, который влезает">${ic("maximize-2",14)}</button></div>
-    <nv-select label="Шрифт" options="${studioFontList().map(f=>f+":"+f).join("|")}" value="${esc(studioFontOf(l))}" data-prop="font"></nv-select>
-    <nv-select label="Роль (для ИИ-текстов)" options=":—|headline:Заголовок|subheadline:Подзаголовок|cta:Кнопка|badge:Плашка|disclaimer:Мелкий текст" value="${esc(l.role||"")}" data-prop="role"></nv-select>
-    <div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="nv-btn ${l.upper?"v-primary":"v-secondary"} s-sm" data-prop-set="upper" data-val="${l.upper?"":"1"}">ВЕРХНИЙ РЕГИСТР</button><button type="button" class="nv-btn ${l.shadow?"v-primary":"v-secondary"} s-sm" data-prop-set="shadow" data-val="${l.shadow?"":"1"}">Тень</button></div>
-    <div class="fld"><span class="lbl">Изгиб текста</span><div class="rng"><input type="range" min="-100" max="100" step="5" value="${+l.curve||0}" style="--rng-p:${rngPct(+l.curve||0,-100,100)}" data-prop="curve"><output>${+l.curve||0}</output></div></div>
-    <div class="fld"><span class="lbl">Межстрочный</span><div class="rng"><input type="range" min="0.8" max="2" step="0.05" value="${+l.lineHeight||1.18}" style="--rng-p:${rngPct(+l.lineHeight||1.18,0.8,2)}" data-prop="lineHeight"><output>${+l.lineHeight||1.18}</output></div></div>
-    <div class="fld"><span class="lbl">Межбуквенный</span><div class="rng"><input type="range" min="-5" max="30" step="1" value="${+l.letterSpacing||0}" style="--rng-p:${rngPct(+l.letterSpacing||0,-5,30)}" data-prop="letterSpacing"><output>${+l.letterSpacing||0}</output></div></div>
-    <div class="sect-t" style="margin-top:2px">Плашка под текстом</div>
-    <div class="stud-seg2"><button type="button" class="${!l.bgColor?"on":""}" data-act-textbg="">Нет</button><button type="button" class="${l.bgColor?"on":""}" data-act-textbg="1">Есть</button></div>
-    ${l.bgColor?`<div class="stud-color"><span class="lbl">Цвет плашки</span><nv-color-picker value="${esc(l.bgColor)}" data-prop="bgColor"></nv-color-picker></div>
-    <div class="fld"><span class="lbl">Скругление</span><div class="rng"><input type="range" min="0" max="50" step="1" value="${+l.bgRadius||0}" style="--rng-p:${rngPct(+l.bgRadius||0,0,50)}" data-prop="bgRadius"><output>${+l.bgRadius||0}</output></div></div>`:""}
-    <button type="button" class="nv-btn ${l.vertical?"v-primary":"v-secondary"} s-sm" icon="${l.vertical?"text":"pilcrow"}" data-prop-set="vertical" data-val="${l.vertical?"":"1"}">${l.vertical?"Горизонтальный":"Вертикальный"} текст</button>
-    ${studioEffectsHtml(l)}
-    ${studioPropsCommonHtml(l)}
-  </div>`;
-  if(l.type==="shape")return`<div class="stack" style="gap:10px">
-    <div class="row" style="gap:6px;flex-wrap:wrap">${[["rect","Прямоугольник"],["ellipse","Эллипс"],["triangle","Треугольник"],["line","Линия"],["polygon","Многоугольник"],["star","Звезда"]].map(([v,lb])=>`<button type="button" class="nv-btn ${l.shape===v?"v-primary":"v-secondary"} s-sm" data-prop-set="shape" data-val="${v}">${lb}</button>`).join("")}</div>
-    ${studioFillStrokeHtml(l)}
-    ${l.shape==="rect"?`<div class="fld"><span class="lbl">Скругление</span><div class="rng"><input type="range" min="0" max="80" step="2" value="${l.radius}" style="--rng-p:${rngPct(l.radius,0,80)}" data-prop="radius"><output>${l.radius}</output></div></div>`:""}
-    ${l.shape==="polygon"||l.shape==="star"?`<div class="fld"><span class="lbl">${l.shape==="star"?"Лучей":"Сторон"}</span><div class="rng"><input type="range" min="3" max="12" step="1" value="${l.sides||(l.shape==="star"?5:6)}" style="--rng-p:${rngPct(l.sides||6,3,12)}" data-prop="sides"><output>${l.sides||(l.shape==="star"?5:6)}</output></div></div>`:""}
-    ${studioEffectsHtml(l)}
-    ${l.shape==="star"?`<div class="fld"><span class="lbl">Глубина луча</span><div class="rng"><input type="range" min="10" max="90" step="5" value="${l.innerRadius||45}" style="--rng-p:${rngPct(l.innerRadius||45,10,90)}" data-prop="innerRadius"><output>${l.innerRadius||45}%</output></div></div>`:""}
-    ${studioPropsCommonHtml(l)}
-  </div>`;
-  if(l.type==="path")return`<div class="stack" style="gap:10px">
-    <button type="button" class="nv-btn v-secondary s-sm" data-act="studEditPts">${studioEditingPathId===l.id?"Закончить правку узлов":"Редактировать узлы"}</button>
-    <div class="row" style="gap:6px"><button type="button" class="nv-btn ${!l.closed?"v-primary":"v-secondary"} s-sm" data-prop-set="closed" data-val="">Открытая</button><button type="button" class="nv-btn ${l.closed?"v-primary":"v-secondary"} s-sm" data-prop-set="closed" data-val="1">Замкнутая</button></div>
-    ${studioFillStrokeHtml(l)}
-    ${studioPointPanelHtml(l)}
-    ${studioPropsCommonHtml(l)}
-  </div>`;
-  if(l.type==="icon")return`<div class="stack" style="gap:10px">
-    <div class="stud-color"><span class="lbl">Цвет</span><nv-color-picker value="${esc(l.color)}" data-prop="color"></nv-color-picker></div>
-    <span class="lbl">Иконка</span>
-    <div class="stud-icon-pick">${STUDIO_ICONS.map(n=>`<button type="button" class="${l.icon===n?"on":""}" data-prop-set="icon" data-val="${n}" aria-label="${n}">${ic(n,16)}</button>`).join("")}</div>
-    ${studioEffectsHtml(l)}
-    ${studioPropsCommonHtml(l)}
-  </div>`;
-  if(l.type==="image")return`<div class="stack" style="gap:10px">${l.src?"":`<p style="font-size:12.5px;margin:0"><b>Место под фото.</b> Загрузите своё — картинка займёт рамку.</p>`}<div class="row" style="gap:6px;flex-wrap:wrap"><label class="nv-btn v-${l.src?"secondary":"primary"} s-sm" for="stud-img-replace">${ic("upload",14)}${l.src?"Заменить картинку":"Загрузить фото"}</label><button type="button" class="nv-btn v-secondary s-sm" data-act-imgurl>${ic("link",14)}По ссылке</button></div><p class="muted" style="font-size:12.5px">Потяните за уголок, чтобы изменить размер рамки, или за картинку — чтобы передвинуть всю рамку.</p>
-    <div class="sect-t" style="margin-top:2px">Кадрирование содержимого</div>
-    <div class="fld"><span class="lbl">По горизонтали</span><div class="rng"><input type="range" min="0" max="100" step="1" value="${l.fx==null?50:l.fx}" style="--rng-p:${rngPct(l.fx==null?50:l.fx,0,100)}" data-prop="fx"><output>${l.fx==null?50:l.fx}%</output></div></div>
-    <div class="fld"><span class="lbl">По вертикали</span><div class="rng"><input type="range" min="0" max="100" step="1" value="${l.fy==null?50:l.fy}" style="--rng-p:${rngPct(l.fy==null?50:l.fy,0,100)}" data-prop="fy"><output>${l.fy==null?50:l.fy}%</output></div></div>
-    <div class="fld"><span class="lbl">Масштаб</span><div class="rng"><input type="range" min="1" max="3" step="0.05" value="${l.zoom||1}" style="--rng-p:${rngPct(l.zoom||1,1,3)}" data-prop="zoom"><output>${Math.round((l.zoom||1)*100)}%</output></div></div>
-    ${studioEffectsHtml(l)}
-    ${studioPropsCommonHtml(l)}</div>`;
+  if(!l)return studioPropsHeadHtml("mouse-pointer-2","Ничего не выбрано","")+`<div class="pp-empty">${ic("mouse-pointer-click",22)}<p>Кликните по элементу на холсте или в «Слоях», чтобы настроить его.</p><p><kbd>Shift</kbd> + клик или рамка — выбрать несколько, <kbd>Ctrl G</kbd> — сгруппировать.</p></div>`;
+  const grp=l.group?studioGroupName(d,l.group):"";
+  if(l.type==="text"){
+    const bold=+l.weight>=600||l.weight==="bold",g=l.grad&&l.grad.enabled,ol=l.outline&&l.outline.enabled;
+    return studioPropsHeadHtml("type","Текст",[{headline:"Заголовок",subheadline:"Подзаголовок",cta:"Кнопка",badge:"Плашка",disclaimer:"Мелкий текст"}[l.role]||"",grp&&"в группе «"+grp+"»"].filter(Boolean).join(" · "))
+    +ppSec("text","Текст",`<nv-textarea rows="2" value="${esc(l.text)}" data-prop="text" aria-label="Текст"></nv-textarea>
+      <div id="stud-contrast" class="stud-contrast">Проверяю контраст…</div>
+      <nv-select options="${studioFontList().map(f=>f+":"+f).join("|")}" value="${esc(studioFontOf(l))}" data-prop="font" aria-label="Шрифт"></nv-select>
+      ${ppRng("Кегль","fontSize",l.fontSize,2,18,0.5)}
+      <div class="pp-tools">${ppIb("bold",`data-prop-set="weight" data-val="${bold?"400":"700"}"`,bold,"Жирный")}${ppIb("case-upper",`data-prop-set="upper" data-val="${l.upper?"":"1"}"`,l.upper,"Верхний регистр")}${ppIb(l.vertical?"text":"pilcrow",`data-prop-set="vertical" data-val="${l.vertical?"":"1"}"`,l.vertical,"Вертикальный текст")}<span class="pp-sp"></span>
+        ${ppSeg([["align-left","left","Влево"],["align-center","center","По центру"],["align-right","right","Вправо"]].map(([i,v,t])=>[ic(i,15),`data-prop-set="align" data-val="${v}"`,l.align===v,t]),"pp-seg-ic")}</div>
+      <div class="pp-ibs wide"><button type="button" class="pp-btn" data-act-fit="1" data-tip="Подобрать кегль, чтобы текст точно влез в рамку">${ic("scaling",14)}Вписать в рамку</button>${ppIb("maximize-2",'data-act-fit="grow"',false,"Максимальный кегль, который влезает")}</div>
+      <div class="pp-row"><span class="pp-l">Роль для ИИ</span><nv-select options=":—|headline:Заголовок|subheadline:Подзаголовок|cta:Кнопка|badge:Плашка|disclaimer:Мелкий текст" value="${esc(l.role||"")}" data-prop="role"></nv-select></div>`)
+    +ppSec("spacing","Интервалы и изгиб",`${ppRng("Межстрочный","lineHeight",+l.lineHeight||1.18,0.8,2,0.05)}${ppRng("Межбуквенный","letterSpacing",+l.letterSpacing||0,-5,30,1)}${ppRng("Изгиб","curve",+l.curve||0,-100,100,5)}`)
+    +ppSec("tcolor","Цвет",`${ppSeg([["Цвет",'data-act-tgrad=""',!g],["Градиент",'data-act-tgrad="1"',g]])}
+      ${ppColor(g?"Цвет 1":"Цвет","color",l.color)}
+      ${g?ppColor("Цвет 2","grad.color2",l.grad.color2||"#0ea5e9")+ppRng("Угол","grad.angle",+l.grad.angle||90,0,360,5):""}`)
+    +ppSec("tbg","Плашка под текстом",`${ppOnOff("Плашка",!!l.bgColor,'data-act-textbg=""','data-act-textbg="1"')}
+      ${l.bgColor?ppColor("Цвет","bgColor",l.bgColor)+ppRng("Скругление","bgRadius",+l.bgRadius||0,0,50,1):""}`,l.bgColor?"вкл":"")
+    +ppSec("tfx","Эффекты",`<div class="pp-chips"><button type="button" class="${l.shadow?"on":""}" data-prop-set="shadow" data-val="${l.shadow?"":"1"}">${ic("sun",14)}Тень</button><button type="button" class="${l.neon?"on":""}" data-prop-set="neon" data-val="${l.neon?"":"1"}">${ic("zap",14)}Неон</button><button type="button" class="${ol?"on":""}" data-act-outline="${ol?"":"1"}">${ic("pen-line",14)}Обводка</button></div>
+      ${ol?ppColor("Цвет обводки","outline.color",l.outline.color||"#000000")+ppRng("Толщина","outline.width",l.outline.width||2,1,10,1):""}`,[l.shadow,l.neon,ol].filter(Boolean).length||"")
+    +studioPosHtml(l)+studioLayerSecHtml(l);
+  }
+  if(l.type==="shape"){
+    const sides=l.sides||(l.shape==="star"?5:6);
+    return studioPropsHeadHtml(studioLayerIcon(l),studioLayerLabel(l),grp&&"в группе «"+grp+"»")
+    +ppSec("shape","Фигура",`${ppSeg(STUDIO_SHAPES.map(([v,i,t])=>[ic(i,15),`data-prop-set="shape" data-val="${v}"`,l.shape===v,t]),"pp-seg-ic six")}
+      ${l.shape==="rect"?ppRng("Скругление","radius",l.radius||0,0,80,2):""}
+      ${l.shape==="polygon"||l.shape==="star"?ppRng(l.shape==="star"?"Лучей":"Сторон","sides",sides,3,12,1):""}
+      ${l.shape==="star"?ppRng("Глубина луча","innerRadius",l.innerRadius||45,10,90,5):""}`)
+    +studioFillSecHtml(l)+studioStrokeSecHtml(l)+studioShadowSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
+  }
+  if(l.type==="path"){
+    const pt=studioEditingPointIndex!=null&&l.points[studioEditingPointIndex];
+    return studioPropsHeadHtml("spline","Кривая",grp&&"в группе «"+grp+"»")
+    +ppSec("path","Контур",`<button type="button" class="pp-btn${studioEditingPathId===l.id?" on":""}" data-act="studEditPts">${ic("pen-tool",14)}${studioEditingPathId===l.id?"Закончить правку узлов":"Редактировать узлы"}</button>
+      <div class="pp-row"><span class="pp-l">Контур</span>${ppSeg([["Открытый",'data-prop-set="closed" data-val=""',!l.closed],["Замкнутый",'data-prop-set="closed" data-val="1"',!!l.closed]])}</div>
+      ${pt?`<div class="pp-row"><span class="pp-l">Точка</span><div class="pp-ibs">${ppSeg([["Излом",'data-act-pttype="corner"',pt.type==="corner"],["Плавная",'data-act-pttype="smooth"',pt.type==="smooth"]])}${ppIb("trash-2","data-act-ptdel",false,"Удалить точку")}</div></div>`:""}`)
+    +studioFillSecHtml(l)+studioStrokeSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
+  }
+  if(l.type==="icon")return studioPropsHeadHtml(l.icon||"star","Иконка",grp&&"в группе «"+grp+"»")
+    +ppSec("icon","Иконка",`${ppColor("Цвет","color",l.color)}<div class="stud-icon-pick">${STUDIO_ICONS.map(n=>`<button type="button" class="${l.icon===n?"on":""}" data-prop-set="icon" data-val="${n}" aria-label="${n}">${ic(n,16)}</button>`).join("")}</div>`)
+    +studioShadowSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
+  if(l.type==="image"){
+    const st=l.sticker&&l.sticker.enabled,bd=l.border&&l.border.enabled,mask=l.mask||"none",fl=l.filter||{};
+    return studioPropsHeadHtml("image",l.src?"Фото":"Место под фото",grp&&"в группе «"+grp+"»")
+    +ppSec("img","Изображение",`${l.src?"":'<p class="pp-hint"><b>Рамка-заглушка.</b> Загрузите фото — оно займёт рамку.</p>'}
+      <div class="pp-ibs wide"><label class="pp-btn${l.src?"":" pri"}" for="stud-img-replace">${ic("upload",14)}${l.src?"Заменить":"Загрузить фото"}</label><button type="button" class="pp-btn" data-act-imgurl>${ic("link",14)}По ссылке</button></div>
+      ${l.src?`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studRemoveBg">${ic("scissors",14)}Удалить фон</button><button type="button" class="pp-btn${st?" on":""}" data-act-sticker="${st?"":"1"}">${ic("sticker",14)}Стикер</button></div>
+      ${st?ppColor("Цвет обводки","sticker.color",l.sticker.color||"#ffffff")+ppRng("Толщина","sticker.width",l.sticker.width||5,1,16,1):""}`:""}`)
+    +ppSec("crop","Кадрирование",`${l.src?`<div class="pp-row"><span class="pp-l">Рамка</span>${ppSeg([["Фото","orig"],["1:1","1"],["4:5","0.8"],["16:9","1.7778"],["3:4","0.75"]].map(([lb,v])=>[lb,`data-act-ratio="${v}"`,false,lb==="Фото"?"Как у фото":"Пропорции "+lb]),"tight")}</div>`:""}
+      ${ppRng("По горизонтали","fx",l.fx==null?50:l.fx,0,100,1)}${ppRng("По вертикали","fy",l.fy==null?50:l.fy,0,100,1)}${ppRng("Масштаб","zoom",l.zoom||1,1,3,0.05)}`)
+    +ppSec("mask","Форма и рамка",`${ppSeg([["Прямо","none"],["Круг","circle"],["Арка","arch"],["Соты","hexagon"],["Звезда","star"]].map(([lb,v])=>[lb,`data-prop-set="mask" data-val="${v}"`,mask===v]),"tight")}
+      ${mask==="none"?ppRng("Скругление","radius",l.radius||0,0,120,2):""}
+      ${ppOnOff("Рамка",bd,'data-act-border=""','data-act-border="1"')}
+      ${bd?ppColor("Цвет рамки","border.color",l.border.color||"#ffffff")+ppRng("Толщина","border.width",l.border.width||4,1,20,1):""}`)
+    +(l.src?ppSec("filters","Фильтры",`<div class="stud-presets">${Object.keys(STUDIO_FILTERS).map(k=>`<button type="button" class="${(l.filterName||"none")===k?"on":""}" data-act-filter="${k}"><i style="filter:${studioFilterCss(STUDIO_FILTERS[k])}"></i>${STUDIO_FILTER_LABELS[k]}</button>`).join("")}</div>
+      ${["brightness:Яркость:50:150","contrast:Контраст:50:160","saturate:Насыщенность:0:200","blur:Размытие:0:12"].map(x=>{const[k,lb,mn,mx]=x.split(":"),v=fl[k]!=null?fl[k]:(k==="blur"?0:100);return ppRng(lb,"filter."+k,v,+mn,+mx,1)}).join("")}`,l.filterName&&l.filterName!=="none"?STUDIO_FILTER_LABELS[l.filterName]:""):"")
+    +studioShadowSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
+  }
   return"";
 }
 function studioLayoutStage(root){
@@ -7908,7 +8061,7 @@ function studioPanelHtml(tab){
     <button type="button" data-act="studAiTexts"><b>${ic("type",14)} Тексты и A/B</b><div class="muted" style="font-size:12px">Заголовки, кнопки, плашки — несколько вариантов</div></button>
     <button type="button" data-act="studAiImage"><b>${ic("image-plus",14)} Сгенерировать изображение</b><div class="muted" style="font-size:12px">По описанию или по примеру</div></button>
     <button type="button" data-act="studAiCritique"><b>${ic("scan-search",14)} Разбор креатива</b><div class="muted" style="font-size:12px">Оценка, ошибки, риски модерации</div></button></div>`;
-  if(tab==="layers")return`<h3>Слои</h3><div id="stud-layers">${studioLayersListHtml()}</div><p class="muted" style="font-size:11.5px">Shift+клик — несколько. Рамкой на холсте — выделить область. Ctrl+G — группа.</p>`;
+  if(tab==="layers")return`<h3>Слои</h3><div id="stud-layers">${studioLayersListHtml()}</div><p class="pp-hint">Перетаскивайте слои мышью — в том числе в группу и из неё. Shift+клик — несколько, Ctrl+G — сгруппировать, двойной клик по группе — переименовать.</p>`;
   return"";
 }
 /* Контекстная панель над холстом: самое нужное для выбранного элемента. */
@@ -8086,7 +8239,7 @@ editor(){
       <input type="file" id="stud-bg-file" accept="image/*" class="sr"><input type="file" id="stud-img-file" accept="image/*" class="sr"><input type="file" id="stud-img-replace" accept="image/*" class="sr">
       ${start?studioStartHtml():`<div class="stud-stage-wrap">${studioZoomHtml()}<div id="stud-stage-host">${studioStageHtml()}</div>${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Перо: клик — точка, клик+тяни — плавная, клик по первой — замкнуть, Enter — закончить, Esc — отмена.</p>':""}</div>${studioPagesHtml()}`}
     </section>
-    <aside class="s2-props"><div class="sect-t" style="margin-top:0">${esc(propsTitle)}</div><div id="stud-props">${studioPropsHtml()}</div></aside>
+    <aside class="s2-props"><div id="stud-props">${studioPropsHtml()}</div></aside>
   </div>`,
   after(root){
     studioLayoutStage(root);studioPaintContrast(root);
@@ -8204,7 +8357,13 @@ editor(){
       const vis=e.target.closest("[data-vis]"),lck=e.target.closest("[data-lock]");
       if(vis||lck){studioBeforeChange();const l=d.layers.find(x=>x.id===(vis||lck).dataset[vis?"vis":"lock"]);if(l){if(vis)l.hidden=!l.hidden;else l.locked=!l.locked}N.refresh();NEON.save();return}
       if(del){studioBeforeChange();const i=d.layers.findIndex(x=>x.id===del.dataset.del);if(i>=0){d.layers.splice(i,1);if(d.selectedId===del.dataset.del)d.selectedId=null}studioMultiSel=studioMultiSel.filter(x=>x!==del.dataset.del);N.refresh();NEON.save();return}
-      if(mv){studioBeforeChange();const i=d.layers.findIndex(x=>x.id===mv.dataset.mv),j=i+(+mv.dataset.dir);if(i>=0&&j>=0&&j<d.layers.length){[d.layers[i],d.layers[j]]=[d.layers[j],d.layers[i]];N.refresh();NEON.save()}return}
+      if(mv){studioBeforeChange();if(studioMoveLayer(d,mv.dataset.mv,+mv.dataset.dir)){N.refresh();NEON.save()}return}
+      const gt=e.target.closest("[data-gtog]");if(gt){const g=gt.dataset.gtog;studioGrpClosed.has(g)?studioGrpClosed.delete(g):studioGrpClosed.add(g);studioRenderSidebar(root);return}
+      const gv=e.target.closest("[data-gvis]"),gl=e.target.closest("[data-glock]");
+      if(gv||gl){studioBeforeChange();const g=(gv||gl).dataset[gv?"gvis":"glock"],ms=d.layers.filter(x=>x.group===g),k=gv?"hidden":"locked",to=!ms.every(x=>x[k]);ms.forEach(x=>x[k]=to);N.refresh();NEON.save();return}
+      const gm=e.target.closest("[data-gmv]");if(gm){studioBeforeChange();studioNormGroups(d);if(studioMoveUnit(d,u=>u.g===gm.dataset.gmv,+gm.dataset.dir)){N.refresh();NEON.save()}return}
+      const gu=e.target.closest("[data-gun]");if(gu){studioBeforeChange();d.layers.forEach(x=>{if(x.group===gu.dataset.gun)delete x.group});studioNormGroups(d);toast("Группа разобрана");N.refresh();NEON.save();return}
+      const gs=e.target.closest("[data-gsel]");if(gs){const ids=d.layers.filter(x=>x.group===gs.dataset.gsel).map(x=>x.id);studioMultiSel=ids;d.selectedId=ids[ids.length-1]||null;N.refresh();return}
       if(sel){
         if(e.shiftKey){
           const id=sel.dataset.sel;
@@ -8215,6 +8374,16 @@ editor(){
         N.refresh();return;
       }
     });
+    if(lp){
+      lp.addEventListener("dblclick",e=>{const gs=e.target.closest("[data-gsel]");if(gs&&!e.target.closest("button"))studioRenameGroup(gs.dataset.gsel)});
+      let drag=null;const clr=()=>lp.querySelectorAll(".drop-b,.drop-a,.drop-in").forEach(x=>x.classList.remove("drop-b","drop-a","drop-in"));
+      lp.addEventListener("dragstart",e=>{const r=e.target.closest("[data-drag],[data-gdrag]");if(!r)return;drag=r.dataset.gdrag?{g:r.dataset.gdrag}:{id:r.dataset.drag};r.classList.add("dragging");e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain","layer")}catch(x){}});
+      lp.addEventListener("dragend",()=>{drag=null;clr();lp.querySelectorAll(".dragging").forEach(x=>x.classList.remove("dragging"))});
+      const where=(e,r)=>{const b=r.getBoundingClientRect(),y=(e.clientY-b.top)/b.height;if(r.dataset.gsel&&drag&&!drag.g&&y>.3&&y<.7)return"into";return y<.5?"before":"after"};
+      lp.addEventListener("dragover",e=>{if(!drag)return;const r=e.target.closest(".lr");if(!r)return;e.preventDefault();clr();const w=where(e,r);r.classList.add(w==="into"?"drop-in":w==="before"?"drop-b":"drop-a")});
+      lp.addEventListener("drop",e=>{if(!drag)return;const r=e.target.closest(".lr");if(!r)return;e.preventDefault();const w=where(e,r),t=r.dataset.gsel?{g:r.dataset.gsel}:{id:r.dataset.sel},d=studioDesign(),snap=JSON.stringify(d);
+        if(studioDropLayers(d,drag,t,w)){studioHistory.undo.push(snap);studioHistory.redo=[];N.refresh();NEON.save()}clr();drag=null});
+    }
     const pp=root.querySelector(".s2");
     studioPaintTplThumbs(root);studioPaintPageThumbs();
     const pgs=root.querySelector("#s2-pages");
@@ -8228,7 +8397,7 @@ editor(){
         let v=e.target.value;if(e.target.type==="range"||e.target.type==="number")v=+v;
         studioSetPath(l,k,v);
         if(e.target.type==="range")e.target.style.setProperty("--rng-p",rngPct(v,e.target.min,e.target.max));
-        const out=e.target.closest(".rng");if(out)out.querySelector("output").textContent=v+(k==="rotation"||k==="fill.angle"?"°":k==="opacity"?"%":k==="stroke.width"?"px":"");
+        const out=e.target.closest(".rng");if(out)out.querySelector("output").textContent=studioOutFmt(k,v);
         if(k==="bgRadius"||k==="lineHeight"||k==="letterSpacing"||k==="curve")studioLayoutStage(document);
         studioPatchLayerDom(l);NEON.save();
       });
@@ -8251,7 +8420,9 @@ editor(){
         if(e.target.tagName!=="NV-COLOR-PICKER")studioRenderSidebar(root);else studioPaintContrast(root);
         NEON.save();
       });
+      pp.addEventListener("toggle",e=>{const s=e.target.closest&&e.target.closest(".pp-sec");if(!s||s!==e.target)return;if(s.open)studioPPClosed.delete(s.dataset.sec);else studioPPClosed.add(s.dataset.sec)},true);
       pp.addEventListener("click",e=>{
+        const gr=e.target.closest("[data-act-grename]");if(gr){studioRenameGroup(gr.dataset.actGrename);return}
         const alignBtn=e.target.closest("[data-act-align]"),distBtn=e.target.closest("[data-act-dist]");
         if(alignBtn){studioAlign(alignBtn.dataset.actAlign);NEON.save();return}
         if(distBtn){studioDistribute(distBtn.dataset.actDist);NEON.save();return}
@@ -8564,11 +8735,16 @@ document.addEventListener("mouseup",()=>{
   if(dr.mode==="rotate"){const st=document.querySelector(".stud-stage");if(st)studioRenderSidebar(document)}
   NEON.save();
 });
+function studioRenameGroup(g){
+  const d=studioDesign();
+  overlay("modal",{title:"Название группы",service:"studio",body:`<nv-input label="Название" data-gnm value="${esc(studioGroupName(d,g))}"></nv-input>`,
+    actions:[{label:"Отмена"},{label:"Сохранить",variant:"primary",fn:()=>{const inp=document.querySelector(".ov [data-gnm]");const nm=((inp&&(inp.value||inp.getAttribute("value")))||"").trim();if(!nm)return;studioBeforeChange();d.groupNames={...(d.groupNames||{}),[g]:nm.slice(0,60)};N.refresh();NEON.save()}}]});
+}
 function studioGroup(on){
   const d=studioDesign(),ids=studioSelIds();if(!ids.length)return;
   studioBeforeChange();
-  if(on){if(ids.length<2){toast("Выделите несколько слоёв (рамкой или Shift+клик)",{tone:"warning"});return}const g="G"+studioUid();d.layers.forEach(l=>{if(ids.includes(l.id))l.group=g});toast("Сгруппировано: "+ids.length)}
-  else{const gs=new Set(d.layers.filter(l=>ids.includes(l.id)).map(l=>l.group).filter(Boolean));d.layers.forEach(l=>{if(gs.has(l.group))delete l.group});toast("Группа разобрана")}
+  if(on){if(ids.length<2){toast("Выделите несколько слоёв (рамкой или Shift+клик)",{tone:"warning"});return}const g="G"+studioUid();d.layers.forEach(l=>{if(ids.includes(l.id))l.group=g});studioNormGroups(d);studioMultiSel=d.layers.filter(l=>l.group===g).map(l=>l.id);toast("Сгруппировано: "+ids.length)}
+  else{const gs=new Set(d.layers.filter(l=>ids.includes(l.id)).map(l=>l.group).filter(Boolean));d.layers.forEach(l=>{if(gs.has(l.group))delete l.group});studioNormGroups(d);toast("Группа разобрана")}
   N.refresh();NEON.save();
 }
 /* Прилипание к краям/центру холста и других видимых слоёв (порог ~1%). */
