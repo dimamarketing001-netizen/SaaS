@@ -1701,6 +1701,9 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s2-menu button{display:flex;justify-content:space-between;gap:16px;width:100%;border:0;background:none;padding:7px 10px;border-radius:7px;font-size:13px;color:var(--ink);cursor:pointer;text-align:left}
 .s2-menu button:hover{background:var(--surface-2)}
 .s2-menu button small{color:var(--ink-3)}
+.s2-menu button .t{flex:1;min-width:0}
+.s2-menu button.on{font-weight:500;background:var(--surface-2)}
+.s2-menu button .ck{width:14px;flex:none;display:flex;color:var(--svc-ink);margin-left:-8px}
 .s2-menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
 .s2-start{max-width:760px;margin:24px auto;display:flex;flex-direction:column;gap:18px;padding:0 12px}
 .s2-start h2{margin:0;font-size:22px}
@@ -8173,7 +8176,9 @@ function studioCtxAction(k){
 function studioMenu(x,y,items){
   document.querySelectorAll(".s2-menu").forEach(m=>m.remove());
   const m=document.createElement("div");m.className="s2-menu";
-  m.innerHTML=items.map(it=>it==="-"?"<hr>":`<button type="button" data-i="${items.indexOf(it)}">${esc(it[0])}${it[1]?`<small>${esc(it[1])}</small>`:""}</button>`).join("");
+  /* it[3] — пункт выбран: как в списках библиотеки (подложка + галочка справа). */
+  const ck=items.some(it=>it!=="-"&&it.length>3);
+  m.innerHTML=items.map(it=>it==="-"?"<hr>":`<button type="button" data-i="${items.indexOf(it)}"${it[3]?' class="on" aria-checked="true"':""}><span class="t">${esc(it[0])}</span>${it[1]?`<small>${esc(it[1])}</small>`:""}${ck?`<span class="ck">${it[3]?ic("check",14):""}</span>`:""}</button>`).join("");
   document.body.append(m);const r=m.getBoundingClientRect();
   m.style.left=Math.min(x,innerWidth-r.width-8)+"px";m.style.top=Math.min(y,innerHeight-r.height-8)+"px";
   const close=()=>{m.remove();document.removeEventListener("mousedown",out,true)};
@@ -9018,10 +9023,10 @@ Object.assign(N.acts,{
   studAiImage:studioAiImage,
   studZoom(a,d){const steps=[0.5,0.75,1,1.25,1.5,2];let i=steps.indexOf(studioZoom);if(i<0)i=2;studioZoom=d.z==="fit"?1:steps[Math.max(0,Math.min(steps.length-1,i+(d.z==="+"?1:-1)))];N.refresh()},
   studZones(){S.studio.zones=!S.studio.zones;N.refresh();NEON.save()},
-  studFmtMenu(a){const r=a.getBoundingClientRect(),cur=studioDesign().format;studioMenu(r.left,r.bottom+4,Object.entries(STUDIO_FMT).map(([k,v])=>[(k===cur?"✓ ":"")+v.label,v.w+"×"+v.h,()=>NEON.chg.studFormat(k,{})]))},
-  studZoomMenu(a){const r=a.getBoundingClientRect(),z=v=>()=>{studioZoom=v;N.refresh()},ck=on=>on?"✓ ":"";
-    studioMenu(r.left,r.bottom+4,[["Вписать в экран","100%",z(1)],["Увеличить","+",()=>N.acts.studZoom(null,{z:"+"})],["Уменьшить","−",()=>N.acts.studZoom(null,{z:"-"})],["50%","",z(0.5)],["150%","",z(1.5)],["200%","",z(2)],"-",
-      [ck(S.studio.rulers!==false)+"Линейки","px",()=>N.acts.studRulers()],[ck(S.studio.zones)+"Безопасные зоны","5%",()=>N.acts.studZones()],[(S.studio.grid?"✓ ":"")+"Сетка колонок",S.studio.grid?S.studio.grid+" кол.":"",()=>N.acts.studGrid()]])},
+  studFmtMenu(a){const r=a.getBoundingClientRect(),cur=studioDesign().format;studioMenu(r.left,r.bottom+4,Object.entries(STUDIO_FMT).map(([k,v])=>[v.label,v.w+"×"+v.h,()=>NEON.chg.studFormat(k,{}),k===cur]))},
+  studZoomMenu(a){const r=a.getBoundingClientRect(),z=v=>()=>{studioZoom=v;N.refresh()};
+    studioMenu(r.left,r.bottom+4,[["Вписать в экран","",z(1),studioZoom===1],["Увеличить","+",()=>N.acts.studZoom(null,{z:"+"}),false],["Уменьшить","−",()=>N.acts.studZoom(null,{z:"-"}),false],["50%","",z(0.5),studioZoom===0.5],["150%","",z(1.5),studioZoom===1.5],["200%","",z(2),studioZoom===2],"-",
+      ["Линейки","px",()=>N.acts.studRulers(),S.studio.rulers!==false],["Безопасные зоны","5%",()=>N.acts.studZones(),!!S.studio.zones],["Сетка колонок",S.studio.grid?S.studio.grid+" кол.":"",()=>N.acts.studGrid(),!!S.studio.grid]])},
   studRulers(){S.studio.rulers=S.studio.rulers===false;N.refresh();NEON.save()},
   studGrid(){const seq=[0,2,3,4,6,12],i=seq.indexOf(+S.studio.grid||0);S.studio.grid=seq[(i+1)%seq.length];N.refresh();NEON.save()},
   studAiTexts:studioAiTexts,
