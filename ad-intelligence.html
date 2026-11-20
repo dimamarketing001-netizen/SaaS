@@ -1715,6 +1715,13 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s2-kbd kbd{background:var(--surface-2);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-size:12px;font-family:inherit;white-space:nowrap}
 @media (max-width:1250px){.s2{grid-template-columns:64px auto minmax(0,1fr)}.s2-props{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);max-height:none}}
 @media (max-width:900px){.s2-panel{width:240px}}
+.s2-pages{display:flex;gap:8px;align-items:center;padding:8px 12px;border-top:1px solid var(--line);background:var(--surface);overflow-x:auto}
+.s2-pages .pg{position:relative;flex:none;border:2px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;background:var(--surface-2);height:64px;display:flex;align-items:center;justify-content:center}
+.s2-pages .pg.on{border-color:var(--svc-ink)}
+.s2-pages .pg img{height:100%;display:block}
+.s2-pages .pg .n{position:absolute;left:4px;bottom:3px;font-size:10px;font-weight:700;background:rgba(0,0,0,.55);color:#fff;border-radius:4px;padding:0 4px}
+.s2-pages .add{flex:none;height:64px;width:52px;border:1px dashed var(--line-2);border-radius:8px;background:none;color:var(--ink-3);cursor:pointer}
+.s2-pages .add:hover{border-color:var(--svc-ink);color:var(--svc-ink)}
 .stud-layer.grp{outline:1px dashed color-mix(in srgb,var(--svc-ink) 55%,transparent);outline-offset:2px}
 .stud-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .stud-presets button{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:3px;cursor:pointer;font-size:10.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:3px;align-items:center}
@@ -6789,6 +6796,13 @@ function studioSelected(){const d=studioDesign();return d.layers.find(l=>l.id===
 /* Стартовые шаблоны (собраны ИИ-арт-директором Студии 19.11.2026 и проверены глазами).
    Рамки-изображения без src — места под фото: выберите слой → «Заменить картинку». */
 const STUDIO_TEMPLATES=[{"key":"sale","name":"Скидка на товар","format":"square","bg":{"type":"color","color":"#fff4e8"},"layers":[{"id":"Tsal0","type":"shape","x":0.0,"y":0.0,"w":100.0,"h":100.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"gradient","color":"#fff4e8","color2":"#ffd6c4","angle":135.0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0},{"id":"Tsal1","type":"shape","x":68.0,"y":0.0,"w":32.0,"h":100.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"solid","color":"#e93f2f","color2":"#e93f2f","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0},{"id":"Tsal2","type":"shape","x":73.0,"y":8.0,"w":24.0,"h":24.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"ellipse","fill":{"type":"solid","color":"#ffca3a","color2":"#ffca3a","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0},{"id":"Tsal3","type":"text","x":76.0,"y":13.0,"w":18.0,"h":11.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"SALE","fontSize":4.0,"color":"#8f1d16","weight":"700","align":"center","vertical":false,"font":"Montserrat","role":"badge","shadow":false,"upper":true,"lineHeight":1.0,"letterSpacing":1.0},{"id":"Tsal4","type":"shape","x":5.0,"y":7.0,"w":42.0,"h":8.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"solid","color":"#231f20","color2":"#231f20","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":50.0},{"id":"Tsal5","type":"text","x":7.0,"y":8.5,"w":38.0,"h":4.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"ТОЛЬКО ДО ВОСКРЕСЕНЬЯ","fontSize":2.8,"color":"#ffffff","weight":"700","align":"center","vertical":false,"font":"Manrope","role":"badge","shadow":false,"upper":true,"lineHeight":1.0,"letterSpacing":0.8},{"id":"Tsal6","type":"text","x":6.0,"y":22.0,"w":57.0,"h":26.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"СКИДКИ ДО −50%","fontSize":10.5,"color":"#211c1c","weight":"700","align":"left","vertical":false,"font":"Montserrat","role":"headline","shadow":false,"upper":true,"lineHeight":0.9,"letterSpacing":0.0},{"id":"Tsal7","type":"text","x":7.0,"y":53.0,"w":52.0,"h":7.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"Бесплатная доставка","fontSize":4.2,"color":"#5b3430","weight":"400","align":"left","vertical":false,"font":"Manrope","role":"subheadline","shadow":false,"upper":false,"lineHeight":1.1,"letterSpacing":0.0},{"id":"Tsal8","type":"icon","x":7.0,"y":64.0,"w":7.0,"h":7.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","icon":"truck","color":"#e93f2f"},{"id":"Tsal9","type":"image","x":49.0,"y":37.0,"w":46.0,"h":52.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","src":"","fx":50,"fy":50,"zoom":1,"placeholder":true},{"id":"Tsal10","type":"shape","x":5.0,"y":78.0,"w":43.0,"h":13.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"solid","color":"#e93f2f","color2":"#e93f2f","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":50.0},{"id":"Tsal11","type":"text","x":7.0,"y":81.0,"w":39.0,"h":5.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"ВЫБРАТЬ ТОВАРЫ","fontSize":3.4,"color":"#ffffff","weight":"700","align":"center","vertical":false,"font":"Manrope","role":"cta","shadow":false,"upper":true,"lineHeight":1.0,"letterSpacing":0.3,"bgColor":"#e93f2f","bgRadius":50},{"id":"Tsal12","type":"shape","x":57.0,"y":91.0,"w":36.0,"h":4.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"line","fill":{"type":"solid","color":"#ffffff","color2":"#ffffff","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0}]},{"key":"legal","name":"Юридические услуги","format":"square","bg":{"type":"color","color":"#0b1636"},"layers":[{"id":"Tleg0","type":"shape","x":0.0,"y":0.0,"w":100.0,"h":100.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"gradient","color":"#0b1636","color2":"#142b62","angle":20.0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0},{"id":"Tleg1","type":"shape","x":58.0,"y":0.0,"w":42.0,"h":100.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"gradient","color":"#1b4a91","color2":"#0b1636","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0},{"id":"Tleg2","type":"shape","x":6.0,"y":8.0,"w":13.0,"h":4.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"solid","color":"#27d7a1","color2":"#27d7a1","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":50.0},{"id":"Tleg3","type":"icon","x":8.0,"y":7.2,"w":5.0,"h":5.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","icon":"shield-check","color":"#ffffff"},{"id":"Tleg4","type":"image","x":56.0,"y":13.0,"w":41.0,"h":80.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","src":"","fx":50,"fy":50,"zoom":1,"placeholder":true},{"id":"Tleg5","type":"shape","x":52.0,"y":0.0,"w":17.0,"h":100.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"polygon","fill":{"type":"gradient","color":"#0b1636","color2":"#0b1636","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0,"sides":6},{"id":"Tleg6","type":"text","x":7.0,"y":19.0,"w":47.0,"h":24.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"ОТВЕТ ЮРИСТА ЗА 15 МИНУТ","fontSize":8.4,"color":"#ffffff","weight":"700","align":"left","vertical":false,"font":"Montserrat","role":"headline","shadow":false,"upper":true,"lineHeight":0.98,"letterSpacing":0.0},{"id":"Tleg7","type":"text","x":7.0,"y":49.0,"w":43.0,"h":12.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"Первая консультация — бесплатно","fontSize":4.3,"color":"#b9c8ec","weight":"400","align":"left","vertical":false,"font":"Manrope","role":"subheadline","shadow":false,"upper":false,"lineHeight":1.15,"letterSpacing":0.0},{"id":"Tleg8","type":"text","x":7.0,"y":70.0,"w":36.0,"h":10.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"Задать вопрос","fontSize":4.1,"color":"#09204b","weight":"700","align":"center","vertical":false,"font":"Manrope","role":"cta","shadow":false,"upper":false,"lineHeight":1.0,"letterSpacing":0.0,"bgColor":"#27d7a1","bgRadius":24.0},{"id":"Tleg9","type":"icon","x":46.0,"y":72.3,"w":5.0,"h":5.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","icon":"zap","color":"#27d7a1"}]},{"key":"bankrupt","name":"Банкротство физлиц","format":"square","bg":{"type":"color","color":"#0B1630"},"layers":[{"id":"Tban0","type":"shape","x":0.0,"y":0.0,"w":100.0,"h":100.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"gradient","color":"#0B1630","color2":"#142B58","angle":135.0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0},{"id":"Tban1","type":"shape","x":59.0,"y":-14.0,"w":54.0,"h":54.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"ellipse","fill":{"type":"radial","color":"#2878FF","color2":"#142B58","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0},{"id":"Tban2","type":"shape","x":-17.0,"y":76.0,"w":48.0,"h":48.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"ellipse","fill":{"type":"radial","color":"#1CD6B4","color2":"#0B1630","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0},{"id":"Tban3","type":"shape","x":55.0,"y":12.0,"w":39.0,"h":76.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"solid","color":"#DCE8FF","color2":"#DCE8FF","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":8.0},{"id":"Tban4","type":"image","x":57.0,"y":14.0,"w":35.0,"h":72.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","src":"","fx":50,"fy":50,"zoom":1,"placeholder":true},{"id":"Tban5","type":"shape","x":6.0,"y":7.0,"w":29.0,"h":8.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"solid","color":"#1CD6B4","color2":"#1CD6B4","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":50.0},{"id":"Tban6","type":"text","x":7.0,"y":8.2,"w":27.0,"h":5.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"ЮРИДИЧЕСКАЯ ПОМОЩЬ","fontSize":2.5,"color":"#0B1630","weight":"700","align":"center","vertical":false,"font":"Manrope","role":"badge","shadow":false,"upper":true,"lineHeight":1.0,"letterSpacing":1.2},{"id":"Tban7","type":"icon","x":10.0,"y":22.0,"w":8.0,"h":8.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","icon":"shield-check","color":"#1CD6B4"},{"id":"Tban8","type":"text","x":7.0,"y":32.0,"w":48.0,"h":27.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"БАНКРОТСТВО ПОД КЛЮЧ","fontSize":9.0,"color":"#FFFFFF","weight":"700","align":"left","vertical":false,"font":"Manrope","role":"headline","shadow":false,"upper":true,"lineHeight":0.96,"letterSpacing":-0.5},{"id":"Tban9","type":"text","x":7.0,"y":63.0,"w":45.0,"h":11.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"Списание долгов по закону с рассрочкой оплаты","fontSize":4.2,"color":"#C9D8F4","weight":"400","align":"left","vertical":false,"font":"Manrope","role":"subheadline","shadow":false,"upper":false,"lineHeight":1.2,"letterSpacing":0.0},{"id":"Tban10","type":"text","x":7.0,"y":81.0,"w":38.0,"h":10.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"Узнать условия","fontSize":3.8,"color":"#07152E","weight":"700","align":"center","vertical":false,"font":"Manrope","role":"cta","shadow":false,"upper":false,"lineHeight":1.0,"letterSpacing":0.0,"bgColor":"#1CD6B4","bgRadius":50},{"id":"Tban11","type":"shape","x":7.0,"y":94.0,"w":86.0,"h":1,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"line","fill":{"type":"solid","color":"#5271A8","color2":"#5271A8","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0},{"id":"Tban12","type":"icon","x":85.0,"y":89.0,"w":7.0,"h":7.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","icon":"check-circle-2","color":"#1CD6B4"}]},{"key":"service","name":"Запись на услугу","format":"square","bg":{"type":"color","color":"#f8e8ed"},"layers":[{"id":"Tser0","type":"shape","x":0.0,"y":0.0,"w":100.0,"h":100.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"gradient","color":"#f8e8ed","color2":"#f3cbd6","angle":135.0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0},{"id":"Tser1","type":"shape","x":57.0,"y":0.0,"w":43.0,"h":100.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"solid","color":"#d97491","color2":"#d97491","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0},{"id":"Tser2","type":"shape","x":52.0,"y":-8.0,"w":54.0,"h":116.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"ellipse","fill":{"type":"solid","color":"#fff7f8","color2":"#fff7f8","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0},{"id":"Tser3","type":"image","x":56.0,"y":9.0,"w":38.0,"h":77.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","src":"","fx":50,"fy":50,"zoom":1,"placeholder":true},{"id":"Tser4","type":"shape","x":6.0,"y":7.0,"w":28.0,"h":8.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"solid","color":"#ffffff","color2":"#ffffff","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":50.0},{"id":"Tser5","type":"text","x":8.0,"y":8.5,"w":24.0,"h":4.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"САЛОН КРАСОТЫ","fontSize":2.7,"color":"#a84362","weight":"700","align":"center","vertical":false,"font":"Manrope","role":"badge","shadow":false,"upper":true,"lineHeight":1.0,"letterSpacing":1.2},{"id":"Tser6","type":"text","x":7.0,"y":22.0,"w":48.0,"h":27.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"−20%\nНА ПЕРВЫЙ ВИЗИТ","fontSize":8.7,"color":"#321923","weight":"700","align":"left","vertical":false,"font":"Montserrat","role":"headline","shadow":false,"upper":true,"lineHeight":0.95,"letterSpacing":0.0},{"id":"Tser7","type":"text","x":7.0,"y":54.0,"w":43.0,"h":10.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"Мастера с опытом от 5 лет","fontSize":4.0,"color":"#6f3850","weight":"400","align":"left","vertical":false,"font":"Manrope","role":"subheadline","shadow":false,"upper":false,"lineHeight":1.15,"letterSpacing":0.0},{"id":"Tser8","type":"icon","x":7.0,"y":68.0,"w":5.0,"h":5.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","icon":"sparkles","color":"#a84362"},{"id":"Tser9","type":"text","x":14.0,"y":67.0,"w":32.0,"h":8.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"Записаться онлайн","fontSize":3.5,"color":"#ffffff","weight":"700","align":"center","vertical":false,"font":"Manrope","role":"cta","shadow":false,"upper":false,"lineHeight":1.0,"letterSpacing":0.0,"bgColor":"#a84362","bgRadius":50},{"id":"Tser10","type":"shape","x":62.0,"y":83.0,"w":29.0,"h":9.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"solid","color":"#ffffff","color2":"#ffffff","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":50.0},{"id":"Tser11","type":"text","x":64.0,"y":85.0,"w":25.0,"h":4.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"ВАШЕ ФОТО","fontSize":2.5,"color":"#a84362","weight":"700","align":"center","vertical":false,"font":"Manrope","role":"disclaimer","shadow":false,"upper":true,"lineHeight":1.0,"letterSpacing":0.8}]},{"key":"realty","name":"Недвижимость","format":"square","bg":{"type":"color","color":"#101B35"},"layers":[{"id":"Trea0","type":"image","x":49.0,"y":0.0,"w":51.0,"h":100.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","src":"","fx":50,"fy":50,"zoom":1,"placeholder":true},{"id":"Trea1","type":"shape","x":43.0,"y":0.0,"w":57.0,"h":100.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"gradient","color":"#101B35","color2":"#0ea5e9","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0},{"id":"Trea2","type":"shape","x":-16.0,"y":73.0,"w":49.0,"h":31.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"ellipse","fill":{"type":"radial","color":"#2B70FF","color2":"#101B35","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":50.0},{"id":"Trea3","type":"shape","x":5.0,"y":8.0,"w":22.0,"h":5.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"solid","color":"#51E6A3","color2":"#51E6A3","angle":0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":50.0},{"id":"Trea4","type":"text","x":5.0,"y":20.0,"w":52.0,"h":28.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"КВАРТИРЫ ОТ 4,9 МЛН ₽","fontSize":9.2,"color":"#FFFFFF","weight":"700","align":"left","vertical":false,"font":"Onest","role":"headline","shadow":false,"upper":true,"lineHeight":0.95,"letterSpacing":0.0},{"id":"Trea5","type":"text","x":5.0,"y":53.0,"w":49.0,"h":12.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"Новостройка у метро Ипотека от 6% • ключи в этом году","fontSize":4.1,"color":"#D8E2FF","weight":"400","align":"left","vertical":false,"font":"Onest","role":"subheadline","shadow":false,"upper":false,"lineHeight":1.2,"letterSpacing":0.0},{"id":"Trea6","type":"text","x":5.0,"y":72.0,"w":38.0,"h":10.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"Выбрать квартиру","fontSize":3.6,"color":"#101B35","weight":"700","align":"center","vertical":false,"font":"Onest","role":"cta","shadow":false,"upper":false,"lineHeight":1.0,"letterSpacing":0.0,"bgColor":"#51E6A3","bgRadius":50},{"id":"Trea7","type":"icon","x":45.0,"y":74.0,"w":7.0,"h":7.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","icon":"map-pin","color":"#51E6A3"}]},{"key":"course","name":"Онлайн-курс","format":"square","bg":{"type":"color","color":"#101B3D"},"layers":[{"id":"Tcou0","type":"shape","x":0.0,"y":0.0,"w":100.0,"h":100.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"gradient","color":"#101B3D","color2":"#243C91","angle":135.0},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":0},{"id":"Tcou1","type":"shape","x":57.0,"y":-12.0,"w":55.0,"h":55.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"ellipse","fill":{"type":"solid","color":"#D9FF45","color2":"#0ea5e9","angle":90},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":12},{"id":"Tcou2","type":"shape","x":-18.0,"y":77.0,"w":48.0,"h":48.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"ellipse","fill":{"type":"solid","color":"#FF6B4A","color2":"#0ea5e9","angle":90},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":12},{"id":"Tcou3","type":"shape","x":54.0,"y":9.0,"w":39.0,"h":7.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"solid","color":"#D9FF45","color2":"#0ea5e9","angle":90},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":50.0},{"id":"Tcou4","type":"text","x":56.0,"y":10.0,"w":35.0,"h":5.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"СТАРТ 1 ДЕКАБРЯ","fontSize":2.7,"color":"#101B3D","weight":"700","align":"center","vertical":false,"font":"Manrope","role":"badge","shadow":false,"upper":true,"lineHeight":1.0,"letterSpacing":1.0},{"id":"Tcou5","type":"image","x":57.0,"y":22.0,"w":36.0,"h":48.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","src":"","fx":50,"fy":50,"zoom":1,"placeholder":true},{"id":"Tcou6","type":"shape","x":55.0,"y":71.0,"w":39.0,"h":17.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","shape":"rect","fill":{"type":"solid","color":"#FFFFFF","color2":"#0ea5e9","angle":90},"stroke":{"enabled":false,"color":"#111827","width":3,"dash":"solid"},"radius":8.0},{"id":"Tcou7","type":"icon","x":59.0,"y":75.0,"w":7.0,"h":7.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","icon":"rocket","color":"#FF6B4A"},{"id":"Tcou8","type":"text","x":67.0,"y":74.0,"w":23.0,"h":4.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"Реальные проекты","fontSize":2.8,"color":"#101B3D","weight":"700","align":"left","vertical":false,"font":"Manrope","role":"badge","shadow":false,"upper":false,"lineHeight":1.0,"letterSpacing":0.0},{"id":"Tcou9","type":"text","x":7.0,"y":22.0,"w":47.0,"h":34.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"8 недель практики в маркетинге","fontSize":9.2,"color":"#FFFFFF","weight":"700","align":"left","vertical":false,"font":"Manrope","role":"headline","shadow":false,"upper":false,"lineHeight":0.94,"letterSpacing":-0.5},{"id":"Tcou10","type":"text","x":7.0,"y":60.0,"w":43.0,"h":10.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"Онлайн-курс: учитесь на задачах бизнеса","fontSize":4.2,"color":"#C8D2FF","weight":"400","align":"left","vertical":false,"font":"Inter","role":"subheadline","shadow":false,"upper":false,"lineHeight":1.15,"letterSpacing":0.0},{"id":"Tcou11","type":"text","x":7.0,"y":77.0,"w":39.0,"h":10.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","text":"ЗАПИСАТЬСЯ","fontSize":3.5,"color":"#101B3D","weight":"700","align":"center","vertical":false,"font":"Manrope","role":"cta","shadow":false,"upper":true,"lineHeight":1.0,"letterSpacing":1.0,"bgColor":"#D9FF45","bgRadius":35.0},{"id":"Tcou12","type":"icon","x":44.0,"y":82.0,"w":7.0,"h":7.0,"rotation":0,"opacity":100,"flipH":false,"flipV":false,"skewX":0,"skewY":0,"blendMode":"normal","icon":"sparkles","color":"#D9FF45"}]}];
+const STUDIO_TPL_CAT={sale:"Товары и акции",legal:"Юр. услуги",bankrupt:"Юр. услуги",service:"Услуги",realty:"Недвижимость",course:"Обучение"};
+let studioUserTpls=null,studioTplCat="";
+async function studioLoadUserTpls(force){if(studioUserTpls&&!force)return;try{studioUserTpls=(await api("/api/v1/studio/templates")).templates||[]}catch(e){studioUserTpls=[]}studioRefreshPanel()}
+function studioTplCatsHtml(){
+  const cats=[...new Set(STUDIO_TEMPLATES.map(t=>STUDIO_TPL_CAT[t.key]||"Разное"))];if((studioUserTpls||[]).length)cats.push("Мои шаблоны");
+  return`<div class="row" style="gap:6px;flex-wrap:wrap">${[""].concat(cats).map(c=>`<button type="button" class="ib ${studioTplCat===c?"on":""}" data-act="studTplCat" data-c="${esc(c)}" style="border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:${studioTplCat===c?"var(--svc-soft)":"var(--surface)"};font-size:12px;cursor:pointer">${c?esc(c):"Все"}</button>`).join("")}</div>`;
+}
 const STUDIO_ICONS=["star","heart","zap","flame","gift","tag","badge-percent","thumbs-up","sparkles","trophy","shield-check","truck","clock","phone","map-pin","award","check-circle-2","rocket"];
 const studioDefFill=c=>({type:"solid",color:c,color2:"#0ea5e9",angle:90});
 const studioDefStroke=(on,c)=>({enabled:!!on,color:c||"#111827",width:3,dash:"solid"});
@@ -6851,6 +6865,7 @@ function studioPathD(l){
   return d;
 }
 function studioLayerInner(l){
+  if(l.type==="text"&&+l.curve){studioEnsureFont(studioFontOf(l));return`<canvas class="stud-curve" style="position:absolute;left:-50%;top:-100%;width:200%;height:300%;display:block;pointer-events:none"></canvas>`}
   if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?"text-shadow:0 2px 10px rgba(0,0,0,.55);":""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}">${esc(l.text)}</div>`}
   if(l.type==="image"){const bd=l.border&&l.border.enabled?`box-shadow:inset 0 0 0 ${l.border.width||4}px ${esc(l.border.color||"#fff")};`:"";
     return l.src?`<div class="stud-layer-image" style="${studioMaskCss(l)};position:relative"><img src="${esc(l.src)}" alt="" draggable="false" style="object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1});filter:${studioFilterCss(l.filter)}">${bd?`<span style="position:absolute;inset:0;${bd};border-radius:inherit"></span>`:""}</div>`:`<div class="stud-layer-image stud-layer-empty" style="${studioMaskCss(l)}">${ic("image",22)}</div>`}
@@ -6954,6 +6969,30 @@ async function studioPaintContrast(root){
     el.textContent=`Контраст ${r.toFixed(1)}:1 — `+(ok?(busy?"фон пёстрый: добавьте плашку или тень":"читается хорошо"):`низкий (нужно ≥ ${need}:1): смените цвет или добавьте плашку`);
   }catch(e){el.textContent=""}
 }
+/* Изогнутый текст: и на холсте, и в экспорте рисуется ОДНОЙ функцией по дуге.
+   curve: -100..100 (плюс — дуга вверх, минус — вниз). */
+function studioDrawCurved(ctx,l,x,y,w,h,fs){
+  const txt=(l.upper?String(l.text||"").toUpperCase():String(l.text||"")).replace(/\n/g," ");
+  ctx.font=`${l.weight||"700"} ${fs}px "${studioFontOf(l)}","Onest",Arial,sans-serif`;
+  if("letterSpacing" in ctx)ctx.letterSpacing=((+l.letterSpacing||0)/100*fs)+"px";
+  ctx.fillStyle=l.color;ctx.textAlign="center";ctx.textBaseline="middle";
+  const c=Math.max(-100,Math.min(100,+l.curve||0)),total=ctx.measureText(txt).width,theta=Math.max(0.05,Math.abs(c)/100*Math.PI*1.2);
+  /* Дугу центрируем по её реальной высоте (стрела прогиба), чтобы она помещалась в рамку. */
+  const R=total/theta,dir=c>=0?1:-1,sag=R*(1-Math.cos(theta/2)),cx=x+w/2,cy=y+h/2-dir*sag/2+dir*R;
+  let a=-theta/2;
+  for(const ch of txt){const cw=ctx.measureText(ch).width,ang=a+cw/R/2;
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(dir*ang);ctx.translate(0,-dir*R);
+    if(l.outline&&l.outline.enabled){ctx.lineJoin="round";ctx.lineWidth=(l.outline.width||2)*2*fs/40;ctx.strokeStyle=l.outline.color||"#000";ctx.strokeText(ch,0,0)}
+    ctx.fillText(ch,0,0);ctx.restore();a+=cw/R}
+}
+function studioPaintCurved(el,l){
+  const cv=el.querySelector("canvas.stud-curve");if(!cv)return;const st=el.closest(".stud-stage");if(!st)return;
+  /* Холст слоя с запасом вокруг рамки: края дуги не обрезаются (экспорт рисует так же). */
+  const w0=el.offsetWidth,h0=el.offsetHeight,dpr=window.devicePixelRatio||1,H=st.getBoundingClientRect().height;
+  cv.width=Math.max(1,Math.round(w0*2*dpr));cv.height=Math.max(1,Math.round(h0*3*dpr));
+  const g=cv.getContext("2d");g.scale(dpr,dpr);if(l.shadow){g.shadowColor="rgba(0,0,0,.55)";g.shadowBlur=8}
+  studioDrawCurved(g,l,w0*0.5,h0,w0,h0,Math.max(8,H*l.fontSize/100));
+}
 function studioLayersListHtml(){
   const d=studioDesign();
   if(!d.layers.length)return'<p class="muted" style="font-size:12.5px">Выберите инструмент слева, чтобы добавить первый слой.</p>';
@@ -7056,6 +7095,7 @@ function studioPropsHtml(){
     <nv-select label="Шрифт" options="${STUDIO_FONTS.map(f=>f+":"+f).join("|")}" value="${esc(studioFontOf(l))}" data-prop="font"></nv-select>
     <nv-select label="Роль (для ИИ-текстов)" options=":—|headline:Заголовок|subheadline:Подзаголовок|cta:Кнопка|badge:Плашка|disclaimer:Мелкий текст" value="${esc(l.role||"")}" data-prop="role"></nv-select>
     <div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="nv-btn ${l.upper?"v-primary":"v-secondary"} s-sm" data-prop-set="upper" data-val="${l.upper?"":"1"}">ВЕРХНИЙ РЕГИСТР</button><button type="button" class="nv-btn ${l.shadow?"v-primary":"v-secondary"} s-sm" data-prop-set="shadow" data-val="${l.shadow?"":"1"}">Тень</button></div>
+    <div class="fld"><span class="lbl">Изгиб текста</span><div class="rng"><input type="range" min="-100" max="100" step="5" value="${+l.curve||0}" style="--rng-p:${rngPct(+l.curve||0,-100,100)}" data-prop="curve"><output>${+l.curve||0}</output></div></div>
     <div class="fld"><span class="lbl">Межстрочный</span><div class="rng"><input type="range" min="0.8" max="2" step="0.05" value="${+l.lineHeight||1.18}" style="--rng-p:${rngPct(+l.lineHeight||1.18,0.8,2)}" data-prop="lineHeight"><output>${+l.lineHeight||1.18}</output></div></div>
     <div class="fld"><span class="lbl">Межбуквенный</span><div class="rng"><input type="range" min="-5" max="30" step="1" value="${+l.letterSpacing||0}" style="--rng-p:${rngPct(+l.letterSpacing||0,-5,30)}" data-prop="letterSpacing"><output>${+l.letterSpacing||0}</output></div></div>
     <div class="sect-t" style="margin-top:2px">Плашка под текстом</div>
@@ -7103,6 +7143,7 @@ function studioLayoutStage(root){
   const h=stage.getBoundingClientRect().height;
   stage.querySelectorAll('.stud-layer[data-type="text"]').forEach(el=>{
     const d=studioDesign(),l=d.layers.find(x=>x.id===el.dataset.id);if(!l)return;
+    if(+l.curve)studioPaintCurved(el,l);
     const t=el.querySelector(".stud-layer-text");if(t){t.style.fontSize=Math.max(8,h*l.fontSize/100)+"px";t.style.borderRadius=l.bgColor?Math.min(el.offsetHeight,el.offsetWidth)/2*Math.min(50,+l.bgRadius||0)/50+"px":""}
   });
 }
@@ -7241,6 +7282,7 @@ async function studioRenderCanvas(design,scale){
     }else if(l.type==="text"){
       const cx=x+w/2,cy=y+h/2;let x2=x,y2=y,w2=w,h2=h;
       if(l.vertical){ctx.translate(cx,cy);ctx.rotate(Math.PI/2);ctx.translate(-cx,-cy);x2=cx-h/2;y2=cy-w/2;w2=h;h2=w}
+      if(+l.curve){if(l.shadow){ctx.shadowColor="rgba(0,0,0,.55)";ctx.shadowBlur=Math.max(8,H*l.fontSize/100)*0.28}studioDrawCurved(ctx,l,x2,y2,w2,h2,Math.max(8,H*l.fontSize/100));ctx.restore();continue}
       /* Как на холсте (DOM): шрифт по фактическому семейству, перенос по словам с учётом
          ручных переводов строки, межстрочный/межбуквенный, регистр, плашка и тень. */
       const fs=Math.max(8,H*l.fontSize/100);
@@ -7305,7 +7347,87 @@ function studioFitText(l,design,grow){
   if(changed)l.fontSize=fs;
   return changed;
 }
-function studioPack(d){const o=JSON.parse(JSON.stringify(d));delete o.thumb;o.selectedId=null;return o}
+/* Страницы (2026-11-20): d.pages=[{bg,layers}], d.page — текущая. Редактор работает с
+   d.bg/d.layers текущей страницы, поэтому весь остальной код Студии не меняется. */
+function studioPagesSync(d){d=d||studioDesign();if(!Array.isArray(d.pages))return;d.page=Math.min(d.page||0,d.pages.length-1);d.pages[d.page]={bg:d.bg,layers:d.layers}}
+function studioPagesOf(d){studioPagesSync(d);return Array.isArray(d.pages)&&d.pages.length?d.pages:[{bg:d.bg,layers:d.layers}]}
+function studioPageDesign(d,p){return{...d,bg:p.bg,layers:p.layers,pages:undefined}}
+function studioGoPage(i,noSync){const d=studioDesign();if(!noSync)studioPagesSync(d);if(!d.pages||!d.pages[i])return;d.page=i;d.bg=d.pages[i].bg;d.layers=d.pages[i].layers;d.selectedId=null;studioMultiSel=[];N.refresh()}
+function studioPageOp(op,i){
+  const d=studioDesign();studioBeforeChange();studioPagesSync(d);
+  if(!Array.isArray(d.pages)){d.pages=[{bg:d.bg,layers:d.layers}];d.page=0}
+  const cur=d.page||0;i=i==null?cur:i;
+  if(op==="add"){d.pages.splice(i+1,0,{bg:JSON.parse(JSON.stringify(d.pages[i].bg)),layers:[]});studioGoPage(i+1,true)}
+  else if(op==="dup"){const c=JSON.parse(JSON.stringify(d.pages[i]));c.layers.forEach(l=>l.id=studioUid());d.pages.splice(i+1,0,c);studioGoPage(i+1,true)}
+  else if(op==="del"){if(d.pages.length<2){toast("Это единственная страница",{tone:"warning"});return}d.pages.splice(i,1);d.page=Math.max(0,Math.min(cur>=i?cur-1:cur,d.pages.length-1));const p=d.pages[d.page];d.bg=p.bg;d.layers=p.layers;if(d.pages.length===1){delete d.pages;delete d.page}N.refresh()}
+  else if(op==="left"&&i>0){[d.pages[i-1],d.pages[i]]=[d.pages[i],d.pages[i-1]];if(cur===i)d.page=i-1;else if(cur===i-1)d.page=i;N.refresh()}
+  else if(op==="right"&&i<d.pages.length-1){[d.pages[i+1],d.pages[i]]=[d.pages[i],d.pages[i+1]];if(cur===i)d.page=i+1;else if(cur===i+1)d.page=i;N.refresh()}
+  NEON.save();
+}
+function studioPagesHtml(){
+  const d=studioDesign(),pages=Array.isArray(d.pages)?d.pages:[{bg:d.bg,layers:d.layers}],cur=d.page||0,f=STUDIO_FMT[d.format];
+  return`<div class="s2-pages" id="s2-pages">${pages.map((p,i)=>`<div class="pg${i===cur?" on":""}" data-pg="${i}" style="aspect-ratio:${f.w}/${f.h}" title="Страница ${i+1} (правый клик — действия)"><img data-pgthumb="${i}" alt=""><span class="n">${i+1}</span></div>`).join("")}<button type="button" class="add" data-act="studPageAdd" data-tip="Добавить страницу (карусель)">${ic("plus",16)}</button>${pages.length>1?`<span class="muted" style="font-size:11.5px;white-space:nowrap">Страниц: ${pages.length} · карусель</span>`:`<span class="muted" style="font-size:11.5px;white-space:nowrap">Добавьте страницы для карусели</span>`}</div>`;
+}
+async function studioPaintPageThumbs(){
+  const d=studioDesign(),pages=studioPagesOf(d),f=STUDIO_FMT[d.format];
+  for(const img of document.querySelectorAll("[data-pgthumb]")){const p=pages[+img.dataset.pgthumb];if(!p)continue;
+    try{img.src=(await studioRenderCanvas(studioPageDesign(d,p),64/f.h)).toDataURL("image/jpeg",0.7)}catch(e){}}
+}
+/* ---- Выгрузка: ZIP (без сжатия), PDF (JPEG-страницы), JPEG до N КБ ---- */
+const studioCrcTable=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function studioCrc32(u8){let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=studioCrcTable[(c^u8[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0}
+function studioZip(files){
+  const enc=new TextEncoder(),parts=[],central=[];let off=0;
+  const u16=v=>[v&255,(v>>8)&255],u32=v=>[v&255,(v>>8)&255,(v>>16)&255,(v>>>24)&255];
+  for(const f of files){const name=enc.encode(f.name),crc=studioCrc32(f.data),sz=f.data.length;
+    const head=new Uint8Array([...u32(0x04034b50),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(sz),...u32(sz),...u16(name.length),...u16(0)]);
+    parts.push(head,name,f.data);
+    central.push(new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(sz),...u32(sz),...u16(name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]),name);
+    off+=head.length+name.length+sz}
+  const csz=central.reduce((a,b)=>a+b.length,0);
+  const end=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(csz),...u32(off),...u16(0)]);
+  return new Blob([...parts,...central,end],{type:"application/zip"});
+}
+function studioPdf(pages){
+  /* pages: [{jpeg:Uint8Array,w,h}] — каждая страница = одна JPEG-картинка на весь лист. */
+  const enc=new TextEncoder(),chunks=[],offs=[];let pos=0;
+  const put=x=>{const b=typeof x==="string"?enc.encode(x):x;chunks.push(b);pos+=b.length};
+  const n=pages.length,kids=pages.map((_,i)=>`${3+i*3} 0 R`).join(" ");
+  put("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+  offs[1]=pos;put("1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n");
+  offs[2]=pos;put(`2 0 obj<</Type/Pages/Kids[${kids}]/Count ${n}>>endobj\n`);
+  pages.forEach((p,i)=>{const o=3+i*3,W=(p.w*0.75).toFixed(2),H=(p.h*0.75).toFixed(2),cs=`q ${W} 0 0 ${H} 0 0 cm /Im${i} Do Q`;
+    offs[o]=pos;put(`${o} 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${W} ${H}]/Resources<</XObject<</Im${i} ${o+1} 0 R>>>>/Contents ${o+2} 0 R>>endobj\n`);
+    offs[o+1]=pos;put(`${o+1} 0 obj<</Type/XObject/Subtype/Image/Width ${p.w}/Height ${p.h}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length ${p.jpeg.length}>>stream\n`);put(p.jpeg);put("\nendstream endobj\n");
+    offs[o+2]=pos;put(`${o+2} 0 obj<</Length ${cs.length}>>stream\n${cs}\nendstream endobj\n`)});
+  const total=2+n*3,xref=pos;let x=`xref\n0 ${total+1}\n0000000000 65535 f \n`;
+  for(let i=1;i<=total;i++)x+=String(offs[i]).padStart(10,"0")+" 00000 n \n";
+  put(x+`trailer<</Size ${total+1}/Root 1 0 R>>\nstartxref\n${xref}\n%%EOF`);
+  return new Blob(chunks,{type:"application/pdf"});
+}
+const studioBlob=(c,mime,q)=>new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error("пустой файл")),mime,q));
+const studioBytes=async b=>new Uint8Array(await b.arrayBuffer());
+function studioFileBase(d){const f=STUDIO_FMT[d.format];return(d.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+"_"+f.w+"x"+f.h}
+async function studioExportPages(kind){
+  const d=studioDesign(),pages=studioPagesOf(d).filter(p=>p.layers.length||p.bg.type==="image");
+  if(!pages.length){toast("Пустой дизайн",{tone:"warning"});return}
+  toast(`Собираю ${kind==="pdf"?"PDF":"ZIP"}: страниц ${pages.length}…`);
+  try{
+    if(kind==="zip"){const files=[];for(const[i,p]of pages.entries()){const c=await studioRenderCanvas(studioPageDesign(d,p),1);files.push({name:`${String(i+1).padStart(2,"0")}.png`,data:await studioBytes(await studioBlob(c,"image/png"))})}
+      studioDownload(studioZip(files),studioFileBase(d)+"_страницы.zip")}
+    else{const out=[];for(const p of pages){const c=await studioRenderCanvas(studioPageDesign(d,p),1);out.push({jpeg:await studioBytes(await studioBlob(c,"image/jpeg",0.92)),w:c.width,h:c.height})}
+      studioDownload(studioPdf(out),studioFileBase(d)+".pdf")}
+  }catch(e){toast("Не удалось собрать файл: "+(e.message||""),{tone:"danger"})}
+}
+async function studioExportUnder(kb){
+  const d=studioDesign();if(!d.layers.length){toast("Пустой дизайн",{tone:"warning"});return}
+  try{const c=await studioRenderCanvas(d,1);let lo=0.3,hi=0.95,best=null;
+    for(let i=0;i<7;i++){const q=(lo+hi)/2,b=await studioBlob(c,"image/jpeg",q);if(b.size<=kb*1024){best=b;lo=q}else hi=q}
+    if(!best){best=await studioBlob(c,"image/jpeg",0.3);toast("Даже на минимальном качестве файл больше — уменьшите детализацию",{tone:"warning"})}
+    studioDownload(best,studioFileBase(d)+`_${Math.round(best.size/1024)}KB.jpg`);toast(`JPEG ${Math.round(best.size/1024)} КБ`,{tone:"success"})}
+  catch(e){toast("Не удалось сжать: "+(e.message||""),{tone:"danger"})}
+}
+function studioPack(d){studioPagesSync(d);const o=JSON.parse(JSON.stringify(d));delete o.thumb;o.selectedId=null;return o}
 async function studioThumb(d){try{return(await studioRenderCanvas(d,240/STUDIO_FMT[d.format].w)).toDataURL("image/jpeg",0.8)}catch(e){return""}}
 function studioUpsertList(meta){const L=S.studio.list,i=L.findIndex(x=>x.id===meta.id);if(i>=0)L[i]=meta;else L.unshift(meta)}
 function studioPersist(o){
@@ -7336,6 +7458,7 @@ async function studioOpenServer(id,o){
   try{
     const r=await api("/api/v1/studio/designs/"+id);
     const d=Object.assign(studioNewDesign(),r.data||{});d.id=r.id;d.name=r.name;d.format=STUDIO_FMT[r.format]?r.format:"square";d.selectedId=null;
+    if(Array.isArray(d.pages)&&d.pages.length){d.page=0;d.bg=d.pages[0].bg;d.layers=d.pages[0].layers}
     studioResetEphemeral();S.studio.editor=d;S.studio.lastId=r.id;studioSave.state="saved";studioSave.at=r.updated_at*1000;
     studioQuiet=true;if(o.go!==false)N.go("studio-editor");else N.refresh();NEON.save();studioQuiet=false;
   }catch(e){if(!o.silent)toast("Не удалось открыть дизайн: "+(e.message||""),{tone:"danger"});if(String(e.message).includes("404")&&S.studio.lastId===id){S.studio.lastId=null;NEON.save()}}
@@ -7656,7 +7779,12 @@ async function studioLoadUploads(force){if(studioUploads&&!force)return;try{stud
 function studioRefreshPanel(){const p=document.getElementById("s2-panel");if(p&&S.studio.tab)p.innerHTML=studioPanelHtml(S.studio.tab)}
 function studioPanelHtml(tab){
   const d=studioDesign();
-  if(tab==="templates")return`<h3>Шаблоны</h3><p class="muted" style="font-size:12.5px;margin:0">Шаблон откроется новым дизайном в формате «${esc(STUDIO_FMT[d.format].label)}».</p><div class="s2-grid2">${STUDIO_TEMPLATES.map((t,i)=>`<div class="th" data-act="studUseTplHere" data-i="${i}" title="${esc(t.name)}"><img data-s2tpl="${i}" alt=""></div>`).join("")}</div>`;
+  if(tab==="templates"){if(studioUserTpls===null)studioLoadUserTpls();
+    const mine=studioTplCat===""||studioTplCat==="Мои шаблоны"?(studioUserTpls||[]):[];
+    const built=studioTplCat==="Мои шаблоны"?[]:STUDIO_TEMPLATES.map((t,i)=>[t,i]).filter(([t])=>!studioTplCat||(STUDIO_TPL_CAT[t.key]||"Разное")===studioTplCat);
+    return`<h3>Шаблоны</h3>${studioTplCatsHtml()}<p class="muted" style="font-size:12px;margin:0">Откроется новым дизайном в формате «${esc(STUDIO_FMT[d.format].label)}». Свой дизайн — в шаблоны через «⋯ → Сохранить как шаблон».</p>
+    ${mine.length?`<div class="sect-t">Мои шаблоны</div><div class="s2-grid2">${mine.map(t=>`<div class="th" data-act="studUseUserTpl" data-id="${t.id}" title="${esc(t.name)} · ${esc(t.category||"")}"><img src="${esc(t.thumb||"")}" alt=""><button type="button" class="x" data-act="studDelUserTpl" data-id="${t.id}" aria-label="Удалить шаблон">×</button></div>`).join("")}</div>`:""}
+    ${built.length?`${mine.length?'<div class="sect-t">Готовые</div>':""}<div class="s2-grid2">${built.map(([t,i])=>`<div class="th" data-act="studUseTplHere" data-i="${i}" title="${esc(t.name)}"><img data-s2tpl="${i}" alt=""></div>`).join("")}</div>`:""}`}
   if(tab==="elements")return`<h3>Элементы</h3><div class="sect-t">Фигуры</div><div class="s2-tiles">${STUDIO_SHAPES.map(([sh,icn,lb])=>`<button type="button" data-act="studAdd" data-type="shape" data-shape="${sh}">${ic(icn,20)}${lb}</button>`).join("")}</div>
     <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label></div>
     <div class="sect-t">Иконки</div><input type="search" class="num" data-s2icon placeholder="Поиск: телефон, скидка, house…" value="${esc(studioIconQ)}" style="width:100%;text-align:left;padding:0 10px">
@@ -7671,7 +7799,9 @@ function studioPanelHtml(tab){
     return`<h3>Фото</h3><div class="row" style="gap:6px"><input type="search" class="num" data-s2stock placeholder="Например: юрист, офис, семья" value="${esc(st.q)}" style="flex:1;text-align:left;padding:0 10px"><button type="button" class="nv-btn v-secondary s-sm" data-act="studStockGo">${ic("search",14)}</button></div>
     <p class="muted" style="font-size:11.5px;margin:0">Бесплатный сток (Openverse), лицензии с коммерческим использованием. Для CC BY укажите автора (он в подсказке).</p>
     ${st.loading?'<p class="muted">Ищу…</p>':st.results===null?"":st.results.length?`<div class="s2-grid2">${st.results.map((r,i)=>`<div><div class="th" data-act="studUseStock" data-i="${i}" title="${esc(r.title)} — ${esc(r.creator)} (${esc(r.license)})"><img src="${esc(r.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer"></div><div class="cr">${esc(r.creator||"")} · ${esc(r.license)}</div></div>`).join("")}</div>`:'<p class="muted">Ничего не нашлось — попробуйте другие слова.</p>'}`}
-  if(tab==="brand")return`<h3>Бренд</h3>${studioBrandHtml()}<div class="row" style="gap:6px;flex-wrap:wrap"><nv-button size="sm" variant="secondary" icon="wand-2" data-act="studApplyBrand">Применить бренд к дизайну</nv-button><nv-button size="sm" variant="secondary" icon="pipette" data-act="studPalette">Палитра из фото</nv-button></div><div data-s2pal></div>`;
+  if(tab==="brand")return`<h3>Бренд</h3>${studioBrandHtml()}
+    <div class="sect-t">Шрифты бренда</div>
+    <div class="s2-grid2"><nv-select label="Заголовки" data-brandfont="head" options="${STUDIO_FONTS.map(f=>f+":"+f).join("|")}" value="${esc(((S.studio.brand||{}).fonts||{}).head||"Montserrat")}"></nv-select><nv-select label="Текст" data-brandfont="body" options="${STUDIO_FONTS.map(f=>f+":"+f).join("|")}" value="${esc(((S.studio.brand||{}).fonts||{}).body||"Onest")}"></nv-select></div><div class="row" style="gap:6px;flex-wrap:wrap"><nv-button size="sm" variant="secondary" icon="wand-2" data-act="studApplyBrand">Применить бренд к дизайну</nv-button><nv-button size="sm" variant="secondary" icon="pipette" data-act="studPalette">Палитра из фото</nv-button></div><div data-s2pal></div>`;
   if(tab==="ai")return`<h3>ИИ-помощник</h3><div class="s2-tpres">
     <button type="button" data-act="studAiDesign"><b>${ic("sparkles",14)} Макет по брифу</b><div class="muted" style="font-size:12px">3 готовых варианта креатива под ваш оффер</div></button>
     <button type="button" data-act="studAiTexts"><b>${ic("type",14)} Тексты и A/B</b><div class="muted" style="font-size:12px">Заголовки, кнопки, плашки — несколько вариантов</div></button>
@@ -7727,11 +7857,23 @@ function studioMenu(x,y,items){
 }
 function studioDownloadMenu(btn){
   const r=btn.getBoundingClientRect();
-  studioMenu(r.left,r.bottom+4,[["PNG","лучшее качество",()=>studioExport("png")],["JPEG","меньше файл",()=>studioExport("jpeg")],["PNG без фона","прозрачный",()=>studioExport("png-alpha")],"-",["Все форматы","PNG пачкой",studioExportAll],"-",["В рекламу…","в проект Директа",studioToAds]]);
+  const multi=studioPagesOf(studioDesign()).length>1;
+  studioMenu(r.left,r.bottom+4,[["PNG",multi?"текущая страница":"лучшее качество",()=>studioExport("png")],["JPEG","меньше файл",()=>studioExport("jpeg")],["PNG без фона","прозрачный",()=>studioExport("png-alpha")],["JPEG до 1 МБ","сжать",()=>studioExportUnder(1024)],["JPEG до 300 КБ","для соцсетей",()=>studioExportUnder(300)],"-",
+    ["PDF",multi?"все страницы":"для печати",()=>studioExportPages("pdf")],["ZIP",multi?"все страницы PNG":"PNG в архиве",()=>studioExportPages("zip")],["Все форматы","PNG пачкой",studioExportAll],"-",["В рекламу…","в проект Директа",studioToAds]]);
 }
 function studioMoreMenu(btn){
   const r=btn.getBoundingClientRect();
-  studioMenu(r.left,r.bottom+4,[["История версий","откатить",studioVersionsDlg],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
+  studioMenu(r.left,r.bottom+4,[["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
+}
+async function studioSaveAsTemplate(){
+  const d=studioDesign();if(!d.layers.length){toast("Пустой дизайн",{tone:"warning"});return}
+  if(studioSave.state!=="saved"||typeof d.id!=="number")await studioPersist({silent:true});
+  if(typeof d.id!=="number")return;
+  const cats=["Мои","Товары и акции","Юр. услуги","Услуги","Недвижимость","Обучение","Разное"];
+  overlay("modal",{title:"Сохранить как шаблон",subtitle:"Шаблон появится во вкладке «Шаблоны → Мои шаблоны». Сам дизайн не изменится.",service:"studio",
+    body:`<div class="stack" style="gap:10px"><nv-input label="Название шаблона" data-tn value="${esc(d.name)}"></nv-input><nv-select label="Категория" data-tc options="${cats.map(c=>c+":"+c).join("|")}" value="Мои"></nv-select></div>`,
+    actions:[{label:"Отмена"},{label:"Сохранить",variant:"primary",fn:r=>{const nm=(r.querySelector("[data-tn]")||{}).value||d.name,ct=(r.querySelector("[data-tc]")||{}).value||"Мои";
+      apiPost("/api/v1/studio/designs/"+d.id+"/as-template",{name:nm,category:ct}).then(t=>{(studioUserTpls=studioUserTpls||[]).unshift(t);studioRefreshPanel();toast("Шаблон сохранён",{tone:"success"})}).catch(e=>toast(e.message,{tone:"danger"}))}}]});
 }
 async function studioVersionsDlg(){
   const d=studioDesign();if(typeof d.id!=="number"){toast("История появится после первого сохранения",{tone:"warning"});return}
@@ -7759,7 +7901,11 @@ async function studioAddImageData(dataUrl,w,h){
 }
 /* «Применить бренд»: самые заметные цвета дизайна (по площади) → цвета бренда по порядку. */
 function studioApplyBrand(){
-  const b=(S.studio.brand||{}).colors||[];if(!b.length){toast("Добавьте цвета бренда (кнопка «+»)",{tone:"warning"});return}
+  const b=(S.studio.brand||{}).colors||[],bf=(S.studio.brand||{}).fonts;
+  if(!b.length&&!bf){toast("Добавьте цвета или шрифты бренда",{tone:"warning"});return}
+  if(bf){const d0=studioDesign(),texts=d0.layers.filter(l=>l.type==="text");if(texts.length){studioBeforeChange();const big=Math.max(...texts.map(l=>+l.fontSize||0));
+    texts.forEach(l=>{const head=["headline","cta","badge"].includes(l.role)||(!l.role&&(+l.fontSize||0)>=big*0.8);l.font=head?(bf.head||l.font):(bf.body||l.font);studioEnsureFont(l.font)})}
+    if(!b.length){N.refresh();NEON.save();toast("Шрифты бренда применены",{tone:"success"});return}}
   const d=studioDesign(),area={};
   const add=(c,a)=>{if(!c||!/^#[0-9a-f]{6}$/i.test(c))return;c=c.toLowerCase();const rgb=studioHexRgb(c),lum=studioLum(...rgb);if(lum>0.92||lum<0.02)return;area[c]=(area[c]||0)+a};
   if(d.bg.type!=="image")add(d.bg.color,10000);
@@ -7820,7 +7966,7 @@ editor(){
         <span class="sep"></span><span id="stud-ctx-sel" style="display:contents">${start?"":studioCtxHtml()}</span>
       </div>
       <input type="file" id="stud-bg-file" accept="image/*" class="sr"><input type="file" id="stud-img-file" accept="image/*" class="sr"><input type="file" id="stud-img-replace" accept="image/*" class="sr">
-      ${start?studioStartHtml():`<div class="stud-stage-wrap">${studioZoomHtml()}<div id="stud-stage-host">${studioStageHtml()}</div>${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Перо: клик — точка, клик+тяни — плавная, клик по первой — замкнуть, Enter — закончить, Esc — отмена.</p>':""}</div>`}
+      ${start?studioStartHtml():`<div class="stud-stage-wrap">${studioZoomHtml()}<div id="stud-stage-host">${studioStageHtml()}</div>${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Перо: клик — точка, клик+тяни — плавная, клик по первой — замкнуть, Enter — закончить, Esc — отмена.</p>':""}</div>${studioPagesHtml()}`}
     </section>
     <aside class="s2-props"><div class="sect-t" style="margin-top:0">${esc(propsTitle)}</div><div id="stud-props">${studioPropsHtml()}</div></aside>
   </div>`,
@@ -7930,7 +8076,7 @@ editor(){
         const layerEl=e.target.closest(".stud-layer");if(!layerEl)return;
         const d=studioDesign(),l=d.layers.find(x=>x.id===layerEl.dataset.id);
         if(l&&l.type==="path"){studioEditingPathId=l.id;studioEditingPointIndex=null;N.refresh()}
-        if(l&&l.type==="text"&&!l.locked)studioInlineEdit(layerEl,l);
+        if(l&&l.type==="text"&&!l.locked){if(+l.curve){toast("Изогнутый текст правьте в панели справа");return}studioInlineEdit(layerEl,l)}
       });
     }
     const lp=root.querySelector("#stud-layers");
@@ -7952,7 +8098,11 @@ editor(){
       }
     });
     const pp=root.querySelector(".s2");
-    studioPaintTplThumbs(root);
+    studioPaintTplThumbs(root);studioPaintPageThumbs();
+    const pgs=root.querySelector("#s2-pages");
+    if(pgs){pgs.addEventListener("click",e=>{const g=e.target.closest("[data-pg]");if(g)studioGoPage(+g.dataset.pg)});
+      pgs.addEventListener("contextmenu",e=>{const g=e.target.closest("[data-pg]");if(!g)return;e.preventDefault();const i=+g.dataset.pg;
+        studioMenu(e.clientX,e.clientY,[["Добавить страницу после","",()=>studioPageOp("add",i)],["Дублировать страницу","",()=>studioPageOp("dup",i)],["Сдвинуть влево","",()=>studioPageOp("left",i)],["Сдвинуть вправо","",()=>studioPageOp("right",i)],"-",["Удалить страницу","",()=>studioPageOp("del",i)]])})}
     if(pp){
       pp.addEventListener("mousedown",e=>{if(e.target.closest("input,[data-prop-set],[data-act-dup],[data-act-center],[data-act-align],[data-act-dist],[data-act-flip],.stud-color,.stud-stepper,nv-select"))studioBeforeChange()},true);
       pp.addEventListener("input",e=>{
@@ -7961,7 +8111,7 @@ editor(){
         studioSetPath(l,k,v);
         if(e.target.type==="range")e.target.style.setProperty("--rng-p",rngPct(v,e.target.min,e.target.max));
         const out=e.target.closest(".rng");if(out)out.querySelector("output").textContent=v+(k==="rotation"||k==="fill.angle"?"°":k==="opacity"?"%":k==="stroke.width"?"px":"");
-        if(k==="bgRadius"||k==="lineHeight"||k==="letterSpacing")studioLayoutStage(document);
+        if(k==="bgRadius"||k==="lineHeight"||k==="letterSpacing"||k==="curve")studioLayoutStage(document);
         studioPatchLayerDom(l);NEON.save();
       });
       /* nv-textarea/nv-color-picker (FieldEl-like) stop their native events from
@@ -8048,6 +8198,7 @@ editor(){
       if(e.target.matches("[data-s2stock]"))studioStock.q=e.target.value;
     });
     root.addEventListener("keydown",e=>{if(e.target.matches("[data-s2stock]")&&e.key==="Enter"){e.preventDefault();N.acts.studStockGo()}});
+    root.addEventListener("nv-change",e=>{const bf=e.target.closest("[data-brandfont]");if(!bf)return;const b=S.studio.brand=S.studio.brand||{colors:[]};b.fonts={head:"Montserrat",body:"Onest",...(b.fonts||{}),[bf.dataset.brandfont]:e.detail.value};studioEnsureFont(e.detail.value);NEON.save()});
     root.addEventListener("change",async e=>{
       if(e.target.id!=="s2-up-file")return;
       const files=[...e.target.files];if(!files.length)return;toast(`Загружаю: ${files.length}…`);
@@ -8347,7 +8498,10 @@ document.addEventListener("keydown",e=>{
 });
 Object.assign(N.chg,{
   studName(v){studioDesign().name=v;NEON.save()},
-  studFormat(v){if(!STUDIO_FMT[v]||v===studioDesign().format)return;studioBeforeChange();const d=studioDesign(),r=studioRefit(d,v);Object.assign(d,{format:r.format,layers:r.layers});N.refresh();NEON.save()},
+  studFormat(v){if(!STUDIO_FMT[v]||v===studioDesign().format)return;studioBeforeChange();const d=studioDesign();studioPagesSync(d);
+    if(Array.isArray(d.pages)){d.pages=d.pages.map(p=>{const r=studioRefit({...d,bg:p.bg,layers:p.layers},v);return{bg:p.bg,layers:r.layers}});const p=d.pages[d.page||0];d.layers=p.layers}
+    else{const r=studioRefit(d,v);d.layers=r.layers}
+    d.format=v;N.refresh();NEON.save()},
   studQ(v){S.studio.q=v;N.refresh();NEON.save()},
   studTplFmt(v){S.studio.tplFmt=v;N.refresh();NEON.save()},
   studFmtF(v){S.studio.fmtF=v;N.refresh();NEON.save()}
@@ -8361,6 +8515,13 @@ Object.assign(N.acts,{
   studImgUrl:studioImageByUrl,
   studToAds:studioToAds,
   studGroup(a,d){studioGroup(!!d.on)},
+  studPageAdd(){studioPageOp("add")},
+  studTplCat(a,d){studioTplCat=d.c||"";studioRefreshPanel();setTimeout(()=>studioPaintTplThumbs(document),0)},
+  async studUseUserTpl(a,d,e){if(e&&e.target.closest(".x"))return;try{const r=await api("/api/v1/studio/designs/"+d.id);const x=Object.assign(studioNewDesign(),r.data||{});x.id=null;x.name=r.name;x.format=STUDIO_FMT[r.format]?r.format:"square";
+    if(Array.isArray(x.pages)&&x.pages.length){x.page=0;x.bg=x.pages[0].bg;x.layers=x.pages[0].layers}
+    (x.pages||[{layers:x.layers}]).forEach(p=>p.layers.forEach(l=>l.id=studioUid()));
+    studioResetEphemeral();studioStartDismissed=true;S.studio.editor=x;N.go("studio-editor");studioPersist({silent:true});toast("Шаблон открыт новым дизайном",{tone:"success"})}catch(err){toast(err.message,{tone:"danger"})}},
+  async studDelUserTpl(a,d,e){if(e)e.stopPropagation();try{await apiDelete("/api/v1/studio/designs/"+d.id);studioUserTpls=(studioUserTpls||[]).filter(x=>String(x.id)!==String(d.id));studioRefreshPanel()}catch(err){toast(err.message,{tone:"danger"})}},
   studTab(a,d){S.studio.tab=S.studio.tab===d.tab?"":d.tab;N.refresh();NEON.save();if(S.studio.tab==="templates")setTimeout(()=>studioPaintTplThumbs(document),0)},
   studShortcuts:studioShortcuts,
   studDownload(a){studioDownloadMenu(a)},
