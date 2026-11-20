@@ -1812,6 +1812,36 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s2-props .stud-presets{gap:5px}
 .s2-props .stud-presets button{border-radius:9px;padding:3px 3px 4px}
 .s2-props nv-textarea textarea{font-size:12.5px}
+/* Быстрые инструменты элемента — в верхней строке */
+.tb-ctx{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px}
+.tb-div{width:1px;height:22px;background:var(--line-2);flex:none}
+.tb-in{flex:1;min-width:0;display:flex;align-items:center;gap:4px;container-type:inline-size;overflow:hidden;height:36px}
+.tb-in .ib{height:32px;min-width:32px;padding:0 8px;border:0;border-radius:999px;background:none;color:var(--ink-2);display:inline-flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;font-size:12px;flex:none;white-space:nowrap}
+.tb-in .ib:hover{background:var(--l2,var(--surface-2));color:var(--ink)}
+.tb-in .ib.on{background:var(--svc-soft);color:var(--svc-ink)}
+.tb-in .ib i{font-style:normal}
+.tb-in .sep{width:1px;height:20px;background:var(--line-2);margin:0 3px;flex:none}
+.tb-in .lbl{font-size:12px;color:var(--ink-3);white-space:nowrap;flex:none}
+.tb-in .tb-font{width:132px;flex:none}
+.tb-in nv-select .dd{height:32px;border-radius:999px}
+.tb-in .tb-num{display:inline-flex;align-items:center;height:32px;border:1px solid var(--line-2);border-radius:999px;background:var(--l2,var(--surface));flex:none;overflow:hidden}
+.tb-in .tb-num button{width:26px;height:100%;border:0;background:none;cursor:pointer;color:var(--ink-2);font-size:14px}
+.tb-in .tb-num button:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.tb-in .tb-num input{width:34px;border:0;background:none;text-align:center;font:12px var(--font-mono);color:var(--ink);outline:0}
+.tb-in nv-color-picker{flex:none}
+.tb-in .cpk-hex,.tb-in .cpk-trig>nv-icon{display:none}
+.tb-in .cpk-trig{height:32px;width:32px;padding:0;justify-content:center;border-radius:50%}
+@container (max-width:690px){.tb-in .p3{display:none!important}}
+@container (max-width:480px){.tb-in .p2{display:none!important}}
+.tb-zoom{height:34px;display:inline-flex;align-items:center;gap:4px;padding:0 10px;border:0;border-radius:999px;background:var(--l2,var(--surface-2));color:var(--ink);font:12px var(--font-mono);cursor:pointer;flex:none}
+.tb-zoom:hover{color:var(--svc-ink)}
+.shell.immersive .crumbs{flex:1 1 auto!important}
+.shell.immersive .ed-name{width:clamp(110px,11vw,190px)}
+.shell.immersive .ed-fmt{min-width:0;width:clamp(120px,12vw,200px)}
+.tb-fmt{height:34px;display:inline-flex;align-items:center;gap:5px;padding:0 10px;border:0;border-radius:999px;background:var(--l2,var(--surface-2));color:var(--ink);font:12px var(--font-mono);cursor:pointer;flex:none}
+.tb-fmt:hover{color:var(--svc-ink)}
+@media (max-width:1800px){.shell.immersive .stud-save{font-size:0;width:9px;height:9px;padding:0;margin:0 6px;border-radius:50%;background:var(--ok,#16a34a);flex:none;cursor:help}
+  .shell.immersive .stud-save.dirty{background:#e0a020}.shell.immersive .stud-save.err{background:var(--bad)}}
 /* Редактор на всю рабочую область: вместо меню раздела — панель редактора, шапка — в верхней строке */
 .top-ed{display:none}
 .shell.immersive{grid-template-columns:78px minmax(0,1fr)}
@@ -7462,7 +7492,7 @@ function studioRedo(){
 }
 function studioToBoxPct(stagePct,boxDim){return stagePct/Math.max(1,boxDim)*100}
 function studioRenderSidebar(root){
-  const cx=(root||document).querySelector("#stud-ctx-sel");if(cx)cx.innerHTML=studioCtxHtml();
+  const cx=document.getElementById("stud-ctx-sel");if(cx)cx.innerHTML=studioCtxHtml();
   const lp=root.querySelector("#stud-layers");if(lp)lp.innerHTML=studioLayersListHtml();
   const pp=root.querySelector("#stud-props");if(pp)pp.innerHTML=studioPropsHtml();
   studioPaintContrast(root);studioDrawRulersSoon();
@@ -7611,7 +7641,7 @@ async function studioExportPng(){
 /* ---------- Сервер: дизайны, автосохранение, перенос из localStorage ---------- */
 const studioSave={state:"saved",at:0,err:""};let studioAutoT=null,studioSaving=null,studioSaveAgain=false,studioBooted=false,studioQuiet=false;
 function studioSaveLabel(){const st=studioSave;return st.state==="saving"?"Сохраняю…":st.state==="dirty"?"Есть изменения":st.state==="err"?"Не сохранено":st.at?"Сохранено "+new Date(st.at).toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"}):""}
-function studioPaintSave(){const el=document.getElementById("stud-save");if(el){el.textContent=studioSaveLabel();el.className="stud-save "+(studioSave.state==="dirty"?"dirty":studioSave.state==="err"?"err":"");el.title=studioSave.err||""}}
+function studioPaintSave(){const el=document.getElementById("stud-save");if(el){el.textContent=studioSaveLabel();el.className="stud-save "+(studioSave.state==="dirty"?"dirty":studioSave.state==="err"?"err":"");el.title=studioSave.err||studioSaveLabel()}}
 function studioMarkDirty(){
   const d=studioDesign();if(!d.layers.length&&!d.id)return;
   studioSave.state="dirty";studioPaintSave();
@@ -8107,22 +8137,23 @@ function studioPanelHtml(tab){
 }
 /* Контекстная панель над холстом: самое нужное для выбранного элемента. */
 function studioCtxHtml(){
+  /* Быстрые инструменты в верхней строке. p2/p3 — второстепенные: прячутся, когда строке
+     не хватает места (всё это есть и в правой панели). */
   const d=studioDesign(),l=studioSelected(),multi=studioMultiSel.length>1;
-  const common=l?`<span class="sep"></span><button type="button" class="ib" data-ctx="dup" data-tip="Дублировать (Ctrl+D)">${ic("copy",14)}</button><button type="button" class="ib" data-ctx="front" data-tip="На передний план">${ic("bring-to-front",14)}</button><button type="button" class="ib" data-ctx="back" data-tip="На задний план">${ic("send-to-back",14)}</button><button type="button" class="ib ${l.locked?"on":""}" data-ctx="lock" data-tip="${l.locked?"Открепить":"Закрепить"}">${ic(l.locked?"lock":"unlock",14)}</button><button type="button" class="ib" data-ctx="del" data-tip="Удалить (Delete)">${ic("trash-2",14)}</button>`:"";
-  if(multi)return`<span class="lbl">Выбрано: ${studioMultiSel.length}</span><button type="button" class="ib" data-act="studGroup" data-on="1">${ic("group",14)}Сгруппировать</button><button type="button" class="ib" data-act="studGroup" data-on="">Разгруппировать</button><span class="sep"></span>${["left:align-horizontal-justify-start","ch:align-horizontal-justify-center","right:align-horizontal-justify-end","top:align-vertical-justify-start","cv:align-vertical-justify-center","bottom:align-vertical-justify-end"].map(x=>{const[k,i]=x.split(":");return`<button type="button" class="ib" data-act-align="${k}">${ic(i,14)}</button>`}).join("")}`;
-  if(!l)return`<span class="lbl">Фон</span><nv-color-picker value="${esc(d.bg.color||"#ffffff")}" data-act-bg-color></nv-color-picker><label class="ib" for="stud-bg-file">${ic("image",14)}Фото фоном</label>${d.bg.type==="image"?`<button type="button" class="ib" data-act="studBgClear">${ic("x",14)}Убрать фото</button>`:""}<span class="sep"></span><span class="lbl">Выберите элемент на холсте, чтобы изменить его</span>`;
-  if(l.type==="text")return`<nv-select data-prop="font" options="${studioFontList().map(f=>f+":"+f).join("|")}" value="${esc(studioFontOf(l))}"></nv-select>
-    <button type="button" class="ib" data-ctx="fs-">−</button><input class="num" data-ctxnum="fontSize" value="${Math.round(l.fontSize*10)/10}"><button type="button" class="ib" data-ctx="fs+">+</button>
-    <nv-color-picker value="${esc(l.color)}" data-prop="color"></nv-color-picker>
-    <button type="button" class="ib ${l.weight!=="400"?"on":""}" data-prop-set="weight" data-val="${l.weight!=="400"?"400":"700"}"><b>Ж</b></button>
-    <button type="button" class="ib ${l.upper?"on":""}" data-prop-set="upper" data-val="${l.upper?"":"1"}">Аа</button>
-    ${["left:align-left","center:align-center","right:align-right"].map(x=>{const[k,i]=x.split(":");return`<button type="button" class="ib ${l.align===k?"on":""}" data-prop-set="align" data-val="${k}">${ic(i,14)}</button>`}).join("")}
-    <button type="button" class="ib ${l.bgColor?"on":""}" data-act-textbg="${l.bgColor?"":"1"}" data-tip="Плашка под текстом">${ic("rectangle-horizontal",14)}</button>
-    <button type="button" class="ib ${l.shadow?"on":""}" data-prop-set="shadow" data-val="${l.shadow?"":"1"}" data-tip="Тень">${ic("cloud",14)}</button>
-    <button type="button" class="ib" data-act-fit="1" data-tip="Вписать текст в рамку">${ic("scaling",14)}</button>${common}`;
-  if(l.type==="image")return`<label class="ib" for="stud-img-replace">${ic("replace",14)}Заменить</label>${l.src?`<button type="button" class="ib" data-act="studRemoveBg">${ic("scissors",14)}Удалить фон</button>`:""}${Object.keys(STUDIO_FILTERS).slice(0,5).map(k=>`<button type="button" class="ib ${(l.filterName||"none")===k?"on":""}" data-act-filter="${k}">${STUDIO_FILTER_LABELS[k]}</button>`).join("")}<button type="button" class="ib ${(l.mask||"none")==="circle"?"on":""}" data-prop-set="mask" data-val="${(l.mask||"none")==="circle"?"none":"circle"}">${ic("circle",14)}В круг</button><button type="button" class="ib ${l.effect&&l.effect.shadow?"on":""}" data-act-fxshadow="${l.effect&&l.effect.shadow?"":"1"}">Тень</button>${common}`;
-  if(l.type==="shape"||l.type==="path")return`<span class="lbl">Заливка</span><nv-color-picker value="${esc(studioFillOf(l).color)}" data-prop="fill.color"></nv-color-picker><button type="button" class="ib ${studioStrokeOf(l).enabled?"on":""}" data-prop-set="stroke.enabled" data-val="${studioStrokeOf(l).enabled?"":"1"}">Обводка</button><button type="button" class="ib ${l.effect&&l.effect.shadow?"on":""}" data-act-fxshadow="${l.effect&&l.effect.shadow?"":"1"}">Тень</button>${common}`;
-  if(l.type==="icon")return`<span class="lbl">Цвет</span><nv-color-picker value="${esc(l.color)}" data-prop="color"></nv-color-picker><button type="button" class="ib ${l.effect&&l.effect.shadow?"on":""}" data-act-fxshadow="${l.effect&&l.effect.shadow?"":"1"}">Тень</button>${common}`;
+  const B=(icon,attrs,tip,on,cls,txt)=>`<button type="button" class="ib${on?" on":""}${cls?" "+cls:""}" ${attrs} data-tip="${esc(tip)}" aria-label="${esc(tip)}">${icon?ic(icon,15):""}${txt?`<span>${txt}</span>`:""}</button>`;
+  const sep=cls=>`<span class="sep${cls?" "+cls:""}"></span>`;
+  const common=l?sep()+B("copy",'data-ctx="dup"',"Дублировать (Ctrl+D)")+B("bring-to-front",'data-ctx="front"',"На передний план",false,"p3")+B("send-to-back",'data-ctx="back"',"На задний план",false,"p3")+B(l.locked?"lock":"unlock",'data-ctx="lock"',l.locked?"Открепить":"Закрепить",l.locked,"p2")+B("trash-2",'data-ctx="del"',"Удалить (Delete)"):"";
+  if(multi)return`<span class="lbl">Выбрано: ${studioMultiSel.length}</span>${B("group",'data-act="studGroup" data-on="1"',"Сгруппировать (Ctrl+G)",false,"",'Сгруппировать')}${B("ungroup",'data-act="studGroup" data-on=""',"Разгруппировать",false,"p2")}${sep("p3")}${["left:align-horizontal-justify-start:Слева","ch:align-horizontal-justify-center:По центру","right:align-horizontal-justify-end:Справа","top:align-vertical-justify-start:Сверху","cv:align-vertical-justify-center:По середине","bottom:align-vertical-justify-end:Снизу"].map(x=>{const[k,i,t]=x.split(":");return B(i,`data-act-align="${k}"`,t,false,"p3")}).join("")}`;
+  if(!l)return`<span class="lbl">Фон</span><nv-color-picker value="${esc(d.bg.color||"#ffffff")}" data-act-bg-color></nv-color-picker><label class="ib" for="stud-bg-file" data-tip="Поставить фото фоном">${ic("image",15)}<span class="p2">Фото фоном</span></label>${d.bg.type==="image"?B("x",'data-act="studBgClear"',"Убрать фото с фона"):""}`;
+  if(l.type==="text"){const bold=l.weight!=="400",al={left:"align-left",center:"align-center",right:"align-right"},nx={left:"center",center:"right",right:"left"}[l.align]||"left";
+    return`<nv-select class="tb-font" data-prop="font" options="${studioFontList().map(f=>f+":"+f).join("|")}" value="${esc(studioFontOf(l))}"></nv-select>
+    <span class="tb-num"><button type="button" data-ctx="fs-" aria-label="Меньше">−</button><input data-ctxnum="fontSize" value="${Math.round(l.fontSize*10)/10}" aria-label="Кегль"><button type="button" data-ctx="fs+" aria-label="Больше">+</button></span>
+    <nv-color-picker value="${esc(l.color)}" data-prop="color"></nv-color-picker>${sep("p2")}
+    ${B("bold",`data-prop-set="weight" data-val="${bold?"400":"700"}"`,"Жирный",bold)}${B("case-upper",`data-prop-set="upper" data-val="${l.upper?"":"1"}"`,"Верхний регистр",l.upper,"p2")}${B(al[l.align]||"align-left",`data-prop-set="align" data-val="${nx}"`,"Выравнивание (клик — следующее)",false,"p2")}
+    ${B("rectangle-horizontal",`data-act-textbg="${l.bgColor?"":"1"}"`,"Плашка под текстом",!!l.bgColor,"p3")}${B("cloud",`data-prop-set="shadow" data-val="${l.shadow?"":"1"}"`,"Тень",l.shadow,"p3")}${B("scaling",'data-act-fit="1"',"Вписать текст в рамку",false,"p3")}${common}`}
+  if(l.type==="image")return`<label class="ib" for="stud-img-replace" data-tip="Заменить картинку">${ic("replace",15)}<span class="p2">Заменить</span></label>${l.src?B("scissors",'data-act="studRemoveBg"',"Удалить фон",false,"","<i class=\"p2\">Удалить фон</i>"):""}${B("circle",`data-prop-set="mask" data-val="${(l.mask||"none")==="circle"?"none":"circle"}"`,"Обрезать в круг",(l.mask||"none")==="circle","p3")}${B("cloud",`data-act-fxshadow="${l.effect&&l.effect.shadow?"":"1"}"`,"Тень",!!(l.effect&&l.effect.shadow),"p3")}${common}`;
+  if(l.type==="shape"||l.type==="path")return`<nv-color-picker value="${esc(studioFillOf(l).color)}" data-prop="fill.color" data-tip="Заливка"></nv-color-picker>${B("square-dashed",`data-prop-set="stroke.enabled" data-val="${studioStrokeOf(l).enabled?"":"1"}"`,"Обводка",studioStrokeOf(l).enabled,"p2")}${B("cloud",`data-act-fxshadow="${l.effect&&l.effect.shadow?"":"1"}"`,"Тень",!!(l.effect&&l.effect.shadow),"p3")}${common}`;
+  if(l.type==="icon")return`<nv-color-picker value="${esc(l.color)}" data-prop="color" data-tip="Цвет"></nv-color-picker>${B("cloud",`data-act-fxshadow="${l.effect&&l.effect.shadow?"":"1"}"`,"Тень",!!(l.effect&&l.effect.shadow),"p3")}${common}`;
   return common;
 }
 function studioCtxAction(k){
@@ -8268,17 +8299,15 @@ editor(){
   return{title:d.name||"Новый дизайн",sub:"",immersive:true,
   topLeft:`<button type="button" class="ed-back" data-go="studio-library" data-tip="Мои дизайны">${ic("chevron-left",16)}<span>Дизайны</span></button>
     <input class="ed-name" data-chg-name value="${esc(d.name)}" aria-label="Название дизайна" spellcheck="false">
-    <nv-select class="ed-fmt" value="${d.format}" options="${Object.entries(STUDIO_FMT).map(([k,v])=>k+":"+v.label.replace(/:/g,"∶")+" · "+v.w+"×"+v.h).join("|")}" data-chg="studFormat"></nv-select>`,
-  actions:`<span id="stud-save" class="stud-save">${esc(studioSaveLabel())}</span><nv-button variant="ghost" size="sm" icon="undo-2" icon-only hint="Отменить (Ctrl+Z)" data-act="studUndo"></nv-button><nv-button variant="ghost" size="sm" icon="redo-2" icon-only hint="Повторить (Ctrl+Shift+Z)" data-act="studRedo"></nv-button><nv-button variant="ghost" size="sm" icon="more-horizontal" icon-only hint="История версий, дублировать, горячие клавиши" data-act="studMore"></nv-button><nv-button variant="secondary" icon="download" icon-end="chevron-down" data-act="studDownload">Скачать</nv-button><nv-button icon="megaphone" hint="Картинки в проект «Рекламы» и запуск" data-act="studToAds">В рекламу</nv-button>`,
+    <button type="button" class="tb-fmt" data-act="studFmtMenu" data-tip="Формат: ${esc(fmt.label)} — сменить">${ic("frame",14)}<span>${fmt.w}×${fmt.h}</span>${ic("chevron-down",12)}</button>
+    <div class="tb-ctx" id="stud-ctx">${start?"":`<span class="tb-div"></span>`}<div class="tb-in" id="stud-ctx-sel">${start?"":studioCtxHtml()}</div></div>`,
+  actions:`${start?"":`<button type="button" class="tb-zoom" data-act="studZoomMenu" data-tip="Масштаб и вид: зоны, линейки, сетка">${ic("zoom-in",14)}<span>${Math.round(studioZoom*100)}%</span>${ic("chevron-down",12)}</button>`}<span id="stud-save" class="stud-save" title="${esc(studioSaveLabel())}">${esc(studioSaveLabel())}</span><nv-button variant="ghost" size="sm" icon="undo-2" icon-only hint="Отменить (Ctrl+Z)" data-act="studUndo"></nv-button><nv-button variant="ghost" size="sm" icon="redo-2" icon-only hint="Повторить (Ctrl+Shift+Z)" data-act="studRedo"></nv-button><nv-button variant="ghost" size="sm" icon="more-horizontal" icon-only hint="История версий, дублировать, горячие клавиши" data-act="studMore"></nv-button><nv-button variant="secondary" icon="download" icon-end="chevron-down" data-act="studDownload">Скачать</nv-button><nv-button icon="megaphone" hint="Картинки в проект «Рекламы» и запуск" data-act="studToAds">В рекламу</nv-button>`,
   body:`<div class="s2">
     <nav class="s2-rail">${STUDIO_TABS.map(([k,i,lb])=>`<button type="button" class="${tabNow===k?"on":""}" data-act="studTab" data-tab="${k}">${ic(i,20)}<span>${lb}</span></button>`).join("")}<button type="button" data-go="studio-library" style="margin-top:auto">${ic("images",18)}<span>Дизайны</span></button><button type="button" data-act="studShortcuts">${ic("keyboard",18)}<span>Клавиши</span></button></nav>
     <aside class="s2-panel" id="s2-panel" ${tabNow?"":"hidden"}>${tabNow?`<button type="button" class="s2-panel-x" data-act="studTab" data-tab="${tabNow}" data-tip="Скрыть панель">${ic("chevrons-left",16)}</button>`+studioPanelHtml(tabNow):""}</aside>
     <section class="s2-main">
-      <div class="s2-ctx" id="stud-ctx">
-        <span id="stud-ctx-sel" style="display:contents">${start?"":studioCtxHtml()}</span>
-      </div>
       <input type="file" id="stud-bg-file" accept="image/*" class="sr"><input type="file" id="stud-img-file" accept="image/*" class="sr"><input type="file" id="stud-img-replace" accept="image/*" class="sr">
-      ${start?studioStartHtml():`<div class="stud-stage-wrap">${studioZoomHtml()}<div class="stud-rbox${S.studio.rulers!==false?" on":""}">${S.studio.rulers!==false?'<canvas class="stud-ruler h" aria-hidden="true"></canvas><canvas class="stud-ruler v" aria-hidden="true"></canvas><span class="stud-ruler-c" aria-hidden="true">px</span>':""}<div id="stud-stage-host">${studioStageHtml()}</div></div>${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Перо: клик — точка, клик+тяни — плавная, клик по первой — замкнуть, Enter — закончить, Esc — отмена.</p>':""}</div>${studioPagesHtml()}`}
+      ${start?studioStartHtml():`<div class="stud-stage-wrap"><div class="stud-rbox${S.studio.rulers!==false?" on":""}">${S.studio.rulers!==false?'<canvas class="stud-ruler h" aria-hidden="true"></canvas><canvas class="stud-ruler v" aria-hidden="true"></canvas><span class="stud-ruler-c" aria-hidden="true">px</span>':""}<div id="stud-stage-host">${studioStageHtml()}</div></div>${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Перо: клик — точка, клик+тяни — плавная, клик по первой — замкнуть, Enter — закончить, Esc — отмена.</p>':""}</div>${studioPagesHtml()}`}
     </section>
     <aside class="s2-props"><div id="stud-props">${studioPropsHtml()}</div></aside>
   </div>`,
@@ -8429,15 +8458,15 @@ editor(){
       lp.addEventListener("drop",e=>{if(!drag)return;const r=e.target.closest(".lr");if(!r)return;e.preventDefault();const w=where(e,r),t=r.dataset.gsel?{g:r.dataset.gsel}:{id:r.dataset.sel},d=studioDesign(),snap=JSON.stringify(d);
         if(studioDropLayers(d,drag,t,w)){studioHistory.undo.push(snap);studioHistory.redo=[];N.refresh();NEON.save()}clr();drag=null});
     }
-    const pp=root.querySelector(".s2");
+    const pp=root.querySelector(".s2"),ctxHost=document.getElementById("stud-ctx"),ppOn=(t,f,c)=>{pp.addEventListener(t,f,c);if(ctxHost)ctxHost.addEventListener(t,f,c)},rootOn=(t,f)=>{root.addEventListener(t,f);if(ctxHost)ctxHost.addEventListener(t,f)};
     studioPaintTplThumbs(root);studioPaintPageThumbs();
     const pgs=root.querySelector("#s2-pages");
     if(pgs){pgs.addEventListener("click",e=>{const g=e.target.closest("[data-pg]");if(g)studioGoPage(+g.dataset.pg)});
       pgs.addEventListener("contextmenu",e=>{const g=e.target.closest("[data-pg]");if(!g)return;e.preventDefault();const i=+g.dataset.pg;
         studioMenu(e.clientX,e.clientY,[["Добавить страницу после","",()=>studioPageOp("add",i)],["Дублировать страницу","",()=>studioPageOp("dup",i)],["Сдвинуть влево","",()=>studioPageOp("left",i)],["Сдвинуть вправо","",()=>studioPageOp("right",i)],"-",["Удалить страницу","",()=>studioPageOp("del",i)]])})}
     if(pp){
-      pp.addEventListener("mousedown",e=>{if(e.target.closest("input,[data-prop-set],[data-act-dup],[data-act-center],[data-act-align],[data-act-dist],[data-act-flip],.stud-color,.stud-stepper,nv-select"))studioBeforeChange()},true);
-      pp.addEventListener("input",e=>{
+      ppOn("mousedown",e=>{if(e.target.closest("input,[data-prop-set],[data-act-dup],[data-act-center],[data-act-align],[data-act-dist],[data-act-flip],.stud-color,.stud-stepper,nv-select"))studioBeforeChange()},true);
+      ppOn("input",e=>{
         const l=studioSelected();if(!l)return;const k=e.target.dataset.prop;if(!k)return;
         let v=e.target.value;if(e.target.type==="range"||e.target.type==="number")v=+v;
         studioSetPath(l,k,v);
@@ -8458,15 +8487,15 @@ editor(){
          A color change never needs to refresh the layers-list label/sub-panel
          anyway (only text content and shape-type do), so skipping it here is
          both safe and necessary. */
-      pp.addEventListener("nv-change",e=>{
+      ppOn("nv-change",e=>{
         const l=studioSelected();if(!l)return;const k=e.target.dataset.prop;if(!k)return;
         studioSetPath(l,k,e.detail.value);
         studioPatchLayerDom(l);
         if(e.target.tagName!=="NV-COLOR-PICKER")studioRenderSidebar(root);else{studioPaintContrast(root);studioSyncProps(e.target)}
         NEON.save();
       });
-      pp.addEventListener("toggle",e=>{const s=e.target.closest&&e.target.closest(".pp-sec");if(!s||s!==e.target)return;if(s.open)studioPPClosed.delete(s.dataset.sec);else studioPPClosed.add(s.dataset.sec)},true);
-      pp.addEventListener("click",e=>{
+      ppOn("toggle",e=>{const s=e.target.closest&&e.target.closest(".pp-sec");if(!s||s!==e.target)return;if(s.open)studioPPClosed.delete(s.dataset.sec);else studioPPClosed.add(s.dataset.sec)},true);
+      ppOn("click",e=>{
         const gr=e.target.closest("[data-act-grename]");if(gr){studioRenameGroup(gr.dataset.actGrename);return}
         const alignBtn=e.target.closest("[data-act-align]"),distBtn=e.target.closest("[data-act-dist]");
         if(alignBtn){studioAlign(alignBtn.dataset.actAlign);NEON.save();return}
@@ -8530,10 +8559,10 @@ editor(){
       try{const{dataUrl}=await fileToDataUrl(f,1600);studioBeforeChange();l.src=dataUrl;delete l.placeholder;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save()}
       catch(err){toast("Не удалось загрузить картинку: "+(err.message||""),{tone:"danger"})}
     });
-    root.addEventListener("click",e=>{
+    rootOn("click",e=>{
       const c=e.target.closest("[data-ctx]");if(c){studioCtxAction(c.dataset.ctx);return}
     });
-    root.addEventListener("change",e=>{
+    rootOn("change",e=>{
       const mp=e.target.closest("[data-mpx]");
       if(mp){const b=studioSelBox();if(!b)return;const F=STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square,k=mp.dataset.mpx,nv=(+mp.value||0)/(k==="x"||k==="w"?F.w:F.h)*100;studioBeforeChange();
         if(k==="x"||k==="y"){const dl=nv-b[k];b.ls.forEach(l=>{if(!l.locked)l[k]+=dl})}
@@ -8989,6 +9018,10 @@ Object.assign(N.acts,{
   studAiImage:studioAiImage,
   studZoom(a,d){const steps=[0.5,0.75,1,1.25,1.5,2];let i=steps.indexOf(studioZoom);if(i<0)i=2;studioZoom=d.z==="fit"?1:steps[Math.max(0,Math.min(steps.length-1,i+(d.z==="+"?1:-1)))];N.refresh()},
   studZones(){S.studio.zones=!S.studio.zones;N.refresh();NEON.save()},
+  studFmtMenu(a){const r=a.getBoundingClientRect(),cur=studioDesign().format;studioMenu(r.left,r.bottom+4,Object.entries(STUDIO_FMT).map(([k,v])=>[(k===cur?"✓ ":"")+v.label,v.w+"×"+v.h,()=>NEON.chg.studFormat(k,{})]))},
+  studZoomMenu(a){const r=a.getBoundingClientRect(),z=v=>()=>{studioZoom=v;N.refresh()},ck=on=>on?"✓ ":"";
+    studioMenu(r.left,r.bottom+4,[["Вписать в экран","100%",z(1)],["Увеличить","+",()=>N.acts.studZoom(null,{z:"+"})],["Уменьшить","−",()=>N.acts.studZoom(null,{z:"-"})],["50%","",z(0.5)],["150%","",z(1.5)],["200%","",z(2)],"-",
+      [ck(S.studio.rulers!==false)+"Линейки","px",()=>N.acts.studRulers()],[ck(S.studio.zones)+"Безопасные зоны","5%",()=>N.acts.studZones()],[(S.studio.grid?"✓ ":"")+"Сетка колонок",S.studio.grid?S.studio.grid+" кол.":"",()=>N.acts.studGrid()]])},
   studRulers(){S.studio.rulers=S.studio.rulers===false;N.refresh();NEON.save()},
   studGrid(){const seq=[0,2,3,4,6,12],i=seq.indexOf(+S.studio.grid||0);S.studio.grid=seq[(i+1)%seq.length];N.refresh();NEON.save()},
   studAiTexts:studioAiTexts,
