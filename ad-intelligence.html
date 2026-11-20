@@ -1668,7 +1668,7 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stud-live{position:fixed;z-index:9999;pointer-events:none;background:#111;color:#fff;font-size:11.5px;padding:3px 7px;border-radius:6px;white-space:nowrap}
 /* ---- Студия v3: раскладка как в Canva ---- */
 .s2{display:grid;grid-template-columns:72px auto minmax(0,1fr) 270px;gap:0;align-items:start;min-height:calc(100vh - 150px);background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.s2-rail{display:flex;flex-direction:column;gap:2px;padding:8px 6px;background:var(--surface-2);border-right:1px solid var(--line);align-self:stretch}
+.s2-rail{display:flex;flex-direction:column;gap:2px;padding:8px 6px;background:var(--surface-2);border-right:1px solid var(--line);align-self:stretch;overflow-y:auto;scrollbar-width:none;min-height:0}
 .s2-rail button{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;border-radius:10px;padding:8px 2px;font-size:10.5px;color:var(--ink-2);cursor:pointer}
 .s2-rail button:hover{background:var(--surface-3);color:var(--ink)}
 .s2-rail button.on{background:var(--svc-soft);color:var(--svc-ink);font-weight:700}
@@ -1887,6 +1887,16 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stud-gl.a i{display:block;width:100%;height:1px;background:#00b3ff}
 .stud-gl:hover{filter:drop-shadow(0 0 1px #00b3ff)}
 .stud-ruler{pointer-events:auto!important}
+.stud-layer.cropping{outline:2px dashed #ff2d78;outline-offset:2px;cursor:grab}
+.stud-layer.cropping .stud-h{display:none}
+.stud-layer.cropping::after{content:"Кадр: тяните · колесо — масштаб · Enter";position:absolute;left:50%;top:100%;transform:translate(-50%,8px);font:500 10.5px var(--font-mono);color:#fff;background:#ff2d78;border-radius:5px;padding:2px 7px;white-space:nowrap;pointer-events:none}
+.hs{display:flex;flex-direction:column;gap:1px}
+.hs-row{display:flex;align-items:center;gap:8px;width:100%;min-height:30px;padding:0 8px;border:0;border-radius:8px;background:none;color:var(--ink-2);font-size:12.5px;text-align:left;cursor:pointer}
+.hs-row span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hs-row:hover{background:var(--l2,var(--surface-2));color:var(--ink)}
+.hs-row nv-icon{color:var(--ink-3)}
+.hs-row.now{background:var(--svc-soft);color:var(--svc-ink);font-weight:500;cursor:default}.hs-row.now nv-icon{color:var(--svc-ink)}
+.hs-row.redo{opacity:.55}.hs-row em{font:normal 10px var(--font-mono);color:var(--ink-3)}
 .stud-measure{position:absolute;inset:0;z-index:9;pointer-events:none}
 .stud-measure i{position:absolute;display:block}
 .stud-measure .ma{outline:1px solid #ff2d78}.stud-measure .mb{outline:1px dashed #ff2d78}
@@ -7693,7 +7703,7 @@ let studioMultiSel=[];
 let studioGroupEnter=null;
 const studioHistory={undo:[],redo:[]};
 function studioResetEphemeral(){studioGroupEnter=null;studioTool="select";studioPenDraft=null;studioEditingPathId=null;studioEditingPointIndex=null;studioMultiSel=[];studioHistory.undo=[];studioHistory.redo=[]}
-function studioBeforeChange(){studioHistory.undo.push(JSON.stringify(studioDesign()));if(studioHistory.undo.length>60)studioHistory.undo.shift();studioHistory.redo=[]}
+function studioBeforeChange(){studioHistory.undo.push(JSON.stringify(studioDesign()));if(studioHistory.undo.length>60)studioHistory.undo.shift();studioHistory.redo=[];if(S.studio.tab==="history"&&typeof studioHistoryRefresh==="function")studioHistoryRefresh()}
 function studioUndo(){
   if(!studioHistory.undo.length)return;
   studioHistory.redo.push(JSON.stringify(studioDesign()));
@@ -8296,7 +8306,7 @@ function studioBrandHtml(){
   ${b.logo?`<div class="row" style="gap:6px"><nv-button size="sm" variant="secondary" icon="image" data-act="studLogoPlace">Логотип на холст</nv-button><nv-button size="sm" variant="ghost" icon="x" icon-only hint="Убрать логотип" data-act="studLogoClear"></nv-button></div>`:`<label class="nv-btn v-secondary s-sm" for="stud-logo-file" style="width:100%;justify-content:center">${ic("upload",14)}Логотип бренда</label>`}`;
 }
 /* ===================== Студия v3: панели, контекст, меню ===================== */
-const STUDIO_TABS=[["templates","layout-template","Шаблоны"],["elements","shapes","Элементы"],["text","type","Текст"],["uploads","upload","Загрузки"],["photos","image","Фото"],["brand","palette","Бренд"],["ai","sparkles","ИИ"],["layers","layers","Слои"]];
+const STUDIO_TABS=[["templates","layout-template","Шаблоны"],["elements","shapes","Элементы"],["text","type","Текст"],["uploads","upload","Загрузки"],["photos","image","Фото"],["brand","palette","Бренд"],["ai","sparkles","ИИ"],["layers","layers","Слои"],["history","history","История"]];
 const STUDIO_TEXT_PRESETS=[
   {k:"headline",label:"Добавить заголовок",style:"font-size:21px;font-weight:800",l:{text:"Заголовок",fontSize:9,weight:"800",x:8,y:12,w:84,h:16,role:"headline"}},
   {k:"subheadline",label:"Добавить подзаголовок",style:"font-size:16px;font-weight:700",l:{text:"Подзаголовок",fontSize:5,weight:"700",x:8,y:32,w:84,h:10,role:"subheadline"}},
@@ -8350,6 +8360,7 @@ function studioPanelHtml(tab){
     <button type="button" data-act="studAiTexts"><b>${ic("type",14)} Тексты и A/B</b><div class="muted" style="font-size:12px">Заголовки, кнопки, плашки — несколько вариантов</div></button>
     <button type="button" data-act="studAiImage"><b>${ic("image-plus",14)} Сгенерировать изображение</b><div class="muted" style="font-size:12px">По описанию или по примеру</div></button>
     <button type="button" data-act="studAiCritique"><b>${ic("scan-search",14)} Разбор креатива</b><div class="muted" style="font-size:12px">Оценка, ошибки, риски модерации</div></button></div>`;
+  if(tab==="history")return`<h3>История</h3><div id="stud-history">${studioHistoryHtml()}</div><p class="pp-hint">Клик по шагу — вернуть дизайн к этому моменту. Отменённые шаги можно вернуть (Ctrl+Shift+Z), пока не сделано новое изменение.</p>`;
   if(tab==="layers")return`<h3>Слои</h3><div id="stud-layers">${studioLayersListHtml()}</div><p class="pp-hint">Перетаскивайте слои мышью — в том числе в группу и из неё. Shift+клик — несколько, Ctrl+G — сгруппировать, двойной клик по группе — переименовать.</p>`;
   return"";
 }
@@ -8439,7 +8450,9 @@ async function studioVersionsDlg(){
       catch(err){toast(err.message,{tone:"danger"})}})}});
 }
 function studioShortcuts(){
-  const K=[["Ctrl+Z / Ctrl+Shift+Z","Отменить / повторить"],["Ctrl+S","Сохранить"],["Ctrl+C / Ctrl+V","Копировать / вставить"],["Ctrl+D","Дублировать"],["Ctrl+G / Ctrl+Shift+G","Сгруппировать / разгруппировать"],["Ctrl+A","Выделить всё"],["Delete","Удалить"],["Стрелки (Shift — ×10)","Сдвинуть"],["Двойной клик по тексту","Править текст"],["Shift + тянуть уголок","Пропорционально"],["Shift + поворот","Шаг 15°"],["Alt + тянуть","Без прилипания"],["Правый клик","Меню действий"],["?","Эта справка"]];
+  const K=[["Ctrl+Z / Ctrl+Shift+Z","Отменить / повторить"],["Ctrl+S","Сохранить"],["Ctrl+C / Ctrl+X / Ctrl+V","Копировать / вырезать / вставить (в т.ч. в другой дизайн, скриншоты, текст, SVG)"],["Ctrl+Alt+C / Ctrl+Alt+V","Копировать / вставить стиль"],["Ctrl+D","Дублировать"],["Alt + тянуть","Копия при перетаскивании"],["Ctrl + тянуть","Без прилипания"],["Alt (наведение)","Расстояния до соседей и краёв"],
+    ["Ctrl+G / Ctrl+Shift+G","Сгруппировать / разгруппировать"],["Двойной клик","Внутрь группы · править текст · кадрировать фото"],["Ctrl + клик","Элемент внутри группы"],["Esc","На уровень выше / выйти из режима"],["Ctrl+A","Выделить всё"],["Delete","Удалить"],["Стрелки / Shift + стрелки","Сдвиг на 1 / 10 px"],
+    ["Ctrl + / Ctrl − / Ctrl 0","Масштаб / вписать"],["Ctrl + колесо, щипок","Масштаб к курсору"],["Пробел + тянуть","Двигать холст"],["Shift + тянуть уголок","Пропорционально"],["Shift + поворот","Шаг 15°"],["Линейка → тянуть","Направляющая"],["Правый клик","Меню действий"],["?","Эта справка"]];
   overlay("modal",{title:"Горячие клавиши",service:"studio",body:`<div class="s2-kbd">${K.map(([k,v])=>`<span>${k.split(" / ").map(x=>`<kbd>${esc(x)}</kbd>`).join(" / ")}</span><span>${esc(v)}</span>`).join("")}</div>`,actions:[{label:"Понятно"}]});
 }
 async function studioRemoveBg(){
@@ -8537,7 +8550,7 @@ editor(){
     <aside class="s2-props"><div id="stud-props">${studioPropsHtml()}</div></aside>
   </div>`,
   after(root){
-    studioLayoutStage(root);studioPaintContrast(root);studioPaintGroupBox();
+    studioLayoutStage(root);studioPaintContrast(root);studioPaintGroupBox();if(studioCropId)studioPaintCrop();
     const stageHost=root.querySelector("#stud-stage-host");
     if(stageHost&&!this._ro){const ro=new ResizeObserver(()=>{studioLayoutStage(root);studioDrawRulersSoon()});ro.observe(stageHost)}
     if(stageHost){stageHost.addEventListener("scroll",studioDrawRulersSoon,{passive:true});
@@ -8657,6 +8670,7 @@ editor(){
         const d=studioDesign(),l=d.layers.find(x=>x.id===layerEl.dataset.id);
         const U=l&&studioUnitGroup(d,l,studioGroupEnter);
         if(U){studioGroupEnter=U;const V=studioUnitGroup(d,l,U);if(V){studioMultiSel=studioDeep(d,V).map(x=>x.id)}else studioMultiSel=[];d.selectedId=l.id;N.refresh();toast("Внутри «"+studioGroupName(d,U)+"»: клик — элемент, Esc — на уровень выше");return}
+        if(l&&l.type==="image"&&l.src&&!l.locked){studioCropOn(l);return}
         if(l&&l.type==="path"){studioEditingPathId=l.id;studioEditingPointIndex=null;N.refresh()}
         if(l&&l.type==="text"&&!l.locked){if(+l.curve){toast("Изогнутый текст правьте в панели справа");return}studioInlineEdit(layerEl,l)}
       });
@@ -9164,6 +9178,67 @@ window.studioImportSvg=function(text,cx,cy,opts){
 };
 /* Иконку → в редактируемые кривые */
 function studioIconToPaths(l){const svg=iconSvg(l.icon||"star").replace("<svg ",`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" stroke-width="2" `);studioImportSvg(svg,null,null,{box:{x:l.x,y:l.y,w:l.w,h:l.h},replace:l,color:l.color,name:"Иконка"})}
+/* ---------- История действий ----------
+   Стек отмены хранит снимки дизайна; подпись шага считаем разницей соседних снимков. */
+function studioDiffLabel(a,b){
+  try{a=JSON.parse(a);b=typeof b==="string"?JSON.parse(b):b}catch(e){return["Изменение","pencil"]}
+  if(a.format!==b.format)return["Формат: "+((STUDIO_FMT[b.format]||{}).label||b.format),"frame"];
+  if(JSON.stringify(a.bg)!==JSON.stringify(b.bg))return["Фон","paint-bucket"];
+  if((a.pages||[]).length!==(b.pages||[]).length)return["Страницы","files"];
+  if(a.name!==b.name)return["Название","pencil"];
+  const A=Object.fromEntries((a.layers||[]).map(l=>[l.id,l])),B=Object.fromEntries((b.layers||[]).map(l=>[l.id,l]));
+  const add=(b.layers||[]).filter(l=>!A[l.id]),del=(a.layers||[]).filter(l=>!B[l.id]),nm=l=>studioLayerLabel(l);
+  if(add.length&&del.length&&add.length===del.length)return["Заменено: "+nm(add[0]),"replace"];
+  if(add.length)return[(add.length>1?"Добавлено "+add.length+": ":"Добавлен: ")+nm(add[0]),"plus"];
+  if(del.length)return[(del.length>1?"Удалено "+del.length+": ":"Удалено: ")+nm(del[0]),"trash-2"];
+  if(JSON.stringify(a.groupParents||{})!==JSON.stringify(b.groupParents||{})||(a.layers||[]).some(l=>B[l.id]&&(B[l.id].group||null)!==(l.group||null)))return["Группировка","group"];
+  if((a.layers||[]).map(l=>l.id).join()!==(b.layers||[]).map(l=>l.id).join())return["Порядок слоёв","layers"];
+  if(JSON.stringify(a.guides||[])!==JSON.stringify(b.guides||[]))return["Направляющие","crosshair"];
+  const ch=(b.layers||[]).filter(l=>JSON.stringify(l)!==JSON.stringify(A[l.id]));if(!ch.length)return["Без изменений","circle"];
+  const keys=new Set();ch.forEach(l=>Object.keys({...l,...A[l.id]}).forEach(k=>{if(JSON.stringify(l[k])!==JSON.stringify(A[l.id][k]))keys.add(k)}));
+  const K=[...keys],what=K.every(k=>["x","y"].includes(k))?["Перемещение","move"]:K.some(k=>["w","h"].includes(k))?["Размер","scaling"]:K.includes("rotation")?["Поворот","rotate-cw"]:K.includes("text")?["Текст","type"]:K.some(k=>/color|fill|grad/.test(k))?["Цвет","palette"]:K.some(k=>/font|weight|letter|line|upper|align/.test(k))?["Шрифт","type"]:K.includes("points")?["Узлы кривой","spline"]:K.some(k=>/shadow|effect|neon|outline/.test(k))?["Эффекты","sparkles"]:K.includes("opacity")?["Прозрачность","droplet"]:K.some(k=>/hidden|locked/.test(k))?["Видимость/замок","eye"]:K.some(k=>/fx|fy|zoom|mask|filter/.test(k))?["Фото","image"]:["Свойства","sliders-horizontal"];
+  return[what[0]+": "+(ch.length>1?ch.length+" слоя":nm(ch[0])),what[1]];
+}
+function studioHistoryHtml(){
+  const U=studioHistory.undo,R=studioHistory.redo,cur=JSON.stringify(studioDesign());
+  if(!U.length&&!R.length)return'<p class="pp-hint" style="padding:6px 2px">Пока пусто — шаги появятся, когда вы начнёте менять дизайн.</p>';
+  const rows=[];
+  /* сверху — самое новое; пустые шаги (снимок без изменений) не показываем */
+  for(let i=0;i<R.length;i++){const prev=i===R.length-1?cur:R[i+1];const[t,icn]=studioDiffLabel(prev,R[i]);if(t==="Без изменений")continue;rows.push(`<button type="button" class="hs-row redo" data-hredo="${R.length-i}">${ic(icn,14)}<span>${esc(t)}</span><em>отменено</em></button>`)}
+  rows.push(`<div class="hs-row now">${ic("circle-dot",14)}<span>Сейчас</span></div>`);
+  for(let i=U.length-1;i>=0;i--){const next=i===U.length-1?cur:U[i+1];const[t,icn]=studioDiffLabel(U[i],next);if(t==="Без изменений")continue;rows.push(`<button type="button" class="hs-row" data-hundo="${U.length-i}">${ic(icn,14)}<span>${esc(t)}</span></button>`)}
+  return`<div class="hs">${rows.join("")}</div>`;
+}
+/* Перейти на n шагов назад/вперёд одним действием (без промежуточных перерисовок). */
+function studioHistoryJump(n,back){
+  const U=studioHistory.undo,R=studioHistory.redo;let cur=JSON.stringify(studioDesign());
+  for(let i=0;i<n;i++){if(back){if(!U.length)break;R.push(cur);cur=U.pop()}else{if(!R.length)break;U.push(cur);cur=R.pop()}}
+  S.studio.editor=JSON.parse(cur);studioEditingPathId=null;studioEditingPointIndex=null;studioMultiSel=[];studioGroupEnter=null;N.refresh();NEON.save();
+}
+let studioHistT=0;
+function studioHistoryRefresh(){clearTimeout(studioHistT);studioHistT=setTimeout(()=>{const h=document.getElementById("stud-history");if(h)h.innerHTML=studioHistoryHtml()},250)}
+document.addEventListener("click",e=>{const u=e.target.closest&&e.target.closest("[data-hundo],[data-hredo]");if(!u||!studioInEditor())return;studioHistoryJump(+(u.dataset.hundo||u.dataset.hredo),!!u.dataset.hundo)});
+/* ---------- Кадрирование фото на холсте ----------
+   Двойной клик по фото — режим кадра: тянуть мышью — сдвинуть картинку в рамке, колесо/щипок — масштаб,
+   Enter/Esc или клик мимо — готово. */
+let studioCropId=null,studioCropDrag=null;
+function studioCropOn(l){studioCropId=l.id;studioPaintCrop();toast("Кадрирование: тяните фото, колесо — масштаб, Enter — готово")}
+function studioCropOff(){if(!studioCropId)return;studioCropId=null;studioPaintCrop();NEON.save()}
+function studioPaintCrop(){document.querySelectorAll(".stud-layer.cropping").forEach(x=>x.classList.remove("cropping"));if(studioCropId){const el=document.querySelector(`.stud-layer[data-id="${studioCropId}"]`);if(el)el.classList.add("cropping");else studioCropId=null}}
+document.addEventListener("mousedown",e=>{
+  if(!studioCropId||e.button!==0)return;const el=e.target.closest&&e.target.closest(".stud-layer");
+  if(!el||el.dataset.id!==studioCropId){if(!(e.target.closest&&e.target.closest(".s2-props,header")))studioCropOff();return}
+  const l=studioDesign().layers.find(x=>x.id===studioCropId);if(!l)return;
+  e.preventDefault();e.stopPropagation();studioBeforeChange();const r=el.getBoundingClientRect();
+  studioCropDrag={sx:e.clientX,sy:e.clientY,fx:l.fx==null?50:l.fx,fy:l.fy==null?50:l.fy,w:r.width,h:r.height,l};
+},true);
+document.addEventListener("mousemove",e=>{const c=studioCropDrag;if(!c)return;const l=c.l,z=l.zoom||1;
+  l.fx=Math.max(0,Math.min(100,Math.round((c.fx-(e.clientX-c.sx)/c.w*100/z)*10)/10));l.fy=Math.max(0,Math.min(100,Math.round((c.fy-(e.clientY-c.sy)/c.h*100/z)*10)/10));
+  studioPatchLayerDom(l);studioPaintCrop();studioSyncPropsSoon()});
+document.addEventListener("mouseup",()=>{if(studioCropDrag){studioCropDrag=null;NEON.save()}});
+document.addEventListener("wheel",e=>{if(!studioCropId)return;const el=e.target.closest&&e.target.closest(".stud-layer.cropping");if(!el)return;e.preventDefault();e.stopPropagation();
+  const l=studioDesign().layers.find(x=>x.id===studioCropId);if(!l)return;l.zoom=Math.max(1,Math.min(4,Math.round((l.zoom||1)*Math.exp(-(e.deltaMode===1?e.deltaY*33:e.deltaY)*0.002)*100)/100));studioPatchLayerDom(l);studioPaintCrop();studioSyncPropsSoon();clearTimeout(studioCropDrag&&0);NEON.save()},{passive:false,capture:true});
+document.addEventListener("keydown",e=>{if(studioCropId&&(e.key==="Enter"||e.key==="Escape")){e.preventDefault();e.stopPropagation();studioCropOff()}},true);
 /* ---------- Alt — измерение расстояний (как в Figma) ----------
    Выделен элемент + зажат Alt: наведение на другой элемент — зазоры между ними, на пустое место —
    отступы до краёв холста. Линии и числа в пикселях макета. */
@@ -9446,7 +9521,7 @@ document.addEventListener("mousemove",e=>{
   const dxPct=(e.clientX-studioDrag.startX)/studioDrag.rect.width*100,dyPct=(e.clientY-studioDrag.startY)/studioDrag.rect.height*100;
   if(studioDrag.mode==="move"){
     let nx=Math.max(-l.w+3,Math.min(97,studioDrag.startXp+dxPct)),ny=Math.max(-l.h+3,Math.min(97,studioDrag.startYp+dyPct));
-    const g=e.altKey?{dx:0,dy:0,xs:[],ys:[]}:studioSnap(d,l,nx,ny);
+    const g=e.ctrlKey||e.metaKey?{dx:0,dy:0,xs:[],ys:[]}:studioSnap(d,l,nx,ny);
     l.x=nx+g.dx;l.y=ny+g.dy;studioShowGuides(g.xs,g.ys);
   }else{
     const c=studioDrag.corner||"se",sx=studioDrag.startXp,sy=studioDrag.startYp,sw=studioDrag.startW,sh=studioDrag.startH;
