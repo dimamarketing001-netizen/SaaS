@@ -8399,7 +8399,7 @@ editor(){
         if(e.target.type==="range")e.target.style.setProperty("--rng-p",rngPct(v,e.target.min,e.target.max));
         const out=e.target.closest(".rng");if(out)out.querySelector("output").textContent=studioOutFmt(k,v);
         if(k==="bgRadius"||k==="lineHeight"||k==="letterSpacing"||k==="curve")studioLayoutStage(document);
-        studioPatchLayerDom(l);NEON.save();
+        studioPatchLayerDom(l);studioSyncProps(e.target);NEON.save();
       });
       /* nv-textarea/nv-color-picker (FieldEl-like) stop their native events from
          bubbling and emit nv-change instead — data-prop lives on the custom
@@ -8417,7 +8417,7 @@ editor(){
         const l=studioSelected();if(!l)return;const k=e.target.dataset.prop;if(!k)return;
         studioSetPath(l,k,e.detail.value);
         studioPatchLayerDom(l);
-        if(e.target.tagName!=="NV-COLOR-PICKER")studioRenderSidebar(root);else studioPaintContrast(root);
+        if(e.target.tagName!=="NV-COLOR-PICKER")studioRenderSidebar(root);else{studioPaintContrast(root);studioSyncProps(e.target)}
         NEON.save();
       });
       pp.addEventListener("toggle",e=>{const s=e.target.closest&&e.target.closest(".pp-sec");if(!s||s!==e.target)return;if(s.open)studioPPClosed.delete(s.dataset.sec);else studioPPClosed.add(s.dataset.sec)},true);
@@ -8493,7 +8493,7 @@ editor(){
           if(l.lockRatio&&(k==="w"||k==="h")&&old){const kk=k==="w"?"h":"w";l[kk]=l[kk]*l[k]/old}}
         studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
       const n=e.target.closest("[data-ctxnum]");
-      if(n){const l=studioSelected();if(l){studioBeforeChange();l[n.dataset.ctxnum]=Math.max(1,+n.value||l[n.dataset.ctxnum]);studioPatchLayerDom(l);NEON.save()}return}
+      if(n){const l=studioSelected();if(l){studioBeforeChange();l[n.dataset.ctxnum]=Math.max(1,+n.value||l[n.dataset.ctxnum]);studioPatchLayerDom(l);studioSyncProps(n);NEON.save()}return}
       if(e.target.matches("[data-chg-name]")){studioDesign().name=e.target.value.trim()||"Новый дизайн";NEON.save();return}
     });
     root.addEventListener("input",e=>{
@@ -8700,7 +8700,7 @@ document.addEventListener("mousemove",e=>{
   if(studioDrag.mode==="rotate"){
     let a=Math.atan2(e.clientY-studioDrag.cy,e.clientX-studioDrag.cx)*180/Math.PI+90;a=(a+360)%360;if(e.shiftKey)a=Math.round(a/15)*15%360;l.rotation=Math.round(a);
     const el=document.querySelector(`.stud-layer[data-id="${l.id}"]`);if(el)el.style.transform=studioLayerTransform(l);
-    studioLive(e,l.rotation+"°");return;
+    studioLive(e,l.rotation+"°");studioSyncPropsSoon();return;
   }
   const dxPct=(e.clientX-studioDrag.startX)/studioDrag.rect.width*100,dyPct=(e.clientY-studioDrag.startY)/studioDrag.rect.height*100;
   if(studioDrag.mode==="move"){
@@ -8717,6 +8717,7 @@ document.addEventListener("mousemove",e=>{
   }
   const el=document.querySelector(`.stud-layer[data-id="${l.id}"]`);
   if(el){el.style.left=l.x+"%";el.style.top=l.y+"%";el.style.width=l.w+"%";el.style.height=l.h+"%";if(l.type==="text")studioLayoutStage(document)}
+  studioSyncPropsSoon();
 });
 function studioLive(e,txt){let t=document.querySelector(".stud-live");if(!t){t=document.createElement("div");t.className="stud-live";document.body.append(t)}t.textContent=txt;t.style.left=(e.clientX+14)+"px";t.style.top=(e.clientY+14)+"px"}
 document.addEventListener("mouseup",()=>{
@@ -8733,8 +8734,32 @@ document.addEventListener("mouseup",()=>{
     return;
   }
   if(dr.mode==="rotate"){const st=document.querySelector(".stud-stage");if(st)studioRenderSidebar(document)}
+  else if(dr.mode==="point"){const st=document.querySelector(".stud-stage");if(st)studioRenderSidebar(document)}
+  else studioSyncProps(null,true);
   NEON.save();
 });
+/* Живая синхронизация: значения в правой панели и в строке инструментов над холстом
+   подтягиваются из слоя без перерисовки (перерисовка закрыла бы открытые списки и
+   сбила бы фокус). Поле, которое сейчас правят, не трогаем. */
+function studioGetPath(o,p){return p.split(".").reduce((a,k)=>a==null?a:a[k],o)}
+function studioSyncProps(except,force){
+  const l=studioSelected();if(!l||studioMultiSel.length>1)return;
+  const act=document.activeElement,skip=el=>el===except||(except&&except.contains&&except.contains(el))||(!force&&act&&act!==document.body&&(el===act||el.contains(act)));
+  const F=STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square;
+  document.querySelectorAll(".s2 [data-pxprop]").forEach(el=>{if(skip(el))return;const k=el.dataset.pxprop,v=k==="rotation"?Math.round(l.rotation||0):Math.round(l[k]/100*(+el.dataset.base));if(String(el.value)!==String(v))el.value=v});
+  document.querySelectorAll(".s2 [data-ctxnum]").forEach(el=>{if(skip(el))return;const v=Math.round((+l[el.dataset.ctxnum]||0)*10)/10;if(String(el.value)!==String(v))el.value=v});
+  document.querySelectorAll(".s2 [data-prop]").forEach(el=>{
+    if(skip(el))return;const k=el.dataset.prop;
+    let v=k==="opacity"?studioOpacityOf(l):k==="font"?studioFontOf(l):k.startsWith("fill.")?studioFillOf(l)[k.slice(5)]:k.startsWith("stroke.")?studioStrokeOf(l)[k.slice(7)]:studioGetPath(l,k);
+    if(v==null||typeof v==="object")return;
+    if(el.tagName==="INPUT"){
+      if(el.type==="range"||el.type==="number"){if(+el.value===+v)return;el.value=v;if(el.type==="range"){el.style.setProperty("--rng-p",rngPct(v,el.min,el.max));const o=el.closest(".rng");if(o&&o.querySelector("output"))o.querySelector("output").textContent=studioOutFmt(k,+v)}}
+      else if(el.value!==String(v))el.value=v;
+    }else if(el.tagName.startsWith("NV-")&&el.getAttribute("value")!==String(v))el.setAttribute("value",String(v));
+  });
+}
+let studioSyncRaf=0;
+function studioSyncPropsSoon(){if(studioSyncRaf)return;studioSyncRaf=requestAnimationFrame(()=>{studioSyncRaf=0;studioSyncProps(null,true)})}
 function studioRenameGroup(g){
   const d=studioDesign();
   overlay("modal",{title:"Название группы",service:"studio",body:`<nv-input label="Название" data-gnm value="${esc(studioGroupName(d,g))}"></nv-input>`,
@@ -8794,7 +8819,7 @@ document.addEventListener("keydown",e=>{
     if(e.key.startsWith("Arrow")&&sel.length){
       e.preventDefault();studioBeforeChange();const st=e.shiftKey?5:0.5;
       sel.forEach(x=>{if(e.key==="ArrowLeft")x.x-=st;if(e.key==="ArrowRight")x.x+=st;if(e.key==="ArrowUp")x.y-=st;if(e.key==="ArrowDown")x.y+=st;studioPatchLayerDom(x)});
-      NEON.save();return;
+      studioSyncProps(null,true);NEON.save();return;
     }
     if((e.key==="Delete"||e.key==="Backspace")&&sel.length&&!studioEditingPathId){
       e.preventDefault();studioBeforeChange();d.layers=d.layers.filter(x=>!sel.includes(x));d.selectedId=null;studioMultiSel=[];N.refresh();NEON.save();return;
