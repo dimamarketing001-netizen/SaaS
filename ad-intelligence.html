@@ -1838,6 +1838,31 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 @container (max-width:480px){.tb-in .p2{display:none!important}}
 .tb-zoom{height:34px;display:inline-flex;align-items:center;gap:4px;padding:0 10px;border:0;border-radius:999px;background:var(--l2,var(--surface-2));color:var(--ink);font:12px var(--font-mono);cursor:pointer;flex:none}
 .tb-zoom:hover{color:var(--svc-ink)}
+.tb-view{display:inline-flex;gap:2px;padding:2px;border-radius:999px;background:var(--l2,var(--surface-2));flex:none}
+.tb-vb{position:relative;width:30px;height:30px;border:0;border-radius:999px;background:none;color:var(--ink-2);display:grid;place-items:center;cursor:pointer;padding:0}
+.tb-vb:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.tb-vb.on{background:var(--surface);color:var(--svc-ink);box-shadow:var(--shadow-1)}
+.tb-vb b{position:absolute;right:1px;bottom:0;font:600 8.5px var(--font-mono);color:var(--svc-ink)}
+.stud-gls{position:absolute;inset:0;z-index:7;pointer-events:none}
+.stud-gl{position:absolute;pointer-events:auto}
+.stud-gl.v{top:0;bottom:0;width:9px;margin-left:-4px;cursor:col-resize;background:linear-gradient(to right,transparent 4px,#00b3ff 4px,#00b3ff 5px,transparent 5px)}
+.stud-gl.h{left:0;right:0;height:9px;margin-top:-4px;cursor:row-resize;background:linear-gradient(to bottom,transparent 4px,#00b3ff 4px,#00b3ff 5px,transparent 5px)}
+.stud-gl.a{width:400%;height:9px;cursor:move;display:flex;align-items:center}
+.stud-gl.a i{display:block;width:100%;height:1px;background:#00b3ff}
+.stud-gl:hover{filter:drop-shadow(0 0 1px #00b3ff)}
+.stud-ruler{pointer-events:auto!important}
+.stud-ruler.h{cursor:row-resize}.stud-ruler.v{cursor:col-resize}
+.stud-ruler-c{cursor:copy}
+body.gl-h,body.gl-h *{cursor:row-resize!important}body.gl-v,body.gl-v *{cursor:col-resize!important}body.gl-a,body.gl-a *{cursor:move!important}
+.gl-pop{display:flex;flex-direction:column;gap:10px;padding:4px}
+.gl-head{display:flex;align-items:center;gap:6px}.gl-head b{font-weight:500;font-size:13px}.gl-head .pp-sp{flex:1}
+.gl-tg{height:26px;display:inline-flex;align-items:center;gap:4px;padding:0 9px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);color:var(--ink-3);font-size:11.5px;cursor:pointer}
+.gl-tg.on{background:var(--svc-soft);border-color:color-mix(in srgb,var(--svc-ink) 40%,transparent);color:var(--svc-ink)}
+.gl-list{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto}
+.gl-row{display:flex;align-items:center;gap:6px}
+.gl-ic{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:color-mix(in srgb,#00b3ff 14%,transparent);color:#0090d0;flex:none}
+.gl-in{flex:1;min-width:0;display:flex;gap:4px}.gl-in .pp-in{flex:1;min-width:0;height:28px}
+.gl-add{display:flex;gap:6px}.gl-add .pp-btn{flex:1;padding:0 6px;font-size:11.5px}
 .shell.immersive .crumbs{flex:1 1 auto!important}
 .shell.immersive .ed-name{width:clamp(110px,11vw,190px)}
 .shell.immersive .ed-fmt{min-width:0;width:clamp(120px,12vw,200px)}
@@ -2352,6 +2377,7 @@ function openPop(anchor,html,o){o=o||{};closePop();const p=document.createElemen
   const close=back=>{p.remove();window.removeEventListener("keydown",key,true);document.removeEventListener("mousedown",down,true);window.removeEventListener("scroll",scr,true);window.removeEventListener("resize",rez);popClose=null;o.onClose&&o.onClose();if(back){const f=anchor.querySelector("button");f&&f.focus()}};
   window.addEventListener("keydown",key,true);document.addEventListener("mousedown",down,true);window.addEventListener("scroll",scr,true);window.addEventListener("resize",rez);popClose=close;
   o.mount&&o.mount(p,close,place);place();return{close,place,el:p}}
+window.nvOpenPop=openPop;window.nvClosePop=()=>{if(popClose)popClose()};
 
 /* ---------- Новые компоненты: формы ---------- */
 const rangeOf=v=>{if(!v||v==="all")return null;if(v.includes("..")){const[a,b]=v.split("..");return[+new Date(a+"T00:00:00"),+new Date(b+"T23:59:59")]}return[Date.now()-(+v)*864e5,Date.now()]};
@@ -2983,7 +3009,7 @@ let saveT;
    сохраняется как есть, чтобы перенос не потерял их. Переполнение — предупреждаем. */
 let saveWarned=false;
 NEON.save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{
-  const st=S.studio,snap=st?{...S,studio:{lastId:st.lastId,migrated:st.migrated,brief:st.brief,q:st.q,fmtF:st.fmtF,tplFmt:st.tplFmt,tab:st.tab,brand:st.brand,zones:st.zones,grid:st.grid,rulers:st.rulers,
+  const st=S.studio,snap=st?{...S,studio:{lastId:st.lastId,migrated:st.migrated,brief:st.brief,q:st.q,fmtF:st.fmtF,tplFmt:st.tplFmt,tab:st.tab,brand:st.brand,zones:st.zones,grid:st.grid,rulers:st.rulers,guidesOff:st.guidesOff,guideSnap:st.guideSnap,
     ...(!st.migrated&&saved.studio&&saved.studio.designs?{designs:saved.studio.designs,editor:saved.studio.editor}:{})}}:S;
   try{localStorage.setItem(KEY,JSON.stringify(snap))}
   catch(e){if(!saveWarned){saveWarned=true;toast("Браузер не смог сохранить настройки кабинета (переполнено хранилище)",{tone:"warning"})}}
@@ -7156,7 +7182,7 @@ function studioEditOverlayHtml(){
 }
 function studioStageHtml(){
   const d=studioDesign(),fmt=STUDIO_FMT[d.format],bgStyle=d.bg.type==="image"&&d.bg.image?`background-image:url('${esc(d.bg.image)}')`:`background:${esc(d.bg.color||"#fff")}`;
-  const z=studioZoom;return`<div class="stud-stage${studioTool==="pen"?" pen-on":studioTool==="eyedrop"?" eyedrop-on":""}" style="aspect-ratio:${fmt.w}/${fmt.h};width:${z===1?`min(100cqw - 40px,(100cqh - 40px)*${fmt.w}/${fmt.h})`:`calc(min(100cqw - 40px,(100cqh - 40px)*${fmt.w}/${fmt.h})*${z})`};max-width:none;${bgStyle}">${d.layers.map(l=>studioLayerHtml(l,l.id===d.selectedId,studioMultiSel.includes(l.id))).join("")}${studioPenPreviewHtml()}${studioEditOverlayHtml()}${studioZonesHtml(d)}</div>`;
+  const z=studioZoom;return`<div class="stud-stage${studioTool==="pen"?" pen-on":studioTool==="eyedrop"?" eyedrop-on":""}" style="aspect-ratio:${fmt.w}/${fmt.h};width:${z===1?`min(100cqw - 40px,(100cqh - 40px)*${fmt.w}/${fmt.h})`:`calc(min(100cqw - 40px,(100cqh - 40px)*${fmt.w}/${fmt.h})*${z})`};max-width:none;${bgStyle}">${d.layers.map(l=>studioLayerHtml(l,l.id===d.selectedId,studioMultiSel.includes(l.id))).join("")}${studioPenPreviewHtml()}${studioEditOverlayHtml()}${studioZonesHtml(d)}${studioGuidesHtml(d)}</div>`;
 }
 /* Безопасные зоны: поля 5% (текст ближе к краю режут превью площадок) и, для
    вертикальных форматов, полосы под интерфейс сторис (шапка ~14%, низ ~20%). */
@@ -8306,7 +8332,7 @@ editor(){
     <input class="ed-name" data-chg-name value="${esc(d.name)}" aria-label="Название дизайна" spellcheck="false">
     <button type="button" class="tb-fmt" data-act="studFmtMenu" data-tip="Формат: ${esc(fmt.label)} — сменить">${ic("frame",14)}<span>${fmt.w}×${fmt.h}</span>${ic("chevron-down",12)}</button>
     <div class="tb-ctx" id="stud-ctx">${start?"":`<span class="tb-div"></span>`}<div class="tb-in" id="stud-ctx-sel">${start?"":studioCtxHtml()}</div></div>`,
-  actions:`${start?"":`<button type="button" class="tb-zoom" data-act="studZoomMenu" data-tip="Масштаб и вид: зоны, линейки, сетка">${ic("zoom-in",14)}<span>${Math.round(studioZoom*100)}%</span>${ic("chevron-down",12)}</button>`}<span id="stud-save" class="stud-save" title="${esc(studioSaveLabel())}">${esc(studioSaveLabel())}</span><nv-button variant="ghost" size="sm" icon="undo-2" icon-only hint="Отменить (Ctrl+Z)" data-act="studUndo"></nv-button><nv-button variant="ghost" size="sm" icon="redo-2" icon-only hint="Повторить (Ctrl+Shift+Z)" data-act="studRedo"></nv-button><nv-button variant="ghost" size="sm" icon="more-horizontal" icon-only hint="История версий, дублировать, горячие клавиши" data-act="studMore"></nv-button><nv-button variant="secondary" icon="download" icon-end="chevron-down" data-act="studDownload">Скачать</nv-button><nv-button icon="megaphone" hint="Картинки в проект «Рекламы» и запуск" data-act="studToAds">В рекламу</nv-button>`,
+  actions:`${start?"":`<button type="button" class="tb-zoom" data-act="studZoomMenu" data-tip="Масштаб и вид: зоны, линейки, сетка">${ic("zoom-in",14)}<span>${Math.round(studioZoom*100)}%</span>${ic("chevron-down",12)}</button><span class="tb-view">${[["studRulers","ruler","Линейки",S.studio.rulers!==false],["studGuidesPanel","crosshair","Направляющие: настройки и положение линий",!S.studio.guidesOff&&studioGuides(d).length>0],["studZones","scan","Безопасные зоны (поля 5% и интерфейс сторис)",!!S.studio.zones],["studGrid","columns-3",S.studio.grid?"Сетка: "+S.studio.grid+" кол. (клик — сменить)":"Сетка колонок (клик — 2, 3, 4, 6, 12, выкл.)",!!S.studio.grid]].map(([a,i,t,on])=>`<button type="button" class="tb-vb${on?" on":""}" data-act="${a}" data-tip="${esc(t)}" aria-label="${esc(t)}" aria-pressed="${on}">${ic(i,16)}${a==="studGrid"&&S.studio.grid?`<b>${S.studio.grid}</b>`:""}</button>`).join("")}</span>`}<span id="stud-save" class="stud-save" title="${esc(studioSaveLabel())}">${esc(studioSaveLabel())}</span><nv-button variant="ghost" size="sm" icon="undo-2" icon-only hint="Отменить (Ctrl+Z)" data-act="studUndo"></nv-button><nv-button variant="ghost" size="sm" icon="redo-2" icon-only hint="Повторить (Ctrl+Shift+Z)" data-act="studRedo"></nv-button><nv-button variant="ghost" size="sm" icon="more-horizontal" icon-only hint="История версий, дублировать, горячие клавиши" data-act="studMore"></nv-button><nv-button variant="secondary" icon="download" icon-end="chevron-down" data-act="studDownload">Скачать</nv-button><nv-button icon="megaphone" hint="Картинки в проект «Рекламы» и запуск" data-act="studToAds">В рекламу</nv-button>`,
   body:`<div class="s2">
     <nav class="s2-rail">${STUDIO_TABS.map(([k,i,lb])=>`<button type="button" class="${tabNow===k?"on":""}" data-act="studTab" data-tab="${k}">${ic(i,20)}<span>${lb}</span></button>`).join("")}<button type="button" data-go="studio-library" style="margin-top:auto">${ic("images",18)}<span>Дизайны</span></button><button type="button" data-act="studShortcuts">${ic("keyboard",18)}<span>Клавиши</span></button></nav>
     <aside class="s2-panel" id="s2-panel" ${tabNow?"":"hidden"}>${tabNow?`<button type="button" class="s2-panel-x" data-act="studTab" data-tab="${tabNow}" data-tip="Скрыть панель">${ic("chevrons-left",16)}</button>`+studioPanelHtml(tabNow):""}</aside>
@@ -8848,6 +8874,85 @@ function studioSyncProps(except,force){
     }else if(el.tagName.startsWith("NV-")&&el.getAttribute("value")!==String(v))el.setAttribute("value",String(v));
   });
 }
+/* ---------- Направляющие (как в Photoshop) ----------
+   d.guides: [{id,t:"v"|"h"|"a",p} — вертикаль/горизонталь в px макета; для наклонной {x,y,a}: точка
+   в px и угол в градусах]. Тянутся из линеек (верхняя — горизонталь, левая — вертикаль, уголок — наклонная),
+   двигаются мышью, утащить на линейку — удалить. Только на экране: в экспорт не попадают. */
+function studioGuides(d){d=d||studioDesign();if(!Array.isArray(d.guides))d.guides=[];return d.guides}
+function studioGuidesHtml(d){
+  if(S.studio.guidesOff)return'<div class="stud-gls"></div>';
+  const F=STUDIO_FMT[d.format]||STUDIO_FMT.square;
+  return`<div class="stud-gls">${studioGuides(d).map(g=>g.t==="v"?`<div class="stud-gl v" data-gl="${g.id}" style="left:${g.p/F.w*100}%" title="Вертикаль ${Math.round(g.p)} px — тяните; на линейку — удалить; двойной клик — настройки"></div>`
+    :g.t==="h"?`<div class="stud-gl h" data-gl="${g.id}" style="top:${g.p/F.h*100}%" title="Горизонталь ${Math.round(g.p)} px — тяните; на линейку — удалить; двойной клик — настройки"></div>`
+    :`<div class="stud-gl a" data-gl="${g.id}" style="left:${g.x/F.w*100}%;top:${g.y/F.h*100}%;transform:translate(-50%,-50%) rotate(${-(+g.a||0)}deg)" title="Наклонная ${Math.round(g.a)}° — тяните; двойной клик — угол и положение"><i></i></div>`).join("")}</div>`;
+}
+function studioPaintGuides(){const st=document.querySelector(".stud-stage .stud-gls");if(st)st.outerHTML=studioGuidesHtml(studioDesign());studioDrawRulersSoon();const pl=document.querySelector(".pop [data-glist]");if(pl&&!pl.contains(document.activeElement))pl.innerHTML=studioGuideListHtml()}
+function studioGuideAdd(t,extra){const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;studioBeforeChange();
+  const g={id:"g"+studioUid(),t,...(t==="a"?{x:F.w/2,y:F.h/2,a:45}:{p:t==="v"?F.w/2:F.h/2}),...(extra||{})};studioGuides(d).push(g);S.studio.guidesOff=false;studioPaintGuides();NEON.save();return g}
+let studioGlDrag=null;
+function studioGlPoint(e){const st=document.querySelector(".stud-stage");if(!st)return null;const r=st.getBoundingClientRect(),F=STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square;return{x:(e.clientX-r.left)/r.width*F.w,y:(e.clientY-r.top)/r.height*F.h,r}}
+document.addEventListener("mousedown",e=>{
+  if(e.button!==0)return;
+  const gl=e.target.closest(".stud-gl"),rl=e.target.closest(".stud-ruler"),corner=e.target.closest(".stud-ruler-c");
+  if(!gl&&!rl&&!corner)return;
+  const r=NEON.route();if(r.s!=="studio"||r.v!=="editor")return;
+  e.preventDefault();e.stopPropagation();
+  if(corner){const g=studioGuideAdd("a");studioGlDrag={id:g.id,new:true};return}
+  if(rl){const pt=studioGlPoint(e);if(!pt)return;const g=studioGuideAdd(rl.classList.contains("h")?"h":"v",rl.classList.contains("h")?{p:pt.y}:{p:pt.x});studioGlDrag={id:g.id,new:true};document.body.classList.add(g.t==="h"?"gl-h":"gl-v");return}
+  const g=studioGuides().find(x=>x.id===gl.dataset.gl);if(!g)return;studioBeforeChange();
+  const pt=studioGlPoint(e);studioGlDrag={id:g.id,sx:pt.x,sy:pt.y,gx:g.x,gy:g.y};document.body.classList.add(g.t==="h"?"gl-h":g.t==="v"?"gl-v":"gl-a");
+},true);
+document.addEventListener("mousemove",e=>{
+  if(!studioGlDrag)return;const g=studioGuides().find(x=>x.id===studioGlDrag.id),pt=studioGlPoint(e);if(!g||!pt)return;
+  studioGlDrag.moved=true;const q=v=>e.shiftKey?Math.round(v/10)*10:Math.round(v);
+  if(g.t==="v")g.p=q(pt.x);else if(g.t==="h")g.p=q(pt.y);
+  else if(studioGlDrag.sx!=null){g.x=q(studioGlDrag.gx+pt.x-studioGlDrag.sx);g.y=q(studioGlDrag.gy+pt.y-studioGlDrag.sy)}
+  const el=document.querySelector(`.stud-gl[data-gl="${g.id}"]`),F=STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square;
+  if(el){if(g.t==="v")el.style.left=g.p/F.w*100+"%";else if(g.t==="h")el.style.top=g.p/F.h*100+"%";else{el.style.left=g.x/F.w*100+"%";el.style.top=g.y/F.h*100+"%"}}
+  studioLive(e,g.t==="a"?`${Math.round(g.x)}, ${Math.round(g.y)} px · ${Math.round(g.a)}°`:(g.t==="v"?"X ":"Y ")+Math.round(g.p)+" px");studioDrawRulersSoon();
+});
+document.addEventListener("mouseup",e=>{
+  if(!studioGlDrag)return;const dr=studioGlDrag;studioGlDrag=null;document.body.classList.remove("gl-h","gl-v","gl-a");
+  const lv=document.querySelector(".stud-live");if(lv)lv.remove();
+  const d=studioDesign(),g=studioGuides(d).find(x=>x.id===dr.id);if(!g)return;
+  if(!dr.moved&&!dr.new){studioHistory.undo.pop();return}
+  /* Отпустили над линейкой или за пределами холста — удаляем (как в Photoshop). */
+  const host=document.querySelector("#stud-stage-host");const hr=host&&host.getBoundingClientRect();
+  const out=hr&&(e.clientX<hr.left||e.clientY<hr.top||e.clientX>hr.right||e.clientY>hr.bottom);
+  if(out&&!(dr.new&&g.t==="a")){d.guides=d.guides.filter(x=>x!==g);toast("Направляющая удалена")}
+  studioPaintGuides();NEON.save();
+});
+document.addEventListener("dblclick",e=>{const gl=e.target.closest(".stud-gl");if(!gl)return;e.preventDefault();e.stopPropagation();const b=document.querySelector('[data-act="studGuidesPanel"]');if(b)studioGuidesPanel(b,gl.dataset.gl)},true);
+function studioGuideListHtml(){
+  const G=studioGuides();if(!G.length)return'<p class="pp-hint" style="padding:6px 2px">Пока нет. Потяните мышью из линейки или добавьте кнопками ниже.</p>';
+  const inp=(g,k,lb,tip)=>`<label class="pp-in" data-tip="${tip}"><span>${lb}</span><input type="number" step="1" value="${Math.round(g[k])}" data-glid="${g.id}" data-glk="${k}"></label>`;
+  return G.map(g=>`<div class="gl-row" data-glrow="${g.id}"><span class="gl-ic" data-tip="${g.t==="v"?"Вертикальная":g.t==="h"?"Горизонтальная":"Наклонная"}">${ic(g.t==="v"?"separator-vertical":g.t==="h"?"separator-horizontal":"slash",14)}</span>
+    <div class="gl-in">${g.t==="v"?inp(g,"p","X","Положение по горизонтали, px"):g.t==="h"?inp(g,"p","Y","Положение по вертикали, px"):inp(g,"x","X","Точка: X, px")+inp(g,"y","Y","Точка: Y, px")+inp(g,"a","∠","Угол наклона, °")}</div>
+    <button type="button" class="pp-ib" data-gldel="${g.id}" data-tip="Удалить" aria-label="Удалить">${ic("x",14)}</button></div>`).join("");
+}
+function studioGuidesPanel(anchor,focusId){
+  const draw=()=>`<div class="gl-pop"><div class="gl-head"><b>Направляющие</b><span class="pp-sp"></span>
+      <button type="button" class="gl-tg${S.studio.guidesOff?"":" on"}" data-glvis>${ic(S.studio.guidesOff?"eye-off":"eye",14)}Показывать</button><button type="button" class="gl-tg${S.studio.guideSnap===false?"":" on"}" data-glsnap>${ic("magnet",14)}Привязка</button></div>
+    <div class="gl-list" data-glist>${studioGuideListHtml()}</div>
+    <div class="gl-add"><button type="button" class="pp-btn" data-gladd="v">${ic("separator-vertical",14)}Вертикаль</button><button type="button" class="pp-btn" data-gladd="h">${ic("separator-horizontal",14)}Горизонталь</button><button type="button" class="pp-btn" data-gladd="a">${ic("slash",14)}Наклонная</button></div>
+    <div class="gl-add"><button type="button" class="pp-btn" data-glcenter>${ic("crosshair",14)}Через центр</button><button type="button" class="pp-btn" data-glclear ${studioGuides().length?"":"disabled"}>${ic("trash-2",14)}Удалить все</button></div>
+    <p class="pp-hint">Тяните из верхней линейки — горизонталь, из левой — вертикаль, из уголка «px» — наклонная. Shift — шаг 10 px. Утащите линию на линейку, чтобы удалить.</p></div>`;
+  window.nvOpenPop(anchor,draw(),{width:330,mount:(p,close,place)=>{
+    const redraw=()=>{p.innerHTML=draw();place()};
+    if(focusId){const i=p.querySelector(`[data-glid="${focusId}"]`);if(i){i.focus();i.select()}}
+    p.addEventListener("click",e=>{const d=studioDesign();
+      if(e.target.closest("[data-glvis]")){S.studio.guidesOff=!S.studio.guidesOff;studioPaintGuides();NEON.save();redraw();return}
+      if(e.target.closest("[data-glsnap]")){S.studio.guideSnap=S.studio.guideSnap===false;NEON.save();redraw();return}
+      const a=e.target.closest("[data-gladd]");if(a){const g=studioGuideAdd(a.dataset.gladd);redraw();const i=p.querySelector(`[data-glid="${g.id}"]`);if(i){i.focus();i.select()}return}
+      if(e.target.closest("[data-glcenter]")){const F=STUDIO_FMT[d.format];studioGuideAdd("v",{p:F.w/2});studioGuideAdd("h",{p:F.h/2});redraw();return}
+      if(e.target.closest("[data-glclear]")){studioBeforeChange();d.guides=[];studioPaintGuides();NEON.save();redraw();return}
+      const x=e.target.closest("[data-gldel]");if(x){studioBeforeChange();d.guides=studioGuides(d).filter(g=>g.id!==x.dataset.gldel);studioPaintGuides();NEON.save();redraw();return}
+    });
+    p.addEventListener("change",e=>{const i=e.target.closest("[data-glid]");if(!i)return;const g=studioGuides().find(x=>x.id===i.dataset.glid);if(!g)return;studioBeforeChange();
+      let v=+i.value||0;if(i.dataset.glk==="a")v=((v%180)+180)%180;g[i.dataset.glk]=v;i.value=Math.round(v);studioPaintGuides();NEON.save()});
+    p.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("[data-glid]")){e.preventDefault();e.target.dispatchEvent(new Event("change",{bubbles:true}));e.target.select()}});
+  }});
+}
 /* Линейки вокруг холста (в пикселях макета). Рисуются на <canvas> по фактическому
    положению .stud-stage, поэтому сами подстраиваются под масштаб, прокрутку и размер окна.
    Подсвечивают рамку выделения и позицию курсора. */
@@ -8878,6 +8983,7 @@ function studioDrawRulers(){
     c.stroke();
     c.strokeStyle=line;c.beginPath();hor?(c.moveTo(0,H-.5),c.lineTo(W,H-.5)):(c.moveTo(W-.5,0),c.lineTo(W-.5,H));c.stroke();
     if(sel){c.strokeStyle=acc;c.lineWidth=1.5;c.beginPath();for(const e of [sel[hor?"x":"y"],sel[hor?"x":"y"]+sel[hor?"w":"h"]]){const q=Math.round(P(e/100*full))+.5;hor?(c.moveTo(q,0),c.lineTo(q,H)):(c.moveTo(0,q),c.lineTo(W,q))}c.stroke()}
+    if(!S.studio.guidesOff){c.fillStyle="#00b3ff";for(const g of studioGuides(d)){if(g.t!==(hor?"v":"h"))continue;const q=P(g.p);if(hor){c.beginPath();c.moveTo(q-4,H);c.lineTo(q+4,H);c.lineTo(q,H-6);c.fill()}else{c.beginPath();c.moveTo(W,q-4);c.lineTo(W,q+4);c.lineTo(W-6,q);c.fill()}}}
     if(studioRulerCursor){const q=Math.round(hor?studioRulerCursor.x-r.left:studioRulerCursor.y-r.top)+.5;if(q>0&&q<len){c.strokeStyle="#ff2d78";c.lineWidth=1;c.beginPath();hor?(c.moveTo(q,0),c.lineTo(q,H)):(c.moveTo(0,q),c.lineTo(W,q));c.stroke()}}
   }
 }
@@ -8899,6 +9005,7 @@ function studioGroup(on){
 /* Прилипание к краям/центру холста и других видимых слоёв (порог ~1%). */
 function studioSnap(d,l,nx,ny){
   const T=1.1,X=[0,50,100].concat(studioGridX()),Y=[0,50,100];
+  if(!S.studio.guidesOff&&S.studio.guideSnap!==false){const F=STUDIO_FMT[d.format]||STUDIO_FMT.square;studioGuides(d).forEach(g=>{if(g.t==="v")X.push(g.p/F.w*100);else if(g.t==="h")Y.push(g.p/F.h*100)})}
   d.layers.forEach(o=>{if(o.id===l.id||o.hidden)return;X.push(o.x,o.x+o.w/2,o.x+o.w);Y.push(o.y,o.y+o.h/2,o.y+o.h)});
   const best=(edges,targets)=>{let r=null;edges.forEach(ev=>targets.forEach(t=>{const dd=t-ev;if(Math.abs(dd)<=T&&(!r||Math.abs(dd)<Math.abs(r.d)))r={d:dd,t}}));return r};
   const bx=best([nx,nx+l.w/2,nx+l.w],X),by=best([ny,ny+l.h/2,ny+l.h],Y);
@@ -9025,8 +9132,8 @@ Object.assign(N.acts,{
   studZones(){S.studio.zones=!S.studio.zones;N.refresh();NEON.save()},
   studFmtMenu(a){const r=a.getBoundingClientRect(),cur=studioDesign().format;studioMenu(r.left,r.bottom+4,Object.entries(STUDIO_FMT).map(([k,v])=>[v.label,v.w+"×"+v.h,()=>NEON.chg.studFormat(k,{}),k===cur]))},
   studZoomMenu(a){const r=a.getBoundingClientRect(),z=v=>()=>{studioZoom=v;N.refresh()};
-    studioMenu(r.left,r.bottom+4,[["Вписать в экран","",z(1),studioZoom===1],["Увеличить","+",()=>N.acts.studZoom(null,{z:"+"}),false],["Уменьшить","−",()=>N.acts.studZoom(null,{z:"-"}),false],["50%","",z(0.5),studioZoom===0.5],["150%","",z(1.5),studioZoom===1.5],["200%","",z(2),studioZoom===2],"-",
-      ["Линейки","px",()=>N.acts.studRulers(),S.studio.rulers!==false],["Безопасные зоны","5%",()=>N.acts.studZones(),!!S.studio.zones],["Сетка колонок",S.studio.grid?S.studio.grid+" кол.":"",()=>N.acts.studGrid(),!!S.studio.grid]])},
+    studioMenu(r.left,r.bottom+4,[["Вписать в экран","",z(1),studioZoom===1],["Увеличить","+",()=>N.acts.studZoom(null,{z:"+"}),false],["Уменьшить","−",()=>N.acts.studZoom(null,{z:"-"}),false],["50%","",z(0.5),studioZoom===0.5],["150%","",z(1.5),studioZoom===1.5],["200%","",z(2),studioZoom===2]])},
+  studGuidesPanel(a){studioGuidesPanel(a)},
   studRulers(){S.studio.rulers=S.studio.rulers===false;N.refresh();NEON.save()},
   studGrid(){const seq=[0,2,3,4,6,12],i=seq.indexOf(+S.studio.grid||0);S.studio.grid=seq[(i+1)%seq.length];N.refresh();NEON.save()},
   studAiTexts:studioAiTexts,
