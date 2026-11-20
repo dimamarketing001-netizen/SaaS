@@ -7298,26 +7298,45 @@ function studioPaintCurved(el,l){
    одним «блоком» и при перестановке двигалась целиком. */
 let studioGrpClosed=new Set();
 const studioPPClosed=new Set(["xform","filters"]);
+/* Вложенные группы: l.group — ближайшая (внутренняя) группа слоя, d.groupParents[g] — родитель группы.
+   «Блок» на уровне P — слой без группы под P или ближайшая к P группа-потомок. Слои любой группы
+   держим подряд в массиве (studioNormGroups), группа двигается целиком. */
+function studioGP(d){if(!d.groupParents||typeof d.groupParents!=="object")d.groupParents={};return d.groupParents}
+function studioGParent(d,g){return(d.groupParents&&d.groupParents[g])||null}
+function studioChain(d,l){const c=[];let g=l&&l.group;const seen=new Set();while(g&&!seen.has(g)){seen.add(g);c.push(g);g=studioGParent(d,g)}return c}
+function studioInGroup(d,l,g){return!!g&&studioChain(d,l).includes(g)}
+function studioDeep(d,g){return d.layers.filter(l=>studioInGroup(d,l,g))}
+/* Ключ блока слоя на уровне P: id группы-ребёнка P (или верхней группы при P=null); null — слой сам себе блок. */
+function studioUnitGroup(d,l,P){const c=studioChain(d,l);if(!P)return c.length?c[c.length-1]:null;const i=c.indexOf(P);return i>0?c[i-1]:null}
+function studioSelGroup(){
+  const d=studioDesign(),S=new Set(studioMultiSel);if(S.size<2)return null;const l=d.layers.find(x=>S.has(x.id));if(!l)return null;
+  for(const g of studioChain(d,l)){const m=studioDeep(d,g);if(m.length===S.size&&m.every(x=>S.has(x.id)))return g}return null;
+}
 function studioNormGroups(d){
-  const seen=new Set(),out=[];
-  for(let i=d.layers.length-1;i>=0;i--){const l=d.layers[i];
-    if(!l.group){out.unshift(l);continue}
-    if(seen.has(l.group))continue;seen.add(l.group);
-    out.unshift(...d.layers.filter(x=>x.group===l.group));
+  const gp=studioGP(d);
+  /* 1) порядок: блоки уровня собираются подряд у своего верхнего слоя, рекурсивно внутрь */
+  const order=(list,P)=>{const out=[],seen=new Set();
+    for(let i=list.length-1;i>=0;i--){const l=list[i],k=studioUnitGroup(d,l,P);if(!k){out.unshift(l);continue}if(seen.has(k))continue;seen.add(k);
+      out.unshift(...order(list.filter(x=>studioUnitGroup(d,x,P)===k),k))}return out};
+  for(let pass=0;pass<4;pass++){
+    /* 2) чистка: группа из <2 блоков растворяется в родителе; висячие записи удаляем */
+    const used=new Set();d.layers.forEach(l=>studioChain(d,l).forEach(g=>used.add(g)));
+    Object.keys(gp).forEach(g=>{if(!used.has(g))delete gp[g]});
+    let changed=false;
+    for(const g of used){const kids=new Set(studioDeep(d,g).map(l=>studioUnitGroup(d,l,g)||("L"+l.id)));
+      if(kids.size<2){const par=studioGParent(d,g);d.layers.forEach(l=>{if(l.group===g){if(par)l.group=par;else delete l.group}});Object.keys(gp).forEach(c=>{if(gp[c]===g){if(par)gp[c]=par;else delete gp[c]}});delete gp[g];changed=true}}
+    if(!changed)break;
   }
-  /* группа из одного слоя — уже не группа */
-  const cnt={};out.forEach(l=>{if(l.group)cnt[l.group]=(cnt[l.group]||0)+1});
-  out.forEach(l=>{if(l.group&&cnt[l.group]<2)delete l.group});
-  d.layers.splice(0,d.layers.length,...out);
-  if(d.groupNames)for(const g of Object.keys(d.groupNames))if(!cnt[g]||cnt[g]<2)delete d.groupNames[g];
+  const out=order(d.layers,null);d.layers.splice(0,d.layers.length,...out);
+  if(d.groupNames){const used=new Set();d.layers.forEach(l=>studioChain(d,l).forEach(g=>used.add(g)));for(const g of Object.keys(d.groupNames))if(!used.has(g))delete d.groupNames[g]}
 }
 function studioGroupName(d,g){
   if(d.groupNames&&d.groupNames[g])return d.groupNames[g];
-  const order=[];d.layers.forEach(l=>{if(l.group&&!order.includes(l.group))order.push(l.group)});
+  const order=[];d.layers.forEach(l=>studioChain(d,l).slice().reverse().forEach(x=>{if(!order.includes(x))order.push(x)}));
   return"Группа "+(order.indexOf(g)+1);
 }
-/* «Блоки» в порядке массива: отдельный слой или группа целиком */
-function studioUnits(d){const u=[];d.layers.forEach(l=>{if(l.group){const last=u[u.length-1];if(last&&last.g===l.group)last.ids.push(l.id);else u.push({g:l.group,ids:[l.id]})}else u.push({id:l.id,ids:[l.id]})});return u}
+/* Блоки уровня P в порядке массива (P=null — верхний уровень). */
+function studioUnits(d,P){const list=P?studioDeep(d,P):d.layers,u=[];list.forEach(l=>{const k=studioUnitGroup(d,l,P);const last=u[u.length-1];if(k){if(last&&last.g===k)last.ids.push(l.id);else u.push({g:k,ids:[l.id]})}else u.push({id:l.id,ids:[l.id]})});return u}
 function studioLayerRowHtml(l,d,inGrp){
   const on=l.id===d.selectedId&&studioMultiSel.length<2||studioMultiSel.includes(l.id);
   return`<div class="lr${on?" on":""}${inGrp?" kid":""}${l.hidden?" hid":""}" data-sel="${esc(l.id)}" draggable="true" data-drag="${esc(l.id)}">
@@ -7326,56 +7345,55 @@ function studioLayerRowHtml(l,d,inGrp){
     <span class="lr-ac"><button type="button" class="${l.locked?"pin":""}" data-lock="${esc(l.id)}" aria-label="${l.locked?"Открепить":"Закрепить"}" data-tip="${l.locked?"Открепить":"Закрепить"}">${ic(l.locked?"lock":"unlock",13)}</button><button type="button" data-mv="${esc(l.id)}" data-dir="1" aria-label="Выше" data-tip="Выше">${ic("chevron-up",13)}</button><button type="button" data-mv="${esc(l.id)}" data-dir="-1" aria-label="Ниже" data-tip="Ниже">${ic("chevron-down",13)}</button><button type="button" data-del="${esc(l.id)}" aria-label="Удалить слой" data-tip="Удалить">${ic("trash-2",13)}</button></span>
   </div>`;
 }
+function studioLayersTreeHtml(d,P){
+  return studioUnits(d,P).reverse().map(u=>{
+    if(!u.g)return studioLayerRowHtml(d.layers.find(x=>x.id===u.id),d,!!P);
+    const ls=u.ids.map(id=>d.layers.find(x=>x.id===id)),closed=studioGrpClosed.has(u.g),nKids=studioUnits(d,u.g).length;
+    const allSel=u.ids.every(id=>studioMultiSel.includes(id))&&studioMultiSel.length===u.ids.length,hid=ls.every(x=>x.hidden),lck=ls.every(x=>x.locked);
+    return`<div class="lg${closed?" closed":""}"><div class="lr grp${allSel?" on":""}${hid?" hid":""}${P?" kid":""}" data-gsel="${esc(u.g)}" draggable="true" data-gdrag="${esc(u.g)}">
+      <button type="button" class="lr-eye${hid?" off":""}" data-gvis="${esc(u.g)}" aria-label="${hid?"Показать группу":"Скрыть группу"}">${ic(hid?"eye-off":"eye",13)}</button>
+      <button type="button" class="lr-tw" data-gtog="${esc(u.g)}" aria-label="${closed?"Развернуть":"Свернуть"}" aria-expanded="${!closed}">${ic(closed?"chevron-right":"chevron-down",13)}</button>
+      <span class="lr-th g">${ic(closed?"folder":"folder-open",13)}</span><span class="lr-n">${esc(studioGroupName(d,u.g))}</span><span class="lr-c">${nKids}</span>
+      <span class="lr-ac"><button type="button" class="${lck?"pin":""}" data-glock="${esc(u.g)}" aria-label="${lck?"Открепить группу":"Закрепить группу"}" data-tip="${lck?"Открепить":"Закрепить"}">${ic(lck?"lock":"unlock",13)}</button><button type="button" data-gmv="${esc(u.g)}" data-dir="1" aria-label="Выше" data-tip="Выше">${ic("chevron-up",13)}</button><button type="button" data-gmv="${esc(u.g)}" data-dir="-1" aria-label="Ниже" data-tip="Ниже">${ic("chevron-down",13)}</button><button type="button" data-gun="${esc(u.g)}" aria-label="Разгруппировать" data-tip="Разгруппировать">${ic("ungroup",13)}</button></span>
+    </div>${closed?"":`<div class="lg-kids">${studioLayersTreeHtml(d,u.g)}</div>`}</div>`;
+  }).join("");
+}
 function studioLayersListHtml(){
   const d=studioDesign();
   if(!d.layers.length)return'<p class="muted" style="font-size:12.5px">Пока пусто — добавьте текст, фигуру или фото во вкладках слева.</p>';
-  const units=studioUnits(d).reverse();
-  return`<div class="lt">${units.map(u=>{
-    if(!u.g)return studioLayerRowHtml(d.layers.find(x=>x.id===u.id),d,false);
-    const ls=u.ids.map(id=>d.layers.find(x=>x.id===id)).reverse(),closed=studioGrpClosed.has(u.g);
-    const allSel=u.ids.every(id=>studioMultiSel.includes(id)),hid=ls.every(x=>x.hidden),lck=ls.every(x=>x.locked);
-    return`<div class="lg${closed?" closed":""}"><div class="lr grp${allSel?" on":""}${hid?" hid":""}" data-gsel="${esc(u.g)}" draggable="true" data-gdrag="${esc(u.g)}">
-      <button type="button" class="lr-eye${hid?" off":""}" data-gvis="${esc(u.g)}" aria-label="${hid?"Показать группу":"Скрыть группу"}">${ic(hid?"eye-off":"eye",13)}</button>
-      <button type="button" class="lr-tw" data-gtog="${esc(u.g)}" aria-label="${closed?"Развернуть":"Свернуть"}" aria-expanded="${!closed}">${ic(closed?"chevron-right":"chevron-down",13)}</button>
-      <span class="lr-th g">${ic(closed?"folder":"folder-open",13)}</span><span class="lr-n">${esc(studioGroupName(d,u.g))}</span><span class="lr-c">${ls.length}</span>
-      <span class="lr-ac"><button type="button" class="${lck?"pin":""}" data-glock="${esc(u.g)}" aria-label="${lck?"Открепить группу":"Закрепить группу"}" data-tip="${lck?"Открепить":"Закрепить"}">${ic(lck?"lock":"unlock",13)}</button><button type="button" data-gmv="${esc(u.g)}" data-dir="1" aria-label="Выше" data-tip="Выше">${ic("chevron-up",13)}</button><button type="button" data-gmv="${esc(u.g)}" data-dir="-1" aria-label="Ниже" data-tip="Ниже">${ic("chevron-down",13)}</button><button type="button" data-gun="${esc(u.g)}" aria-label="Разгруппировать" data-tip="Разгруппировать">${ic("ungroup",13)}</button></span>
-    </div>${closed?"":`<div class="lg-kids">${ls.map(l=>studioLayerRowHtml(l,d,true)).join("")}</div>`}</div>`;
-  }).join("")}</div>`;
+  return`<div class="lt">${studioLayersTreeHtml(d,null)}</div>`;
 }
-/* Перестановка: слой внутри группы ходит только внутри неё; одиночный слой и
-   группа перепрыгивают соседний блок целиком. dir=+1 — выше (к концу массива). */
+/* Перестановка: блок (слой или группа) меняется местами с соседним блоком того же уровня.
+   dir=+1 — выше (к концу массива). */
 function studioMoveLayer(d,id,dir){
-  studioNormGroups(d);
-  const l=d.layers.find(x=>x.id===id);if(!l)return false;
-  if(l.group){const i=d.layers.indexOf(l),j=i+dir,n=d.layers[j];if(!n||n.group!==l.group)return false;[d.layers[i],d.layers[j]]=[n,l];return true}
-  return studioMoveUnit(d,u=>u.id===id,dir);
+  studioNormGroups(d);const l=d.layers.find(x=>x.id===id);if(!l)return false;
+  return studioMoveUnit(d,u=>u.id===id,dir,l.group||null);
 }
-function studioMoveUnit(d,match,dir){
-  const U=studioUnits(d),k=U.findIndex(match),j=k+dir;if(k<0||j<0||j>=U.length)return false;
-  [U[k],U[j]]=[U[j],U[k]];const by=Object.fromEntries(d.layers.map(x=>[x.id,x]));
-  d.layers.splice(0,d.layers.length,...U.flatMap(u=>u.ids.map(id=>by[id])));return true;
+function studioMoveUnit(d,match,dir,P){
+  if(P===undefined){const g=(studioUnits(d).find(match)||{}).g;P=null;if(!g){/* ищем уровень группы */const all=Object.keys(studioGP(d));for(const x of [...all,...d.layers.map(l=>l.group).filter(Boolean)]){if(studioUnits(d,studioGParent(d,x)).some(u=>match(u))){P=studioGParent(d,x);break}}}}
+  const scope=P?studioDeep(d,P):d.layers.slice(),U=studioUnits(d,P),k=U.findIndex(match),j=k+dir;if(k<0||j<0||j>=U.length)return false;
+  [U[k],U[j]]=[U[j],U[k]];const by=Object.fromEntries(d.layers.map(x=>[x.id,x])),seg=U.flatMap(u=>u.ids.map(id=>by[id]));
+  const start=d.layers.indexOf(scope[0]);d.layers.splice(start,scope.length,...seg);return true;
 }
 /* Перетаскивание в списке: pos — "before" (выше цели в списке), "after" (ниже) или "into" (в группу). */
 function studioDropLayers(d,drag,target,pos){
-  studioNormGroups(d);
+  studioNormGroups(d);const gp=studioGP(d);
   const by=Object.fromEntries(d.layers.map(x=>[x.id,x]));
-  const moving=drag.g?d.layers.filter(x=>x.group===drag.g):[by[drag.id]].filter(Boolean);
+  const moving=drag.g?studioDeep(d,drag.g):[by[drag.id]].filter(Boolean);
   if(!moving.length)return false;
-  if(target.g&&drag.g===target.g)return false;
+  if(target.g&&drag.g&&(target.g===drag.g||studioChain(d,studioDeep(d,target.g)[0]||{}).includes(drag.g)))return false; /* в себя или в своего потомка */
   if(target.id&&moving.some(x=>x.id===target.id))return false;
   const rest=d.layers.filter(x=>!moving.includes(x));
-  let idx,newGroup=null;
+  const setParent=par=>{if(drag.g){if(par)gp[drag.g]=par;else delete gp[drag.g]}else{if(par)moving[0].group=par;else delete moving[0].group}};
+  let idx;
   if(target.g){
-    const gi=rest.map((x,i)=>x.group===target.g?i:-1).filter(i=>i>=0);if(!gi.length)return false;
-    if(pos==="into"&&!drag.g){idx=gi[gi.length-1]+1;newGroup=target.g}
-    else idx=pos==="after"?gi[0]:gi[gi.length-1]+1;
+    const gi=rest.map((x,i)=>studioInGroup(d,x,target.g)?i:-1).filter(i=>i>=0);if(!gi.length)return false;
+    if(pos==="into"){idx=gi[gi.length-1]+1;setParent(target.g)}
+    else{idx=pos==="after"?gi[0]:gi[gi.length-1]+1;setParent(studioGParent(d,target.g))}
   }else{
     const t=rest.find(x=>x.id===target.id);if(!t)return false;const ti=rest.indexOf(t);
-    idx=pos==="after"?ti:ti+1;
-    if(!drag.g)newGroup=t.group||null;
-    else if(t.group){const gi=rest.map((x,i)=>x.group===t.group?i:-1).filter(i=>i>=0);idx=pos==="after"?gi[0]:gi[gi.length-1]+1}
+    idx=pos==="after"?ti:ti+1;setParent(t.group||null);
   }
-  if(!drag.g){if(newGroup)moving[0].group=newGroup;else delete moving[0].group}
   rest.splice(idx,0,...moving);d.layers.splice(0,d.layers.length,...rest);
   studioNormGroups(d);return true;
 }
@@ -7457,14 +7475,15 @@ function studioMultiPosHtml(){
 function studioPaintGroupBox(){
   const st=document.querySelector(".stud-stage");if(!st)return;let el=st.querySelector(".stud-gbox");
   const d=studioDesign();let ids=null,cls="";
-  if(studioMultiSel.length>1){ids=studioMultiSel;const gs=new Set(d.layers.filter(x=>ids.includes(x.id)).map(x=>x.group));cls=gs.size===1&&[...gs][0]?"grp":"sel"}
-  else if(studioGroupEnter){ids=d.layers.filter(x=>x.group===studioGroupEnter).map(x=>x.id);cls="in"}
+  let gname=null;
+  if(studioMultiSel.length>1){ids=studioMultiSel;gname=studioSelGroup();cls=gname?"grp":"sel"}
+  else if(studioGroupEnter){ids=studioDeep(d,studioGroupEnter).map(x=>x.id);cls="in";gname=studioGroupEnter}
   const ls=ids?d.layers.filter(x=>ids.includes(x.id)&&!x.hidden):[];
   if(ls.length<2){if(el)el.remove();return}
   const{x1,y1,x2,y2}=studioBoxOf(ls);
   if(!el){el=document.createElement("div");st.append(el)}
   el.className="stud-gbox "+cls;el.style.cssText=`left:${x1}%;top:${y1}%;width:${x2-x1}%;height:${y2-y1}%`;
-  el.innerHTML=(cls==="grp"||cls==="in"?`<span>${esc(studioGroupName(d,ls[0].group))}${cls==="in"?" · внутри":""}</span>`:"")
+  el.innerHTML=(cls==="grp"||cls==="in"?`<span>${esc(studioGroupName(d,gname))}${cls==="in"?" · внутри":""}</span>`:"")
     +(cls!=="in"&&!ls.some(l=>l.locked)?["nw","ne","sw","se"].map(h=>`<em class="gh" data-gh="${h}"></em>`).join("")+'<em class="gh rot" data-gh="rot"></em>':"");
 }
 /* Масштаб и поворот группы/выделения мышью за ручки общей рамки. */
@@ -7532,17 +7551,19 @@ function studioGroupHandle(e,root){
     else if(k==="fill")ls.filter(l=>l.type==="shape"||l.type==="path").forEach(l=>{const f=studioFillOf(l);l.fill={...f,type:f.type==="none"?"solid":f.type,color:v}});
     return done(el.tagName!=="NV-COLOR-PICKER")}
   if(e.type==="click"){const b=e.target.closest("[data-gact]");if(!b)return false;const[a,arg]=b.dataset.gact.split(":");studioBeforeChange();
-    const g=ls[0].group;
-    if(a==="sel"){const sub=ls.filter(l=>l.type===arg).map(l=>l.id);studioHistory.undo.pop();if(sub.length===1){studioMultiSel=[];d.selectedId=sub[0];studioGroupEnter=g||null}else{studioMultiSel=sub;d.selectedId=sub[sub.length-1]}N.refresh();return true}
+    const G=studioSelGroup();
+    if(a==="sel"){const sub=ls.filter(l=>l.type===arg).map(l=>l.id);studioHistory.undo.pop();if(sub.length===1){studioMultiSel=[];d.selectedId=sub[0];studioGroupEnter=(d.layers.find(x=>x.id===sub[0])||{}).group||null}else{studioMultiSel=sub;d.selectedId=sub[sub.length-1]}N.refresh();return true}
     if(a==="fs+"||a==="fs-"){texts.forEach(l=>l.fontSize=Math.max(1,Math.round(l.fontSize*(a==="fs+"?1.1:1/1.1)*10)/10));return done(true)}
     if(a==="bold"){const all=texts.every(l=>+l.weight>=600);texts.forEach(l=>l.weight=all?"400":"700");return done(true)}
     if(a==="align"){texts.forEach(l=>l.align=arg);return done(true)}
     if(a==="shadow"){ls.forEach(l=>{if(l.type==="text")l.shadow=arg==="1";else{l.effect={...(l.effect||{})};if(arg==="1")l.effect.shadow=l.effect.shadow||{...STUDIO_SHADOW_DEF.other};else delete l.effect.shadow}});return done(true)}
     if(a==="hide"||a==="lock"){const k=a==="hide"?"hidden":"locked",to=!ls.every(l=>l[k]);ls.forEach(l=>l[k]=to);N.refresh();NEON.save();return true}
     if(a==="del"){d.layers=d.layers.filter(l=>!ids.includes(l.id));studioMultiSel=[];d.selectedId=null;studioGroupEnter=null;N.refresh();NEON.save();toast("Удалено: "+ls.length);return true}
-    if(a==="dup"){studioNormGroups(d);const ng=g&&ls.every(l=>l.group===g)?"G"+studioUid():null,copies=ls.map(l=>{const c=JSON.parse(JSON.stringify(l));c.id=studioUid();c.x+=3;c.y+=3;if(ng)c.group=ng;else delete c.group;return c});
-      const last=Math.max(...ls.map(l=>d.layers.indexOf(l)));d.layers.splice(last+1,0,...copies);if(ng&&d.groupNames&&d.groupNames[g])d.groupNames[ng]=d.groupNames[g]+" (копия)";studioMultiSel=copies.map(c=>c.id);d.selectedId=copies[copies.length-1].id;N.refresh();NEON.save();return true}
-    if(a==="front"||a==="back"){studioNormGroups(d);const dir=a==="front"?1:-1;if(g&&ls.every(l=>l.group===g)){while(studioMoveUnit(d,u=>u.g===g,dir));}else{const rest=d.layers.filter(l=>!ids.includes(l.id));d.layers.splice(0,d.layers.length,...(dir>0?rest.concat(ls):ls.concat(rest)))}N.refresh();NEON.save();return true}
+    if(a==="dup"){studioNormGroups(d);const gp=studioGP(d),map={};
+      if(G){const gs=new Set();ls.forEach(l=>{for(const x of studioChain(d,l)){gs.add(x);if(x===G)break}});gs.forEach(x=>map[x]="G"+studioUid());gs.forEach(x=>{const par=x===G?studioGParent(d,G):map[studioGParent(d,x)];if(par)gp[map[x]]=par});if(d.groupNames&&d.groupNames[G])d.groupNames[map[G]]=d.groupNames[G]+" (копия)"}
+      const copies=ls.map(l=>{const c=JSON.parse(JSON.stringify(l));c.id=studioUid();c.x+=3;c.y+=3;if(G&&map[l.group])c.group=map[l.group];else delete c.group;return c});
+      const last=Math.max(...ls.map(l=>d.layers.indexOf(l)));d.layers.splice(last+1,0,...copies);studioNormGroups(d);studioMultiSel=copies.map(c=>c.id);d.selectedId=copies[copies.length-1].id;N.refresh();NEON.save();return true}
+    if(a==="front"||a==="back"){studioNormGroups(d);const dir=a==="front"?1:-1;if(G){while(studioMoveUnit(d,u=>u.g===G,dir));}else{const rest=d.layers.filter(l=>!ids.includes(l.id));d.layers.splice(0,d.layers.length,...(dir>0?rest.concat(ls):ls.concat(rest)));studioNormGroups(d)}N.refresh();NEON.save();return true}
     studioHistory.undo.pop();return false}
   return false;
 }
@@ -7551,14 +7572,14 @@ function studioPropsHeadHtml(icon,title,sub){
 }
 function studioPropsHtml(){
   const h=studioPropsHtml0(),l=studioSelected();
-  if(studioMultiSel.length>1||!l||!l.group||studioGroupEnter!==l.group)return h;
-  const bar=`<div class="pp-acts pp-ing">${ic("folder-open",14)}<span>Внутри «${esc(studioGroupName(studioDesign(),l.group))}»</span><button type="button" class="nv-btn v-ghost s-sm" data-gexit>Вся группа <kbd>Esc</kbd></button></div>`;
+  if(studioMultiSel.length>1||!l||!studioGroupEnter||!studioInGroup(studioDesign(),l,studioGroupEnter))return h;
+  const bar=`<div class="pp-acts pp-ing">${ic("folder-open",14)}<span>Внутри «${esc(studioGroupName(studioDesign(),studioGroupEnter))}»</span><button type="button" class="nv-btn v-ghost s-sm" data-gexit>Вся группа <kbd>Esc</kbd></button></div>`;
   const i=h.indexOf("</div></div>");return i<0?h:h.slice(0,i+12)+bar+h.slice(i+12);
 }
 function studioPropsHtml0(){
   const d=studioDesign();
   if(studioMultiSel.length>1){
-    const gs=new Set(d.layers.filter(x=>studioMultiSel.includes(x.id)).map(x=>x.group)),g0=gs.size===1&&[...gs][0],one=g0&&d.layers.filter(x=>x.group===g0).length===studioMultiSel.length?g0:null;
+    const one=studioSelGroup(),gs=new Set(d.layers.filter(x=>studioMultiSel.includes(x.id)).map(x=>x.group));
     return studioPropsHeadHtml(one?"folder-open":"layers",one?studioGroupName(d,one):"Несколько элементов",`Выбрано слоёв: ${studioMultiSel.length} · тяните любой — сдвинутся все`)
     +`<div class="pp-acts">${one?`<button type="button" class="nv-btn v-secondary s-sm" data-act="studGroup" data-on="">${ic("ungroup",14)}Разгруппировать</button><button type="button" class="nv-btn v-ghost s-sm" data-act-grename="${esc(one)}">${ic("pencil",14)}Переименовать</button>`:`<button type="button" class="nv-btn v-soft s-sm" data-act="studGroup" data-on="1">${ic("group",14)}Сгруппировать <kbd>Ctrl G</kbd></button>${[...gs].some(Boolean)?`<button type="button" class="nv-btn v-ghost s-sm" data-act="studGroup" data-on="">Разгруппировать</button>`:""}`}</div>`
     +studioGroupPropsHtml(d.layers.filter(x=>studioMultiSel.includes(x.id)))+studioMultiPosHtml()+ppSec("align","Выравнивание",`<div class="pp-seg pp-seg-ic six">${[["left","align-horizontal-justify-start","Слева"],["ch","align-horizontal-justify-center","По центру"],["right","align-horizontal-justify-end","Справа"],["top","align-vertical-justify-start","Сверху"],["cv","align-vertical-justify-center","По середине"],["bottom","align-vertical-justify-end","Снизу"]].map(([v,i,t])=>`<button type="button" data-act-align="${v}" data-tip="${t}" aria-label="${t}">${ic(i,15)}</button>`).join("")}</div>
@@ -8326,7 +8347,7 @@ function studioCtxHtml(){
   const B=(icon,attrs,tip,on,cls,txt)=>`<button type="button" class="ib${on?" on":""}${cls?" "+cls:""}" ${attrs} data-tip="${esc(tip)}" aria-label="${esc(tip)}">${icon?ic(icon,15):""}${txt?`<span>${txt}</span>`:""}</button>`;
   const sep=cls=>`<span class="sep${cls?" "+cls:""}"></span>`;
   const common=l?sep()+B("copy",'data-ctx="dup"',"Дублировать (Ctrl+D)")+B("bring-to-front",'data-ctx="front"',"На передний план",false,"p3")+B("send-to-back",'data-ctx="back"',"На задний план",false,"p3")+B(l.locked?"lock":"unlock",'data-ctx="lock"',l.locked?"Открепить":"Закрепить",l.locked,"p2")+B("trash-2",'data-ctx="del"',"Удалить (Delete)"):"";
-  if(multi){const gs=new Set(d.layers.filter(x=>studioMultiSel.includes(x.id)).map(x=>x.group)),g0=gs.size===1&&[...gs][0],whole=g0&&d.layers.filter(x=>x.group===g0).length===studioMultiSel.length;
+  if(multi){const g0=studioSelGroup(),whole=!!g0;
     return`${whole?`<span class="lbl">${ic("folder-open",14)} ${esc(studioGroupName(d,g0))}</span>${B("ungroup",'data-act="studGroup" data-on=""',"Разгруппировать (Ctrl+Shift+G)",false,"",'Разгруппировать')}`:`<span class="lbl">Выбрано: ${studioMultiSel.length}</span>${B("group",'data-act="studGroup" data-on="1"',"Сгруппировать (Ctrl+G)",false,"",'Сгруппировать')}`}${sep("p3")}${["left:align-horizontal-justify-start:Слева","ch:align-horizontal-justify-center:По центру","right:align-horizontal-justify-end:Справа","top:align-vertical-justify-start:Сверху","cv:align-vertical-justify-center:По середине","bottom:align-vertical-justify-end:Снизу"].map(x=>{const[k,i,t]=x.split(":");return B(i,`data-act-align="${k}"`,t,false,"p3")}).join("")}`}
   if(!l)return`<span class="lbl">Фон</span><nv-color-picker value="${esc(d.bg.color||"#ffffff")}" data-act-bg-color></nv-color-picker><label class="ib" for="stud-bg-file" data-tip="Поставить фото фоном">${ic("image",15)}<span class="p2">Фото фоном</span></label>${d.bg.type==="image"?B("x",'data-act="studBgClear"',"Убрать фото с фона"):""}`;
   if(l.type==="text"){const bold=l.weight!=="400",al={left:"align-left",center:"align-center",right:"align-right"},nx={left:"center",center:"right",right:"left"}[l.align]||"left";
@@ -8549,10 +8570,10 @@ editor(){
         const layerEl=e.target.closest(".stud-layer");
         if(e.shiftKey){
           if(!layerEl)return;
-          const id=layerEl.dataset.id;
+          const id=layerEl.dataset.id,sl=d.layers.find(x=>x.id===id),ug=sl&&studioUnitGroup(d,sl,studioGroupEnter),unit=ug?studioDeep(d,ug).map(x=>x.id):[id];
           if(!studioMultiSel.length&&d.selectedId)studioMultiSel.push(d.selectedId);
-          const i=studioMultiSel.indexOf(id);
-          if(i>=0)studioMultiSel.splice(i,1);else studioMultiSel.push(id);
+          /* Shift+клик по элементу группы добавляет/убирает всю группу (на текущем уровне). */
+          if(unit.every(x=>studioMultiSel.includes(x)))studioMultiSel=studioMultiSel.filter(x=>!unit.includes(x));else unit.forEach(x=>{if(!studioMultiSel.includes(x))studioMultiSel.push(x)});
           d.selectedId=studioMultiSel[studioMultiSel.length-1]||null;
           N.refresh();e.preventDefault();return;
         }
@@ -8561,10 +8582,11 @@ editor(){
         /* Клик по слою из группы/выделения — тянем всё выделение сразу. */
         if(layerEl&&!e.target.closest(".stud-h")){
           const lid=layerEl.dataset.id,ll=d.layers.find(x=>x.id===lid);
-          if(studioGroupEnter&&(!ll||ll.group!==studioGroupEnter))studioGroupEnter=null;
+          if(studioGroupEnter&&!(ll&&studioInGroup(d,ll,studioGroupEnter)))studioGroupEnter=null;
           /* Ctrl/⌘+клик — сразу элемент внутри группы (как в Figma). */
           if((e.ctrlKey||e.metaKey)&&ll&&ll.group&&(studioGroupEnter!==ll.group||studioMultiSel.length)){studioGroupEnter=ll.group;studioMultiSel=[];d.selectedId=lid;N.refresh()}
-          if(ll&&ll.group&&ll.group!==studioGroupEnter&&!studioMultiSel.includes(lid)){studioMultiSel=d.layers.filter(x=>x.group===ll.group).map(x=>x.id);d.selectedId=lid;N.refresh()}
+          const ug=ll&&studioUnitGroup(d,ll,studioGroupEnter);
+          if(ug&&!studioMultiSel.includes(lid)){studioMultiSel=studioDeep(d,ug).map(x=>x.id);d.selectedId=lid;N.refresh()}
           if(studioMultiSel.length>1&&studioMultiSel.includes(lid)){
             const items=d.layers.filter(x=>studioMultiSel.includes(x.id)&&!x.locked);
             studioBeforeChange();
@@ -8610,7 +8632,8 @@ editor(){
         if(studioTool==="pen"){if(studioPenDraft)studioPenFinish(false);return}
         const layerEl=e.target.closest(".stud-layer");if(!layerEl)return;
         const d=studioDesign(),l=d.layers.find(x=>x.id===layerEl.dataset.id);
-        if(l&&l.group&&studioGroupEnter!==l.group){studioGroupEnter=l.group;studioMultiSel=[];d.selectedId=l.id;N.refresh();toast("Внутри группы: клик — элемент, Esc — вся группа");return}
+        const U=l&&studioUnitGroup(d,l,studioGroupEnter);
+        if(U){studioGroupEnter=U;const V=studioUnitGroup(d,l,U);if(V){studioMultiSel=studioDeep(d,V).map(x=>x.id)}else studioMultiSel=[];d.selectedId=l.id;N.refresh();toast("Внутри «"+studioGroupName(d,U)+"»: клик — элемент, Esc — на уровень выше");return}
         if(l&&l.type==="path"){studioEditingPathId=l.id;studioEditingPointIndex=null;N.refresh()}
         if(l&&l.type==="text"&&!l.locked){if(+l.curve){toast("Изогнутый текст правьте в панели справа");return}studioInlineEdit(layerEl,l)}
       });
@@ -8625,10 +8648,10 @@ editor(){
       if(mv){studioBeforeChange();if(studioMoveLayer(d,mv.dataset.mv,+mv.dataset.dir)){N.refresh();NEON.save()}return}
       const gt=e.target.closest("[data-gtog]");if(gt){const g=gt.dataset.gtog;studioGrpClosed.has(g)?studioGrpClosed.delete(g):studioGrpClosed.add(g);studioRenderSidebar(root);return}
       const gv=e.target.closest("[data-gvis]"),gl=e.target.closest("[data-glock]");
-      if(gv||gl){studioBeforeChange();const g=(gv||gl).dataset[gv?"gvis":"glock"],ms=d.layers.filter(x=>x.group===g),k=gv?"hidden":"locked",to=!ms.every(x=>x[k]);ms.forEach(x=>x[k]=to);N.refresh();NEON.save();return}
-      const gm=e.target.closest("[data-gmv]");if(gm){studioBeforeChange();studioNormGroups(d);if(studioMoveUnit(d,u=>u.g===gm.dataset.gmv,+gm.dataset.dir)){N.refresh();NEON.save()}return}
-      const gu=e.target.closest("[data-gun]");if(gu){studioBeforeChange();d.layers.forEach(x=>{if(x.group===gu.dataset.gun)delete x.group});studioNormGroups(d);toast("Группа разобрана");N.refresh();NEON.save();return}
-      const gs=e.target.closest("[data-gsel]");if(gs){studioGroupEnter=null;const ids=d.layers.filter(x=>x.group===gs.dataset.gsel).map(x=>x.id);studioMultiSel=ids;d.selectedId=ids[ids.length-1]||null;N.refresh();return}
+      if(gv||gl){studioBeforeChange();const g=(gv||gl).dataset[gv?"gvis":"glock"],ms=studioDeep(d,g),k=gv?"hidden":"locked",to=!ms.every(x=>x[k]);ms.forEach(x=>x[k]=to);N.refresh();NEON.save();return}
+      const gm=e.target.closest("[data-gmv]");if(gm){studioBeforeChange();studioNormGroups(d);if(studioMoveUnit(d,u=>u.g===gm.dataset.gmv,+gm.dataset.dir,studioGParent(d,gm.dataset.gmv))){N.refresh();NEON.save()}return}
+      const gu=e.target.closest("[data-gun]");if(gu){studioBeforeChange();studioDissolve(d,gu.dataset.gun);studioNormGroups(d);toast("Группа разобрана");N.refresh();NEON.save();return}
+      const gs=e.target.closest("[data-gsel]");if(gs){studioGroupEnter=studioGParent(d,gs.dataset.gsel);const ids=studioDeep(d,gs.dataset.gsel).map(x=>x.id);studioMultiSel=ids;d.selectedId=ids[ids.length-1]||null;N.refresh();return}
       if(sel){
         if(e.shiftKey){
           const id=sel.dataset.sel;
@@ -8641,7 +8664,7 @@ editor(){
     });
     if(lp){
       lp.addEventListener("contextmenu",e=>{const r=e.target.closest(".lr");if(!r)return;e.preventDefault();const d=studioDesign();
-        if(r.dataset.gsel){const g=r.dataset.gsel,ms=d.layers.filter(x=>x.group===g);studioMultiSel=ms.map(x=>x.id);d.selectedId=studioMultiSel[studioMultiSel.length-1];studioGroupEnter=null;N.refresh();
+        if(r.dataset.gsel){const g=r.dataset.gsel,ms=studioDeep(d,g);studioMultiSel=ms.map(x=>x.id);d.selectedId=studioMultiSel[studioMultiSel.length-1];studioGroupEnter=studioGParent(d,g);N.refresh();
           const fake=a=>({type:"click",target:{closest:s=>s==="[data-gact]"?{dataset:{gact:a}}:null}});
           studioMenu(e.clientX,e.clientY,[["Переименовать","двойной клик",()=>studioRenameGroup(g)],["Дублировать группу","",()=>studioGroupHandle(fake("dup"))],["На передний план","",()=>studioGroupHandle(fake("front"))],["На задний план","",()=>studioGroupHandle(fake("back"))],"-",[ms.every(x=>x.hidden)?"Показать":"Скрыть","",()=>studioGroupHandle(fake("hide"))],[ms.every(x=>x.locked)?"Открепить":"Закрепить","",()=>studioGroupHandle(fake("lock"))],["Разгруппировать","Ctrl+Shift+G",()=>{studioGroup(false)}],"-",["Удалить группу","",()=>studioGroupHandle(fake("del"))]]);return}
         const id=r.dataset.sel,l=d.layers.find(x=>x.id===id);if(!l)return;
@@ -8649,7 +8672,7 @@ editor(){
         const multi=studioMultiSel.length>1;
         studioMenu(e.clientX,e.clientY,[["Дублировать","Ctrl+D",()=>studioCtxAction("dup")],["На передний план","",()=>studioCtxAction("front")],["На задний план","",()=>studioCtxAction("back")],"-",
           [l.hidden?"Показать":"Скрыть","",()=>{studioBeforeChange();l.hidden=!l.hidden;N.refresh();NEON.save()}],[l.locked?"Открепить":"Закрепить","",()=>studioCtxAction("lock")],
-          ...(multi?[["Сгруппировать","Ctrl+G",()=>studioGroup(true)]]:l.group?[["Убрать из группы","",()=>{studioBeforeChange();delete l.group;studioNormGroups(d);N.refresh();NEON.save()}]]:[]),"-",["Удалить","Delete",()=>studioCtxAction("del")]]);
+          ...(multi?[["Сгруппировать","Ctrl+G",()=>studioGroup(true)]]:l.group?[["Убрать из группы","",()=>{studioBeforeChange();const par=studioGParent(d,l.group);if(par)l.group=par;else delete l.group;studioNormGroups(d);N.refresh();NEON.save()}]]:[]),"-",["Удалить","Delete",()=>studioCtxAction("del")]]);
       });
       lp.addEventListener("dblclick",e=>{const gs=e.target.closest("[data-gsel]");if(gs&&!e.target.closest("button"))studioRenameGroup(gs.dataset.gsel)});
       let drag=null;const clr=()=>lp.querySelectorAll(".drop-b,.drop-a,.drop-in").forEach(x=>x.classList.remove("drop-b","drop-a","drop-in"));
@@ -8702,7 +8725,7 @@ editor(){
       });
       ppOn("toggle",e=>{const s=e.target.closest&&e.target.closest(".pp-sec");if(!s||s!==e.target)return;if(s.open)studioPPClosed.delete(s.dataset.sec);else studioPPClosed.add(s.dataset.sec)},true);
       ppOn("click",e=>{
-        if(e.target.closest("[data-gexit]")){const d=studioDesign(),g=studioGroupEnter;studioGroupEnter=null;if(g){studioMultiSel=d.layers.filter(x=>x.group===g).map(x=>x.id);d.selectedId=studioMultiSel[studioMultiSel.length-1]||null}N.refresh();return}
+        if(e.target.closest("[data-gexit]")){const d=studioDesign(),g=studioGroupEnter;studioGroupEnter=g?studioGParent(d,g):null;if(g){studioMultiSel=studioDeep(d,g).map(x=>x.id);d.selectedId=studioMultiSel[studioMultiSel.length-1]||null}N.refresh();return}
         if(studioGroupHandle(e,root))return;
         const gr=e.target.closest("[data-act-grename]");if(gr){studioRenameGroup(gr.dataset.actGrename);return}
         const alignBtn=e.target.closest("[data-act-align]"),distBtn=e.target.closest("[data-act-dist]");
@@ -9261,11 +9284,18 @@ function studioRenameGroup(g){
   overlay("modal",{title:"Название группы",service:"studio",body:`<nv-input label="Название" data-gnm value="${esc(studioGroupName(d,g))}"></nv-input>`,
     actions:[{label:"Отмена"},{label:"Сохранить",variant:"primary",fn:()=>{const inp=document.querySelector(".ov [data-gnm]");const nm=((inp&&(inp.value||inp.getAttribute("value")))||"").trim();if(!nm)return;studioBeforeChange();d.groupNames={...(d.groupNames||{}),[g]:nm.slice(0,60)};N.refresh();NEON.save()}}]});
 }
+function studioDissolve(d,g){const gp=studioGP(d),par=studioGParent(d,g);d.layers.forEach(l=>{if(l.group===g){if(par)l.group=par;else delete l.group}});Object.keys(gp).forEach(c=>{if(gp[c]===g){if(par)gp[c]=par;else delete gp[c]}});delete gp[g]}
 function studioGroup(on){
   const d=studioDesign(),ids=studioSelIds();if(!ids.length)return;
-  studioBeforeChange();
-  if(on){if(ids.length<2){toast("Выделите несколько слоёв (рамкой или Shift+клик)",{tone:"warning"});return}const g="G"+studioUid();d.layers.forEach(l=>{if(ids.includes(l.id))l.group=g});studioNormGroups(d);studioMultiSel=d.layers.filter(l=>l.group===g).map(l=>l.id);toast("Сгруппировано: "+ids.length)}
-  else{const gs=new Set(d.layers.filter(l=>ids.includes(l.id)).map(l=>l.group).filter(Boolean));d.layers.forEach(l=>{if(gs.has(l.group))delete l.group});studioNormGroups(d);toast("Группа разобрана")}
+  studioBeforeChange();const gp=studioGP(d);
+  if(on){if(ids.length<2){studioHistory.undo.pop();toast("Выделите несколько слоёв (рамкой или Shift+клик)",{tone:"warning"});return}
+    /* Новая группа на уровне E (группа, в которую вошли) — целиком выделенные подгруппы становятся её детьми. */
+    const E=studioGroupEnter,g="G"+studioUid(),sel=d.layers.filter(l=>ids.includes(l.id)),done=new Set();
+    if(E)gp[g]=E;
+    const pre=sel.map(l=>[l,studioUnitGroup(d,l,E)]),full=new Set(pre.filter(([l,u])=>u&&studioDeep(d,u).every(x=>ids.includes(x.id))).map(([l,u])=>u));
+    full.forEach(u=>{gp[u]=g});pre.forEach(([l,u])=>{if(!u||!full.has(u))l.group=g});
+    studioNormGroups(d);studioMultiSel=studioDeep(d,g).map(l=>l.id);toast("Сгруппировано: "+studioUnits(d,g).length)}
+  else{const G=studioSelGroup();if(G)studioDissolve(d,G);else{const gs=new Set(d.layers.filter(l=>ids.includes(l.id)).map(l=>l.group).filter(Boolean));gs.forEach(g=>studioDissolve(d,g))}studioNormGroups(d);toast("Группа разобрана")}
   N.refresh();NEON.save();
 }
 /* Прилипание к краям/центру холста и других видимых слоёв (порог ~1%). */
@@ -9304,7 +9334,7 @@ document.addEventListener("keydown",e=>{
     if(studioPenDraft){studioPenDraft=null;studioDrag=null;N.refresh();e.preventDefault()}
     else if(studioEditingPathId){studioEditingPathId=null;studioEditingPointIndex=null;N.refresh();e.preventDefault()}
     else if(studioTool!=="select"){studioTool="select";N.refresh();e.preventDefault()}
-    else if(studioGroupEnter&&!typing){const d=studioDesign(),g=studioGroupEnter;studioGroupEnter=null;studioMultiSel=d.layers.filter(x=>x.group===g).map(x=>x.id);d.selectedId=studioMultiSel[studioMultiSel.length-1]||null;N.refresh();e.preventDefault()}
+    else if(studioGroupEnter&&!typing){const d=studioDesign(),g=studioGroupEnter;studioGroupEnter=studioGParent(d,g);studioMultiSel=studioDeep(d,g).map(x=>x.id);d.selectedId=studioMultiSel[studioMultiSel.length-1]||null;N.refresh();e.preventDefault()}
     return;
   }
   if(e.key==="Enter"&&studioPenDraft&&!typing){studioPenFinish(false);e.preventDefault();return}
