@@ -1887,6 +1887,7 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stud-gl.a i{display:block;width:100%;height:1px;background:#00b3ff}
 .stud-gl:hover{filter:drop-shadow(0 0 1px #00b3ff)}
 .stud-ruler{pointer-events:auto!important}
+.stud-rbox.drop-on #stud-stage-host{outline:2px dashed var(--svc-ink);outline-offset:-6px;background:color-mix(in srgb,var(--svc) 10%,transparent)}
 .stud-ruler.h{cursor:row-resize}.stud-ruler.v{cursor:col-resize}
 .stud-ruler-c{cursor:copy}
 body.gl-h,body.gl-h *{cursor:row-resize!important}body.gl-v,body.gl-v *{cursor:col-resize!important}body.gl-a,body.gl-a *{cursor:move!important}
@@ -8363,12 +8364,16 @@ function studioCtxHtml(){
 }
 function studioCtxAction(k){
   const d=studioDesign(),l=studioSelected();if(!l)return;
-  studioBeforeChange();const i=d.layers.indexOf(l);
-  if(k==="dup"){const c=JSON.parse(JSON.stringify(l));c.id=studioUid();c.x+=3;c.y+=3;delete c.group;d.layers.splice(i+1,0,c);d.selectedId=c.id}
-  else if(k==="front"){d.layers.splice(i,1);d.layers.push(l)}
-  else if(k==="back"){d.layers.splice(i,1);d.layers.unshift(l)}
-  else if(k==="fwd"&&i<d.layers.length-1){[d.layers[i],d.layers[i+1]]=[d.layers[i+1],d.layers[i]]}
-  else if(k==="bwd"&&i>0){[d.layers[i],d.layers[i-1]]=[d.layers[i-1],d.layers[i]]}
+  /* Несколько слоёв/группа — общие действия группы */
+  if(studioMultiSel.length>1&&["dup","front","back","hide","lock","del"].includes(k)){studioGroupHandle({type:"click",target:{closest:s=>s==="[data-gact]"?{dataset:{gact:k}}:null}});return}
+  if(studioMultiSel.length>1&&(k==="fwd"||k==="bwd")){studioBeforeChange();const G=studioSelGroup();if(G)studioMoveUnit(d,u=>u.g===G,k==="fwd"?1:-1);N.refresh();NEON.save();return}
+  studioBeforeChange();studioNormGroups(d);const i=d.layers.indexOf(l),P=l.group||null,mv=u=>u.id===l.id;
+  if(k==="dup"){const c=studioCloneLayers(d,[l],3,3)[0];if(l.group)c.group=l.group;d.layers.splice(i+1,0,c);d.selectedId=c.id}
+  /* Порядок — в пределах своего уровня (группы), группа не разваливается */
+  else if(k==="front"){while(studioMoveUnit(d,mv,1,P));}
+  else if(k==="back"){while(studioMoveUnit(d,mv,-1,P));}
+  else if(k==="fwd")studioMoveUnit(d,mv,1,P);
+  else if(k==="bwd")studioMoveUnit(d,mv,-1,P);
   else if(k==="lock")l.locked=!l.locked;
   else if(k==="hide")l.hidden=!l.hidden;
   else if(k==="del"){d.layers.splice(i,1);d.selectedId=null}
@@ -8590,6 +8595,7 @@ editor(){
           if(studioMultiSel.length>1&&studioMultiSel.includes(lid)){
             const items=d.layers.filter(x=>studioMultiSel.includes(x.id)&&!x.locked);
             studioBeforeChange();
+            if(e.altKey&&items.length){studioNormGroups(d);const cs=studioCloneLayers(d,items,0,0);const first=Math.min(...items.map(x=>d.layers.indexOf(x)));d.layers.splice(first,0,...cs);studioNormGroups(d);N.refresh()}
             studioDrag={mode:"multimove",startX:e.clientX,startY:e.clientY,rect:rect0,items:items.map(x=>({id:x.id,x:x.x,y:x.y}))};
             e.preventDefault();return;
           }
@@ -8619,7 +8625,9 @@ editor(){
         if(handle&&handle.dataset.h==="rot"){
           const lr=layerEl.getBoundingClientRect();
           studioDrag={mode:"rotate",id,cx:lr.left+lr.width/2,cy:lr.top+lr.height/2,rect};
-        }else studioDrag=handle?{mode:"resize",corner:handle.dataset.h||"se",id,startX:e.clientX,startY:e.clientY,rect,startXp:l.x,startYp:l.y,startW:l.w,startH:l.h}:{mode:"move",id,startX:e.clientX,startY:e.clientY,rect,startXp:l.x,startYp:l.y};
+        }else{
+          if(!handle&&e.altKey){/* Alt+перетаскивание: на месте остаётся копия, тянем оригинал */studioNormGroups(d);const c=studioCloneLayers(d,[l],0,0)[0];c.group=l.group;if(!c.group)delete c.group;d.layers.splice(d.layers.indexOf(l),0,c);N.refresh()}
+          studioDrag=handle?{mode:"resize",corner:handle.dataset.h||"se",id,startX:e.clientX,startY:e.clientY,rect,startXp:l.x,startYp:l.y,startW:l.w,startH:l.h}:{mode:"move",id,startX:e.clientX,startY:e.clientY,rect,startXp:l.x,startYp:l.y};}
         e.preventDefault();
       });
       stage.addEventListener("mousemove",e=>{
@@ -8830,15 +8838,24 @@ editor(){
       for(const f of files){try{const{dataUrl}=await fileToDataUrl(f,2000);const u=await apiPost("/api/v1/studio/uploads",{data_url:dataUrl,name:f.name});(studioUploads=studioUploads||[]).unshift({id:u.id,name:u.name,thumb:u.thumb,width:u.width,height:u.height})}catch(err){toast(f.name+": "+(err.message||"ошибка"),{tone:"danger"})}}
       studioRefreshPanel();
     });
-    const stg=root.querySelector(".stud-stage");
-    if(stg)stg.addEventListener("contextmenu",e=>{
-      const el=e.target.closest(".stud-layer");if(!el)return;e.preventDefault();
-      const d=studioDesign(),l=d.layers.find(x=>x.id===el.dataset.id);if(!l)return;
-      if(!studioMultiSel.includes(l.id)){d.selectedId=l.id;studioMultiSel=[];N.refresh()}
-      studioMenu(e.clientX,e.clientY,[["Копировать","Ctrl+C",()=>{studioClipboard=JSON.stringify(d.layers.filter(x=>studioSelIds().includes(x.id)));toast("Скопировано")}],["Вставить","Ctrl+V",()=>{if(!studioClipboard)return;studioBeforeChange();const add=JSON.parse(studioClipboard).map(x=>({...x,id:studioUid(),x:x.x+3,y:x.y+3}));d.layers.push(...add);d.selectedId=add[add.length-1].id;N.refresh();NEON.save()}],["Дублировать","Ctrl+D",()=>studioCtxAction("dup")],"-",
+    const rbx=root.querySelector(".stud-rbox");
+    if(rbx)rbx.addEventListener("contextmenu",e=>{
+      if(e.target.closest(".stud-ruler,.stud-ruler-c,.stud-gl"))return;e.preventDefault();
+      const d=studioDesign(),el=e.target.closest(".stud-layer"),l=el&&d.layers.find(x=>x.id===el.dataset.id);
+      const pasteIt=async()=>{let t="";try{t=await navigator.clipboard.readText()}catch(err){}
+        if(t&&t.startsWith(STUDIO_CLIP)){try{const o=JSON.parse(t.slice(STUDIO_CLIP.length)),L=o.layers;L._gp=o.gp||{};L._gn=o.gn||{};studioPasteLayers(L,true);return}catch(err){}}
+        if(studioClipboard){const o=JSON.parse(studioClipboard),L=Array.isArray(o)?o:o.layers;L._gp=o.gp||{};L._gn=o.gn||{};studioPasteLayers(L,true)}else toast("Буфер пуст — скопируйте слои (Ctrl+C) или вставьте картинку Ctrl+V",{tone:"warning"})};
+      const copyIt=()=>{const ids=studioSelIds(),ls=d.layers.filter(x=>ids.includes(x.id)),gs={};ls.forEach(x=>studioChain(d,x).forEach(g=>{const p=studioGParent(d,g);if(p)gs[g]=p}));const pl=JSON.stringify({layers:ls,gp:gs});studioClipboard=pl;try{navigator.clipboard.writeText(STUDIO_CLIP+pl)}catch(err){}toast("Скопировано слоёв: "+ls.length)};
+      const common=[["Вставить","Ctrl+V",pasteIt],["Выделить всё","Ctrl+A",()=>{studioMultiSel=d.layers.filter(x=>!x.hidden&&!x.locked).map(x=>x.id);d.selectedId=studioMultiSel[studioMultiSel.length-1]||null;studioGroupEnter=null;N.refresh()}]];
+      if(!l){studioMenu(e.clientX,e.clientY,[...common,"-",["Вписать в экран","Ctrl 0",()=>studioSetZoom(1)],[S.studio.rulers!==false?"Скрыть линейки":"Показать линейки","",()=>N.acts.studRulers()],["Направляющие…","",()=>{const b=document.querySelector('[data-act="studGuidesPanel"]');if(b)studioGuidesPanel(b)}]]);return}
+      if(!studioMultiSel.includes(l.id)){const ug=studioUnitGroup(d,l,studioGroupEnter);if(ug){studioMultiSel=studioDeep(d,ug).map(x=>x.id)}else studioMultiSel=[];d.selectedId=l.id;N.refresh()}
+      const multi=studioMultiSel.length>1,G=studioSelGroup();
+      studioMenu(e.clientX,e.clientY,[["Копировать","Ctrl+C",copyIt],...common.slice(0,1),["Дублировать","Ctrl+D",()=>{if(multi)studioGroupHandle({type:"click",target:{closest:s=>s==="[data-gact]"?{dataset:{gact:"dup"}}:null}});else studioCtxAction("dup")}],"-",
+        ["Копировать стиль","Ctrl+Alt+C",studioCopyStyle],["Вставить стиль","Ctrl+Alt+V",studioPasteStyle],"-",
         ["На передний план","",()=>studioCtxAction("front")],["Вперёд","",()=>studioCtxAction("fwd")],["Назад","",()=>studioCtxAction("bwd")],["На задний план","",()=>studioCtxAction("back")],"-",
         [l.locked?"Открепить":"Закрепить","",()=>studioCtxAction("lock")],[l.hidden?"Показать":"Скрыть","",()=>studioCtxAction("hide")],
-        ...(studioMultiSel.length>1?[["Сгруппировать","Ctrl+G",()=>studioGroup(true)]]:l.group?[["Разгруппировать","Ctrl+Shift+G",()=>{d.selectedId=l.id;studioMultiSel=[l.id];studioGroup(false)}]]:[]),
+        ...(G?[["Разгруппировать","Ctrl+Shift+G",()=>studioGroup(false)],["Переименовать группу","",()=>studioRenameGroup(G)]]:multi?[["Сгруппировать","Ctrl+G",()=>studioGroup(true)]]:[]),
+        ...(window.studioExportSelection?[["Сохранить выделенное в PNG","",()=>studioExportSelection()]]:[]),
         "-",["Удалить","Delete",()=>studioCtxAction("del")]]);
     });
     const logoFile=root.querySelector("#stud-logo-file");
@@ -8929,6 +8946,78 @@ function studioPointDelete(){
     studioEditingPathId=null;if(d.selectedId===l.id)d.selectedId=null;
   }
   N.refresh();NEON.save();
+}
+/* ---------- Буфер обмена, файлы, стиль ----------
+   Копирование слоёв кладёт их в системный буфер (можно вставить в другой дизайн или вкладку).
+   Вставка: свои слои → картинка (скриншот) → обычный текст как новый текстовый слой. */
+const STUDIO_CLIP="NEON-STUDIO-LAYERS:";
+function studioInEditor(){const r=NEON.route();return r.s==="studio"&&r.v==="editor"}
+function studioTyping(){const a=document.activeElement;return a&&(["INPUT","TEXTAREA","SELECT"].includes(a.tagName)||a.isContentEditable)}
+function studioPasteLayers(src,shift){
+  const d=studioDesign();studioBeforeChange();
+  const tmp={...d,layers:src,groupParents:src._gp||{},groupNames:src._gn||{}};
+  const added=studioCloneLayers(tmp,src,shift?3:0,shift?3:0);
+  Object.assign(studioGP(d),tmp.groupParents);d.groupNames={...(d.groupNames||{}),...tmp.groupNames};
+  d.layers.push(...added);studioNormGroups(d);d.selectedId=added[added.length-1].id;studioMultiSel=added.length>1?added.map(x=>x.id):[];studioGroupEnter=null;N.refresh();NEON.save();
+}
+async function studioAddImageAt(file,cx,cy){
+  const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;
+  const{dataUrl,naturalW,naturalH}=await fileToDataUrl(file,1600);studioBeforeChange();
+  const l=studioLayerDefaults("image");l.src=dataUrl;l.w=Math.min(80,naturalW/F.w*100||50);l.h=l.w*F.w/F.h*(naturalH/(naturalW||1));
+  if(l.h>90){const k=90/l.h;l.h*=k;l.w*=k}
+  l.x=(cx==null?50:cx)-l.w/2;l.y=(cy==null?50:cy)-l.h/2;d.layers.push(l);d.selectedId=l.id;studioMultiSel=[];N.refresh();NEON.save();
+}
+document.addEventListener("copy",e=>{
+  if(!studioInEditor()||studioTyping())return;const d=studioDesign(),ids=studioSelIds();if(!ids.length)return;
+  const ls=d.layers.filter(x=>ids.includes(x.id)),gs={},gn={};ls.forEach(l=>studioChain(d,l).forEach(g=>{const p=studioGParent(d,g);if(p)gs[g]=p;if(d.groupNames&&d.groupNames[g])gn[g]=d.groupNames[g]}));
+  const payload=JSON.stringify({layers:ls,gp:gs,gn});studioClipboard=payload;
+  e.clipboardData.setData("text/plain",STUDIO_CLIP+payload);e.preventDefault();toast("Скопировано слоёв: "+ls.length);
+});
+document.addEventListener("cut",e=>{
+  if(!studioInEditor()||studioTyping())return;const d=studioDesign(),ids=studioSelIds();if(!ids.length)return;
+  document.dispatchEvent(new ClipboardEvent("copy",{clipboardData:e.clipboardData}));
+  const ls=d.layers.filter(x=>ids.includes(x.id)),gs={};ls.forEach(l=>studioChain(d,l).forEach(g=>{const p=studioGParent(d,g);if(p)gs[g]=p}));
+  e.clipboardData.setData("text/plain",STUDIO_CLIP+JSON.stringify({layers:ls,gp:gs}));e.preventDefault();
+  studioBeforeChange();d.layers=d.layers.filter(x=>!ids.includes(x.id));d.selectedId=null;studioMultiSel=[];studioNormGroups(d);N.refresh();NEON.save();
+});
+document.addEventListener("paste",async e=>{
+  if(!studioInEditor()||studioTyping())return;const cd=e.clipboardData;if(!cd)return;
+  const txt=cd.getData("text/plain")||"";
+  const parse=t=>{try{const o=JSON.parse(t);const L=Array.isArray(o)?o:o.layers;L._gp=o.gp||{};L._gn=o.gn||{};return L}catch(err){return null}};
+  if(txt.startsWith(STUDIO_CLIP)){const L=parse(txt.slice(STUDIO_CLIP.length));if(L&&L.length){e.preventDefault();studioPasteLayers(L,true);return}}
+  const img=[...cd.files||[]].find(f=>/^image\//.test(f.type));
+  if(img){e.preventDefault();if(img.type==="image/svg+xml"&&window.studioImportSvg){studioImportSvg(await img.text());return}try{await studioAddImageAt(img);toast("Картинка вставлена")}catch(err){toast("Не удалось вставить картинку",{tone:"danger"})}return}
+  if(/^\s*<svg[\s>]/i.test(txt)&&window.studioImportSvg){e.preventDefault();studioImportSvg(txt);return}
+  if(txt.trim()){e.preventDefault();const d=studioDesign();studioBeforeChange();const l=Object.assign(studioLayerDefaults("text"),{text:txt.trim().slice(0,600),align:"left"});d.layers.push(l);d.selectedId=l.id;studioMultiSel=[];N.refresh();NEON.save();return}
+  if(studioClipboard){e.preventDefault();const L=parse(studioClipboard);if(L)studioPasteLayers(L,true)}
+});
+/* Перетаскивание файлов картинок прямо на рабочую область */
+document.addEventListener("dragover",e=>{if(!studioInEditor())return;const h=e.target.closest&&e.target.closest(".stud-rbox");if(!h||![...(e.dataTransfer.types||[])].includes("Files"))return;e.preventDefault();e.dataTransfer.dropEffect="copy";h.classList.add("drop-on")});
+document.addEventListener("dragleave",e=>{const h=e.target.closest&&e.target.closest(".stud-rbox");if(h&&!h.contains(e.relatedTarget))h.classList.remove("drop-on")});
+document.addEventListener("drop",async e=>{
+  if(!studioInEditor())return;const h=e.target.closest&&e.target.closest(".stud-rbox");if(!h)return;const files=[...(e.dataTransfer.files||[])];if(!files.length)return;
+  e.preventDefault();h.classList.remove("drop-on");const st=document.querySelector(".stud-stage");if(!st)return;const r=st.getBoundingClientRect();
+  let cx=(e.clientX-r.left)/r.width*100,cy=(e.clientY-r.top)/r.height*100;
+  for(const f of files){
+    if(f.type==="image/svg+xml"||/\.svg$/i.test(f.name)){if(window.studioImportSvg)studioImportSvg(await f.text(),cx,cy);continue}
+    if(/^image\//.test(f.type)){try{await studioAddImageAt(f,cx,cy)}catch(err){toast("Не удалось открыть "+f.name,{tone:"danger"})}cx+=4;cy+=4}
+  }
+});
+/* Стиль: что копируется у разных типов. */
+const STUDIO_STYLE_KEYS={text:["font","fontSize","weight","color","align","upper","lineHeight","letterSpacing","shadow","shadowSet","neon","outline","grad","bgColor","bgRadius","opacity","blendMode"],
+  shape:["fill","stroke","radius","effect","opacity","blendMode"],path:["fill","stroke","effect","opacity","blendMode"],icon:["color","effect","opacity","blendMode"],
+  image:["filter","filterName","mask","radius","border","sticker","effect","opacity","blendMode"]};
+let studioStyleClip=null;
+function studioCopyStyle(){const l=studioSelected();if(!l)return;const keys=STUDIO_STYLE_KEYS[l.type]||[];studioStyleClip={type:l.type,v:JSON.parse(JSON.stringify(Object.fromEntries(keys.filter(k=>l[k]!==undefined).map(k=>[k,l[k]]))))};toast("Стиль скопирован — Ctrl+Alt+V, чтобы применить")}
+function studioPasteStyle(){
+  if(!studioStyleClip){toast("Сначала скопируйте стиль: Ctrl+Alt+C",{tone:"warning"});return}
+  const d=studioDesign(),ids=studioSelIds(),ls=d.layers.filter(x=>ids.includes(x.id));if(!ls.length)return;studioBeforeChange();
+  const shared=["opacity","blendMode","effect"],color=studioStyleClip.v.color||(studioStyleClip.v.fill&&studioStyleClip.v.fill.color);let n=0;
+  ls.forEach(l=>{const keys=STUDIO_STYLE_KEYS[l.type]||[];Object.entries(studioStyleClip.v).forEach(([k,v])=>{if(keys.includes(k)&&(l.type===studioStyleClip.type||shared.includes(k))){l[k]=JSON.parse(JSON.stringify(v));n++}});
+    /* разные типы: переносим хотя бы цвет */
+    if(l.type!==studioStyleClip.type&&color){if(l.type==="shape"||l.type==="path")l.fill={...studioFillOf(l),color};else if(l.type==="text"||l.type==="icon")l.color=color}
+    studioPatchLayerDom(l)});
+  studioRenderSidebar(document);studioPaintGroupBox();NEON.save();toast("Стиль применён");
 }
 /* ---------- Масштаб и перемещение холста ----------
    studioZoom — множитель к «вписать в экран» (1 = целиком в рабочей области). Меняем ширину холста
@@ -9284,6 +9373,13 @@ function studioRenameGroup(g){
   overlay("modal",{title:"Название группы",service:"studio",body:`<nv-input label="Название" data-gnm value="${esc(studioGroupName(d,g))}"></nv-input>`,
     actions:[{label:"Отмена"},{label:"Сохранить",variant:"primary",fn:()=>{const inp=document.querySelector(".ov [data-gnm]");const nm=((inp&&(inp.value||inp.getAttribute("value")))||"").trim();if(!nm)return;studioBeforeChange();d.groupNames={...(d.groupNames||{}),[g]:nm.slice(0,60)};N.refresh();NEON.save()}}]});
 }
+/* Копии слоёв: группы, целиком попавшие в набор, копируются тоже (с новыми id и той же вложенностью). */
+function studioCloneLayers(d,ls,dx,dy){
+  const gp=studioGP(d),ids=new Set(ls.map(l=>l.id)),map={};
+  ls.forEach(l=>studioChain(d,l).forEach(g=>{if(!(g in map)&&studioDeep(d,g).every(x=>ids.has(x.id)))map[g]="G"+studioUid()}));
+  Object.keys(map).forEach(g=>{const par=studioGParent(d,g);const np=par&&map[par]?map[par]:par;if(np)gp[map[g]]=np;if(d.groupNames&&d.groupNames[g])d.groupNames[map[g]]=d.groupNames[g]+" (копия)"});
+  return ls.map(l=>{const c=JSON.parse(JSON.stringify(l));c.id=studioUid();c.x+=dx||0;c.y+=dy||0;c.locked=false;if(l.group&&map[l.group])c.group=map[l.group];return c});
+}
 function studioDissolve(d,g){const gp=studioGP(d),par=studioGParent(d,g);d.layers.forEach(l=>{if(l.group===g){if(par)l.group=par;else delete l.group}});Object.keys(gp).forEach(c=>{if(gp[c]===g){if(par)gp[c]=par;else delete gp[c]}});delete gp[g]}
 function studioGroup(on){
   const d=studioDesign(),ids=studioSelIds();if(!ids.length)return;
@@ -9345,8 +9441,9 @@ document.addEventListener("keydown",e=>{
   if(!editing){
     const d=studioDesign(),ids=studioSelIds(),sel=d.layers.filter(x=>ids.includes(x.id)&&!x.locked);
     if(e.key.startsWith("Arrow")&&sel.length){
-      e.preventDefault();studioBeforeChange();const st=e.shiftKey?5:0.5;
-      sel.forEach(x=>{if(e.key==="ArrowLeft")x.x-=st;if(e.key==="ArrowRight")x.x+=st;if(e.key==="ArrowUp")x.y-=st;if(e.key==="ArrowDown")x.y+=st;studioPatchLayerDom(x)});
+      e.preventDefault();studioBeforeChange();const F=STUDIO_FMT[d.format]||STUDIO_FMT.square,px=e.shiftKey?10:1,sx=px/F.w*100,sy=px/F.h*100;
+      /* 1 px макета, с Shift — 10 px */
+      sel.forEach(x=>{if(e.key==="ArrowLeft")x.x-=sx;if(e.key==="ArrowRight")x.x+=sx;if(e.key==="ArrowUp")x.y-=sy;if(e.key==="ArrowDown")x.y+=sy;studioPatchLayerDom(x)});studioPaintGroupBox();
       studioSyncProps(null,true);NEON.save();return;
     }
     if((e.key==="Delete"||e.key==="Backspace")&&sel.length&&!studioEditingPathId){
@@ -9354,12 +9451,13 @@ document.addEventListener("keydown",e=>{
     }
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="g"){e.preventDefault();studioGroup(!e.shiftKey);return}
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="a"){e.preventDefault();studioMultiSel=d.layers.filter(x=>!x.hidden&&!x.locked).map(x=>x.id);d.selectedId=studioMultiSel[studioMultiSel.length-1]||null;N.refresh();return}
-    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="c"&&ids.length){studioClipboard=JSON.stringify(d.layers.filter(x=>ids.includes(x.id)));toast("Скопировано слоёв: "+ids.length);return}
-    if((e.ctrlKey||e.metaKey)&&(e.key.toLowerCase()==="v"&&studioClipboard||e.key.toLowerCase()==="d"&&sel.length)){
-      e.preventDefault();studioBeforeChange();
-      const src=e.key.toLowerCase()==="v"?JSON.parse(studioClipboard):JSON.parse(JSON.stringify(sel));
-      const added=src.map(x=>({...x,id:studioUid(),x:x.x+3,y:x.y+3,locked:false}));
-      d.layers.push(...added);d.selectedId=added[added.length-1].id;studioMultiSel=added.length>1?added.map(x=>x.id):[];
+    /* Копировать/вставить стиль */
+    if((e.ctrlKey||e.metaKey)&&e.altKey&&e.code==="KeyC"&&ids.length){e.preventDefault();studioCopyStyle();return}
+    if((e.ctrlKey||e.metaKey)&&e.altKey&&e.code==="KeyV"&&ids.length){e.preventDefault();studioPasteStyle();return}
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="d"&&sel.length){
+      e.preventDefault();studioBeforeChange();studioNormGroups(d);
+      const added=studioCloneLayers(d,sel,3,3),last=Math.max(...sel.map(l=>d.layers.indexOf(l)));d.layers.splice(last+1,0,...added);studioNormGroups(d);
+      d.selectedId=added[added.length-1].id;studioMultiSel=added.length>1?added.map(x=>x.id):[];
       N.refresh();NEON.save();return;
     }
   }
