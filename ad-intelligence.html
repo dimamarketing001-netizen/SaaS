@@ -1887,6 +1887,14 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stud-gl.a i{display:block;width:100%;height:1px;background:#00b3ff}
 .stud-gl:hover{filter:drop-shadow(0 0 1px #00b3ff)}
 .stud-ruler{pointer-events:auto!important}
+.stud-measure{position:absolute;inset:0;z-index:9;pointer-events:none}
+.stud-measure i{position:absolute;display:block}
+.stud-measure .ma{outline:1px solid #ff2d78}.stud-measure .mb{outline:1px dashed #ff2d78}
+.stud-measure .ml.h{height:0;border-top:1px solid #ff2d78}.stud-measure .ml.v{width:0;border-left:1px solid #ff2d78}
+.stud-measure .ml.h::before,.stud-measure .ml.h::after{content:"";position:absolute;top:-4px;width:1px;height:7px;background:#ff2d78}.stud-measure .ml.h::before{left:0}.stud-measure .ml.h::after{right:0}
+.stud-measure .ml.v::before,.stud-measure .ml.v::after{content:"";position:absolute;left:-4px;height:1px;width:7px;background:#ff2d78}.stud-measure .ml.v::before{top:0}.stud-measure .ml.v::after{bottom:0}
+.stud-measure b{position:absolute;font:600 10.5px var(--font-mono);color:#fff;background:#ff2d78;border-radius:4px;padding:1px 5px;white-space:nowrap}
+.stud-measure .ml.h b{left:50%;top:5px;transform:translateX(-50%)}.stud-measure .ml.v b{top:50%;left:5px;transform:translateY(-50%)}
 .stud-rbox.drop-on #stud-stage-host{outline:2px dashed var(--svc-ink);outline-offset:-6px;background:color-mix(in srgb,var(--svc) 10%,transparent)}
 .stud-ruler.h{cursor:row-resize}.stud-ruler.v{cursor:col-resize}
 .stud-ruler-c{cursor:copy}
@@ -7143,7 +7151,7 @@ function studioLayerInner(l){
   if(l.type==="path"){
     const f=studioFillOf(l),s=studioStrokeOf(l),gid="pg-"+l.id;
     const grad=f.type==="gradient"?`<linearGradient id="${gid}" gradientTransform="rotate(${f.angle||90} .5 .5)"><stop offset="0" stop-color="${esc(f.color)}"/><stop offset="1" stop-color="${esc(f.color2)}"/></linearGradient>`:f.type==="radial"?`<radialGradient id="${gid}"><stop offset="0" stop-color="${esc(f.color)}"/><stop offset="1" stop-color="${esc(f.color2)}"/></radialGradient>`:"";
-    return`<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:100%;overflow:visible">${grad?`<defs>${grad}</defs>`:""}<path d="${studioPathD(l)}" fill="${f.type==="none"?"none":grad?`url(#${gid})`:esc(f.color)}" stroke="${s.enabled?esc(s.color):"none"}" stroke-width="${s.width}" stroke-dasharray="${studioDashArr(s.dash)}" vector-effect="non-scaling-stroke"/></svg>`;
+    return`<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:100%;overflow:visible">${grad?`<defs>${grad}</defs>`:""}<path d="${studioPathD(l)}" fill="${f.type==="none"?"none":grad?`url(#${gid})`:esc(f.color)}" stroke="${s.enabled?esc(s.color):"none"}" stroke-width="${s.width}" stroke-dasharray="${studioDashArr(s.dash)}" stroke-linecap="${s.cap||"butt"}" stroke-linejoin="${s.join||"miter"}" vector-effect="non-scaling-stroke"/></svg>`;
   }
   if(l.type==="shape"){
     const f=studioFillOf(l),s=studioStrokeOf(l);
@@ -7450,7 +7458,9 @@ function studioFillSecHtml(l){
 function studioStrokeSecHtml(l){
   const s=studioStrokeOf(l);
   return ppSec("stroke","Обводка",`${ppOnOff("Обводка",s.enabled,'data-prop-set="stroke.enabled" data-val=""','data-prop-set="stroke.enabled" data-val="1"')}
-    ${s.enabled?ppColor("Цвет","stroke.color",s.color)+ppRng("Толщина","stroke.width",s.width,1,20,1)+`<div class="pp-row"><span class="pp-l">Линия</span>${ppSeg([["Сплошная","solid"],["Штрих","dashed"],["Точки","dotted"]].map(([lb,v])=>[ppSvg(PP_DASH[v]),`data-prop-set="stroke.dash" data-val="${v}"`,s.dash===v,lb]),"pp-seg-ic")}</div>`:""}`,s.enabled?"вкл":"");
+    ${s.enabled?ppColor("Цвет","stroke.color",s.color)+ppRng("Толщина","stroke.width",s.width,1,20,1)+`<div class="pp-row"><span class="pp-l">Линия</span>${ppSeg([["Сплошная","solid"],["Штрих","dashed"],["Точки","dotted"]].map(([lb,v])=>[ppSvg(PP_DASH[v]),`data-prop-set="stroke.dash" data-val="${v}"`,s.dash===v,lb]),"pp-seg-ic")}</div>`
+      +(l.type==="path"?`<div class="pp-row"><span class="pp-l">Концы</span>${ppSeg([["Срезанные","butt",'<path d="M6 12h12" stroke-width="6" stroke-linecap="butt"/><path d="M18 6v12" stroke-width="1"/>'],["Круглые","round",'<path d="M6 12h12" stroke-width="6" stroke-linecap="round"/><path d="M18 6v12" stroke-width="1"/>'],["Квадратные","square",'<path d="M6 12h9" stroke-width="6" stroke-linecap="square"/><path d="M18 6v12" stroke-width="1"/>']].map(([lb,v,g])=>[ppSvg(g),`data-prop-set="stroke.cap" data-val="${v}"`,(s.cap||"butt")===v,lb]),"pp-seg-ic")}</div>
+        <div class="pp-row"><span class="pp-l">Углы</span>${ppSeg([["Острые","miter"],["Скруглённые","round"],["Срезанные","bevel"]].map(([lb,v])=>[ppSvg(`<path d="M5 18 12 7l7 11" stroke-width="4" stroke-linejoin="${v}" stroke-linecap="butt"/>`),`data-prop-set="stroke.join" data-val="${v}"`,(s.join||"miter")===v,lb]),"pp-seg-ic")}</div>`:""):""}`,s.enabled?"вкл":"");
 }
 /* Габариты слоя с учётом поворота (в % холста): углы поворачиваем вокруг центра в пикселях макета. */
 function studioRotBox(l,F){
@@ -7616,7 +7626,8 @@ function studioPropsHtml0(){
     +ppSec("shape","Фигура",`${ppSeg(STUDIO_SHAPES.map(([v,i,t])=>[ic(i,15),`data-prop-set="shape" data-val="${v}"`,l.shape===v,t]),"pp-seg-ic six")}
       ${l.shape==="rect"?ppRng("Скругление","radius",l.radius||0,0,80,2):""}
       ${l.shape==="polygon"||l.shape==="star"?ppRng(l.shape==="star"?"Лучей":"Сторон","sides",sides,3,12,1):""}
-      ${l.shape==="star"?ppRng("Глубина луча","innerRadius",l.innerRadius||45,10,90,5):""}`)
+      ${l.shape==="star"?ppRng("Глубина луча","innerRadius",l.innerRadius||45,10,90,5):""}
+      <button type="button" class="pp-btn" data-act-topath data-tip="Превратить в кривую с точками — можно править узлы пером">${ic("spline",14)}Превратить в кривую</button>`)
     +studioFillSecHtml(l)+studioStrokeSecHtml(l)+studioShadowSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
   }
   if(l.type==="path"){
@@ -7624,11 +7635,13 @@ function studioPropsHtml0(){
     return studioPropsHeadHtml("spline","Кривая",grp&&"в группе «"+grp+"»")
     +ppSec("path","Контур",`<button type="button" class="pp-btn${studioEditingPathId===l.id?" on":""}" data-act="studEditPts">${ic("pen-tool",14)}${studioEditingPathId===l.id?"Закончить правку узлов":"Редактировать узлы"}</button>
       <div class="pp-row"><span class="pp-l">Контур</span>${ppSeg([["Открытый",'data-prop-set="closed" data-val=""',!l.closed],["Замкнутый",'data-prop-set="closed" data-val="1"',!!l.closed]])}</div>
+      ${!l.closed?`<button type="button" class="pp-btn" data-act-contpath>${ic("pen-tool",14)}Продолжить контур пером</button>`:""}
+      <p class="pp-hint">В режиме правки клик по линии добавляет точку, Delete — удаляет выбранную.</p>
       ${pt?`<div class="pp-row"><span class="pp-l">Точка</span><div class="pp-ibs">${ppSeg([["Излом",'data-act-pttype="corner"',pt.type==="corner"],["Плавная",'data-act-pttype="smooth"',pt.type==="smooth"]])}${ppIb("trash-2","data-act-ptdel",false,"Удалить точку")}</div></div>`:""}`)
     +studioFillSecHtml(l)+studioStrokeSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
   }
   if(l.type==="icon")return studioPropsHeadHtml(l.icon||"star","Иконка",grp&&"в группе «"+grp+"»")
-    +ppSec("icon","Иконка",`${ppColor("Цвет","color",l.color)}<div class="stud-icon-pick">${STUDIO_ICONS.map(n=>`<button type="button" class="${l.icon===n?"on":""}" data-prop-set="icon" data-val="${n}" aria-label="${n}">${ic(n,16)}</button>`).join("")}</div>`)
+    +ppSec("icon","Иконка",`${ppColor("Цвет","color",l.color)}<button type="button" class="pp-btn" data-act-icon2path>${ic("spline",14)}Разобрать на кривые</button><div class="stud-icon-pick">${STUDIO_ICONS.map(n=>`<button type="button" class="${l.icon===n?"on":""}" data-prop-set="icon" data-val="${n}" aria-label="${n}">${ic(n,16)}</button>`).join("")}</div>`)
     +studioShadowSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
   if(l.type==="image"){
     const st=l.sticker&&l.sticker.enabled,bd=l.border&&l.border.enabled,mask=l.mask||"none",fl=l.filter||{};
@@ -7776,7 +7789,7 @@ async function studioRenderCanvas(design,scale){
           ctx.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,b.x,b.y);ctx.closePath();
         }
         if(f.type!=="none"){ctx.fillStyle=f.type==="gradient"?(()=>{const g=studioGradLine(x,y,w,h,f.angle||90);const gr=ctx.createLinearGradient(g.x0,g.y0,g.x1,g.y1);gr.addColorStop(0,f.color);gr.addColorStop(1,f.color2);return gr})():f.type==="radial"?(()=>{const gr=ctx.createRadialGradient(x+w/2,y+h/2,0,x+w/2,y+h/2,Math.max(w,h)/2);gr.addColorStop(0,f.color);gr.addColorStop(1,f.color2);return gr})():f.color;ctx.fill()}
-        if(s.enabled){ctx.strokeStyle=s.color;ctx.lineWidth=s.width*(scale||1);ctx.setLineDash(studioDashArr(s.dash,scale).split(",").filter(Boolean).map(Number));ctx.stroke()}
+        if(s.enabled){ctx.strokeStyle=s.color;ctx.lineWidth=s.width*(scale||1);ctx.lineCap=s.cap||"butt";ctx.lineJoin=s.join||"miter";ctx.setLineDash(studioDashArr(s.dash,scale).split(",").filter(Boolean).map(Number));ctx.stroke()}
       }
     }else if(l.type==="icon"){
       try{const img=await studioLoadImg(studioIconDataUrl(l.icon||"star",l.color));ctx.drawImage(img,x,y,w,h)}catch(e){}
@@ -8313,7 +8326,7 @@ function studioPanelHtml(tab){
     ${mine.length?`<div class="sect-t">Мои шаблоны</div><div class="s2-grid2">${mine.map(t=>`<div class="th" data-act="studUseUserTpl" data-id="${t.id}" title="${esc(t.name)} · ${esc(t.category||"")}"><img src="${esc(t.thumb||"")}" alt=""><button type="button" class="x" data-act="studDelUserTpl" data-id="${t.id}" aria-label="Удалить шаблон">×</button></div>`).join("")}</div>`:""}
     ${built.length?`${mine.length?'<div class="sect-t">Готовые</div>':""}<div class="s2-grid2">${built.map(([t,i])=>`<div class="th" data-act="studUseTplHere" data-i="${i}" title="${esc(t.name)}"><img data-s2tpl="${i}" alt=""></div>`).join("")}</div>`:""}`}
   if(tab==="elements")return`<h3>Элементы</h3><div class="sect-t">Фигуры</div><div class="s2-tiles">${STUDIO_SHAPES.map(([sh,icn,lb])=>`<button type="button" data-act="studAdd" data-type="shape" data-shape="${sh}">${ic(icn,20)}${lb}</button>`).join("")}</div>
-    <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label></div>
+    <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
     <div class="sect-t">Иконки</div><input type="search" class="num" data-s2icon placeholder="Поиск: телефон, скидка, house…" value="${esc(studioIconQ)}" style="width:100%;text-align:left;padding:0 10px">
     <div class="s2-icons" data-s2icons>${studioIconList().map(n=>`<button type="button" data-act="studAddIcon" data-icon="${esc(n)}" title="${esc(n)}">${ic(n,18)}</button>`).join("")}</div>`;
   if(tab==="text")return`<h3>Текст</h3><div class="s2-tpres">${STUDIO_TEXT_PRESETS.map(p=>`<button type="button" data-act="studAddTextPreset" data-k="${p.k}"><span style="${p.style}">${esc(p.label)}</span></button>`).join("")}</div>
@@ -8396,7 +8409,7 @@ function studioMenu(x,y,items){
 function studioDownloadMenu(btn){
   const r=btn.getBoundingClientRect();
   const multi=studioPagesOf(studioDesign()).length>1;
-  studioMenu(r.left,r.bottom+4,[["PNG",multi?"текущая страница":"лучшее качество",()=>studioExport("png")],["JPEG","меньше файл",()=>studioExport("jpeg")],["PNG без фона","прозрачный",()=>studioExport("png-alpha")],["PNG ×2","высокое разрешение",()=>studioExport("scale:2")],["PNG нужной ширины…","",studioExportWidth],["JPEG до 1 МБ","сжать",()=>studioExportUnder(1024)],["JPEG до 300 КБ","для соцсетей",()=>studioExportUnder(300)],"-",
+  studioMenu(r.left,r.bottom+4,[["PNG",multi?"текущая страница":"лучшее качество",()=>studioExport("png")],["JPEG","меньше файл",()=>studioExport("jpeg")],["PNG без фона","прозрачный",()=>studioExport("png-alpha")],["PNG ×2","высокое разрешение",()=>studioExport("scale:2")],["SVG","вектор",()=>studioExportSvg(false)],...(studioSelIds().length?[["Выделенное в PNG","без фона",()=>studioExportSelection()],["Выделенное в SVG","вектор",()=>studioExportSvg(true)]]:[]),["PNG нужной ширины…","",studioExportWidth],["JPEG до 1 МБ","сжать",()=>studioExportUnder(1024)],["JPEG до 300 КБ","для соцсетей",()=>studioExportUnder(300)],"-",
     ["PDF",multi?"все страницы":"для печати",()=>studioExportPages("pdf")],["ZIP",multi?"все страницы PNG":"PNG в архиве",()=>studioExportPages("zip")],["Все форматы","PNG пачкой",studioExportAll],"-",["В рекламу…","в проект Директа",studioToAds]]);
 }
 function studioMoreMenu(btn){
@@ -8548,6 +8561,8 @@ editor(){
             e.preventDefault();e.stopPropagation();
             return;
           }
+          {const l=d.layers.find(x=>x.id===studioEditingPathId),hit=l&&studioPathHit(l,e.clientX,e.clientY);
+            if(hit&&hit.dist<9){studioBeforeChange();studioEditingPointIndex=studioSplitSeg(l,hit.i,hit.t);studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();toast("Точка добавлена");e.preventDefault();return}}
           studioEditingPathId=null;studioEditingPointIndex=null;N.refresh();return;
         }
         if(studioTool==="pen"){
@@ -8735,6 +8750,9 @@ editor(){
       ppOn("click",e=>{
         if(e.target.closest("[data-gexit]")){const d=studioDesign(),g=studioGroupEnter;studioGroupEnter=g?studioGParent(d,g):null;if(g){studioMultiSel=studioDeep(d,g).map(x=>x.id);d.selectedId=studioMultiSel[studioMultiSel.length-1]||null}N.refresh();return}
         if(studioGroupHandle(e,root))return;
+        if(e.target.closest("[data-act-topath]")){const l=studioSelected();if(l&&l.type==="shape"){studioBeforeChange();studioShapeToPath(l);studioEditingPathId=l.id;studioEditingPointIndex=null;N.refresh();NEON.save();toast("Фигура стала кривой — тяните точки")}return}
+        if(e.target.closest("[data-act-icon2path]")){const l=studioSelected();if(l&&l.type==="icon")studioIconToPaths(l);return}
+        if(e.target.closest("[data-act-contpath]")){const l=studioSelected();if(l&&l.type==="path")studioContinuePath(l);return}
         const gr=e.target.closest("[data-act-grename]");if(gr){studioRenameGroup(gr.dataset.actGrename);return}
         const alignBtn=e.target.closest("[data-act-align]"),distBtn=e.target.closest("[data-act-dist]");
         if(alignBtn){studioAlign(alignBtn.dataset.actAlign);NEON.save();return}
@@ -8870,6 +8888,7 @@ editor(){
       try{studioBeforeChange();const{dataUrl}=await fileToDataUrl(f,1600);studioDesign().bg={type:"image",image:dataUrl};N.refresh();NEON.save()}
       catch(err){toast("Не удалось загрузить фон: "+(err.message||""),{tone:"danger"})}
     });
+    root.addEventListener("change",async e=>{if(e.target.id!=="stud-svg-file")return;const f=e.target.files[0];if(f)studioImportSvg(await f.text(),null,null,{name:f.name.replace(/\.svg$/i,"")});e.target.value=""});
     const imgFile=root.querySelector("#stud-img-file");
     if(imgFile)imgFile.addEventListener("change",async()=>{
       const f=imgFile.files[0];if(!f)return;
@@ -8932,6 +8951,7 @@ function studioPenFinish(closed){
   }));
   const l=studioLayerDefaults("path");
   Object.assign(l,{x:minX,y:minY,w:bw,h:bh,points:pts,closed:!!closed});
+  if(draft.replaceId){const dd=studioDesign(),old=dd.layers.find(x=>x.id===draft.replaceId);if(old){["fill","stroke","effect","opacity","blendMode","group","name"].forEach(k=>{if(old[k]!==undefined)l[k]=old[k]});l.id=old.id;dd.layers[dd.layers.indexOf(old)]=l;dd.selectedId=l.id;studioTool="select";N.refresh();NEON.save();return}}
   studioDesign().layers.push(l);studioDesign().selectedId=l.id;
   studioTool="select";
   N.refresh();NEON.save();
@@ -8947,6 +8967,236 @@ function studioPointDelete(){
   }
   N.refresh();NEON.save();
 }
+/* ---------- Векторы: точка на сегменте, фигура → кривая, продолжение контура ---------- */
+const STUDIO_K=0.5523;
+function studioBez(p0,p1,i){const a=p0,b=p1,c1={x:a.x+(a.out?a.out.dx:0),y:a.y+(a.out?a.out.dy:0)},c2={x:b.x+(b.in?b.in.dx:0),y:b.y+(b.in?b.in.dy:0)};return[a,c1,c2,b]}
+function studioBezAt(P,t){const u=1-t;return{x:u*u*u*P[0].x+3*u*u*t*P[1].x+3*u*t*t*P[2].x+t*t*t*P[3].x,y:u*u*u*P[0].y+3*u*u*t*P[1].y+3*u*t*t*P[2].y+t*t*t*P[3].y}}
+/* Ближайшая точка контура к клику (с учётом поворота слоя); dist — в экранных px. */
+function studioPathHit(l,cx,cy){
+  const st=document.querySelector(".stud-stage");if(!st||!l.points||l.points.length<2)return null;const r=st.getBoundingClientRect();
+  const a=-(l.rotation||0)*Math.PI/180,ox=r.left+(l.x+l.w/2)/100*r.width,oy=r.top+(l.y+l.h/2)/100*r.height,dx=cx-ox,dy=cy-oy;
+  const qx=ox+dx*Math.cos(a)-dy*Math.sin(a),qy=oy+dx*Math.sin(a)+dy*Math.cos(a);
+  const sx=r.width*l.w/1e4,sy=r.height*l.h/1e4,bx=(qx-r.left-l.x/100*r.width)/sx,by=(qy-r.top-l.y/100*r.height)/sy;
+  const n=l.points.length,segs=l.closed?n:n-1;let best=null;
+  for(let i=0;i<segs;i++){const P=studioBez(l.points[i],l.points[(i+1)%n]);for(let k=1;k<40;k++){const t=k/40,q=studioBezAt(P,t),dd=Math.hypot((q.x-bx)*sx,(q.y-by)*sy);if(!best||dd<best.dist)best={i,t,dist:dd}}}
+  return best;
+}
+function studioSplitSeg(l,i,t){
+  const n=l.points.length,a=l.points[i],b=l.points[(i+1)%n],P=studioBez(a,b),L=(p,q)=>({x:p.x+(q.x-p.x)*t,y:p.y+(q.y-p.y)*t});
+  const q0=L(P[0],P[1]),q1=L(P[1],P[2]),q2=L(P[2],P[3]),r0=L(q0,q1),r1=L(q1,q2),S=L(r0,r1);
+  const curved=a.out||b.in;
+  a.out=curved?{dx:q0.x-a.x,dy:q0.y-a.y}:a.out;b.in=curved?{dx:q2.x-b.x,dy:q2.y-b.y}:b.in;
+  const np={x:S.x,y:S.y,type:curved?"smooth":"corner",in:curved?{dx:r0.x-S.x,dy:r0.y-S.y}:null,out:curved?{dx:r1.x-S.x,dy:r1.y-S.y}:null};
+  l.points.splice(i+1,0,np);return i+1;
+}
+/* Фигура → редактируемая кривая (в координатах рамки 0–100). */
+function studioShapeToPath(l){
+  const C=(x,y)=>({x,y,type:"corner",in:null,out:null}),k=50*STUDIO_K;let pts,closed=true;
+  if(l.shape==="ellipse")pts=[{x:50,y:0,type:"smooth",in:{dx:-k,dy:0},out:{dx:k,dy:0}},{x:100,y:50,type:"smooth",in:{dx:0,dy:-k},out:{dx:0,dy:k}},{x:50,y:100,type:"smooth",in:{dx:k,dy:0},out:{dx:-k,dy:0}},{x:0,y:50,type:"smooth",in:{dx:0,dy:k},out:{dx:0,dy:-k}}];
+  else if(l.shape==="triangle")pts=[C(50,0),C(100,100),C(0,100)];
+  else if(l.shape==="polygon"||l.shape==="star")pts=studioPolyPoints(l.sides||(l.shape==="star"?5:6),l.shape==="star"?(l.innerRadius||45):null).map(p=>C(p.x,p.y));
+  else pts=[C(0,0),C(100,0),C(100,100),C(0,100)];
+  const keep=["id","x","y","w","h","rotation","opacity","blendMode","fill","stroke","effect","group","hidden","locked","flipH","flipV","skewX","skewY","name"];
+  Object.keys(l).forEach(key=>{if(!keep.includes(key))delete l[key]});
+  Object.assign(l,{type:"path",points:pts,closed});if(!l.fill)l.fill=studioDefFill("#16c784");if(!l.stroke)l.stroke=studioDefStroke(false);
+}
+function studioContinuePath(l){
+  if(l.closed||+l.rotation){toast(l.closed?"Контур замкнут — сначала разомкните его":"Продолжить можно только неповёрнутую кривую",{tone:"warning"});return}
+  const P=p=>({x:l.x+p.x/100*l.w,y:l.y+p.y/100*l.h,type:p.type,in:p.in?{dx:p.in.dx/100*l.w,dy:p.in.dy/100*l.h}:null,out:p.out?{dx:p.out.dx/100*l.w,dy:p.out.dy/100*l.h}:null});
+  studioBeforeChange();studioEditingPathId=null;studioEditingPointIndex=null;studioTool="pen";
+  studioPenDraft={points:l.points.map(P),cursor:null,replaceId:l.id};N.refresh();toast("Перо: продолжайте контур, Enter — закончить, клик по первой точке — замкнуть");
+}
+/* ---------- SVG: экспорт в вектор и импорт как редактируемых кривых ---------- */
+function studioSvgEsc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+/* Дизайн (или только выбранные слои) → SVG-текст. Координаты — пиксели макета. */
+async function studioToSvg(d,ids){
+  const F=STUDIO_FMT[d.format]||STUDIO_FMT.square,W=F.w,H=F.h,k=W/560,defs=[];let n=0;
+  const ls=d.layers.filter(l=>!l.hidden&&(!ids||ids.includes(l.id)));
+  const fillOf=(l,box)=>{const f=studioFillOf(l);if(f.type==="none")return"none";if(f.type==="gradient"||f.type==="radial"){const id="g"+(++n);
+      defs.push(f.type==="gradient"?`<linearGradient id="${id}" gradientTransform="rotate(${(f.angle||90)-90} .5 .5)"><stop offset="0" stop-color="${f.color}"/><stop offset="1" stop-color="${f.color2}"/></linearGradient>`:`<radialGradient id="${id}"><stop offset="0" stop-color="${f.color}"/><stop offset="1" stop-color="${f.color2}"/></radialGradient>`);return`url(#${id})`}return f.color};
+  const strokeAttrs=l=>{const s=studioStrokeOf(l);return s.enabled?` stroke="${s.color}" stroke-width="${s.width}"${s.dash!=="solid"?` stroke-dasharray="${studioDashArr(s.dash)}"`:""} stroke-linecap="${s.cap||"butt"}" stroke-linejoin="${s.join||"miter"}"`:""};
+  const shadowAttr=l=>{const sh=studioShadowOf(l);if(!sh)return"";const id="f"+(++n);defs.push(`<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="${sh.x*k}" dy="${sh.y*k}" stdDeviation="${sh.blur*k/2}" flood-color="${sh.color}" flood-opacity="${sh.op/100}"/></filter>`);return` filter="url(#${id})"`};
+  let body="";
+  if(!ids){if(d.bg.type==="image"&&d.bg.image)body+=`<image href="${studioSvgEsc(d.bg.image)}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/>`;else if(d.bg.type!=="none")body+=`<rect width="${W}" height="${H}" fill="${d.bg.color||"#fff"}"/>`}
+  const mc=document.createElement("canvas").getContext("2d");
+  for(const l of ls){
+    const x=l.x/100*W,y=l.y/100*H,w=l.w/100*W,h=l.h/100*H,cx=x+w/2,cy=y+h/2;
+    const tf=`translate(${cx} ${cy}) rotate(${l.rotation||0}) scale(${l.flipH?-1:1} ${l.flipV?-1:1}) skewX(${l.skewX||0}) skewY(${l.skewY||0}) translate(${-cx} ${-cy})`;
+    let el="";
+    if(l.type==="shape"){const fl=fillOf(l),st=strokeAttrs(l);
+      if(l.shape==="ellipse")el=`<ellipse cx="${cx}" cy="${cy}" rx="${w/2}" ry="${h/2}" fill="${fl}"${st}/>`;
+      else if(l.shape==="triangle")el=`<polygon points="${cx},${y} ${x+w},${y+h} ${x},${y+h}" fill="${fl}"${st}/>`;
+      else if(l.shape==="polygon"||l.shape==="star")el=`<polygon points="${studioPolyPoints(l.sides||(l.shape==="star"?5:6),l.shape==="star"?(l.innerRadius||45):null).map(p=>(x+p.x/100*w)+","+(y+p.y/100*h)).join(" ")}" fill="${fl}"${st}/>`;
+      else el=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min(l.radius||0,w/2,h/2)}" fill="${fl}"${st}/>`}
+    else if(l.type==="path"){const P=l.points||[];if(P.length>1){const X=p=>x+p.x/100*w,Y=p=>y+p.y/100*h,cX=(p,s)=>x+(p.x+(p[s]?p[s].dx:0))/100*w,cY=(p,s)=>y+(p.y+(p[s]?p[s].dy:0))/100*h;
+      let dd=`M${X(P[0])} ${Y(P[0])}`;const seg=(a,b)=>` C${cX(a,"out")} ${cY(a,"out")} ${cX(b,"in")} ${cY(b,"in")} ${X(b)} ${Y(b)}`;
+      for(let i=1;i<P.length;i++)dd+=seg(P[i-1],P[i]);if(l.closed)dd+=seg(P[P.length-1],P[0])+"Z";
+      el=`<path d="${dd}" fill="${fillOf(l)}"${strokeAttrs(l)}/>`}}
+    else if(l.type==="icon"){const inner=(iconSvg(l.icon||"star").match(/<svg[^>]*>([\s\S]*)<\/svg>/)||[])[1]||"";el=`<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 24 24" fill="none" stroke="${l.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`}
+    else if(l.type==="image"&&l.src){const cid="c"+(++n),m=l.mask||"none";
+      defs.push(`<clipPath id="${cid}">${m==="circle"?`<ellipse cx="${cx}" cy="${cy}" rx="${w/2}" ry="${h/2}"/>`:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min((l.radius||0)*k,w/2,h/2)}"/>`}</clipPath>`);
+      el=`<g clip-path="url(#${cid})"><image href="${studioSvgEsc(l.src)}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice"/></g>`}
+    else if(l.type==="text"){const fs=H*l.fontSize/100,font=studioFontOf(l);mc.font=`${l.weight||700} ${fs}px "${font}"`;
+      const raw=(l.upper?String(l.text||"").toUpperCase():String(l.text||"")),pad=l.bgColor?w*0.04:0,maxW=w-pad*2,lines=[];
+      raw.split("\n").forEach(par=>{let cur="";par.split(/\s+/).filter(Boolean).forEach(wd=>{const t=cur?cur+" "+wd:wd;if(mc.measureText(t).width>maxW&&cur){lines.push(cur);cur=wd}else cur=t});lines.push(cur)});
+      const lh=fs*(+l.lineHeight||1.18),y0=cy-lh*lines.length/2+lh/2,anchor=l.align==="center"?"middle":l.align==="right"?"end":"start",tx=l.align==="center"?cx:l.align==="right"?x+w-pad:x+pad;
+      el=(l.bgColor?`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min(w,h)/2*Math.min(50,+l.bgRadius||0)/50}" fill="${l.bgColor}"/>`:"")
+        +`<text x="${tx}" font-family="${studioSvgEsc(font)}, sans-serif" font-size="${fs}" font-weight="${l.weight||700}" fill="${l.color}" text-anchor="${anchor}" dominant-baseline="central"${l.letterSpacing?` letter-spacing="${(+l.letterSpacing)/100*fs}"`:""}>${lines.map((t,i)=>`<tspan x="${tx}" y="${y0+i*lh}">${studioSvgEsc(t)}</tspan>`).join("")}</text>`}
+    if(el)body+=`<g transform="${tf}" opacity="${studioOpacityOf(l)/100}"${shadowAttr(l)}${l.blendMode&&l.blendMode!=="normal"?` style="mix-blend-mode:${l.blendMode}"`:""}>${el}</g>`;
+  }
+  let vb=`0 0 ${W} ${H}`,ww=W,hh=H;
+  if(ids&&ls.length){const b=studioBoxOf(ls),pad=4;const bx=b.x1/100*W-pad,by=b.y1/100*H-pad,bw=(b.x2-b.x1)/100*W+pad*2,bh=(b.y2-b.y1)/100*H+pad*2;vb=`${bx} ${by} ${bw} ${bh}`;ww=Math.round(bw);hh=Math.round(bh)}
+  return`<svg xmlns="http://www.w3.org/2000/svg" width="${ww}" height="${hh}" viewBox="${vb}">${defs.length?`<defs>${defs.join("")}</defs>`:""}${body}</svg>`;
+}
+async function studioExportSvg(selOnly){
+  const d=studioDesign(),ids=selOnly?studioSelIds():null;if(selOnly&&!ids.length){toast("Выделите элементы",{tone:"warning"});return}
+  if(!d.layers.length){toast("Добавьте хотя бы один слой",{tone:"warning"});return}
+  const svg=await studioToSvg(d,ids&&studioMultiSel.length>1?studioMultiSel:ids);
+  studioDownload(new Blob([svg],{type:"image/svg+xml"}),(d.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+(selOnly?"_выделение":"")+".svg");
+}
+/* Выделенное → PNG (только эти слои, без фона, обрезано по рамке, ×2). */
+window.studioExportSelection=async function(){
+  const d=studioDesign(),ids=studioMultiSel.length>1?studioMultiSel:studioSelIds();if(!ids.length){toast("Выделите элементы",{tone:"warning"});return}
+  const ls=d.layers.filter(l=>ids.includes(l.id)&&!l.hidden),sc=2,c=await studioRenderCanvas({...d,bg:{type:"none"},layers:ls},sc),F=STUDIO_FMT[d.format],b=studioBoxOf(ls),pad=6*sc;
+  const x=Math.max(0,Math.floor(b.x1/100*F.w*sc-pad)),y=Math.max(0,Math.floor(b.y1/100*F.h*sc-pad)),w=Math.min(c.width-x,Math.ceil((b.x2-b.x1)/100*F.w*sc+pad*2)),h=Math.min(c.height-y,Math.ceil((b.y2-b.y1)/100*F.h*sc+pad*2));
+  const o=document.createElement("canvas");o.width=w;o.height=h;o.getContext("2d").drawImage(c,x,y,w,h,0,0,w,h);
+  o.toBlob(bl=>studioDownload(bl,(d.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+"_выделение.png"),"image/png");
+};
+/* --- Импорт SVG --- */
+function studioArcToCubics(x1,y1,rx,ry,phi,fa,fs,x2,y2){
+  if(!rx||!ry)return[[x1,y1,x2,y2,x2,y2]];
+  const s=Math.sin(phi*Math.PI/180),c=Math.cos(phi*Math.PI/180),dx=(x1-x2)/2,dy=(y1-y2)/2,x1p=c*dx+s*dy,y1p=-s*dx+c*dy;
+  rx=Math.abs(rx);ry=Math.abs(ry);const lam=x1p*x1p/(rx*rx)+y1p*y1p/(ry*ry);if(lam>1){rx*=Math.sqrt(lam);ry*=Math.sqrt(lam)}
+  const sgn=fa===fs?-1:1,num=rx*rx*ry*ry-rx*rx*y1p*y1p-ry*ry*x1p*x1p,den=rx*rx*y1p*y1p+ry*ry*x1p*x1p,co=sgn*Math.sqrt(Math.max(0,num/den));
+  const cxp=co*rx*y1p/ry,cyp=-co*ry*x1p/rx,cx=c*cxp-s*cyp+(x1+x2)/2,cy=s*cxp+c*cyp+(y1+y2)/2;
+  const ang=(ux,uy,vx,vy)=>{const a=Math.atan2(ux*vy-uy*vx,ux*vx+uy*vy);return a};
+  let t1=ang(1,0,(x1p-cxp)/rx,(y1p-cyp)/ry),dt=ang((x1p-cxp)/rx,(y1p-cyp)/ry,(-x1p-cxp)/rx,(-y1p-cyp)/ry);
+  if(!fs&&dt>0)dt-=2*Math.PI;else if(fs&&dt<0)dt+=2*Math.PI;
+  const segs=Math.ceil(Math.abs(dt)/(Math.PI/2)),out=[],step=dt/segs,al=4/3*Math.tan(step/4);
+  const P=t=>[cx+rx*Math.cos(t)*c-ry*Math.sin(t)*s,cy+rx*Math.cos(t)*s+ry*Math.sin(t)*c],D=t=>[-rx*Math.sin(t)*c-ry*Math.cos(t)*s,-rx*Math.sin(t)*s+ry*Math.cos(t)*c];
+  for(let i=0;i<segs;i++){const a=t1+i*step,b=a+step,p0=P(a),p3=P(b),d0=D(a),d3=D(b);out.push([p0[0]+al*d0[0],p0[1]+al*d0[1],p3[0]-al*d3[0],p3[1]-al*d3[1],p3[0],p3[1]])}
+  return out;
+}
+/* d-атрибут → подпути: {pts:[[x,y]...], segs:[[c1x,c1y,c2x,c2y,x,y]...], closed} */
+function studioParsePathD(dstr){
+  const tok=String(dstr).match(/[a-zA-Z]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g)||[];let i=0,cmd="",x=0,y=0,sx=0,sy=0,lc=null,lq=null;const subs=[];let cur=null;
+  const num=()=>+tok[i++],isNum=()=>i<tok.length&&!/^[a-zA-Z]$/.test(tok[i]);
+  const start=(nx,ny)=>{cur={start:[nx,ny],segs:[],closed:false};subs.push(cur);x=sx=nx;y=sy=ny};
+  const C=(a,b,c,d2,e,f)=>{if(!cur)start(x,y);cur.segs.push([a,b,c,d2,e,f]);x=e;y=f};
+  while(i<tok.length){
+    if(/^[a-zA-Z]$/.test(tok[i]))cmd=tok[i++];else if(!cmd)break;
+    const rel=cmd===cmd.toLowerCase(),U=cmd.toUpperCase();let first=true;
+    do{
+      if(U==="Z"){if(cur){cur.closed=true;x=sx;y=sy}lc=lq=null;break}
+      if(U==="M"){const nx=num()+(rel?x:0),ny=num()+(rel?y:0);if(first)start(nx,ny);else C(x,y,nx,ny,nx,ny);lc=lq=null}
+      else if(U==="L"){const nx=num()+(rel?x:0),ny=num()+(rel?y:0);C(x,y,nx,ny,nx,ny);lc=lq=null}
+      else if(U==="H"){const nx=num()+(rel?x:0);C(x,y,nx,y,nx,y);lc=lq=null}
+      else if(U==="V"){const ny=num()+(rel?y:0);C(x,y,x,ny,x,ny);lc=lq=null}
+      else if(U==="C"){const a=num()+(rel?x:0),b=num()+(rel?y:0),c=num()+(rel?x:0),d2=num()+(rel?y:0),e=num()+(rel?x:0),f=num()+(rel?y:0);C(a,b,c,d2,e,f);lc=[c,d2];lq=null}
+      else if(U==="S"){const c=num()+(rel?x:0),d2=num()+(rel?y:0),e=num()+(rel?x:0),f=num()+(rel?y:0),a=lc?2*x-lc[0]:x,b=lc?2*y-lc[1]:y;C(a,b,c,d2,e,f);lc=[c,d2];lq=null}
+      else if(U==="Q"||U==="T"){let qx,qy;if(U==="Q"){qx=num()+(rel?x:0);qy=num()+(rel?y:0)}else{qx=lq?2*x-lq[0]:x;qy=lq?2*y-lq[1]:y}const e=num()+(rel?x:0),f=num()+(rel?y:0);
+        C(x+2/3*(qx-x),y+2/3*(qy-y),e+2/3*(qx-e),f+2/3*(qy-f),e,f);lq=[qx,qy];lc=null}
+      else if(U==="A"){const rx=num(),ry=num(),ph=num(),fa=num(),fs=num(),e=num()+(rel?x:0),f=num()+(rel?y:0);studioArcToCubics(x,y,rx,ry,ph,fa,fs,e,f).forEach(sg=>C(...sg));lc=lq=null}
+      else{i++;break}
+      first=false;if(U==="M")cmd=rel?"l":"L";
+    }while(isNum());
+  }
+  return subs;
+}
+function studioElToD(el){
+  const t=el.tagName.toLowerCase(),A=n=>+(el.getAttribute(n)||0);
+  if(t==="path")return el.getAttribute("d")||"";
+  if(t==="rect"){const x=A("x"),y=A("y"),w=A("width"),h=A("height");let rx=Math.min(+(el.getAttribute("rx")||el.getAttribute("ry")||0),w/2),ry=Math.min(+(el.getAttribute("ry")||el.getAttribute("rx")||0),h/2);
+    if(!rx)return`M${x} ${y}H${x+w}V${y+h}H${x}Z`;return`M${x+rx} ${y}H${x+w-rx}A${rx} ${ry} 0 0 1 ${x+w} ${y+ry}V${y+h-ry}A${rx} ${ry} 0 0 1 ${x+w-rx} ${y+h}H${x+rx}A${rx} ${ry} 0 0 1 ${x} ${y+h-ry}V${y+ry}A${rx} ${ry} 0 0 1 ${x+rx} ${y}Z`}
+  if(t==="circle"||t==="ellipse"){const cx=A("cx"),cy=A("cy"),rx=t==="circle"?A("r"):A("rx"),ry=t==="circle"?A("r"):A("ry");return`M${cx-rx} ${cy}A${rx} ${ry} 0 1 0 ${cx+rx} ${cy}A${rx} ${ry} 0 1 0 ${cx-rx} ${cy}Z`}
+  if(t==="line")return`M${A("x1")} ${A("y1")}L${A("x2")} ${A("y2")}`;
+  if(t==="polyline"||t==="polygon"){const n=(el.getAttribute("points")||"").trim().split(/[\s,]+/).map(Number);if(n.length<4)return"";let d=`M${n[0]} ${n[1]}`;for(let k=2;k+1<n.length;k+=2)d+=`L${n[k]} ${n[k+1]}`;return d+(t==="polygon"?"Z":"")}
+  return"";
+}
+const studioRgbHex=c=>{const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?/.exec(c||"");return m?{hex:"#"+[m[1],m[2],m[3]].map(v=>(+v).toString(16).padStart(2,"0")).join(""),a:m[4]==null?1:+m[4]}:null};
+/* SVG-текст → кривые/фигуры на холсте (группой). cx,cy — куда поставить (в % холста). */
+window.studioImportSvg=function(text,cx,cy,opts){
+  opts=opts||{};let doc;try{doc=new DOMParser().parseFromString(text,"image/svg+xml")}catch(e){doc=null}
+  const root=doc&&doc.documentElement;if(!root||root.tagName.toLowerCase()!=="svg"||doc.querySelector("parsererror")){toast("Не удалось прочитать SVG",{tone:"danger"});return}
+  root.querySelectorAll("script,foreignObject").forEach(n=>n.remove());root.querySelectorAll("*").forEach(n=>[...n.attributes].forEach(a=>{if(/^on/i.test(a.name)||/javascript:/i.test(a.value))n.removeAttribute(a.name)}));
+  const host=document.createElement("div");host.style.cssText="position:fixed;left:-9999px;top:0;width:800px;height:800px;opacity:0;pointer-events:none"+(opts.color?";color:"+opts.color:"");document.body.append(host);
+  const svg=document.importNode(root,true);if(!svg.getAttribute("width")&&!svg.getAttribute("viewBox"))svg.setAttribute("width","800");host.append(svg);
+  try{
+    const inv=svg.getScreenCTM().inverse(),items=[];let skipped=0;
+    svg.querySelectorAll("path,rect,circle,ellipse,line,polyline,polygon,text").forEach(el=>{
+      if(el.closest("defs,clipPath,mask,symbol,marker,pattern"))return;if(el.tagName.toLowerCase()==="text"){skipped++;return}
+      const cs=getComputedStyle(el);if(cs.display==="none"||cs.visibility==="hidden")return;
+      const m=inv.multiply(el.getScreenCTM()),T=(px,py)=>[m.a*px+m.c*py+m.e,m.b*px+m.d*py+m.f],sc=Math.sqrt(Math.abs(m.a*m.d-m.b*m.c))||1;
+      const fillC=cs.fill&&cs.fill!=="none"?(/url\(/.test(cs.fill)?(()=>{const id=(cs.fill.match(/#([^")]+)/)||[])[1],g=id&&svg.querySelector("#"+CSS.escape(id)),st=g&&g.querySelector("stop");return st?studioRgbHex(getComputedStyle(st).stopColor):null})():studioRgbHex(cs.fill)):null;
+      const strokeC=cs.stroke&&cs.stroke!=="none"?studioRgbHex(cs.stroke):null,op=(+cs.opacity||1)*(fillC?(+cs.fillOpacity||1)*fillC.a:1);
+      studioParsePathD(studioElToD(el)).forEach(sp=>{if(!sp.segs.length)return;
+        const s0=T(...sp.start),segs=sp.segs.map(g=>[...T(g[0],g[1]),...T(g[2],g[3]),...T(g[4],g[5])]);
+        items.push({start:s0,segs,closed:sp.closed,fill:fillC,stroke:strokeC,sw:(parseFloat(cs.strokeWidth)||1)*sc,cap:cs.strokeLinecap,join:cs.strokeLinejoin,op})});
+    });
+    if(!items.length){toast("В SVG не нашлось фигур"+(skipped?" (текст пока не переносится)":""),{tone:"warning"});return}
+    let X1=Infinity,Y1=Infinity,X2=-Infinity,Y2=-Infinity;const ext=(x,y)=>{X1=Math.min(X1,x);Y1=Math.min(Y1,y);X2=Math.max(X2,x);Y2=Math.max(Y2,y)};
+    items.forEach(it=>{ext(...it.start);it.segs.forEach(g=>{ext(g[4],g[5]);ext(g[0],g[1]);ext(g[2],g[3])})});
+    const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,bw=Math.max(1e-6,X2-X1),bh=Math.max(1e-6,Y2-Y1);
+    const fit=opts.box?null:Math.min(F.w*0.6/bw,F.h*0.6/bh),pxw=opts.box?opts.box.w/100*F.w:bw*fit,pxh=opts.box?opts.box.h/100*F.h:bh*fit,k=Math.min(pxw/bw,pxh/bh);
+    const ox=(opts.box?opts.box.x/100*F.w+(pxw-bw*k)/2:((cx==null?50:cx)/100*F.w-bw*k/2)),oy=(opts.box?opts.box.y/100*F.h+(pxh-bh*k)/2:((cy==null?50:cy)/100*F.h-bh*k/2));
+    const toD=(x,y)=>[ox+(x-X1)*k,oy+(y-Y1)*k];
+    studioBeforeChange();const g="G"+studioUid(),added=[];
+    items.forEach(it=>{
+      const P=[toD(...it.start)];const segs=it.segs.map(s=>[...toD(s[0],s[1]),...toD(s[2],s[3]),...toD(s[4],s[5])]);segs.forEach(s=>P.push([s[4],s[5]]),[]);
+      /* рамка — по реальной форме кривой (выборка точек сегментов), а не только по опорным точкам */
+      let lx=Infinity,ly=Infinity,lX=-Infinity,lY=-Infinity;const ex=(x,y)=>{lx=Math.min(lx,x);ly=Math.min(ly,y);lX=Math.max(lX,x);lY=Math.max(lY,y)};P.forEach(([x,y])=>ex(x,y));
+      segs.forEach((s,i)=>{const p0=P[i];for(let t=0.05;t<1;t+=0.05){const u=1-t;ex(u*u*u*p0[0]+3*u*u*t*s[0]+3*u*t*t*s[2]+t*t*t*s[4],u*u*u*p0[1]+3*u*u*t*s[1]+3*u*t*t*s[3]+t*t*t*s[5])}});
+      const w=Math.max(0.5,lX-lx),h=Math.max(0.5,lY-ly),B=(x,y)=>({x:(x-lx)/w*100,y:(y-ly)/h*100}),D=(dx,dy)=>({dx:dx/w*100,dy:dy/h*100});
+      const pts=[{...B(...P[0]),type:"corner",in:null,out:null}];
+      segs.forEach((s,i)=>{const prev=pts[pts.length-1],pp=P[i],line=Math.abs(s[0]-pp[0])<1e-6&&Math.abs(s[1]-pp[1])<1e-6&&Math.abs(s[2]-s[4])<1e-6&&Math.abs(s[3]-s[5])<1e-6;
+        if(!line)prev.out=D(s[0]-pp[0],s[1]-pp[1]);pts.push({...B(s[4],s[5]),type:line?"corner":"smooth",in:line?null:D(s[2]-s[4],s[3]-s[5]),out:null})});
+      if(it.closed&&pts.length>2){const a=pts[0],z=pts[pts.length-1];if(Math.abs(a.x-z.x)<0.01&&Math.abs(a.y-z.y)<0.01){a.in=z.in;pts.pop()}}
+      const l=studioLayerDefaults("path");Object.assign(l,{x:lx/F.w*100,y:ly/F.h*100,w:w/F.w*100,h:h/F.h*100,points:pts,closed:it.closed,opacity:Math.round(it.op*100),group:g,
+        fill:it.fill?{type:"solid",color:it.fill.hex,color2:"#0ea5e9",angle:90}:{type:"none",color:"#16c784",color2:"#0ea5e9",angle:90},
+        stroke:it.stroke?{enabled:true,color:it.stroke.hex,width:Math.max(0.5,Math.round(it.sw*k*560/F.w*10)/10),dash:"solid",cap:it.cap||"butt",join:it.join||"miter"}:studioDefStroke(false)});
+      added.push(l)});
+    if(added.length===1)delete added[0].group;else{d.groupNames=d.groupNames||{};d.groupNames[g]=opts.name||"SVG"}
+    if(opts.replace){const i=d.layers.indexOf(opts.replace);d.layers.splice(i,1,...added);if(opts.replace.group&&added.length>1)studioGP(d)[g]=opts.replace.group;else if(opts.replace.group)added[0].group=opts.replace.group}else d.layers.push(...added);
+    studioNormGroups(d);studioMultiSel=added.length>1?added.map(l=>l.id):[];d.selectedId=added[added.length-1].id;studioGroupEnter=null;N.refresh();NEON.save();
+    toast("Импортировано кривых: "+added.length+(skipped?" · текст SVG пропущен: "+skipped:""));
+  }catch(err){toast("Ошибка импорта SVG: "+err.message,{tone:"danger"})}
+  finally{host.remove()}
+};
+/* Иконку → в редактируемые кривые */
+function studioIconToPaths(l){const svg=iconSvg(l.icon||"star").replace("<svg ",`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" stroke-width="2" `);studioImportSvg(svg,null,null,{box:{x:l.x,y:l.y,w:l.w,h:l.h},replace:l,color:l.color,name:"Иконка"})}
+/* ---------- Alt — измерение расстояний (как в Figma) ----------
+   Выделен элемент + зажат Alt: наведение на другой элемент — зазоры между ними, на пустое место —
+   отступы до краёв холста. Линии и числа в пикселях макета. */
+let studioMeasureAt=null;
+function studioMeasure(clientX,clientY){
+  const st=document.querySelector(".stud-stage");let ov=st&&st.querySelector(".stud-measure");
+  const clear=()=>{if(ov)ov.remove()};
+  if(!st||!studioMeasureAt||studioDrag||studioGDrag){clear();return}
+  const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,ids=studioSelIds();if(!ids.length){clear();return}
+  const toPx=b=>({x1:b.x1/100*F.w,y1:b.y1/100*F.h,x2:b.x2/100*F.w,y2:b.y2/100*F.h});
+  const A=toPx(studioBoxOf(d.layers.filter(l=>ids.includes(l.id))));
+  const hit=document.elementFromPoint(clientX,clientY),hel=hit&&hit.closest&&hit.closest(".stud-layer");
+  let hl=hel&&d.layers.find(x=>x.id===hel.dataset.id);if(hl&&ids.includes(hl.id))hl=null;
+  if(hl){const ug=studioUnitGroup(d,hl,studioGroupEnter);if(ug&&!studioDeep(d,ug).some(x=>ids.includes(x.id)))hl={_box:studioBoxOf(studioDeep(d,ug))}}
+  const B=hl?toPx(hl._box||studioRotBox(hl)):{x1:0,y1:0,x2:F.w,y2:F.h},lines=[];
+  const H=(x1,x2,y)=>{if(x2-x1>0.5)lines.push({h:1,x1,x2,y,v:x2-x1})},V=(y1,y2,x)=>{if(y2-y1>0.5)lines.push({h:0,y1,y2,x,v:y2-y1})};
+  const cy=(Math.max(A.y1,B.y1)+Math.min(A.y2,B.y2))/2,cx=(Math.max(A.x1,B.x1)+Math.min(A.x2,B.x2))/2,ay=(A.y1+A.y2)/2,ax=(A.x1+A.x2)/2;
+  const inside=B.x1<=A.x1&&B.x2>=A.x2&&B.y1<=A.y1&&B.y2>=A.y2;
+  if(inside){H(B.x1,A.x1,ay);H(A.x2,B.x2,ay);V(B.y1,A.y1,ax);V(A.y2,B.y2,ax)}
+  else{
+    const yy=A.y2<B.y1||B.y2<A.y1?ay:cy,xx=A.x2<B.x1||B.x2<A.x1?ax:cx;
+    if(A.x2<=B.x1)H(A.x2,B.x1,yy);else if(B.x2<=A.x1)H(B.x2,A.x1,yy);
+    if(A.y2<=B.y1)V(A.y2,B.y1,xx);else if(B.y2<=A.y1)V(B.y2,A.y1,xx);
+    if(!lines.length){/* перекрываются: расстояния между одноимёнными краями */H(Math.min(A.x1,B.x1),Math.max(A.x1,B.x1),ay);V(Math.min(A.y1,B.y1),Math.max(A.y1,B.y1),ax)}
+  }
+  if(!ov){ov=document.createElement("div");ov.className="stud-measure";st.append(ov)}
+  const X=v=>v/F.w*100+"%",Y=v=>v/F.h*100+"%";
+  ov.innerHTML=(hl?`<i class="mb" style="left:${X(B.x1)};top:${Y(B.y1)};width:${X(B.x2-B.x1)};height:${Y(B.y2-B.y1)}"></i>`:"")+`<i class="ma" style="left:${X(A.x1)};top:${Y(A.y1)};width:${X(A.x2-A.x1)};height:${Y(A.y2-A.y1)}"></i>`
+    +lines.map(L=>L.h?`<i class="ml h" style="left:${X(L.x1)};top:${Y(L.y)};width:${X(L.x2-L.x1)}"><b>${Math.round(L.v)}</b></i>`:`<i class="ml v" style="top:${Y(L.y1)};left:${X(L.x)};height:${Y(L.y2-L.y1)}"><b>${Math.round(L.v)}</b></i>`).join("");
+}
+document.addEventListener("mousemove",e=>{if(!studioInEditor())return;if(e.altKey&&!e.buttons&&e.target.closest&&e.target.closest("#stud-stage-host")){studioMeasureAt={x:e.clientX,y:e.clientY};studioMeasure(e.clientX,e.clientY)}else if(studioMeasureAt){studioMeasureAt=null;studioMeasure()}});
+document.addEventListener("keydown",e=>{if(e.key==="Alt"&&studioInEditor()){e.preventDefault()}});
+document.addEventListener("keyup",e=>{if(e.key==="Alt"&&studioMeasureAt){studioMeasureAt=null;studioMeasure()}});
 /* ---------- Буфер обмена, файлы, стиль ----------
    Копирование слоёв кладёт их в системный буфер (можно вставить в другой дизайн или вкладку).
    Вставка: свои слои → картинка (скриншот) → обычный текст как новый текстовый слой. */
