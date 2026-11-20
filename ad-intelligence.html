@@ -5896,20 +5896,20 @@ function integEditor(it){
     :`<nv-input name="${name}" label="${esc(label)} — код" value="${esc(String(val||""))}" style="${style||"flex:1 1 240px"}" hint="Нажмите «Загрузить из Б24», чтобы выбрать из списка"></nv-input>`;
   const chk=(name,label,on)=>`<label class="row" style="gap:8px;margin-top:6px"><input type="checkbox" name="${name}"${on?" checked":""}><span>${esc(label)}</span></label>`;
   const fields=()=>{const m=meta||{};
-    if(kind==="mu")return `<div class="row" style="gap:10px;flex-wrap:wrap"><nv-input name="title_prefix" label="Заголовок лида: «<Тип> | <Имя>»" value="${esc(s.title_prefix||"")}" style="flex:1 1 200px"></nv-input>
+    if(kind==="mu")return `${chk("title_service","В заголовок лида — «Направление → услуга» (юр. квизы с подуслугами: «Семейные споры → Развод»). Блок «ОБРАЩЕНИЕ» в комментарии пишется всегда.",s.title_service!==false)}<div class="row" style="gap:10px;flex-wrap:wrap"><nv-input name="title_prefix" label="Заголовок лида: «<Тип> | <Направление → услуга> | <Имя>»" value="${esc(s.title_prefix||"")}" style="flex:1 1 200px"></nv-input>
       ${sel("lead_type_id","Тип лида",s.lead_type_id,m.lead_types)}${sel("b24_source","Источник (SOURCE_ID)",s.b24_source,m.sources,"— не задавать —")}</div>
       <div class="row" style="gap:10px;flex-wrap:wrap">${sel("dept_default","Отдел продаж по умолчанию",s.dept_default,m.departments,"— не задавать —")}
       <nv-textarea name="dept_rules" label="Отдел по региону: «часть названия региона/города = код отдела», по строке" rows="3" value="${esc((s.dept_rules||[]).map(x=>x.match+" = "+x.value).join("\n"))}" style="flex:1 1 300px"></nv-textarea></div>
       <nv-input name="quiz_title" label="Название квиза в комментарии (пусто — из шаблона)" value="${esc(s.quiz_title||"")}"></nv-input>
       <div class="muted" style="font-size:12.5px">Как у квизов МЮ: SOURCE_DESCRIPTION «По региону из формы: …», комментарий «Name / city / region / ═══ ОТВЕТЫ ═══», поле «Город».</div>`;
-    if(kind==="ydl")return `<div class="row" style="gap:10px;flex-wrap:wrap"><nv-input name="title_prefix" label="Заголовок: «<Тип> | <Город> | <Имя> 7XXX***XXXX»" value="${esc(s.title_prefix||"")}" style="flex:1 1 220px"></nv-input>
+    if(kind==="ydl")return `${chk("title_service","В заголовок лида — «Направление → услуга» (юр. квизы с подуслугами: «Семейные споры → Развод»). Блок «ОБРАЩЕНИЕ» в комментарии пишется всегда.",s.title_service!==false)}<div class="row" style="gap:10px;flex-wrap:wrap"><nv-input name="title_prefix" label="Заголовок: «<Тип> | <Направление → услуга> | <Город> | <Имя> 7XXX***XXXX»" value="${esc(s.title_prefix||"")}" style="flex:1 1 220px"></nv-input>
       ${sel("lead_type_id","Тип лида",s.lead_type_id,m.lead_types)}${sel("origin_id","Источник лида (поле)",s.origin_id,m.origins,"— не задавать —")}</div>
       ${chk("source_by_city","Источник (офис) — по городу из заявки: «Волгоград», «Владивосток 2»…",s.source_by_city)}
       <div class="row" style="gap:10px;flex-wrap:wrap">${sel("b24_source","Источник, если город не найден",s.b24_source,m.sources,"— не задавать —")}</div>
       ${chk("hot","«Горячий лид»",s.hot)}${chk("work","«Рабочий лид»",s.work)}
       <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:6px">${["utm_product","utm_manager","utm_account","utm_campaign_type"].map(k=>`<nv-input name="${k}" label="${k} (если нет в ссылке)" value="${esc(s[k]||"")}" style="flex:1 1 160px"></nv-input>`).join("")}</div>
       <div class="muted" style="font-size:12.5px">Как у сайтов ЮДЛ: SOURCE_DESCRIPTION — полный адрес с UTM, ответы в поле «Комментарий» («Вопрос: — ответ»), ClientID Метрики, UF_UTM_*.</div>`;
-    return `<div class="row" style="gap:10px;flex-wrap:wrap"><nv-input name="title_prefix" label="Заголовок лида" value="${esc(s.title_prefix||"")}" style="flex:1 1 220px"></nv-input>${sel("b24_source","Источник (SOURCE_ID)",s.b24_source,m.sources,"— не задавать —")}</div>`};
+    return `${chk("title_service","В заголовок лида — «Направление → услуга» (юр. квизы с подуслугами: «Семейные споры → Развод»). Блок «ОБРАЩЕНИЕ» в комментарии пишется всегда.",s.title_service!==false)}<div class="row" style="gap:10px;flex-wrap:wrap"><nv-input name="title_prefix" label="Заголовок лида" value="${esc(s.title_prefix||"")}" style="flex:1 1 220px"></nv-input>${sel("b24_source","Источник (SOURCE_ID)",s.b24_source,m.sources,"— не задавать —")}</div>`};
   const portalOpts="_:— выберите —|"+[...portals,...(it&&it.source_id&&!portals.some(p=>p.id===it.source_id)?[{id:it.source_id,name:"Источник #"+it.source_id}]:[])].map(p=>p.id+":"+optSafe(p.name)).join("|");
   const body=`<div class="row" style="gap:10px;flex-wrap:wrap"><nv-input name="name" label="Название" value="${esc(it?it.name:"")}" placeholder="Например: МЮ — Пенсия" style="flex:1 1 240px" required></nv-input>
       <nv-select name="kind" label="Логика" value="${kind}" options="${esc(Object.entries(kinds).map(([k,l])=>k+":"+optSafe(l)).join("|"))}" style="min-width:220px"></nv-select>
@@ -5923,6 +5923,7 @@ function integEditor(it){
     ["title_prefix","lead_type_id","b24_source","dept_default","quiz_title","origin_id","utm_product","utm_manager","utm_account","utm_campaign_type"].forEach(k=>{if(v[k]!==undefined)o[k]=val(v[k])});
     if(v.dept_rules!==undefined)o.dept_rules=(v.dept_rules||"").split("\n").map(l=>l.split("=")).filter(p=>p.length===2&&p[0].trim()&&p[1].trim()).map(p=>({match:p[0].trim(),value:p[1].trim()}));
     if(kind==="ydl"){o.source_by_city=cb("source_by_city");o.hot=cb("hot");o.work=cb("work")}
+    o.title_service=cb("title_service");
     try{o.fields=JSON.parse(v.fields_json||"{}")}catch(e){o.fields=s.fields||{}}
     return{name:(v.name||"").trim(),kind,source_id:+(v.source_id)||null,settings:o}};
   overlay("modal",{title:it?"Интеграция «"+it.name+"»":"Новая интеграция",subtitle:"Своя логика лида для каждого портала — повторяет, как лиды заводят сайты МЮ и ЮДЛ.",size:"lg",body,
