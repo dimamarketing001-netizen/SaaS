@@ -333,6 +333,14 @@ code,.mono{font-family:var(--font-mono);font-size:.88em}
 nv-icon{display:inline-flex;flex:none;line-height:0}
 nv-icon svg{width:1em;height:1em;stroke-width:2}
 
+/* Свои полосы прокрутки и цвет выделения текста — вместо системных. */
+*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--ink) 22%,transparent) transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--ink) 20%,transparent);border-radius:999px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb,var(--ink) 35%,transparent);background-clip:content-box}
+::-webkit-scrollbar-corner{background:transparent}
+::selection{background:color-mix(in srgb,var(--svc,#c4a7ff) 55%,transparent);color:inherit}
 /* ---------- Оболочка ---------- */
 #app{height:100%}
 .shell{display:grid;grid-template-columns:78px 228px minmax(0,1fr);height:100%;transition:grid-template-columns .15s ease}
@@ -1807,6 +1815,11 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .pp-hint{font-size:11.5px;color:var(--ink-3);margin:0;line-height:1.4}
 .pp-ing{align-items:center;gap:6px;font-size:12px;color:var(--svc-ink);background:var(--svc-soft)}
 .pp-ing span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stud-loupe{position:fixed;z-index:9500;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:4px}
+.stud-loupe i{display:block;width:40px;height:40px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25),var(--shadow-2)}
+.stud-loupe b{font:500 10.5px var(--font-mono);color:#fff;background:rgba(20,22,24,.85);border-radius:6px;padding:2px 6px;text-transform:uppercase}
+.lr-ghost{position:fixed;left:-1000px;top:-1000px;display:flex;align-items:center;gap:8px;height:32px;padding:0 12px 0 5px;border-radius:999px;background:var(--surface);border:1px solid color-mix(in srgb,var(--svc-ink) 45%,transparent);box-shadow:var(--shadow-2);font-size:12.5px;color:var(--ink);white-space:nowrap}
+.lr-ghost .lr-th{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;background:var(--svc-soft);color:var(--svc-ink)}
 .stud-gbox{position:absolute;z-index:6;pointer-events:none;outline:1.5px solid var(--svc-ink,#6a3fd4);outline-offset:3px;border-radius:2px}
 .stud-gbox.sel{outline-style:dashed;outline-width:1px}
 .stud-gbox.in{outline:1px dashed color-mix(in srgb,var(--svc-ink,#6a3fd4) 70%,transparent)}
@@ -2742,6 +2755,8 @@ function confirmDlg(o){overlay("modal",{title:o.title,body:`<p>${esc(o.text)}</p
 /* Глобальная подсказка по data-tip: работает при наведении и с клавиатуры */
 let tipEl;function showTip(n){const txt=n.dataset.tip;if(!txt)return;if(!tipEl){tipEl=document.createElement("div");tipEl.id="nv-tip";tipEl.setAttribute("role","tooltip");document.body.append(tipEl)}tipEl.hidden=false;tipEl.textContent=txt;const r=n.getBoundingClientRect(),t=tipEl.getBoundingClientRect();let x=r.left+r.width/2-t.width/2,y=r.top-t.height-7;if(y<6)y=r.bottom+7;x=Math.max(8,Math.min(innerWidth-t.width-8,x));tipEl.style.left=x+"px";tipEl.style.top=y+"px"}
 const hideTip=()=>{if(tipEl)tipEl.hidden=true};
+/* Браузерные подсказки (title) заменяем своими — один стиль подсказок во всём ЛК. */
+document.addEventListener("mouseover",e=>{const t=e.target.closest&&e.target.closest("[title]");if(t&&!(t instanceof SVGElement)&&t.tagName!=="IFRAME"){const v=t.getAttribute("title");if(v){if(!t.dataset.tip)t.dataset.tip=v;if(!t.getAttribute("aria-label")&&!t.textContent.trim())t.setAttribute("aria-label",v)}t.removeAttribute("title")}},true);
 document.addEventListener("mouseover",e=>{const n=e.target.closest&&e.target.closest("[data-tip]");n?showTip(n):hideTip()});
 document.addEventListener("focusin",e=>{const n=e.target.closest&&e.target.closest("[data-tip]");if(n&&n.matches(":focus-visible"))showTip(n)});
 document.addEventListener("focusout",hideTip);document.addEventListener("click",hideTip,true);
@@ -8577,9 +8592,22 @@ editor(){
       }
     });
     if(lp){
+      lp.addEventListener("contextmenu",e=>{const r=e.target.closest(".lr");if(!r)return;e.preventDefault();const d=studioDesign();
+        if(r.dataset.gsel){const g=r.dataset.gsel,ms=d.layers.filter(x=>x.group===g);studioMultiSel=ms.map(x=>x.id);d.selectedId=studioMultiSel[studioMultiSel.length-1];studioGroupEnter=null;N.refresh();
+          const fake=a=>({type:"click",target:{closest:s=>s==="[data-gact]"?{dataset:{gact:a}}:null}});
+          studioMenu(e.clientX,e.clientY,[["Переименовать","двойной клик",()=>studioRenameGroup(g)],["Дублировать группу","",()=>studioGroupHandle(fake("dup"))],["На передний план","",()=>studioGroupHandle(fake("front"))],["На задний план","",()=>studioGroupHandle(fake("back"))],"-",[ms.every(x=>x.hidden)?"Показать":"Скрыть","",()=>studioGroupHandle(fake("hide"))],[ms.every(x=>x.locked)?"Открепить":"Закрепить","",()=>studioGroupHandle(fake("lock"))],["Разгруппировать","Ctrl+Shift+G",()=>{studioGroup(false)}],"-",["Удалить группу","",()=>studioGroupHandle(fake("del"))]]);return}
+        const id=r.dataset.sel,l=d.layers.find(x=>x.id===id);if(!l)return;
+        if(!studioMultiSel.includes(id)){studioMultiSel=[];d.selectedId=id;studioGroupEnter=l.group||null;N.refresh()}
+        const multi=studioMultiSel.length>1;
+        studioMenu(e.clientX,e.clientY,[["Дублировать","Ctrl+D",()=>studioCtxAction("dup")],["На передний план","",()=>studioCtxAction("front")],["На задний план","",()=>studioCtxAction("back")],"-",
+          [l.hidden?"Показать":"Скрыть","",()=>{studioBeforeChange();l.hidden=!l.hidden;N.refresh();NEON.save()}],[l.locked?"Открепить":"Закрепить","",()=>studioCtxAction("lock")],
+          ...(multi?[["Сгруппировать","Ctrl+G",()=>studioGroup(true)]]:l.group?[["Убрать из группы","",()=>{studioBeforeChange();delete l.group;studioNormGroups(d);N.refresh();NEON.save()}]]:[]),"-",["Удалить","Delete",()=>studioCtxAction("del")]]);
+      });
       lp.addEventListener("dblclick",e=>{const gs=e.target.closest("[data-gsel]");if(gs&&!e.target.closest("button"))studioRenameGroup(gs.dataset.gsel)});
       let drag=null;const clr=()=>lp.querySelectorAll(".drop-b,.drop-a,.drop-in").forEach(x=>x.classList.remove("drop-b","drop-a","drop-in"));
-      lp.addEventListener("dragstart",e=>{const r=e.target.closest("[data-drag],[data-gdrag]");if(!r)return;drag=r.dataset.gdrag?{g:r.dataset.gdrag}:{id:r.dataset.drag};r.classList.add("dragging");e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain","layer")}catch(x){}});
+      lp.addEventListener("dragstart",e=>{const r=e.target.closest("[data-drag],[data-gdrag]");if(!r)return;drag=r.dataset.gdrag?{g:r.dataset.gdrag}:{id:r.dataset.drag};r.classList.add("dragging");e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain","layer")}catch(x){}
+        /* Своя «плашка» при перетаскивании вместо полупрозрачного снимка строки. */
+        try{const gh=document.createElement("div");gh.className="lr-ghost";gh.innerHTML=(r.querySelector(".lr-th")||{}).outerHTML+`<span>${esc((r.querySelector(".lr-n")||{}).textContent||"")}</span>`;document.body.append(gh);e.dataTransfer.setDragImage(gh,14,16);setTimeout(()=>gh.remove(),0)}catch(x){}});
       lp.addEventListener("dragend",()=>{drag=null;clr();lp.querySelectorAll(".dragging").forEach(x=>x.classList.remove("dragging"))});
       const where=(e,r)=>{const b=r.getBoundingClientRect(),y=(e.clientY-b.top)/b.height;if(r.dataset.gsel&&drag&&!drag.g&&y>.3&&y<.7)return"into";return y<.5?"before":"after"};
       lp.addEventListener("dragover",e=>{if(!drag)return;const r=e.target.closest(".lr");if(!r)return;e.preventDefault();clr();const w=where(e,r);r.classList.add(w==="into"?"drop-in":w==="before"?"drop-b":"drop-a")});
@@ -8831,6 +8859,46 @@ function studioPointDelete(){
   }
   N.refresh();NEON.save();
 }
+/* ---------- Свои курсоры и лупа пипетки (вместо системных) ----------
+   Курсор = иконка Lucide (как в библиотеке): тёмная линия 2px поверх белой обводки 5px —
+   видно на любом фоне. Точка срабатывания — там, где у инструмента «кончик». */
+function studioCursorUrl(name,hx,hy,size){
+  const svg=iconSvg(name),inner=(svg.match(/<svg[^>]*>([\s\S]*)<\/svg>/)||[])[1]||"";
+  const S=size||24,k=S/26,mk=(stroke,w)=>`<g fill="none" stroke="${stroke}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${inner}</g>`;
+  const doc=`<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${S}" viewBox="-1 -1 26 26">${mk("#ffffff",5)}${mk("#16181a",2)}</svg>`;
+  return`url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(doc)}") ${Math.round((hx+1)*k)} ${Math.round((hy+1)*k)}`;
+}
+function studioInstallCursors(){
+  if(document.getElementById("stud-cursors")||!window.lucide)return;
+  const C={pipette:studioCursorUrl("pipette",2,22,28)+",crosshair",pen:studioCursorUrl("pen-tool",2,2,28)+",crosshair",rotate:studioCursorUrl("rotate-cw",12,12)+",grab",
+    move:studioCursorUrl("move",12,12)+",move",nwse:studioCursorUrl("move-diagonal-2",12,12)+",nwse-resize",nesw:studioCursorUrl("move-diagonal",12,12)+",nesw-resize",
+    ew:studioCursorUrl("move-horizontal",12,12)+",col-resize",ns:studioCursorUrl("move-vertical",12,12)+",row-resize",add:studioCursorUrl("plus",12,12)+",copy"};
+  const st=document.createElement("style");st.id="stud-cursors";
+  st.textContent=`.stud-layer{cursor:${C.move}}.stud-layer.lock{cursor:default}
+.stud-h{cursor:${C.nwse}}.stud-h[data-h="nw"],.stud-h[data-h="se"]{cursor:${C.nwse}}.stud-h[data-h="ne"],.stud-h[data-h="sw"]{cursor:${C.nesw}}
+.stud-h[data-h="rot"],.stud-rot{cursor:${C.rotate}}
+.stud-stage.eyedrop-on,.stud-stage.eyedrop-on *{cursor:${C.pipette}!important}
+.stud-stage.pen-on,.stud-stage.pen-on *{cursor:${C.pen}!important}
+.stud-gl.v,.stud-ruler.v{cursor:${C.ew}}.stud-gl.h,.stud-ruler.h{cursor:${C.ns}}.stud-gl.a{cursor:${C.move}}.stud-ruler-c{cursor:${C.add}}
+body.gl-h,body.gl-h *{cursor:${C.ns}!important}body.gl-v,body.gl-v *{cursor:${C.ew}!important}body.gl-a,body.gl-a *{cursor:${C.move}!important}`;
+  /* Стили приложения идут в документе позже — поднимаем точность правил префиксом html. */
+  st.textContent=st.textContent.replace(/(^|\})\s*([^{}]+)\{/g,(m,a,sel)=>a+sel.split(",").map(x=>"html "+x.trim()).join(",")+"{");
+  document.head.append(st);
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",studioInstallCursors);else setTimeout(studioInstallCursors,0);
+/* Лупа пипетки: цвет под курсором и его код — до клика. Картинку холста рисуем один раз за сеанс пипетки. */
+let studioEyeCache=null,studioEyeBusy=false;
+document.addEventListener("mousemove",async e=>{
+  let lp=document.querySelector(".stud-loupe");
+  const st=studioTool==="eyedrop"&&e.target.closest&&e.target.closest(".stud-stage");
+  if(!st){if(lp)lp.remove();if(studioTool!=="eyedrop")studioEyeCache=null;return}
+  if(!studioEyeCache&&!studioEyeBusy){studioEyeBusy=true;try{studioEyeCache=await studioRenderCanvas(studioDesign(),1)}catch(err){}studioEyeBusy=false}
+  if(!studioEyeCache)return;
+  const r=st.getBoundingClientRect(),c=studioEyeCache,px=Math.min(c.width-1,Math.max(0,Math.round((e.clientX-r.left)/r.width*c.width))),py=Math.min(c.height-1,Math.max(0,Math.round((e.clientY-r.top)/r.height*c.height)));
+  let hex="#000000";try{const[R,G,B]=c.getContext("2d").getImageData(px,py,1,1).data;hex="#"+[R,G,B].map(v=>v.toString(16).padStart(2,"0")).join("")}catch(err){return}
+  if(!lp){lp=document.createElement("div");lp.className="stud-loupe";lp.innerHTML="<i></i><b></b>";document.body.append(lp)}
+  lp.querySelector("i").style.background=hex;lp.querySelector("b").textContent=hex;lp.style.left=(e.clientX+18)+"px";lp.style.top=(e.clientY-58)+"px";
+});
 async function studioEyedrop(xPct,yPct){
   const d=studioDesign();
   let hex="#000000";
@@ -9264,7 +9332,7 @@ Object.assign(N.acts,{
     studioLoadImg(logo).then(img=>{const f=STUDIO_FMT[studioDesign().format];l.h=Math.max(3,22*f.w/f.h*img.naturalHeight/img.naturalWidth);studioPatchLayerDom(l);NEON.save()}).catch(()=>{});
     studioDesign().layers.push(l);studioDesign().selectedId=l.id;N.refresh();NEON.save()},
   studLogoClear(){S.studio.brand={...S.studio.brand,logo:""};NEON.save();N.refresh()},
-  studTool(a,d){studioPenDraft=null;studioEditingPathId=null;studioEditingPointIndex=null;studioTool=studioTool===d.tool?"select":d.tool;N.refresh()},
+  studTool(a,d){studioEyeCache=null;studioPenDraft=null;studioEditingPathId=null;studioEditingPointIndex=null;studioTool=studioTool===d.tool?"select":d.tool;N.refresh()},
   studUndo:studioUndo,
   studRedo:studioRedo,
   studEditPts(){const l=studioSelected();if(!l||l.type!=="path")return;studioEditingPathId=studioEditingPathId===l.id?null:l.id;studioEditingPointIndex=null;N.refresh()},
