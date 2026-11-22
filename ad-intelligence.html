@@ -1663,6 +1663,11 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stud-h[data-h="ne"]{right:-7px;top:-7px;bottom:auto;cursor:nesw-resize}
 .stud-h[data-h="sw"]{left:-7px;bottom:-7px;right:auto;cursor:nesw-resize}
 .stud-guide{position:absolute;background:#ff2d78;pointer-events:none;z-index:6}
+.stud-gap{position:absolute;pointer-events:none;z-index:6;display:flex;align-items:center;justify-content:center}
+.stud-gap.x{height:0;border-top:1px solid #ff2d78}.stud-gap.x::before,.stud-gap.x::after{content:"";position:absolute;top:-5px;height:9px;border-left:1px solid #ff2d78}.stud-gap.x::before{left:0}.stud-gap.x::after{right:0}
+.stud-gap.y{width:0;border-left:1px solid #ff2d78}.stud-gap.y::before,.stud-gap.y::after{content:"";position:absolute;left:-5px;width:9px;border-top:1px solid #ff2d78}.stud-gap.y::before{top:0}.stud-gap.y::after{bottom:0}
+.stud-gap b{position:absolute;background:#ff2d78;color:#fff;font:600 10px/1 var(--font-mono);padding:2px 4px;border-radius:4px;white-space:nowrap;transform:scale(calc(1/var(--zf,1)))}
+.stud-gap.x b{top:4px}.stud-gap.y b{left:4px}
 .stud-rot{position:absolute;left:50%;top:-30px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:#fff;border:2px solid var(--svc-ink);cursor:grab;box-shadow:var(--shadow-1);z-index:3}
 .stud-rot::after{content:"";position:absolute;left:50%;top:14px;width:2px;height:12px;margin-left:-1px;background:var(--svc-ink)}
 .stud-marquee{position:fixed;border:1px solid var(--svc-ink);background:color-mix(in srgb,var(--svc-ink) 12%,transparent);pointer-events:none;z-index:7}
@@ -10416,7 +10421,7 @@ document.addEventListener("mousemove",e=>{
   if(studioDrag.mode==="move"){
     let nx=Math.max(-l.w+3,Math.min(97,studioDrag.startXp+dxPct)),ny=Math.max(-l.h+3,Math.min(97,studioDrag.startYp+dyPct));
     const g=e.ctrlKey||e.metaKey?{dx:0,dy:0,xs:[],ys:[]}:studioSnap(d,l,nx,ny);
-    l.x=nx+g.dx;l.y=ny+g.dy;studioShowGuides(g.xs,g.ys);
+    l.x=nx+g.dx;l.y=ny+g.dy;studioShowGuides(g.xs,g.ys,g.gaps);
   }else{
     const c=studioDrag.corner||"se",sx=studioDrag.startXp,sy=studioDrag.startYp,sw=studioDrag.startW,sh=studioDrag.startH;
     let w=sw+(c==="se"||c==="ne"?dxPct:-dxPct),h=sh+(c==="se"||c==="sw"?dyPct:-dyPct);
@@ -10621,11 +10626,29 @@ function studioSnap(d,l,nx,ny){
   d.layers.forEach(o=>{if(o.id===l.id||o.hidden)return;X.push(o.x,o.x+o.w/2,o.x+o.w);Y.push(o.y,o.y+o.h/2,o.y+o.h)});
   const best=(edges,targets)=>{let r=null;edges.forEach(ev=>targets.forEach(t=>{const dd=t-ev;if(Math.abs(dd)<=T&&(!r||Math.abs(dd)<Math.abs(r.d)))r={d:dd,t}}));return r};
   const bx=best([nx,nx+l.w/2,nx+l.w],X),by=best([ny,ny+l.h/2,ny+l.h],Y);
-  return{dx:bx?bx.d:0,dy:by?by.d:0,xs:bx?[bx.t]:[],ys:by?[by.t]:[]};
+  /* равные интервалы (как в Figma): между двумя соседями или такой же шаг, как у соседней пары */
+  const F=STUDIO_FMT[d.format]||STUDIO_FMT.square,others=d.layers.filter(o=>o.id!==l.id&&!o.hidden&&!studioDrag?.skip?.includes(o.id)&&!(o.x<=1&&o.y<=1&&o.x+o.w>=99&&o.y+o.h>=99));
+  const gx=studioGapSnap(others,nx,ny,l.w,l.h,"x",T,F),gy=studioGapSnap(others,nx,ny,l.w,l.h,"y",T,F);
+  const useGx=gx&&(!bx||Math.abs(gx.d)<Math.abs(bx.d)),useGy=gy&&(!by||Math.abs(gy.d)<Math.abs(by.d));
+  return{dx:useGx?gx.d:bx?bx.d:0,dy:useGy?gy.d:by?by.d:0,xs:!useGx&&bx?[bx.t]:[],ys:!useGy&&by?[by.t]:[],gaps:[...(useGx?gx.gaps:[]),...(useGy?gy.gaps:[])]};
 }
-function studioShowGuides(xs,ys){
+function studioGapSnap(others,nx,ny,w,h,axis,T,F){
+  const X=axis==="x",p=X?"x":"y",sz=X?"w":"h",q=X?"y":"x",qs=X?"h":"w",pos=X?nx:ny,size=X?w:h,qp=X?ny:nx,qz=X?h:w,unit=X?F.w:F.h;
+  const row=others.filter(o=>o[q]<qp+qz&&o[q]+o[qs]>qp),end=o=>o[p]+o[sz];
+  const L=row.filter(o=>end(o)<=pos+T).sort((a,b)=>end(b)-end(a)),R=row.filter(o=>o[p]>=pos+size-T).sort((a,b)=>a[p]-b[p]);
+  const mid=o=>{const a=Math.max(o[q],qp),b=Math.min(o[q]+o[qs],qp+qz);return(a+b)/2};
+  const cands=[];
+  if(L[0]&&R[0]){const g=(R[0][p]-end(L[0])-size)/2;if(g>0.2){const t=end(L[0])+g;cands.push({t,g,segs:[[end(L[0]),t,mid(L[0])],[t+size,R[0][p],mid(R[0])]]})}}
+  if(L[0]){const L1=L.find(o=>end(o)<=L[0][p]&&o!==L[0]);if(L1){const g=L[0][p]-end(L1);if(g>0.2){const t=end(L[0])+g;cands.push({t,g,segs:[[end(L1),L[0][p],(mid(L1)+mid(L[0]))/2],[end(L[0]),t,mid(L[0])]]})}}}
+  if(R[0]){const R1=R.find(o=>o[p]>=end(R[0])&&o!==R[0]);if(R1){const g=R1[p]-end(R[0]);if(g>0.2){const t=R[0][p]-g-size;cands.push({t,g,segs:[[t+size,R[0][p],mid(R[0])],[end(R[0]),R1[p],(mid(R[0])+mid(R1))/2]]})}}}
+  let b=null;cands.forEach(c=>{const dd=c.t-pos;if(Math.abs(dd)<=T&&(!b||Math.abs(dd)<Math.abs(b.d)))b={d:dd,c}});
+  if(!b)return null;const px=Math.round(b.c.g/100*unit);
+  return{d:b.d,gaps:b.c.segs.map(([a,z,m])=>({a:axis,from:a,to:z,at:m,px}))};
+}
+function studioShowGuides(xs,ys,gaps){
   const stage=document.querySelector(".stud-stage");if(!stage)return;
-  stage.querySelectorAll(".stud-guide").forEach(g=>g.remove());
+  stage.querySelectorAll(".stud-guide,.stud-gap").forEach(g=>g.remove());
+  (gaps||[]).forEach(g=>stage.insertAdjacentHTML("beforeend",g.a==="x"?`<div class="stud-gap x" style="left:${g.from}%;width:${g.to-g.from}%;top:${g.at}%"><b>${g.px}</b></div>`:`<div class="stud-gap y" style="top:${g.from}%;height:${g.to-g.from}%;left:${g.at}%"><b>${g.px}</b></div>`));
   xs.forEach(x=>stage.insertAdjacentHTML("beforeend",`<div class="stud-guide v" style="left:${x}%"></div>`));
   ys.forEach(y=>stage.insertAdjacentHTML("beforeend",`<div class="stud-guide h" style="top:${y}%"></div>`));
 }
