@@ -1713,6 +1713,14 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s2-menu button.on{font-weight:500;background:var(--surface-2)}
 .s2-menu button .ck{width:14px;flex:none;display:flex;color:var(--svc-ink);margin-left:-8px}
 .s2-menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.mr{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.mr-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}.mr-h b{font-weight:500;font-size:13px}
+.mr-f{display:flex;flex-direction:column;gap:3px}
+.mr-f button{display:flex;align-items:center;gap:8px;min-height:30px;padding:0 8px;border:1px solid transparent;border-radius:9px;background:none;color:var(--ink-2);font-size:12.5px;cursor:pointer;text-align:left}
+.mr-f button span{flex:1}.mr-f button small{font:10.5px var(--font-mono);color:var(--ink-3)}
+.mr-f button:hover{background:var(--surface-2);color:var(--ink)}
+.mr-f button.on{background:var(--svc-soft);border-color:color-mix(in srgb,var(--svc-ink) 35%,transparent);color:var(--svc-ink)}
+.mr-f button.cur{opacity:.45;cursor:default}
 .s2-menu .mh{font:500 10px var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);padding:8px 10px 3px}
 .s2-menu{max-height:min(80vh,640px);overflow:auto}
 .pf-b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;background:var(--pf);color:#fff;font:700 8.5px/1 var(--font-mono);font-style:normal;letter-spacing:-.02em;flex:none}
@@ -8470,7 +8478,7 @@ function studioDownloadMenu(btn){
 }
 function studioMoreMenu(btn){
   const r=btn.getBoundingClientRect();
-  studioMenu(r.left,r.bottom+4,[["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
+  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],"-",["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
 }
 async function studioSaveAsTemplate(){
   const d=studioDesign();if(!d.layers.length){toast("Пустой дизайн",{tone:"warning"});return}
@@ -9317,6 +9325,29 @@ document.addEventListener("mouseup",()=>{if(studioCropDrag){studioCropDrag=null;
 document.addEventListener("wheel",e=>{if(!studioCropId)return;const el=e.target.closest&&e.target.closest(".stud-layer.cropping");if(!el)return;e.preventDefault();e.stopPropagation();
   const l=studioDesign().layers.find(x=>x.id===studioCropId);if(!l)return;l.zoom=Math.max(1,Math.min(4,Math.round((l.zoom||1)*Math.exp(-(e.deltaMode===1?e.deltaY*33:e.deltaY)*0.002)*100)/100));studioPatchLayerDom(l);studioPaintCrop();studioSyncPropsSoon();clearTimeout(studioCropDrag&&0);NEON.save()},{passive:false,capture:true});
 document.addEventListener("keydown",e=>{if(studioCropId&&(e.key==="Enter"||e.key==="Escape")){e.preventDefault();e.stopPropagation();studioCropOff()}},true);
+/* ---------- «Волшебный ресайз» (как в Canva): копии дизайна под выбранные площадки ---------- */
+function studioMagicResize(){
+  const d=studioDesign();if(!d.layers.length){toast("Добавьте хотя бы один слой",{tone:"warning"});return}
+  const sel=new Set();
+  const body=()=>`<div class="mr">${STUDIO_PLATFORMS.filter(P=>P.k!=="popular").map(P=>`<div class="mr-p"><div class="mr-h">${studioPfBadge(P,20)}<b>${esc(P.n)}</b></div><div class="mr-f">${P.f.map(([k,lb])=>{const id=P.k+":"+k,on=sel.has(id),cur=k===d.format;return`<button type="button" class="${on?"on":""}${cur?" cur":""}" data-mr="${id}" ${cur?'disabled data-tip="Текущий формат"':""}>${ic(on?"check-square":"square",14)}<span>${esc(lb)}</span><small>${STUDIO_FMT[k].w}×${STUDIO_FMT[k].h}</small></button>`}).join("")}</div></div>`).join("")}</div>`;
+  const {root,close}=overlay("modal",{title:"Волшебный ресайз",subtitle:"Отметьте площадки — для каждой появится копия дизайна в нужном размере (элементы перестроятся под формат). Копии сохранятся в «Мои дизайны».",size:"lg",service:"studio",
+    body:body(),actions:[{label:"Отмена"},{label:"Создать копии",variant:"primary",fn:()=>{
+      const keys=[...new Set([...sel].map(id=>id.split(":")[1]))];if(!keys.length){toast("Отметьте хотя бы один формат",{tone:"warning"});return false}
+      (async()=>{studioPagesSync(d);let n=0;toast("Создаю копии: "+keys.length+"…");
+      for(const k of keys){
+        const P=STUDIO_PLATFORMS.find(P=>P.k!=="popular"&&[...sel].includes(P.k+":"+k)),lb=(P.f.find(f=>f[0]===k)||[])[1]||STUDIO_FMT[k].label;
+        let x;if(Array.isArray(d.pages)&&d.pages.length>1){const pages=d.pages.map(pg=>studioRefit({...d,bg:pg.bg,layers:pg.layers,pages:undefined},k));x={...JSON.parse(JSON.stringify(d)),format:k,pages:pages.map(r=>({bg:r.bg,layers:r.layers})),page:0};x.bg=x.pages[0].bg;x.layers=x.pages[0].layers}
+        else x=studioRefit(JSON.parse(JSON.stringify(d)),k);
+        x.id=null;x.name=(d.name||"Дизайн")+" · "+P.n+" "+lb;x.layers.forEach(l=>studioFitText(l,x));
+        try{await studioFontsReady(x);const meta=await apiPost("/api/v1/studio/designs",{name:x.name,format:k,data:studioPack(x),thumb:await studioThumb(x)});studioUpsertList(meta);n++}catch(e){toast("Не удалось создать «"+x.name+"»: "+e.message,{tone:"danger"})}
+      }
+      NEON.save();toast("Готово: "+n+" копий в «Мои дизайны»",{tone:"success"});})();
+    }}]});
+  root.addEventListener("click",e=>{const b=e.target.closest("[data-mr]");if(!b||b.disabled)return;const id=b.dataset.mr;sel.has(id)?sel.delete(id):sel.add(id);
+    /* один формат у разных площадок — отмечается вместе */
+    const k=id.split(":")[1],on=sel.has(id);STUDIO_PLATFORMS.forEach(P=>{if(P.k!=="popular"&&P.f.some(f=>f[0]===k)){const j=P.k+":"+k;on?sel.add(j):sel.delete(j)}});
+    root.querySelector(".mr").outerHTML=body()});
+}
 /* ---------- Булевы операции над фигурами (как Pathfinder в Illustrator) ----------
    Фигуры/кривые → многоугольники в пикселях макета (с поворотом и отражением), операция —
    библиотека polygon-clipping, результат — одна составная кривая (even-odd) на месте нижнего слоя. */
@@ -9972,6 +10003,7 @@ Object.assign(N.acts,{
   studZoom(a,d){studioSetZoom(d.z==="fit"?1:d.z==="+"?studioZoom*1.25:studioZoom/1.25)},
   studZones(){S.studio.zones=!S.studio.zones;N.refresh();NEON.save()},
   studFmtMenu(a){const r=a.getBoundingClientRect(),cur=studioDesign().format,items=[];
+    items.push(["Волшебный ресайз…","копии под площадки",studioMagicResize],"-");
     STUDIO_PLATFORMS.filter(P=>P.k!=="popular").forEach(P=>{items.push("#"+P.n);P.f.forEach(([k,lb])=>items.push([lb,STUDIO_FMT[k].w+"×"+STUDIO_FMT[k].h,()=>NEON.chg.studFormat(k,{}),k===cur]))});
     studioMenu(r.left,r.bottom+4,items)},
   studZoomMenu(a){const r=a.getBoundingClientRect(),z=v=>()=>studioSetZoom(v);
