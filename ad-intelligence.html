@@ -2079,6 +2079,8 @@ body.gl-h,body.gl-h *{cursor:row-resize!important}body.gl-v,body.gl-v *{cursor:c
 .stud-save.dirty{color:#b7791f}.stud-save.err{color:var(--bad)}
 .stud-layer-row .row-ic button.off{opacity:1;color:var(--svc-ink)}
 .stud-swatches{display:flex;flex-wrap:wrap;gap:6px}
+.tbl-ed input{position:absolute;box-sizing:border-box;border:0;outline:0;margin:0;min-width:0;cursor:text;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--svc-ink) 35%,transparent)}
+.tbl-ed input:focus{box-shadow:inset 0 0 0 2px var(--svc-ink);position:absolute;z-index:1}
 .ph-ov{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
 .stud-layer-image{isolation:isolate}
 .duo-pre{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:6px 0}
@@ -7242,8 +7244,8 @@ function studioGradLine(x,y,w,h,angle){
   const rad=(angle-90)*Math.PI/180,dx=Math.cos(rad),dy=Math.sin(rad),cx=x+w/2,cy=y+h/2,half=Math.sqrt(w*w+h*h)/2;
   return{x0:cx-half*dx,y0:cy-half*dy,x1:cx+half*dx,y1:cy+half*dy};
 }
-function studioLayerIcon(l){if(l.type==="qr")return"qr-code";if(l.type==="chart")return{line:"line-chart",pie:"pie-chart",donut:"pie-chart"}[l.chartKind]||"bar-chart-3";if(l.type==="text")return"type";if(l.type==="image")return"image";if(l.type==="icon")return l.icon||"star";if(l.type==="path")return"spline";return l.shape==="ellipse"?"circle":l.shape==="triangle"?"triangle":l.shape==="line"?"minus":"square"}
-function studioLayerLabel(l){if(l.type==="qr")return"QR-код";if(l.type==="chart")return"График";if(l.type==="text")return(l.text||"Текст").slice(0,22);if(l.type==="image")return"Изображение";if(l.type==="icon")return"Иконка";if(l.type==="path")return"Кривая";return{rect:"Прямоугольник",ellipse:"Эллипс",triangle:"Треугольник",line:"Линия"}[l.shape]||"Фигура"}
+function studioLayerIcon(l){if(l.type==="table")return"table-2";if(l.type==="qr")return"qr-code";if(l.type==="chart")return{line:"line-chart",pie:"pie-chart",donut:"pie-chart"}[l.chartKind]||"bar-chart-3";if(l.type==="text")return"type";if(l.type==="image")return"image";if(l.type==="icon")return l.icon||"star";if(l.type==="path")return"spline";return l.shape==="ellipse"?"circle":l.shape==="triangle"?"triangle":l.shape==="line"?"minus":"square"}
+function studioLayerLabel(l){if(l.type==="table")return"Таблица";if(l.type==="qr")return"QR-код";if(l.type==="chart")return"График";if(l.type==="text")return(l.text||"Текст").slice(0,22);if(l.type==="image")return"Изображение";if(l.type==="icon")return"Иконка";if(l.type==="path")return"Кривая";return{rect:"Прямоугольник",ellipse:"Эллипс",triangle:"Треугольник",line:"Линия"}[l.shape]||"Фигура"}
 function studioFillCss(f){if(f.type==="none")return"transparent";if(f.type==="gradient")return`linear-gradient(${f.angle||90}deg,${esc(f.color)},${esc(f.color2)})`;if(f.type==="radial")return`radial-gradient(circle,${esc(f.color)},${esc(f.color2)})`;return esc(f.color)}
 function studioPolyPoints(sides,innerRadius){
   const n=Math.max(3,sides||6),inner=(innerRadius==null?100:innerRadius)/100,star=innerRadius!=null,pts=[];
@@ -7269,7 +7271,7 @@ function studioLayerInner(l){
   if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(l.text)}</span>`:esc(l.text)}</div>`}
   if(l.type==="image"){const bd=l.border&&l.border.enabled?`box-shadow:inset 0 0 0 ${l.border.width||4}px ${esc(l.border.color||"#fff")};`:"";
     return l.src?`<div style="width:100%;height:100%;filter:${studioDropCss(l,true)}"><div class="stud-layer-image" style="${studioMaskCss(l)};position:relative">${studioPhotoDefs(l)}<img src="${esc(l.src)}" alt="" draggable="false" style="object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1});filter:${studioPhotoFilter(l)}">${studioPhotoOverlays(l)}${bd?`<span style="position:absolute;inset:0;${bd};border-radius:inherit"></span>`:""}</div></div>`:`<div class="stud-layer-image stud-layer-empty" style="${studioMaskCss(l)}">${ic("image",22)}</div>`}
-  if(l.type==="qr"||l.type==="chart")return`<div class="stud-layer-data">${studioDataSvg(l)}</div>`;
+  if(l.type==="qr"||l.type==="chart"||l.type==="table")return`<div class="stud-layer-data">${studioDataSvg(l)}</div>`;
   if(l.type==="icon")return`<div class="stud-layer-icon" style="color:${esc(l.color)}">${iconSvg(l.icon||"star")}</div>`;
   if(l.type==="path"){
     const f=studioFillOf(l),s=studioStrokeOf(l),gid="pg-"+l.id;
@@ -7794,6 +7796,18 @@ function studioPropsHtml0(){
       ${ppColor("Цвет","color",l.color||"#111111")}${ppColor("Фон","bg",l.bg||"#ffffff")}
       <div class="pp-row"><span class="pp-l">Надёжность</span>${ppSeg([["L","7%"],["M","15%"],["Q","25%"],["H","30%"]].map(([v,t])=>[v,`data-prop-set="qrLevel" data-val="${v}"`,(l.qrLevel||"M")===v,"Восстановление при повреждении: "+t]))}</div>
       ${ppOnOff("Поля",l.qrMargin!==false,'data-prop-set="qrMargin" data-val=""','data-prop-set="qrMargin" data-val="1"')}`)+studioPosHtml(l)+studioLayerSecHtml(l);
+  if(l.type==="table"){const R=studioTableRows(l),nc=Math.max(...R.map(r=>r.length));
+    return studioPropsHeadHtml("table-2","Таблица",(grp?"в группе «"+grp+"» · ":"")+R.length+"×"+nc)
+    +ppSec("table","Таблица",`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-tbl="row+">${ic("plus",14)}Строка</button><button type="button" class="pp-btn" data-tbl="row-">${ic("minus",14)}Строка</button></div>
+      <div class="pp-ibs wide"><button type="button" class="pp-btn" data-tbl="col+">${ic("plus",14)}Столбец</button><button type="button" class="pp-btn" data-tbl="col-">${ic("minus",14)}Столбец</button></div>
+      ${ppOnOff("Шапка",l.head!==false,'data-prop-set="tblHead" data-val=""','data-prop-set="tblHead" data-val="1"')}
+      ${ppOnOff("Зебра",l.zebra!==false,'data-prop-set="tblZebra" data-val=""','data-prop-set="tblZebra" data-val="1"')}
+      <div class="pp-row"><span class="pp-l">Выравнивание</span>${ppSeg([["left","align-left","По левому"],["center","align-center","По центру"],["right","align-right","По правому"]].map(([v,i,t])=>[ic(i,15),`data-prop-set="align" data-val="${v}"`,(l.align||"left")===v,t]),"pp-seg-ic")}</div>
+      <div class="pp-row"><span class="pp-l">Шрифт</span><nv-select options="${studioFontList().map(f=>f+":"+f).join("|")}" value="${esc(l.font||"Onest")}" data-prop="font" aria-label="Шрифт таблицы"></nv-select></div>
+      ${ppRng("Скругление","radius",+l.radius||0,0,40,1)}
+      ${ppCap("Ячейки — по строке, через « | » или табуляцию (можно вставить из Excel). Двойной клик по таблице — правка на холсте.")}<nv-textarea rows="5" value="${esc(R.map(r=>r.join(" | ")).join("\n"))}" data-tbltext aria-label="Данные таблицы"></nv-textarea>`)
+    +ppSec("tblcol","Цвета таблицы",ppColor("Шапка","headBg",l.headBg||"#16c784")+ppColor("Текст шапки","headColor",l.headColor||"#ffffff")+ppColor("Текст","color",l.color||"#1f2937")+ppColor("Ячейки","cellBg",l.cellBg||"#ffffff")+ppColor("Зебра","zebraBg",l.zebraBg||"#f3f4f6")+ppColor("Линии","lineColor",l.lineColor||"#e5e7eb"))
+    +studioPosHtml(l)+studioLayerSecHtml(l)}
   if(l.type==="chart"){const cs=l.colors&&l.colors.length?l.colors:STUDIO_CHART_COLORS;
     return studioPropsHeadHtml(studioLayerIcon(l),"График",grp&&"в группе «"+grp+"»")
     +ppSec("chart","График",`${ppSeg([["bar","bar-chart-3","Столбцы"],["line","line-chart","Линия"],["pie","pie-chart","Круговая"],["donut","circle-dashed","Кольцо"]].map(([v,i,t])=>[ic(i,15),`data-prop-set="chartKind" data-val="${v}"`,(l.chartKind||"bar")===v,t]),"pp-seg-ic")}
@@ -8044,6 +8058,7 @@ async function studioRenderCanvas(design,scale,anim){
         if(f.type!=="none"){ctx.fillStyle=f.type==="gradient"?(()=>{const g=studioGradLine(x,y,w,h,f.angle||90);const gr=ctx.createLinearGradient(g.x0,g.y0,g.x1,g.y1);gr.addColorStop(0,f.color);gr.addColorStop(1,f.color2);return gr})():f.type==="radial"?(()=>{const gr=ctx.createRadialGradient(x+w/2,y+h/2,0,x+w/2,y+h/2,Math.max(w,h)/2);gr.addColorStop(0,f.color);gr.addColorStop(1,f.color2);return gr})():f.color;ctx.fill(l.fillRule||"nonzero")}
         if(s.enabled){ctx.strokeStyle=s.color;ctx.lineWidth=s.width*(scale||1);ctx.lineCap=s.cap||"butt";ctx.lineJoin=s.join||"miter";ctx.setLineDash(studioDashArr(s.dash,scale).split(",").filter(Boolean).map(Number));ctx.stroke()}
       }
+    }else if(l.type==="table"){studioTablePaint(ctx,l,x,y,w,h,W);
     }else if(l.type==="qr"||l.type==="chart"){
       try{const svg=l.type==="qr"?studioQrSvg(l):studioChartSvg(l,Math.max(40,Math.round(l.w/100*fmt.w)),Math.max(30,Math.round(l.h/100*fmt.h)));const img=await studioLoadImg("data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg));
         if(l.type==="qr"){const sz=Math.min(w,h);ctx.imageSmoothingEnabled=false;ctx.drawImage(img,x+(w-sz)/2,y+(h-sz)/2,sz,sz);ctx.imageSmoothingEnabled=true}else ctx.drawImage(img,x,y,w,h)}catch(e){}
@@ -8628,7 +8643,7 @@ function studioPanelHtml(tab){
     <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
     <div class="sect-t">Графика</div><input type="search" class="num" data-s2gfx placeholder="Поиск: стрелка, бейдж, рамка…" value="${esc(studioGfxQ)}" style="width:100%;text-align:left;padding:0 10px">
     <div class="s2-gfx" data-s2gfxgrid>${studioGfxGridHtml()}</div>
-    <div class="sect-t">Данные</div><div class="s2-tiles">${[["qr","qr-code","QR-код"],["bar","bar-chart-3","Столбцы"],["line","line-chart","Линия"],["pie","pie-chart","Круговая"],["donut","circle-dashed","Кольцо"]].map(([k,i,t])=>`<button type="button" data-act="studAddData" data-k="${k}">${ic(i,20)}${t}</button>`).join("")}</div>
+    <div class="sect-t">Данные</div><div class="s2-tiles">${[["table","table-2","Таблица"],["qr","qr-code","QR-код"],["bar","bar-chart-3","Столбцы"],["line","line-chart","Линия"],["pie","pie-chart","Круговая"],["donut","circle-dashed","Кольцо"]].map(([k,i,t])=>`<button type="button" data-act="studAddData" data-k="${k}">${ic(i,20)}${t}</button>`).join("")}</div>
     <div class="sect-t">Коллажи</div><div class="s2-tiles s2-coll">${STUDIO_COLLAGES.map(([n,c],i)=>`<button type="button" data-act="studCollage" data-i="${i}" data-tip="${esc(n)}">${studioCollageIcon(c)}<span>${esc(n)}</span></button>`).join("")}</div>
     <div class="sect-t">Иконки</div><input type="search" class="num" data-s2icon placeholder="Поиск: телефон, скидка, house…" value="${esc(studioIconQ)}" style="width:100%;text-align:left;padding:0 10px">
     <div class="s2-icons" data-s2icons>${studioIconList().map(n=>`<button type="button" data-act="studAddIcon" data-icon="${esc(n)}" title="${esc(n)}">${ic(n,18)}</button>`).join("")}</div>`;
@@ -9052,6 +9067,7 @@ editor(){
         const U=l&&studioUnitGroup(d,l,studioGroupEnter);
         if(U){studioGroupEnter=U;const V=studioUnitGroup(d,l,U);if(V){studioMultiSel=studioDeep(d,V).map(x=>x.id)}else studioMultiSel=[];d.selectedId=l.id;N.refresh();toast("Внутри «"+studioGroupName(d,U)+"»: клик — элемент, Esc — на уровень выше");return}
         if(l&&l.type==="image"&&l.src&&!l.locked){studioCropOn(l);return}
+        if(l&&l.type==="table"&&!l.locked){studioTableEdit(layerEl,l,e);return}
         if(l&&l.type==="path"){studioEditingPathId=l.id;studioEditingPointIndex=null;N.refresh()}
         if(l&&l.type==="text"&&!l.locked){if(+l.curve){toast("Изогнутый текст правьте в панели справа");return}studioInlineEdit(layerEl,l)}
       });
@@ -9195,7 +9211,7 @@ editor(){
         if(tbg){studioBeforeChange();if(tbg.dataset.actTextbg){l.bgColor=l.bgColor||"#16c784";l.bgRadius=l.bgRadius==null?24:l.bgRadius}else delete l.bgColor;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const set=e.target.closest("[data-prop-set]");
         if(set){
-          const k=set.dataset.propSet,boolKeys=["closed","stroke.enabled","vertical","upper","shadow","neon","lockRatio","showValues","qrMargin","photo.duo"];
+          const k=set.dataset.propSet,boolKeys=["closed","stroke.enabled","vertical","upper","shadow","neon","lockRatio","showValues","qrMargin","photo.duo"];if(k==="tblHead"||k==="tblZebra"){l[k==="tblHead"?"head":"zebra"]=set.dataset.val==="1";studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
           studioSetPath(l,k,boolKeys.includes(k)?set.dataset.val==="1":set.dataset.val);
           studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return;
         }
@@ -9433,7 +9449,9 @@ async function studioToSvg(d,ids){
       for(let i=1;i<P.length;i++)dd+=seg(P[i-1],P[i]);if(l.closed)dd+=seg(P[P.length-1],P[0])+"Z";
       (l.subs||[]).forEach(c=>{const Q=c.points||[];if(Q.length<2)return;dd+=` M${X(Q[0])} ${Y(Q[0])}`;for(let i=1;i<Q.length;i++)dd+=seg(Q[i-1],Q[i]);if(c.closed)dd+=seg(Q[Q.length-1],Q[0])+"Z"});
       el=`<path d="${dd}" fill-rule="${l.fillRule||"nonzero"}" fill="${fillOf(l)}"${strokeAttrs(l)}/>`}}
-    else if(l.type==="qr"||l.type==="chart"){const sv=l.type==="qr"?studioQrSvg(l):studioChartSvg(l,Math.round(w),Math.round(h));el=sv.replace("<svg ",`<svg x="${x}" y="${y}" width="${w}" height="${h}" `)}
+    else if(l.type==="qr"||l.type==="chart"||l.type==="table"){const sv=l.type==="table"?studioTableSvg(l,w,h,true):l.type==="qr"?studioQrSvg(l):studioChartSvg(l,Math.round(w),Math.round(h));
+      /* вложенный <svg>: свои x/y/width/height вместо исходных размеров корня (иначе атрибуты дублируются и файл не открывается) */
+      el=sv.replace(/^<svg\b([^>]*)>/,(m,a)=>`<svg x="${x}" y="${y}" width="${w}" height="${h}"${a.replace(/\s(?:width|height|x|y)="[^"]*"/g,"")}>`)}
     else if(l.type==="icon"){const inner=(iconSvg(l.icon||"star").match(/<svg[^>]*>([\s\S]*)<\/svg>/)||[])[1]||"";el=`<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 24 24" fill="none" stroke="${l.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`}
     else if(l.type==="image"&&l.src){const cid="c"+(++n),m=l.mask||"none";
       defs.push(`<clipPath id="${cid}">${m==="circle"?`<ellipse cx="${cx}" cy="${cy}" rx="${w/2}" ry="${h/2}"/>`:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min((l.radius||0)*k,w/2,h/2)}"/>`}</clipPath>`);
@@ -9872,11 +9890,73 @@ function studioChartSvg(l,W,H){
   D.forEach((x,i)=>{g+=`<text x="${pl+step*(i+0.5)}" y="${H-pb+fs*1.3}" text-anchor="middle" ${font} font-size="${fs*0.85}" fill="${tc}" fill-opacity=".75">${esc(x.label.slice(0,14))}</text>`});
   return head+g+"</svg>";
 }
-function studioDataSvg(l){const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;return l.type==="qr"?studioQrSvg(l):studioChartSvg(l,Math.max(40,Math.round(l.w/100*F.w)),Math.max(30,Math.round(l.h/100*F.h)))}
+function studioDataSvg(l){const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;if(l.type==="table")return studioTableSvg(l,Math.max(40,l.w/100*F.w),Math.max(20,l.h/100*F.h));return l.type==="qr"?studioQrSvg(l):studioChartSvg(l,Math.max(40,Math.round(l.w/100*F.w)),Math.max(30,Math.round(l.h/100*F.h)))}
+/* ---------- Таблица: одна геометрия → SVG на холсте / в SVG-экспорте и нативное рисование в PNG ---------- */
+function studioTableRows(l){const R=(Array.isArray(l.rows)&&l.rows.length?l.rows:[[""]]).map(r=>(Array.isArray(r)?r:[r]).map(c=>String(c??"")));const n=Math.max(...R.map(r=>r.length));return R.map(r=>r.concat(Array(n-r.length).fill("")))}
+function studioTableGeo(l,W,H){
+  const R=studioTableRows(l),nr=R.length,nc=R[0].length,rh=H/nr,font=l.font||"Onest",pad=Math.max(2,rh*0.28);
+  const m=(studioTableGeo.c||(studioTableGeo.c=document.createElement("canvas").getContext("2d")));
+  const tw=(t,fs,b)=>{m.font=`${b?700:400} ${fs}px "${font}", Onest, Arial, sans-serif`;return m.measureText(t).width};
+  let fs=rh*0.42;const need=[...Array(nc)].map((_,c)=>Math.max(fs*1.5,...R.map((r,i)=>tw(r[c],fs,l.head!==false&&i===0)))+pad*2);
+  const tot=need.reduce((a,b)=>a+b,0),cw=need.map(v=>v/tot*W);
+  /* если широкие тексты не влезают даже при пропорциональных столбцах — уменьшаем кегль */
+  if(tot>W)fs*=Math.max(0.35,W/tot);
+  const xs=[0];cw.forEach(v=>xs.push(xs[xs.length-1]+v));
+  const cells=[];R.forEach((r,i)=>r.forEach((t,c)=>{const hd=l.head!==false&&i===0;cells.push({r:i,c,x:xs[c],y:i*rh,w:cw[c],h:rh,t,hd,bg:hd?(l.headBg||"#16c784"):(l.zebra!==false&&(i-(l.head!==false?1:0))%2===1)?(l.zebraBg||"#f3f4f6"):(l.cellBg||"#ffffff"),color:hd?(l.headColor||"#ffffff"):(l.color||"#1f2937")})}));
+  return{R,nr,nc,rh,xs,cw,fs,pad,font,cells,rad:Math.min((+l.radius||0)*W/Math.max(W,1)*1,(+l.radius||0)),al:l.align||"left"};
+}
+function studioTableSvg(l,W,H,file){
+  W=Math.round(W);H=Math.round(H);const G=studioTableGeo(l,W,H),rad=Math.min(+l.radius||0,W/2,H/2)*(file?1:1),ff=`${esc(G.font)}, Onest, Arial, sans-serif`,id="tc"+String(l.id).replace(/\W/g,"");
+  const ax=c=>G.al==="center"?c.x+c.w/2:G.al==="right"?c.x+c.w-G.pad:c.x+G.pad,anc=G.al==="center"?"middle":G.al==="right"?"end":"start";
+  let g=`<defs><clipPath id="${id}"><rect width="${W}" height="${H}" rx="${rad}"/></clipPath></defs><g clip-path="url(#${id})">`;
+  G.cells.forEach(c=>{g+=`<rect x="${c.x.toFixed(2)}" y="${c.y.toFixed(2)}" width="${(c.w+0.5).toFixed(2)}" height="${(c.h+0.5).toFixed(2)}" fill="${esc(c.bg)}"/>`});
+  const lc=esc(l.lineColor||"#e5e7eb");for(let i=1;i<G.nr;i++)g+=`<line x1="0" x2="${W}" y1="${(i*G.rh).toFixed(2)}" y2="${(i*G.rh).toFixed(2)}" stroke="${lc}" stroke-width="1"/>`;
+  for(let c=1;c<G.nc;c++)g+=`<line y1="0" y2="${H}" x1="${G.xs[c].toFixed(2)}" x2="${G.xs[c].toFixed(2)}" stroke="${lc}" stroke-width="1"/>`;
+  G.cells.forEach(c=>{if(c.t)g+=`<text x="${ax(c).toFixed(2)}" y="${(c.y+c.h/2).toFixed(2)}" dominant-baseline="central" text-anchor="${anc}" font-family="${ff}" font-size="${G.fs.toFixed(2)}" font-weight="${c.hd?700:400}" fill="${esc(c.color)}">${esc(c.t)}</text>`});
+  g+=`</g><rect x=".5" y=".5" width="${W-1}" height="${H-1}" rx="${rad}" fill="none" stroke="${lc}"/>`;
+  return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" preserveAspectRatio="none">${g}</svg>`;
+}
+function studioTablePaint(ctx,l,x,y,w,h,W){
+  /* в PNG — тем же расчётом, но в пикселях экспорта (кегль и отступы масштабируются) */
+  const F=STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square,k=w/Math.max(1,l.w/100*F.w*(W/F.w)/(W/F.w)),G=studioTableGeo(l,w,h),rad=Math.min(+l.radius||0,w/2,h/2)*(W/F.w);
+  ctx.save();ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,rad):ctx.rect(x,y,w,h);ctx.clip();
+  G.cells.forEach(c=>{ctx.fillStyle=c.bg;ctx.fillRect(x+c.x,y+c.y,c.w+0.5,c.h+0.5)});
+  ctx.strokeStyle=l.lineColor||"#e5e7eb";ctx.lineWidth=Math.max(1,W/F.w);ctx.beginPath();
+  for(let i=1;i<G.nr;i++){ctx.moveTo(x,y+i*G.rh);ctx.lineTo(x+w,y+i*G.rh)}for(let c=1;c<G.nc;c++){ctx.moveTo(x+G.xs[c],y);ctx.lineTo(x+G.xs[c],y+h)}ctx.stroke();
+  ctx.textBaseline="middle";ctx.textAlign=G.al==="center"?"center":G.al==="right"?"right":"left";
+  G.cells.forEach(c=>{if(!c.t)return;ctx.fillStyle=c.color;ctx.font=`${c.hd?700:400} ${G.fs}px "${G.font}", Onest, Arial, sans-serif`;ctx.fillText(c.t,x+(G.al==="center"?c.x+c.w/2:G.al==="right"?c.x+c.w-G.pad:c.x+G.pad),y+c.y+c.h/2)});
+  ctx.restore();ctx.save();ctx.strokeStyle=l.lineColor||"#e5e7eb";ctx.lineWidth=Math.max(1,W/F.w);ctx.beginPath();ctx.roundRect?ctx.roundRect(x+0.5,y+0.5,w-1,h-1,rad):ctx.rect(x,y,w,h);ctx.stroke();ctx.restore();
+}
+function studioTableOp(l,op){const R=studioTableRows(l),nc=R[0].length;
+  if(op==="row+")R.push(Array(nc).fill(""));else if(op==="row-"&&R.length>1)R.pop();else if(op==="col+")R.forEach(r=>r.push(""));else if(op==="col-"&&nc>1)R.forEach(r=>r.pop());
+  l.rows=R;const F=STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square;if(op==="row+"||op==="row-"){const rh=l.h/(op==="row+"?R.length-1:R.length+1);l.h=Math.min(100-l.y,rh*R.length)}}
+function studioTableEdit(el,l,e){
+  /* правка ячеек на холсте: поля поверх ячеек, Tab/Enter — следующая, Esc/клик мимо — готово */
+  const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,W=l.w/100*F.w,H=l.h/100*F.h,G=studioTableGeo(l,W,H),box=el.getBoundingClientRect(),k=box.width/W;
+  studioBeforeChange();el.querySelectorAll(".tbl-ed").forEach(x=>x.remove());
+  const ed=document.createElement("div");ed.className="tbl-ed";ed.style.cssText="position:absolute;inset:0;z-index:5";
+  const R=studioTableRows(l);l.rows=R;
+  ed.innerHTML=G.cells.map(c=>`<input data-r="${c.r}" data-c="${c.c}" value="${esc(c.t)}" style="left:${c.x/W*100}%;top:${c.y/H*100}%;width:${c.w/W*100}%;height:${c.h/H*100}%;font:${c.hd?700:400} ${G.fs*k}px '${esc(G.font)}',Onest,sans-serif;color:${esc(c.color)};background:${esc(c.bg)};text-align:${G.al};padding:0 ${G.pad*k}px">`).join("");
+  el.append(ed);
+  const ins=[...ed.querySelectorAll("input")];
+  let pick=ins[0];if(e){const hit=document.elementFromPoint(e.clientX,e.clientY);if(hit&&hit.tagName==="INPUT"&&ed.contains(hit))pick=hit}
+  pick.focus();pick.setSelectionRange(pick.value.length,pick.value.length);
+  ins.forEach(i=>{i.addEventListener("input",()=>{R[+i.dataset.r][+i.dataset.c]=i.value;NEON.save()});
+    i.addEventListener("keydown",ev=>{ev.stopPropagation();if(ev.key==="Escape"){done();return}if(ev.key==="Enter"){ev.preventDefault();const j=ins.indexOf(i)+R[0].length;(ins[j]||ins[0]).focus()}});
+    i.addEventListener("mousedown",ev=>ev.stopPropagation())});
+  const out=ev=>{if(!ed.contains(ev.target))done()};
+  const done=()=>{document.removeEventListener("mousedown",out,true);ed.remove();N.refresh();NEON.save()};
+  setTimeout(()=>document.addEventListener("mousedown",out,true),0);
+}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-tbl]");if(!b)return;const l=studioSelected();if(!l||l.type!=="table")return;studioBeforeChange();studioTableOp(l,b.dataset.tbl);N.refresh();NEON.save()});
+document.addEventListener("nv-change",e=>{if(!e.target.matches||!e.target.matches("[data-tbltext]"))return;const l=studioSelected();if(!l||l.type!=="table")return;studioBeforeChange();
+  const rows=String(e.detail.value||"").replace(/\r/g,"").split("\n").filter(x=>x.trim()).map(x=>x.includes("\t")?x.split("\t"):x.split("|")).map(r=>r.map(c=>c.trim()));
+  if(rows.length){const old=studioTableRows(l).length;l.rows=rows;if(rows.length!==old)l.h=Math.min(100-l.y,l.h/old*rows.length)}studioPatchLayerDom(l);studioSyncProps(null,true);NEON.save()});
 function studioAddData(kind){
   const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;studioBeforeChange();
   const l=studioLayerDefaults("icon");delete l.icon;
-  if(kind==="qr"){const w=32;Object.assign(l,{type:"qr",w,h:w*F.w/F.h,x:34,y:30,qr:"https://example.ru",color:"#111111",bg:"#ffffff",qrLevel:"M"})}
+  if(kind==="table"){Object.assign(l,{type:"table",x:10,w:80,rows:[["Услуга","Цена"],["Консультация","Бесплатно"],["Анализ документов","2 000 ₽"],["Ведение дела","от 30 000 ₽"]],head:true,zebra:true,font:"Onest",color:"#1f2937",headBg:"#16c784",headColor:"#ffffff",cellBg:"#ffffff",zebraBg:"#f3f4f6",lineColor:"#e5e7eb",radius:10,align:"left"});l.h=40*F.w/F.h*0.75;l.y=Math.max(4,50-l.h/2)}
+  else if(kind==="qr"){const w=32;Object.assign(l,{type:"qr",w,h:w*F.w/F.h,x:34,y:30,qr:"https://example.ru",color:"#111111",bg:"#ffffff",qrLevel:"M"})}
   else Object.assign(l,{type:"chart",chartKind:kind,x:12,y:25,w:76,h:(kind==="pie"||kind==="donut"?40:46)*F.w/F.h,chartText:kind==="pie"||kind==="donut"?"Реклама: 45\nСоцсети: 30\nСайт: 15\nДругое: 10":"Янв: 120\nФев: 180\nМар: 150\nАпр: 240\nМай: 310",color:"#1f2937",colors:STUDIO_CHART_COLORS.slice(0,kind==="bar"?1:4),showValues:true});
   if(l.h>90){const k=90/l.h;l.h*=k;l.w*=k}
   d.layers.push(l);d.selectedId=l.id;studioMultiSel=[];N.refresh();NEON.save();
@@ -10365,7 +10445,7 @@ document.addEventListener("mouseup",()=>{
   }
   if(dr.mode==="rotate"){const st=document.querySelector(".stud-stage");if(st)studioRenderSidebar(document)}
   else if(dr.mode==="point"){const st=document.querySelector(".stud-stage");if(st)studioRenderSidebar(document)}
-  else if(dr.mode==="resize"){const l=studioDesign().layers.find(x=>x.id===dr.id);if(l&&(l.type==="chart"||l.type==="qr"))studioPatchLayerDom(l);studioSyncProps(null,true)}
+  else if(dr.mode==="resize"){const l=studioDesign().layers.find(x=>x.id===dr.id);if(l&&(l.type==="chart"||l.type==="qr"||l.type==="table"))studioPatchLayerDom(l);studioSyncProps(null,true)}
   else studioSyncProps(null,true);
   NEON.save();
 });
