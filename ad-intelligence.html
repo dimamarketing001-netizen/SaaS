@@ -2079,6 +2079,7 @@ body.gl-h,body.gl-h *{cursor:row-resize!important}body.gl-v,body.gl-v *{cursor:c
 .stud-guide.h{left:0;right:0;height:1px}
 .stud-layer.hid{display:none}
 .stud-layer.lock{cursor:default}
+.stl-wrap{width:100%}.stl-p{min-height:1em}.stl-m{display:inline-block;text-indent:0}
 .stud-layer-text[contenteditable="true"]{outline:2px dashed var(--svc-ink);outline-offset:2px;cursor:text;user-select:text}
 .stud-save{font-size:12px;color:var(--ink-3);white-space:nowrap;align-self:center;margin-right:4px}
 .stud-save.dirty{color:#b7791f}.stud-save.err{color:var(--bad)}
@@ -7289,7 +7290,7 @@ function studioContourD(pts,closed){
 function studioPathD(l){return[studioContourD(l.points,l.closed),...(l.subs||[]).map(c=>studioContourD(c.points,c.closed))].filter(Boolean).join(" ")}
 function studioLayerInner(l){
   if(l.type==="text"&&+l.curve){studioEnsureFont(studioFontOf(l));return`<canvas class="stud-curve" style="position:absolute;left:-50%;top:-100%;width:200%;height:300%;display:block;pointer-events:none"></canvas>`}
-  if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(l.text)}</span>`:esc(l.text)}</div>`}
+  if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent${studioListOf(l)?";display:block;width:100%":""}">${studioListHtml(l)||esc(l.text)}</span>`:studioListHtml(l)||esc(l.text)}</div>`}
   if(l.type==="image"){const bd=l.border&&l.border.enabled?`box-shadow:inset 0 0 0 ${l.border.width||4}px ${esc(l.border.color||"#fff")};`:"";
     return l.src?`<div style="width:100%;height:100%;filter:${studioDropCss(l,true)}"><div class="stud-layer-image" style="${studioMaskCss(l)};position:relative">${studioPhotoDefs(l)}<img src="${esc(l.src)}" alt="" draggable="false" style="object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1});filter:${studioPhotoFilter(l)}">${studioPhotoOverlays(l)}${bd?`<span style="position:absolute;inset:0;${bd};border-radius:inherit"></span>`:""}</div></div>`:`<div class="stud-layer-image stud-layer-empty" style="${studioMaskCss(l)}">${ic("image",22)}</div>`}
   if(l.type==="qr"||l.type==="chart"||l.type==="table")return`<div class="stud-layer-data">${studioDataSvg(l)}</div>`;
@@ -7778,7 +7779,7 @@ function studioPropsHtml0(){
       <div id="stud-contrast" class="stud-contrast">Проверяю контраст…</div>
       <nv-select options="${studioFontList().map(f=>f+":"+f).join("|")}" value="${esc(studioFontOf(l))}" data-prop="font" aria-label="Шрифт"></nv-select>
       ${ppRng("Кегль","fontSize",l.fontSize,2,18,0.5)}
-      <div class="pp-tools">${ppIb("bold",`data-prop-set="weight" data-val="${bold?"400":"700"}"`,bold,"Жирный")}${ppIb("case-upper",`data-prop-set="upper" data-val="${l.upper?"":"1"}"`,l.upper,"Верхний регистр")}${ppIb(l.vertical?"text":"pilcrow",`data-prop-set="vertical" data-val="${l.vertical?"":"1"}"`,l.vertical,"Вертикальный текст")}<span class="pp-sp"></span>
+      <div class="pp-tools">${ppIb("bold",`data-prop-set="weight" data-val="${bold?"400":"700"}"`,bold,"Жирный")}${ppIb("case-upper",`data-prop-set="upper" data-val="${l.upper?"":"1"}"`,l.upper,"Верхний регистр")}${ppIb(l.vertical?"text":"pilcrow",`data-prop-set="vertical" data-val="${l.vertical?"":"1"}"`,l.vertical,"Вертикальный текст")}${ppIb("list",`data-prop-set="list" data-val="${l.list==="bullet"?"":"bullet"}"`,l.list==="bullet","Маркированный список")}${ppIb("list-ordered",`data-prop-set="list" data-val="${l.list==="number"?"":"number"}"`,l.list==="number","Нумерованный список")}<span class="pp-sp"></span>
         ${ppSeg([["align-left","left","Влево"],["align-center","center","По центру"],["align-right","right","Вправо"]].map(([i,v,t])=>[ic(i,15),`data-prop-set="align" data-val="${v}"`,l.align===v,t]),"pp-seg-ic")}</div>
       <div class="pp-ibs wide"><button type="button" class="pp-btn" data-act-fit="1" data-tip="Подобрать кегль, чтобы текст точно влез в рамку">${ic("scaling",14)}Вписать в рамку</button>${ppIb("maximize-2",'data-act-fit="grow"',false,"Максимальный кегль, который влезает")}</div>
       <div class="pp-row"><span class="pp-l">Роль для ИИ</span><nv-select options=":—|headline:Заголовок|subheadline:Подзаголовок|cta:Кнопка|badge:Плашка|disclaimer:Мелкий текст" value="${esc(l.role||"")}" data-prop="role"></nv-select></div>`)
@@ -8124,19 +8125,22 @@ async function studioRenderCanvas(design,scale,anim){
       if("letterSpacing" in ctx)ctx.letterSpacing=((+l.letterSpacing||0)/100*fs)+"px";
       ctx.textBaseline="middle";ctx.textAlign=l.align==="center"?"center":l.align==="right"?"right":"left";
       const tx=l.align==="center"?x2+w2/2:l.align==="right"?x2+w2-pad:x2+pad,maxW=w2-pad*2;
-      const raw=String(l.text||"");const txt=l.upper?raw.toUpperCase():raw;const lines=[];
-      for(const para of txt.split("\n")){
+      const raw=String(l.text||"");const txt=l.upper?raw.toUpperCase():raw;const lines=[],LI=studioListOf(l);
+      for(const[pi,para]of txt.split("\n").entries()){
         const words=para.split(/\s+/).filter(Boolean);let cur="";
         if(!words.length){lines.push("");continue}
-        for(const word of words){const test=cur?cur+" "+word:word;if(ctx.measureText(test).width>maxW&&cur){lines.push(cur);cur=word}else cur=test}
-        if(cur)lines.push(cur);
+        const mk=LI&&LI.marks[pi],dx=mk?LI.em*fs:0,mw=maxW-dx;let first=true;const push=t=>{lines.push(mk?{t,dx,m:first?mk:""}:t);first=false};
+        for(const word of words){const test=cur?cur+" "+word:word;if(ctx.measureText(test).width>mw&&cur){push(cur);cur=word}else cur=test}
+        if(cur)push(cur);
       }
+      const drawL=fn=>lines.forEach((ln,i)=>{const yy=startY+i*lh;if(typeof ln==="string"){fn(ln,tx,yy);return}
+        const al=ctx.textAlign;ctx.textAlign="left";const wT=ctx.measureText(ln.t).width,st=l.align==="center"?tx-(ln.dx+wT)/2:l.align==="right"?tx-(ln.dx+wT):tx;if(ln.m)fn(ln.m,st,yy);fn(ln.t,st+ln.dx,yy);ctx.textAlign=al});
       const lh=fs*(+l.lineHeight||1.18),totalH=lh*lines.length,startY=y2+h2/2-totalH/2+lh/2;
       if(l.grad&&l.grad.enabled){const g=studioGradLine(x2,y2,w2,h2,+l.grad.angle||90),gr=ctx.createLinearGradient(g.x0,g.y0,g.x1,g.y1);gr.addColorStop(0,l.color);gr.addColorStop(1,l.grad.color2||"#0ea5e9");ctx.fillStyle=gr}
       if(l.shadow){const sh=studioShadowOf(l),k=W/560;ctx.shadowColor=studioShadowRgba(sh);ctx.shadowBlur=sh.blur*k;ctx.shadowOffsetX=sh.x*k;ctx.shadowOffsetY=sh.y*k}
-      if(l.neon){ctx.shadowColor=l.color;ctx.shadowBlur=fs*0.45;ctx.shadowOffsetY=0;lines.forEach((ln,i)=>ctx.fillText(ln,tx,startY+i*lh))}
-      if(l.outline&&l.outline.enabled){ctx.lineJoin="round";ctx.lineWidth=(l.outline.width||2)*2*(W/560);ctx.strokeStyle=l.outline.color||"#000";lines.forEach((ln,i)=>ctx.strokeText(ln,tx,startY+i*lh));ctx.shadowColor="transparent"}
-      lines.forEach((ln,i)=>ctx.fillText(ln,tx,startY+i*lh));
+      if(l.neon){ctx.shadowColor=l.color;ctx.shadowBlur=fs*0.45;ctx.shadowOffsetY=0;drawL((t,a,b)=>ctx.fillText(t,a,b))}
+      if(l.outline&&l.outline.enabled){ctx.lineJoin="round";ctx.lineWidth=(l.outline.width||2)*2*(W/560);ctx.strokeStyle=l.outline.color||"#000";drawL((t,a,b)=>ctx.strokeText(t,a,b));ctx.shadowColor="transparent"}
+      drawL((t,a,b)=>ctx.fillText(t,a,b));
     }
     ctx.restore();
   }
@@ -8161,13 +8165,18 @@ function studioMarkDirty(){
 }
 /* Вписать текст в рамку: уменьшаем кегль, пока самое длинное слово влезает по ширине,
    а все строки — по высоте (те же правила переноса, что в экспорте). */
+/* Списки в тексте: l.list = "bullet" | "number"; маркер на каждый непустой абзац, висячий отступ (в em). */
+function studioListOf(l){if(!l.list||l.vertical||+l.curve)return null;const paras=String(l.text||"").split("\n");let n=0;
+  const marks=paras.map(p=>p.trim()?(l.list==="number"?(++n)+".":"•"):"");return{em:l.list==="number"?String(n).length*0.6+0.75:1.05,marks,paras}}
+function studioListHtml(l,inner){const L=studioListOf(l);if(!L)return null;
+  return`<div class="stl-wrap">${L.paras.map((p,i)=>L.marks[i]?`<div class="stl-p" style="padding-left:${L.em}em;text-indent:-${L.em}em"><span class="stl-m" style="width:${L.em}em">${L.marks[i]}</span>${esc(p)}</div>`:`<div class="stl-p">${esc(p)||"&nbsp;"}</div>`).join("")}</div>`}
 function studioFitText(l,design,grow){
   if(l.type!=="text"||!l.text)return false;
   const f=STUDIO_FMT[design.format]||STUDIO_FMT.square,ctx=(studioFitText.c||(studioFitText.c=document.createElement("canvas"))).getContext("2d");
   const boxW=l.w/100*f.w*(l.bgColor?0.92:1),boxH=l.h/100*f.h,txt=l.upper?String(l.text).toUpperCase():String(l.text);
   const fits=fsPct=>{const fs=f.h*fsPct/100;ctx.font=`${l.weight||"700"} ${fs}px "${studioFontOf(l)}","Onest",Arial,sans-serif`;if("letterSpacing" in ctx)ctx.letterSpacing=((+l.letterSpacing||0)/100*fs)+"px";
-    let lines=0;for(const para of txt.split("\n")){const ws=para.split(/\s+/).filter(Boolean);if(!ws.length){lines++;continue}let cur="";
-      for(const w of ws){if(ctx.measureText(w).width>boxW)return false;const t=cur?cur+" "+w:w;if(ctx.measureText(t).width>boxW&&cur){lines++;cur=w}else cur=t}if(cur)lines++}
+    const LI=studioListOf(l);let lines=0;for(const[pi,para]of txt.split("\n").entries()){const ws=para.split(/\s+/).filter(Boolean);if(!ws.length){lines++;continue}let cur="";const bw=boxW-(LI&&LI.marks[pi]?LI.em*fs:0);
+      for(const w of ws){if(ctx.measureText(w).width>bw)return false;const t=cur?cur+" "+w:w;if(ctx.measureText(t).width>bw&&cur){lines++;cur=w}else cur=t}if(cur)lines++}
     return lines*fs*(+l.lineHeight||1.18)<=boxH*1.02};
   let fs=+l.fontSize||6,changed=false;
   while(fs>1.5&&!fits(fs)){fs=Math.round(fs*0.94*100)/100;changed=true}
@@ -10796,7 +10805,7 @@ function studioShowGuides(xs,ys,gaps){
 }
 function studioInlineEdit(layerEl,l){
   const t=layerEl.querySelector(".stud-layer-text");if(!t)return;
-  const before=l.text;t.contentEditable="true";t.focus();
+  const before=l.text;if(studioListOf(l))t.textContent=l.text;t.contentEditable="true";t.focus();
   const r=document.createRange();r.selectNodeContents(t);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);
   const finish=keep=>{t.removeEventListener("blur",onBlur);t.removeEventListener("keydown",onKey);t.contentEditable="false";
     const v=t.innerText.replace(/\n$/,"");
