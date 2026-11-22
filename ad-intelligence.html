@@ -7137,23 +7137,13 @@ function studioPolyPoints(sides,innerRadius){
 function studioPolyClipPath(l){return"polygon("+studioPolyPoints(l.sides,l.shape==="star"?l.innerRadius:null).map(p=>`${p.x}% ${p.y}%`).join(",")+")"}
 function studioLayerTransform(l){return`rotate(${l.rotation||0}deg) scaleX(${l.flipH?-1:1}) scaleY(${l.flipV?-1:1}) skewX(${l.skewX||0}deg) skewY(${l.skewY||0}deg)`}
 function studioStrokeCssBorder(s){return s.enabled?`${s.width}px ${s.dash==="dashed"?"dashed":s.dash==="dotted"?"dotted":"solid"} ${esc(s.color)}`:"none"}
-function studioPathD(l){
-  const pts=l.points||[];if(pts.length<2)return"";
-  let d=`M ${pts[0].x} ${pts[0].y}`;
-  for(let i=1;i<pts.length;i++){
-    const p0=pts[i-1],p1=pts[i];
-    const c1x=p0.out?p0.x+p0.out.dx:p0.x,c1y=p0.out?p0.y+p0.out.dy:p0.y;
-    const c2x=p1.in?p1.x+p1.in.dx:p1.x,c2y=p1.in?p1.y+p1.in.dy:p1.y;
-    d+=` C ${c1x} ${c1y} ${c2x} ${c2y} ${p1.x} ${p1.y}`;
-  }
-  if(l.closed){
-    const p0=pts[pts.length-1],p1=pts[0];
-    const c1x=p0.out?p0.x+p0.out.dx:p0.x,c1y=p0.out?p0.y+p0.out.dy:p0.y;
-    const c2x=p1.in?p1.x+p1.in.dx:p1.x,c2y=p1.in?p1.y+p1.in.dy:p1.y;
-    d+=` C ${c1x} ${c1y} ${c2x} ${c2y} ${p1.x} ${p1.y} Z`;
-  }
-  return d;
+/* Контур → d. Слой кривой: основной контур l.points/l.closed + доп. контуры l.subs=[{points,closed}] (дырки, буквы). */
+function studioContourD(pts,closed){
+  if(!pts||pts.length<2)return"";let d=`M ${pts[0].x} ${pts[0].y}`;
+  const seg=(p0,p1)=>{const c1x=p0.out?p0.x+p0.out.dx:p0.x,c1y=p0.out?p0.y+p0.out.dy:p0.y,c2x=p1.in?p1.x+p1.in.dx:p1.x,c2y=p1.in?p1.y+p1.in.dy:p1.y;return` C ${c1x} ${c1y} ${c2x} ${c2y} ${p1.x} ${p1.y}`};
+  for(let i=1;i<pts.length;i++)d+=seg(pts[i-1],pts[i]);if(closed)d+=seg(pts[pts.length-1],pts[0])+" Z";return d;
 }
+function studioPathD(l){return[studioContourD(l.points,l.closed),...(l.subs||[]).map(c=>studioContourD(c.points,c.closed))].filter(Boolean).join(" ")}
 function studioLayerInner(l){
   if(l.type==="text"&&+l.curve){studioEnsureFont(studioFontOf(l));return`<canvas class="stud-curve" style="position:absolute;left:-50%;top:-100%;width:200%;height:300%;display:block;pointer-events:none"></canvas>`}
   if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(l.text)}</span>`:esc(l.text)}</div>`}
@@ -7163,7 +7153,7 @@ function studioLayerInner(l){
   if(l.type==="path"){
     const f=studioFillOf(l),s=studioStrokeOf(l),gid="pg-"+l.id;
     const grad=f.type==="gradient"?`<linearGradient id="${gid}" gradientTransform="rotate(${f.angle||90} .5 .5)"><stop offset="0" stop-color="${esc(f.color)}"/><stop offset="1" stop-color="${esc(f.color2)}"/></linearGradient>`:f.type==="radial"?`<radialGradient id="${gid}"><stop offset="0" stop-color="${esc(f.color)}"/><stop offset="1" stop-color="${esc(f.color2)}"/></radialGradient>`:"";
-    return`<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:100%;overflow:visible">${grad?`<defs>${grad}</defs>`:""}<path d="${studioPathD(l)}" fill="${f.type==="none"?"none":grad?`url(#${gid})`:esc(f.color)}" stroke="${s.enabled?esc(s.color):"none"}" stroke-width="${s.width}" stroke-dasharray="${studioDashArr(s.dash)}" stroke-linecap="${s.cap||"butt"}" stroke-linejoin="${s.join||"miter"}" vector-effect="non-scaling-stroke"/></svg>`;
+    return`<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:100%;overflow:visible">${grad?`<defs>${grad}</defs>`:""}<path d="${studioPathD(l)}" fill-rule="${l.fillRule||"nonzero"}" fill="${f.type==="none"?"none":grad?`url(#${gid})`:esc(f.color)}" stroke="${s.enabled?esc(s.color):"none"}" stroke-width="${s.width}" stroke-dasharray="${studioDashArr(s.dash)}" stroke-linecap="${s.cap||"butt"}" stroke-linejoin="${s.join||"miter"}" vector-effect="non-scaling-stroke"/></svg>`;
   }
   if(l.type==="shape"){
     const f=studioFillOf(l),s=studioStrokeOf(l);
@@ -7796,20 +7786,11 @@ async function studioRenderCanvas(design,scale){
       if(pts.length>1){
         ctx.beginPath();
         const toPx=p=>({x:x+p.x/100*w,y:y+p.y/100*h});
-        const a0=toPx(pts[0]);ctx.moveTo(a0.x,a0.y);
-        for(let i=1;i<pts.length;i++){
-          const p0=pts[i-1],p1=pts[i],a=toPx(p0),b=toPx(p1);
-          const c1=p0.out?toPx({x:p0.x+p0.out.dx,y:p0.y+p0.out.dy}):a;
-          const c2=p1.in?toPx({x:p1.x+p1.in.dx,y:p1.y+p1.in.dy}):b;
-          ctx.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,b.x,b.y);
-        }
-        if(l.closed){
-          const p0=pts[pts.length-1],p1=pts[0],a=toPx(p0),b=toPx(p1);
-          const c1=p0.out?toPx({x:p0.x+p0.out.dx,y:p0.y+p0.out.dy}):a;
-          const c2=p1.in?toPx({x:p1.x+p1.in.dx,y:p1.y+p1.in.dy}):b;
-          ctx.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,b.x,b.y);ctx.closePath();
-        }
-        if(f.type!=="none"){ctx.fillStyle=f.type==="gradient"?(()=>{const g=studioGradLine(x,y,w,h,f.angle||90);const gr=ctx.createLinearGradient(g.x0,g.y0,g.x1,g.y1);gr.addColorStop(0,f.color);gr.addColorStop(1,f.color2);return gr})():f.type==="radial"?(()=>{const gr=ctx.createRadialGradient(x+w/2,y+h/2,0,x+w/2,y+h/2,Math.max(w,h)/2);gr.addColorStop(0,f.color);gr.addColorStop(1,f.color2);return gr})():f.color;ctx.fill()}
+        const trace=(pts,closed)=>{if(!pts||pts.length<2)return;const a0=toPx(pts[0]);ctx.moveTo(a0.x,a0.y);
+          const seg=(p0,p1)=>{const a=toPx(p0),b=toPx(p1),c1=p0.out?toPx({x:p0.x+p0.out.dx,y:p0.y+p0.out.dy}):a,c2=p1.in?toPx({x:p1.x+p1.in.dx,y:p1.y+p1.in.dy}):b;ctx.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,b.x,b.y)};
+          for(let i=1;i<pts.length;i++)seg(pts[i-1],pts[i]);if(closed){seg(pts[pts.length-1],pts[0]);ctx.closePath()}};
+        trace(pts,l.closed);(l.subs||[]).forEach(c=>trace(c.points,c.closed));
+        if(f.type!=="none"){ctx.fillStyle=f.type==="gradient"?(()=>{const g=studioGradLine(x,y,w,h,f.angle||90);const gr=ctx.createLinearGradient(g.x0,g.y0,g.x1,g.y1);gr.addColorStop(0,f.color);gr.addColorStop(1,f.color2);return gr})():f.type==="radial"?(()=>{const gr=ctx.createRadialGradient(x+w/2,y+h/2,0,x+w/2,y+h/2,Math.max(w,h)/2);gr.addColorStop(0,f.color);gr.addColorStop(1,f.color2);return gr})():f.color;ctx.fill(l.fillRule||"nonzero")}
         if(s.enabled){ctx.strokeStyle=s.color;ctx.lineWidth=s.width*(scale||1);ctx.lineCap=s.cap||"butt";ctx.lineJoin=s.join||"miter";ctx.setLineDash(studioDashArr(s.dash,scale).split(",").filter(Boolean).map(Number));ctx.stroke()}
       }
     }else if(l.type==="icon"){
@@ -9056,7 +9037,8 @@ async function studioToSvg(d,ids){
     else if(l.type==="path"){const P=l.points||[];if(P.length>1){const X=p=>x+p.x/100*w,Y=p=>y+p.y/100*h,cX=(p,s)=>x+(p.x+(p[s]?p[s].dx:0))/100*w,cY=(p,s)=>y+(p.y+(p[s]?p[s].dy:0))/100*h;
       let dd=`M${X(P[0])} ${Y(P[0])}`;const seg=(a,b)=>` C${cX(a,"out")} ${cY(a,"out")} ${cX(b,"in")} ${cY(b,"in")} ${X(b)} ${Y(b)}`;
       for(let i=1;i<P.length;i++)dd+=seg(P[i-1],P[i]);if(l.closed)dd+=seg(P[P.length-1],P[0])+"Z";
-      el=`<path d="${dd}" fill="${fillOf(l)}"${strokeAttrs(l)}/>`}}
+      (l.subs||[]).forEach(c=>{const Q=c.points||[];if(Q.length<2)return;dd+=` M${X(Q[0])} ${Y(Q[0])}`;for(let i=1;i<Q.length;i++)dd+=seg(Q[i-1],Q[i]);if(c.closed)dd+=seg(Q[Q.length-1],Q[0])+"Z"});
+      el=`<path d="${dd}" fill-rule="${l.fillRule||"nonzero"}" fill="${fillOf(l)}"${strokeAttrs(l)}/>`}}
     else if(l.type==="icon"){const inner=(iconSvg(l.icon||"star").match(/<svg[^>]*>([\s\S]*)<\/svg>/)||[])[1]||"";el=`<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 24 24" fill="none" stroke="${l.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`}
     else if(l.type==="image"&&l.src){const cid="c"+(++n),m=l.mask||"none";
       defs.push(`<clipPath id="${cid}">${m==="circle"?`<ellipse cx="${cx}" cy="${cy}" rx="${w/2}" ry="${h/2}"/>`:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min((l.radius||0)*k,w/2,h/2)}"/>`}</clipPath>`);
@@ -9147,43 +9129,52 @@ window.studioImportSvg=function(text,cx,cy,opts){
   const host=document.createElement("div");host.style.cssText="position:fixed;left:-9999px;top:0;width:800px;height:800px;opacity:0;pointer-events:none"+(opts.color?";color:"+opts.color:"");document.body.append(host);
   const svg=document.importNode(root,true);if(!svg.getAttribute("width")&&!svg.getAttribute("viewBox"))svg.setAttribute("width","800");host.append(svg);
   try{
-    const inv=svg.getScreenCTM().inverse(),items=[];let skipped=0;
+    const inv=svg.getScreenCTM().inverse(),items=[],texts=[];let skipped=0;
     svg.querySelectorAll("path,rect,circle,ellipse,line,polyline,polygon,text").forEach(el=>{
-      if(el.closest("defs,clipPath,mask,symbol,marker,pattern"))return;if(el.tagName.toLowerCase()==="text"){skipped++;return}
+      if(el.closest("defs,clipPath,mask,symbol,marker,pattern"))return;
       const cs=getComputedStyle(el);if(cs.display==="none"||cs.visibility==="hidden")return;
       const m=inv.multiply(el.getScreenCTM()),T=(px,py)=>[m.a*px+m.c*py+m.e,m.b*px+m.d*py+m.f],sc=Math.sqrt(Math.abs(m.a*m.d-m.b*m.c))||1;
+      if(el.tagName.toLowerCase()==="text"){const txt=(el.textContent||"").replace(/\s+/g," ").trim();if(!txt)return;let bb;try{bb=el.getBBox()}catch(e){return}
+        const P=[T(bb.x,bb.y),T(bb.x+bb.width,bb.y),T(bb.x,bb.y+bb.height),T(bb.x+bb.width,bb.y+bb.height)],xs=P.map(q=>q[0]),ys=P.map(q=>q[1]),fc=studioRgbHex(cs.fill)||{hex:"#111111"};
+        texts.push({x1:Math.min(...xs),y1:Math.min(...ys),x2:Math.max(...xs),y2:Math.max(...ys),text:txt,fs:(parseFloat(cs.fontSize)||16)*sc,color:fc.hex,weight:(+cs.fontWeight||400)>=600?"700":"400",
+          font:(cs.fontFamily||"").split(",")[0].replace(/["']/g,"").trim(),anchor:cs.textAnchor});return}
       const fillC=cs.fill&&cs.fill!=="none"?(/url\(/.test(cs.fill)?(()=>{const id=(cs.fill.match(/#([^")]+)/)||[])[1],g=id&&svg.querySelector("#"+CSS.escape(id)),st=g&&g.querySelector("stop");return st?studioRgbHex(getComputedStyle(st).stopColor):null})():studioRgbHex(cs.fill)):null;
       const strokeC=cs.stroke&&cs.stroke!=="none"?studioRgbHex(cs.stroke):null,op=(+cs.opacity||1)*(fillC?(+cs.fillOpacity||1)*fillC.a:1);
-      studioParsePathD(studioElToD(el)).forEach(sp=>{if(!sp.segs.length)return;
-        const s0=T(...sp.start),segs=sp.segs.map(g=>[...T(g[0],g[1]),...T(g[2],g[3]),...T(g[4],g[5])]);
-        items.push({start:s0,segs,closed:sp.closed,fill:fillC,stroke:strokeC,sw:(parseFloat(cs.strokeWidth)||1)*sc,cap:cs.strokeLinecap,join:cs.strokeLinejoin,op})});
+      /* все контуры элемента — в один слой (буквы, фигуры с вырезом) */
+      const cons=studioParsePathD(studioElToD(el)).filter(sp=>sp.segs.length).map(sp=>({start:T(...sp.start),segs:sp.segs.map(g=>[...T(g[0],g[1]),...T(g[2],g[3]),...T(g[4],g[5])]),closed:sp.closed}));
+      if(cons.length)items.push({cons,fill:fillC,stroke:strokeC,sw:(parseFloat(cs.strokeWidth)||1)*sc,cap:cs.strokeLinecap,join:cs.strokeLinejoin,op,rule:cs.fillRule==="evenodd"?"evenodd":"nonzero"});
     });
-    if(!items.length){toast("В SVG не нашлось фигур"+(skipped?" (текст пока не переносится)":""),{tone:"warning"});return}
+    if(!items.length&&!texts.length){toast("В SVG не нашлось фигур",{tone:"warning"});return}
     let X1=Infinity,Y1=Infinity,X2=-Infinity,Y2=-Infinity;const ext=(x,y)=>{X1=Math.min(X1,x);Y1=Math.min(Y1,y);X2=Math.max(X2,x);Y2=Math.max(Y2,y)};
-    items.forEach(it=>{ext(...it.start);it.segs.forEach(g=>{ext(g[4],g[5]);ext(g[0],g[1]);ext(g[2],g[3])})});
+    items.forEach(it=>it.cons.forEach(c=>{ext(...c.start);c.segs.forEach(g=>{ext(g[4],g[5]);ext(g[0],g[1]);ext(g[2],g[3])})}));texts.forEach(t=>{ext(t.x1,t.y1);ext(t.x2,t.y2)});
     const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,bw=Math.max(1e-6,X2-X1),bh=Math.max(1e-6,Y2-Y1);
     const fit=opts.box?null:Math.min(F.w*0.6/bw,F.h*0.6/bh),pxw=opts.box?opts.box.w/100*F.w:bw*fit,pxh=opts.box?opts.box.h/100*F.h:bh*fit,k=Math.min(pxw/bw,pxh/bh);
     const ox=(opts.box?opts.box.x/100*F.w+(pxw-bw*k)/2:((cx==null?50:cx)/100*F.w-bw*k/2)),oy=(opts.box?opts.box.y/100*F.h+(pxh-bh*k)/2:((cy==null?50:cy)/100*F.h-bh*k/2));
     const toD=(x,y)=>[ox+(x-X1)*k,oy+(y-Y1)*k];
     studioBeforeChange();const g="G"+studioUid(),added=[];
     items.forEach(it=>{
-      const P=[toD(...it.start)];const segs=it.segs.map(s=>[...toD(s[0],s[1]),...toD(s[2],s[3]),...toD(s[4],s[5])]);segs.forEach(s=>P.push([s[4],s[5]]),[]);
-      /* рамка — по реальной форме кривой (выборка точек сегментов), а не только по опорным точкам */
-      let lx=Infinity,ly=Infinity,lX=-Infinity,lY=-Infinity;const ex=(x,y)=>{lx=Math.min(lx,x);ly=Math.min(ly,y);lX=Math.max(lX,x);lY=Math.max(lY,y)};P.forEach(([x,y])=>ex(x,y));
-      segs.forEach((s,i)=>{const p0=P[i];for(let t=0.05;t<1;t+=0.05){const u=1-t;ex(u*u*u*p0[0]+3*u*u*t*s[0]+3*u*t*t*s[2]+t*t*t*s[4],u*u*u*p0[1]+3*u*u*t*s[1]+3*u*t*t*s[3]+t*t*t*s[5])}});
+      const C=it.cons.map(c=>{const P=[toD(...c.start)],segs=c.segs.map(s=>[...toD(s[0],s[1]),...toD(s[2],s[3]),...toD(s[4],s[5])]);segs.forEach(s=>P.push([s[4],s[5]]));return{P,segs,closed:c.closed}});
+      /* рамка — по реальной форме всех контуров */
+      let lx=Infinity,ly=Infinity,lX=-Infinity,lY=-Infinity;const ex=(x,y)=>{lx=Math.min(lx,x);ly=Math.min(ly,y);lX=Math.max(lX,x);lY=Math.max(lY,y)};
+      C.forEach(c=>{c.P.forEach(([x,y])=>ex(x,y));c.segs.forEach((s,i)=>{const p0=c.P[i];for(let t=0.05;t<1;t+=0.05){const u=1-t;ex(u*u*u*p0[0]+3*u*u*t*s[0]+3*u*t*t*s[2]+t*t*t*s[4],u*u*u*p0[1]+3*u*u*t*s[1]+3*u*t*t*s[3]+t*t*t*s[5])}})});
       const w=Math.max(0.5,lX-lx),h=Math.max(0.5,lY-ly),B=(x,y)=>({x:(x-lx)/w*100,y:(y-ly)/h*100}),D=(dx,dy)=>({dx:dx/w*100,dy:dy/h*100});
-      const pts=[{...B(...P[0]),type:"corner",in:null,out:null}];
-      segs.forEach((s,i)=>{const prev=pts[pts.length-1],pp=P[i],line=Math.abs(s[0]-pp[0])<1e-6&&Math.abs(s[1]-pp[1])<1e-6&&Math.abs(s[2]-s[4])<1e-6&&Math.abs(s[3]-s[5])<1e-6;
-        if(!line)prev.out=D(s[0]-pp[0],s[1]-pp[1]);pts.push({...B(s[4],s[5]),type:line?"corner":"smooth",in:line?null:D(s[2]-s[4],s[3]-s[5]),out:null})});
-      if(it.closed&&pts.length>2){const a=pts[0],z=pts[pts.length-1];if(Math.abs(a.x-z.x)<0.01&&Math.abs(a.y-z.y)<0.01){a.in=z.in;pts.pop()}}
-      const l=studioLayerDefaults("path");Object.assign(l,{x:lx/F.w*100,y:ly/F.h*100,w:w/F.w*100,h:h/F.h*100,points:pts,closed:it.closed,opacity:Math.round(it.op*100),group:g,
+      const conv=c=>{const pts=[{...B(...c.P[0]),type:"corner",in:null,out:null}];
+        c.segs.forEach((s,i)=>{const prev=pts[pts.length-1],pp=c.P[i],line=Math.abs(s[0]-pp[0])<1e-6&&Math.abs(s[1]-pp[1])<1e-6&&Math.abs(s[2]-s[4])<1e-6&&Math.abs(s[3]-s[5])<1e-6;
+          if(!line)prev.out=D(s[0]-pp[0],s[1]-pp[1]);pts.push({...B(s[4],s[5]),type:line?"corner":"smooth",in:line?null:D(s[2]-s[4],s[3]-s[5]),out:null})});
+        if(c.closed&&pts.length>2){const a=pts[0],z=pts[pts.length-1];if(Math.abs(a.x-z.x)<0.01&&Math.abs(a.y-z.y)<0.01){a.in=z.in;pts.pop()}}return{points:pts,closed:c.closed}};
+      const cs=C.map(conv),main=cs[0];
+      const l=studioLayerDefaults("path");Object.assign(l,{x:lx/F.w*100,y:ly/F.h*100,w:w/F.w*100,h:h/F.h*100,points:main.points,closed:main.closed,opacity:Math.round(it.op*100),group:g,
         fill:it.fill?{type:"solid",color:it.fill.hex,color2:"#0ea5e9",angle:90}:{type:"none",color:"#16c784",color2:"#0ea5e9",angle:90},
         stroke:it.stroke?{enabled:true,color:it.stroke.hex,width:Math.max(0.5,Math.round(it.sw*k*560/F.w*10)/10),dash:"solid",cap:it.cap||"butt",join:it.join||"miter"}:studioDefStroke(false)});
+      if(cs.length>1){l.subs=cs.slice(1);l.fillRule=it.rule}
       added.push(l)});
+    texts.forEach(t=>{const[a,b2]=[toD(t.x1,t.y1),toD(t.x2,t.y2)],fsPx=t.fs*k,fam=STUDIO_FONTS.find(f=>f.toLowerCase()===t.font.toLowerCase());
+      const l=Object.assign(studioLayerDefaults("text"),{text:t.text,x:a[0]/F.w*100,y:a[1]/F.h*100,w:Math.max(1,(b2[0]-a[0])/F.w*100*1.08),h:Math.max(1,(b2[1]-a[1])/F.h*100),fontSize:Math.max(0.5,Math.round(fsPx/F.h*1000)/10),color:t.color,weight:t.weight,align:t.anchor==="middle"?"center":t.anchor==="end"?"right":"left",group:g});
+      if(fam)l.font=fam;added.push(l)});
     if(added.length===1)delete added[0].group;else{d.groupNames=d.groupNames||{};d.groupNames[g]=opts.name||"SVG"}
     if(opts.replace){const i=d.layers.indexOf(opts.replace);d.layers.splice(i,1,...added);if(opts.replace.group&&added.length>1)studioGP(d)[g]=opts.replace.group;else if(opts.replace.group)added[0].group=opts.replace.group}else d.layers.push(...added);
     studioNormGroups(d);studioMultiSel=added.length>1?added.map(l=>l.id):[];d.selectedId=added[added.length-1].id;studioGroupEnter=null;N.refresh();NEON.save();
-    toast("Импортировано кривых: "+added.length+(skipped?" · текст SVG пропущен: "+skipped:""));
+    toast("Импортировано: "+added.filter(l=>l.type==="path").length+" кривых"+(texts.length?", "+texts.length+" текст.":""));
   }catch(err){toast("Ошибка импорта SVG: "+err.message,{tone:"danger"})}
   finally{host.remove()}
 };
