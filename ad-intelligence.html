@@ -1726,6 +1726,13 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s2-coll{grid-template-columns:repeat(2,1fr)!important}
 .s2-coll button{color:var(--ink-2)}.s2-coll button:hover{color:var(--svc-ink)}
 .stud-layer-data{width:100%;height:100%}.stud-layer-data svg{width:100%;height:100%;display:block}
+.bk-sum{display:flex;align-items:center;gap:8px;margin:12px 0 8px;font-size:13px;color:var(--ink-2)}.bk-sum b{color:var(--ink);font-weight:500}.bk-sum span{font:11.5px var(--font-mono);color:var(--ink-3)}.bk-sum .warn{color:var(--warning,#b7791f)}
+.bk-prev{overflow:auto;max-height:150px;border:1px solid var(--line);border-radius:10px}
+.bk-prev table{border-collapse:collapse;font-size:12px;min-width:100%}.bk-prev th,.bk-prev td{padding:5px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.bk-prev th{position:sticky;top:0;background:var(--surface-2);font:500 10.5px var(--font-mono);text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3)}
+.bk-map{display:flex;flex-direction:column;gap:6px}.bk-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:10px;align-items:center}
+.bk-l{display:flex;align-items:center;gap:8px;min-width:0;font-size:13px;color:var(--ink-2)}.bk-l span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bk-tok{display:flex;align-items:center;gap:6px;font:11.5px var(--font-mono);color:var(--svc-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mr{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
 .mr-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}.mr-h b{font-weight:500;font-size:13px}
 .mr-f{display:flex;flex-direction:column;gap:3px}
@@ -8546,7 +8553,7 @@ function studioDownloadMenu(btn){
 }
 function studioMoreMenu(btn){
   const r=btn.getBoundingClientRect();
-  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],"-",["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
+  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],"-",["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
 }
 async function studioSaveAsTemplate(){
   const d=studioDesign();if(!d.layers.length){toast("Пустой дизайн",{tone:"warning"});return}
@@ -9617,6 +9624,99 @@ function studioMagicResize(){
     const k=id.split(":")[1],on=sel.has(id);STUDIO_PLATFORMS.forEach(P=>{if(P.k!=="popular"&&P.f.some(f=>f[0]===k)){const j=P.k+":"+k;on?sel.add(j):sel.delete(j)}});
     root.querySelector(".mr").outerHTML=body()});
 }
+/* ---------- Массовое создание (как Bulk Create в Canva): таблица → страницы / дизайны / ZIP ----------
+   Строка таблицы = копия текущей страницы. Тексты: целиком из колонки или подстановка {{Колонка}};
+   фото — по ссылке (через сервер, иначе canvas «пачкается»), QR — ссылка из колонки. */
+function studioParseTable(txt){
+  txt=String(txt||"").replace(/^﻿/,"").replace(/\r\n?/g,"\n").replace(/\n+$/,"");if(!txt.trim())return[];
+  const first=txt.split("\n")[0],delim=first.includes("\t")?"\t":first.split(";").length>first.split(",").length?";":",";
+  const rows=[];let row=[],cell="",q=false;
+  for(let i=0;i<txt.length;i++){const ch=txt[i];
+    if(q){if(ch==='"'){if(txt[i+1]==='"'){cell+='"';i++}else q=false}else cell+=ch;continue}
+    if(ch==='"'&&cell==="")q=true;else if(ch===delim){row.push(cell);cell=""}else if(ch==="\n"){row.push(cell);rows.push(row);row=[];cell=""}else cell+=ch}
+  row.push(cell);rows.push(row);
+  return rows.map(r=>r.map(c=>c.trim())).filter(r=>r.some(Boolean));
+}
+const STUDIO_BULK_ROLE={headline:/заголов|title|headline|назван|товар|оффер/,subheadline:/подзаг|описан|subtitle|текст/,cta:/кнопк|cta|button|призыв/,badge:/скидк|цена|price|бейдж|badge|акци/,disclaimer:/дисклейм|сноск|мелк|правов/};
+function studioBulkFill(text,head,row){return String(text||"").replace(/\{\{\s*([^}]+?)\s*\}\}/g,(m,k)=>{const i=head.findIndex(h=>h.toLowerCase()===k.toLowerCase());return i<0?m:(row[i]||"")})}
+function studioBulkCreate(){
+  const d=studioDesign();studioPagesSync(d);
+  const tpl=JSON.parse(JSON.stringify({bg:d.bg,layers:d.layers}));
+  const slots=tpl.layers.filter(l=>["text","image","qr"].includes(l.type)&&!l.hidden);
+  if(!slots.length){toast("На странице нет текстов, фото или QR-кодов, которые можно заполнить",{tone:"warning"});return}
+  const hasTok=l=>l.type==="text"&&/\{\{[^}]+\}\}/.test(l.text||"");
+  let head=[],rows=[],map={},mode="pages",busy=false;
+  const norm=s=>String(s||"").toLowerCase().replace(/[^a-zа-яё0-9]/g,"");
+  const autoMap=()=>{map={};const used=new Set();slots.forEach(l=>{if(hasTok(l)){map[l.id]="tok";return}
+    const re=l.type==="image"?/фото|картин|изображ|image|photo|img|pic/:l.type==="qr"?/qr|ссылк|url|сайт|link/:STUDIO_BULK_ROLE[l.role];
+    let i=head.findIndex((h,j)=>!used.has(j)&&norm(h)===norm(l.text));if(i<0&&re)i=head.findIndex((h,j)=>!used.has(j)&&re.test(norm(h)));
+    if(i>=0){map[l.id]=String(i);used.add(i)}})};
+  const slotName=l=>l.type==="image"?"Фото":l.type==="qr"?"QR-код":"«"+(l.text||"Текст").replace(/\s+/g," ").slice(0,26)+"»";
+  const out=()=>{
+    if(!rows.length)return`<p class="pp-hint">Скопируйте таблицу из Excel или Google Таблиц (вместе со строкой заголовков) и вставьте выше — или загрузите CSV. Каждая строка станет отдельным креативом. В тексте можно писать <b>{{Название колонки}}</b> — подставится значение.</p>`;
+    const opts="-:— не менять|"+head.map((h,i)=>i+":"+(h||"Колонка "+(i+1)).replace(/[|:]/g," ")).join("|");
+    return`<div class="bk-sum">${ic("table-2",15)}<b>Строк: ${rows.length}</b><span>колонок: ${head.length}</span>${rows.length>200?`<span class="warn">в работу пойдут первые 200</span>`:""}</div>
+    <div class="bk-prev"><table><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.slice(0,3).map(r=>`<tr>${head.map((_,i)=>`<td>${esc(r[i]||"")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <div class="sect-t" style="margin:12px 0 6px">Что чем заполнить</div>
+    <div class="bk-map">${slots.map(l=>`<div class="bk-row"><span class="bk-l">${ic(studioLayerIcon(l),15)}<span>${esc(slotName(l))}</span></span>${map[l.id]==="tok"?`<span class="bk-tok">${ic("braces",14)}подстановка ${esc(((l.text||"").match(/\{\{[^}]+\}\}/g)||[]).join(", "))}</span>`:`<nv-select data-bk-map="${l.id}" options="${esc(opts)}" value="${esc(map[l.id]||"-")}" aria-label="Колонка для ${esc(slotName(l))}"></nv-select>`}</div>`).join("")}</div>
+    <div class="sect-t" style="margin:12px 0 6px">Результат</div>
+    <nv-segmented data-bk-mode options="pages:Страницы нового дизайна|designs:Отдельные дизайны|zip:Сразу ZIP с PNG" value="${mode}"></nv-segmented>
+    <p class="pp-hint" style="margin-top:6px">${mode==="pages"?"Создам новый дизайн, где каждая строка — страница. Текущий дизайн не изменится.":mode==="designs"?"Каждая строка сохранится отдельным дизайном в «Мои дизайны».":"Ничего не сохраняю — сразу скачаю архив картинок."} Пустая ячейка скрывает слой на этой странице. Длинный текст уменьшится, чтобы влезть в рамку.</p>`};
+  const {root,close}=overlay("modal",{title:"Массовое создание",subtitle:"Один макет → десятки креативов из таблицы: товары, цены, города, офферы.",size:"lg",service:"studio",
+    body:`<div class="bk"><div class="row" style="gap:8px;align-items:flex-start"><nv-textarea data-bk-ta rows="5" placeholder="Заголовок&#9;Цена&#9;Фото&#10;Диван «Лофт»&#9;29 990 ₽&#9;https://…" aria-label="Таблица" style="flex:1"></nv-textarea>
+      <div class="stack" style="gap:6px"><label class="nv-btn v-secondary s-sm" for="bk-file">${ic("file-spreadsheet",15)}CSV-файл</label><input type="file" id="bk-file" accept=".csv,.tsv,.txt,text/csv" class="sr"><nv-button size="sm" variant="ghost" icon="wand-2" data-bk-demo>Пример</nv-button></div></div>
+      <div id="bk-out">${out()}</div></div>`,
+    actions:[{label:"Отмена"},{label:"Создать",variant:"primary",icon:"layers",fn:()=>{if(busy)return false;if(!rows.length){toast("Вставьте таблицу",{tone:"warning"});return false}
+      const mapped=slots.filter(l=>map[l.id]&&map[l.id]!=="-");if(!mapped.length){toast("Привяжите хотя бы один слой к колонке",{tone:"warning"});return false}
+      busy=true;studioBulkRun(d,tpl,slots,head,rows.slice(0,200),{...map},mode).finally(()=>busy=false)}}]});
+  const ta=()=>root.querySelector("[data-bk-ta] textarea");
+  const reparse=txt=>{const t=studioParseTable(txt);head=t[0]||[];rows=t.slice(1);autoMap();root.querySelector("#bk-out").innerHTML=out()};
+  let tm;const onTa=()=>{clearTimeout(tm);tm=setTimeout(()=>reparse(ta().value),200)};
+  /* nv-textarea гасит всплытие input — слушаем само поле (и после возможной перерисовки компонента) */
+  const hookTa=()=>{const t=ta();if(t&&!t._bk){t._bk=1;t.addEventListener("input",onTa);t.addEventListener("paste",()=>setTimeout(onTa,0))}};hookTa();new MutationObserver(hookTa).observe(root.querySelector("[data-bk-ta]"),{childList:true,subtree:true});
+  root.addEventListener("nv-change",e=>{const s=e.target.closest("[data-bk-map]");if(s){map[s.dataset.bkMap]=e.detail.value;return}
+    if(e.target.closest("[data-bk-mode]")){mode=e.detail.value;root.querySelector("#bk-out").innerHTML=out()}});
+  root.querySelector("#bk-file").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;let t=await f.text();if(t.includes("�")){try{t=new TextDecoder("windows-1251").decode(await f.arrayBuffer())}catch(_){}}ta().value=t;reparse(t)});
+  root.querySelector("[data-bk-demo]").addEventListener("click",()=>{
+    const ex=[["Диван «Лофт»","Скидка до 30%","Купить","29 990 ₽","Москва"],["Кресло «Сканди»","Доставка за 1 день","Заказать","12 490 ₽","Казань"],["Стол «Дуб»","Массив, 10 лет гарантии","Смотреть","18 700 ₽","Сочи"]];
+    const cols=[];/* [заголовок колонки, (r)=>значение] */
+    slots.forEach((l,i)=>{if(hasTok(l)){(l.text.match(/\{\{\s*([^}]+?)\s*\}\}/g)||[]).forEach(m=>{const k=m.replace(/[{}]/g,"").trim();if(!cols.some(c=>c[0]===k))cols.push([k,r=>/город/i.test(k)?ex[r][4]:k+" "+(r+1)])});return}
+      const role={headline:["Заголовок",0],subheadline:["Описание",1],cta:["Кнопка",2],badge:["Цена",3]}[l.role];
+      let h=l.type==="image"?"Фото":l.type==="qr"?"Ссылка":role?role[0]:(l.text||"Текст").replace(/\s+/g," ").slice(0,14);while(cols.some(c=>c[0]===h))h+=" "+(i+1);
+      cols.push([h,r=>l.type==="image"?"":l.type==="qr"?"https://example.ru/"+(r+1):role?ex[r][role[1]]:(l.text||"")+" "+(r+1)])});
+    const t=[cols.map(c=>c[0]).join("\t"),...[0,1,2].map(r=>cols.map(c=>c[1](r)).join("\t"))].join("\n");ta().value=t;reparse(t)});
+}
+async function studioBulkRun(d,tpl,slots,head,rows,map,mode){
+  const imgCache={},fails=[];let done=0;
+  const prog=toastProgress("Массовое создание: 0 / "+rows.length);
+  const page=async row=>{const pg=JSON.parse(JSON.stringify(tpl));
+    for(const l of pg.layers){const m=map[l.id];l.id=studioUid();if(!m||m==="-")continue;
+      if(m==="tok"){l.text=studioBulkFill(l.text,head,row);if(!l.text.trim())l.hidden=true;continue}
+      const v=(row[+m]||"").trim();if(!v){l.hidden=true;continue}
+      if(l.type==="text")l.text=v;
+      else if(l.type==="qr")l.qr=v;
+      else if(l.type==="image"){if(/^data:image\//.test(v)){l.src=v;continue}if(!/^https?:\/\//i.test(v)){fails.push(v.slice(0,40));continue}
+        try{imgCache[v]=imgCache[v]||studioFetchImage(v,1600);const r=await imgCache[v];l.src=r.data_url;delete l.placeholder;l.fx=50;l.fy=50;l.zoom=1}catch(e){delete imgCache[v];fails.push(v.slice(0,60))}}}
+    return pg};
+  const base={...JSON.parse(JSON.stringify({...d,pages:undefined,bg:undefined,layers:undefined})),id:null,selectedId:null};
+  const fit=x=>x.layers.forEach(l=>{if(l.type==="text"&&!l.hidden)studioFitText(l,x)});
+  try{
+    const pages=[];for(const row of rows){const pg=await page(row);const x={...base,bg:pg.bg,layers:pg.layers};await studioFontsReady(x);fit(x);pages.push({bg:x.bg,layers:x.layers,row});prog.set(`Массовое создание: ${++done} / ${rows.length}`)}
+    const title=r=>(r.find(Boolean)||"").replace(/\s+/g," ").slice(0,40);
+    if(mode==="zip"){const files=[];for(const[i,p]of pages.entries()){const c=await studioRenderCanvas({...base,bg:p.bg,layers:p.layers},1);
+        files.push({name:`${String(i+1).padStart(3,"0")}_${title(p.row).replace(/[\\/:*?"<>|]+/g,"_")||"креатив"}.png`,data:await studioBytes(await studioBlob(c,"image/png"))});prog.set(`Рисую PNG: ${i+1} / ${pages.length}`)}
+      studioDownload(studioZip(files),studioFileBase(d)+"_массово.zip");prog.done(`Готово: ${files.length} PNG в архиве`)}
+    else if(mode==="designs"){let n=0;for(const[i,p]of pages.entries()){const x={...base,bg:p.bg,layers:p.layers,name:(d.name||"Дизайн")+" · "+(title(p.row)||i+1)};
+        try{const meta=await apiPost("/api/v1/studio/designs",{name:x.name,format:x.format,data:studioPack(x),thumb:await studioThumb(x)});studioUpsertList(meta);n++}catch(e){fails.push("сохранение: "+e.message)}prog.set(`Сохраняю: ${i+1} / ${pages.length}`)}
+      NEON.save();prog.done(`Готово: ${n} дизайнов в «Мои дизайны»`)}
+    else{const x={...base,name:(d.name||"Дизайн")+" · массово",pages:pages.map(p=>({bg:p.bg,layers:p.layers})),page:0,bg:pages[0].bg,layers:pages[0].layers};
+      const meta=await apiPost("/api/v1/studio/designs",{name:x.name,format:x.format,data:studioPack(x),thumb:await studioThumb(x)});studioUpsertList(meta);NEON.save();
+      prog.done(`Готово: ${pages.length} страниц в новом дизайне`);if(studioSave.state!=="saved")await studioPersist({silent:true});await studioOpenServer(meta.id)}
+    if(fails.length)toast(`Не загрузились фото (${fails.length}): ${[...new Set(fails)].slice(0,3).join(", ")}`,{tone:"warning",timeout:9000});
+  }catch(e){prog.done("");toast("Массовое создание прервано: "+(e.message||""),{tone:"danger"})}
+}
+function toastProgress(text){toast(text,{timeout:600000});const t=[...document.querySelectorAll("#nv-toasts .toast")].pop(),m=t&&t.querySelector(".m");
+  return{set:s=>{if(m)m.textContent=s},done:s=>{if(t)t.remove();if(s)toast(s,{tone:"success"})}}}
 /* ---------- Булевы операции над фигурами (как Pathfinder в Illustrator) ----------
    Фигуры/кривые → многоугольники в пикселях макета (с поворотом и отражением), операция —
    библиотека polygon-clipping, результат — одна составная кривая (even-odd) на месте нижнего слоя. */
