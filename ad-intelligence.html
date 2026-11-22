@@ -2024,6 +2024,32 @@ body.gl-h,body.gl-h *{cursor:row-resize!important}body.gl-v,body.gl-v *{cursor:c
   .shell.immersive #stud-stage-host{height:min(70vh,560px);flex:none}
   .shell.immersive .stud-rbox{flex:none}
 }
+/* Телефон: как мобильная Canva — холст на весь экран, вкладки снизу, панели — шторками */
+.m-props-btn{display:none}
+@media (max-width:760px){
+  .shell.immersive .top{flex-wrap:nowrap;padding:6px 8px;gap:4px}
+  .shell.immersive .tb-ctx,.shell.immersive .tb-fmt,.shell.immersive .stud-save,.shell.immersive .tb-view,.shell.immersive #bell,.shell.immersive .top-av,.shell.immersive .burger,.shell.immersive [data-act="studToAds"],.shell.immersive [data-act="studRedo"]{display:none!important}
+  .shell.immersive .top-ed{flex:none;order:0;flex-wrap:nowrap;margin-left:auto;gap:4px}
+  .shell.immersive .tb-zoom{padding:0 8px}.shell.immersive .tb-zoom span,.shell.immersive .tb-zoom nv-icon:last-child{display:none}
+  .shell.immersive .crumbs{flex:1 1 auto;min-width:0}
+  .shell.immersive .scroll{overflow:hidden}
+  .shell.immersive .view{height:100%;padding:0}
+  .shell.immersive .s2{height:100%;display:flex;flex-direction:column;border:0;border-radius:0}
+  .shell.immersive .s2-main{order:1;flex:1;min-height:0}
+  .shell.immersive .stud-rbox{flex:1;min-height:0}
+  .shell.immersive .stud-rbox.on{padding:0}
+  .shell.immersive .stud-ruler,.shell.immersive .stud-ruler-c{display:none}
+  .shell.immersive #stud-stage-host{height:auto;flex:1;touch-action:none}
+  .shell.immersive .s2-pages{padding:4px 8px}.shell.immersive .s2-pages .pg,.shell.immersive .s2-pages .add{height:40px}.shell.immersive .s2-pages>span{display:none}
+  .shell.immersive .s2-rail{order:3;flex:none;flex-direction:row;overflow-x:auto;height:62px;padding:4px 6px;border-right:0;border-top:1px solid var(--line);border-bottom:0;background:var(--surface)}
+  .shell.immersive .s2-rail button{flex:none;min-width:62px;margin-top:0!important}
+  .shell.immersive .s2-panel{position:fixed;left:0;right:0;bottom:62px;width:auto;max-height:58vh;z-index:30;border:0;border-radius:18px 18px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.18);background:var(--surface)}
+  .shell.immersive .s2-props{position:fixed;left:0;right:0;bottom:62px;max-height:62vh;z-index:31;border:0!important;border-radius:18px 18px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.18);background:var(--surface);transform:translateY(115%);transition:transform .2s ease}
+  body.pp-open .shell.immersive .s2-props{transform:none}
+  .m-props-btn{display:inline-flex;position:fixed;right:12px;bottom:74px;z-index:32;height:42px;padding:0 16px;border-radius:999px;border:0;background:var(--ink);color:var(--surface);align-items:center;gap:6px;box-shadow:var(--shadow-2);font-size:13px}
+  body.pp-open .m-props-btn{bottom:calc(62vh + 70px)}
+  .s2:has(.s2-start) .m-props-btn,.s2:has(.s2-panel:not([hidden])) .m-props-btn{display:none}
+}
 .s2-pages{display:flex;gap:8px;align-items:center;padding:8px 12px;border-top:1px solid var(--line);background:var(--surface);overflow-x:auto}
 .s2-pages .pg{position:relative;flex:none;border:2px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;background:var(--surface-2);height:64px;display:flex;align-items:center;justify-content:center}
 .s2-pages .pg.on{border-color:var(--svc-ink)}
@@ -8657,6 +8683,7 @@ editor(){
       <input type="file" id="stud-bg-file" accept="image/*" class="sr"><input type="file" id="stud-img-file" accept="image/*" class="sr"><input type="file" id="stud-img-replace" accept="image/*" class="sr">
       ${start?studioStartHtml():`<div class="stud-stage-wrap"><div class="stud-rbox${S.studio.rulers!==false?" on":""}">${S.studio.rulers!==false?'<canvas class="stud-ruler h" aria-hidden="true"></canvas><canvas class="stud-ruler v" aria-hidden="true"></canvas><span class="stud-ruler-c" aria-hidden="true">px</span>':""}<div id="stud-stage-host">${studioStageHtml()}</div></div>${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Перо: клик — точка, клик+тяни — плавная, клик по первой — замкнуть, Enter — закончить, Esc — отмена.</p>':""}</div>${studioPagesHtml()}`}
     </section>
+    <button type="button" class="m-props-btn" data-act="studMProps">${ic("sliders-horizontal",16)}<span>Настройки</span></button>
     <aside class="s2-props"><div id="stud-props">${studioPropsHtml()}</div></aside>
   </div>`,
   after(root){
@@ -9373,6 +9400,33 @@ document.addEventListener("mouseup",()=>{if(studioCropDrag){studioCropDrag=null;
 document.addEventListener("wheel",e=>{if(!studioCropId)return;const el=e.target.closest&&e.target.closest(".stud-layer.cropping");if(!el)return;e.preventDefault();e.stopPropagation();
   const l=studioDesign().layers.find(x=>x.id===studioCropId);if(!l)return;l.zoom=Math.max(1,Math.min(4,Math.round((l.zoom||1)*Math.exp(-(e.deltaMode===1?e.deltaY*33:e.deltaY)*0.002)*100)/100));studioPatchLayerDom(l);studioPaintCrop();studioSyncPropsSoon();clearTimeout(studioCropDrag&&0);NEON.save()},{passive:false,capture:true});
 document.addEventListener("keydown",e=>{if(studioCropId&&(e.key==="Enter"||e.key==="Escape")){e.preventDefault();e.stopPropagation();studioCropOff()}},true);
+/* ---------- Касания (телефон, планшет) ----------
+   Один палец на рабочей области = мышь (те же обработчики: перетаскивание, ручки, поворот, направляющие, кадр).
+   Два пальца — масштаб и сдвиг холста. Двойной тап — двойной клик. */
+let studioTouch=null;
+const studioMouse=(type,target,x,y)=>target.dispatchEvent(new MouseEvent(type,{bubbles:true,cancelable:true,clientX:x,clientY:y,button:0,buttons:type==="mouseup"?0:1,view:window}));
+document.addEventListener("touchstart",e=>{
+  if(!studioInEditor())return;const host=e.target.closest&&e.target.closest("#stud-stage-host");if(!host)return;e.preventDefault();
+  if(e.touches.length===2){if(studioTouch&&studioTouch.down)studioMouse("mouseup",document,studioTouch.x,studioTouch.y);
+    const[a,b]=e.touches,mx=(a.clientX+b.clientX)/2,my=(a.clientY+b.clientY)/2;studioTouch={pinch:true,d0:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)||1,z0:studioZoom,mx,my,host,sl:host.scrollLeft,st:host.scrollTop};return}
+  const t=e.touches[0],now=Date.now(),prev=studioTouch&&studioTouch.lastTap;
+  studioTouch={down:true,x:t.clientX,y:t.clientY,sx:t.clientX,sy:t.clientY,t0:now,target:e.target,lastTap:prev};
+  studioMouse("mousedown",e.target,t.clientX,t.clientY);
+},{passive:false});
+document.addEventListener("touchmove",e=>{
+  if(!studioTouch)return;e.preventDefault();
+  if(studioTouch.pinch&&e.touches.length===2){const[a,b]=e.touches,dd=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),mx=(a.clientX+b.clientX)/2,my=(a.clientY+b.clientY)/2;
+    studioSetZoom(studioTouch.z0*dd/studioTouch.d0,mx,my);studioTouch.host.scrollLeft-=mx-studioTouch.mx;studioTouch.host.scrollTop-=my-studioTouch.my;studioTouch.mx=mx;studioTouch.my=my;return}
+  if(studioTouch.down){const t=e.touches[0];studioTouch.x=t.clientX;studioTouch.y=t.clientY;studioMouse("mousemove",document,t.clientX,t.clientY)}
+},{passive:false});
+document.addEventListener("touchend",e=>{
+  if(!studioTouch)return;const T=studioTouch;
+  if(T.pinch){if(!e.touches.length)studioTouch=null;return}
+  if(T.down){studioMouse("mouseup",document,T.x,T.y);
+    const tap=Date.now()-T.t0<300&&Math.hypot(T.x-T.sx,T.y-T.sy)<10;
+    if(tap&&T.lastTap&&Date.now()-T.lastTap.t<350&&Math.hypot(T.x-T.lastTap.x,T.y-T.lastTap.y)<24){const el=document.elementFromPoint(T.x,T.y);if(el)el.dispatchEvent(new MouseEvent("dblclick",{bubbles:true,cancelable:true,clientX:T.x,clientY:T.y,view:window}));studioTouch={lastTap:null};return}
+    studioTouch={lastTap:tap?{t:Date.now(),x:T.x,y:T.y}:null}}
+},{passive:false});
 /* ---------- Анимация появления и экспорт видео (MP4) ----------
    l.anim={type,delay,dur} — в секундах; d.animLen — длина ролика. Кадр = studioRenderCanvas с поправками
    studioAnimAt; MP4 — WebCodecs (H.264) + mp4-muxer с явными метками времени (ровный ролик при любой скорости). */
@@ -10188,7 +10242,7 @@ Object.assign(N.acts,{
     (x.pages||[{layers:x.layers}]).forEach(p=>p.layers.forEach(l=>l.id=studioUid()));
     studioResetEphemeral();studioStartDismissed=true;S.studio.editor=x;N.go("studio-editor");studioPersist({silent:true});toast("Шаблон открыт новым дизайном",{tone:"success"})}catch(err){toast(err.message,{tone:"danger"})}},
   async studDelUserTpl(a,d,e){if(e)e.stopPropagation();try{await apiDelete("/api/v1/studio/designs/"+d.id);studioUserTpls=(studioUserTpls||[]).filter(x=>String(x.id)!==String(d.id));studioRefreshPanel()}catch(err){toast(err.message,{tone:"danger"})}},
-  studTab(a,d){S.studio.tab=S.studio.tab===d.tab?"":d.tab;N.refresh();NEON.save();if(S.studio.tab==="templates")setTimeout(()=>studioPaintTplThumbs(document),0)},
+  studTab(a,d){document.body.classList.remove("pp-open");S.studio.tab=S.studio.tab===d.tab?"":d.tab;N.refresh();NEON.save();if(S.studio.tab==="templates")setTimeout(()=>studioPaintTplThumbs(document),0)},
   studShortcuts:studioShortcuts,
   studDownload(a){studioDownloadMenu(a)},
   studMore(a){studioMoreMenu(a)},
@@ -10234,6 +10288,7 @@ Object.assign(N.acts,{
   studCollage(a,d){studioAddCollage(+d.i)},
   studAddData(a,d){studioAddData(d.k)},
   studAddGfx(a,d){studioAddGfx(+d.i)},
+  studMProps(){const on=!document.body.classList.contains("pp-open");if(on&&S.studio.tab){S.studio.tab="";N.refresh()}document.body.classList.toggle("pp-open",on)},
   studAnimAuto(){studioAutoAnimate()},studAnimPlay(){studioAnimPreview()},studVideo(){studioExportVideo()},
   studAnimClear(){const d=studioDesign();studioBeforeChange();d.layers.forEach(l=>delete l.anim);N.refresh();NEON.save()},
   studRulers(){S.studio.rulers=S.studio.rulers===false;N.refresh();NEON.save()},
