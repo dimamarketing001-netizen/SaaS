@@ -1713,6 +1713,8 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s2-menu button.on{font-weight:500;background:var(--surface-2)}
 .s2-menu button .ck{width:14px;flex:none;display:flex;color:var(--svc-ink);margin-left:-8px}
 .s2-menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.s2-coll{grid-template-columns:repeat(2,1fr)!important}
+.s2-coll button{color:var(--ink-2)}.s2-coll button:hover{color:var(--svc-ink)}
 .mr{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
 .mr-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}.mr-h b{font-weight:500;font-size:13px}
 .mr-f{display:flex;flex-direction:column;gap:3px}
@@ -8390,6 +8392,7 @@ function studioPanelHtml(tab){
     ${built.length?`${mine.length?'<div class="sect-t">Готовые</div>':""}<div class="s2-grid2">${built.map(([t,i])=>`<div class="th" data-act="studUseTplHere" data-i="${i}" title="${esc(t.name)}"><img data-s2tpl="${i}" alt=""></div>`).join("")}</div>`:""}`}
   if(tab==="elements")return`<h3>Элементы</h3><div class="sect-t">Фигуры</div><div class="s2-tiles">${STUDIO_SHAPES.map(([sh,icn,lb])=>`<button type="button" data-act="studAdd" data-type="shape" data-shape="${sh}">${ic(icn,20)}${lb}</button>`).join("")}</div>
     <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
+    <div class="sect-t">Коллажи</div><div class="s2-tiles s2-coll">${STUDIO_COLLAGES.map(([n,c],i)=>`<button type="button" data-act="studCollage" data-i="${i}" data-tip="${esc(n)}">${studioCollageIcon(c)}<span>${esc(n)}</span></button>`).join("")}</div>
     <div class="sect-t">Иконки</div><input type="search" class="num" data-s2icon placeholder="Поиск: телефон, скидка, house…" value="${esc(studioIconQ)}" style="width:100%;text-align:left;padding:0 10px">
     <div class="s2-icons" data-s2icons>${studioIconList().map(n=>`<button type="button" data-act="studAddIcon" data-icon="${esc(n)}" title="${esc(n)}">${ic(n,18)}</button>`).join("")}</div>`;
   if(tab==="text")return`<h3>Текст</h3><div class="s2-tpres">${STUDIO_TEXT_PRESETS.map(p=>`<button type="button" data-act="studAddTextPreset" data-k="${p.k}"><span style="${p.style}">${esc(p.label)}</span></button>`).join("")}</div>
@@ -8521,8 +8524,11 @@ async function studioRemoveBg(){
   }catch(e){toast(e.message||"Не удалось удалить фон",{tone:"danger"})}
 }
 async function studioAddImageData(dataUrl,w,h){
-  const d=studioDesign(),sel=studioSelected();studioBeforeChange();
-  if(sel&&sel.type==="image"){sel.src=dataUrl;delete sel.placeholder}
+  const d=studioDesign(),sel=studioMultiSel.length>1?null:studioSelected();studioBeforeChange();
+  /* выделен коллаж/несколько — первая пустая ячейка среди выделенных */
+  const emptyInSel=studioMultiSel.length>1&&d.layers.find(y=>studioMultiSel.includes(y.id)&&y.type==="image"&&!y.src);
+  if(emptyInSel){emptyInSel.src=dataUrl;delete emptyInSel.placeholder}
+  else if(sel&&sel.type==="image"){sel.src=dataUrl;delete sel.placeholder}
   else{const ph=d.layers.find(y=>y.type==="image"&&!y.src);
     if(ph){ph.src=dataUrl;delete ph.placeholder}
     else{const l=studioLayerDefaults("image");l.src=dataUrl;const f=STUDIO_FMT[d.format];l.w=60;l.h=Math.max(6,Math.min(95,f.w*0.6*((h||1)/(w||1))/f.h*100));l.x=20;l.y=Math.max(0,(100-l.h)/2);d.layers.push(l);d.selectedId=l.id}}
@@ -9325,6 +9331,17 @@ document.addEventListener("mouseup",()=>{if(studioCropDrag){studioCropDrag=null;
 document.addEventListener("wheel",e=>{if(!studioCropId)return;const el=e.target.closest&&e.target.closest(".stud-layer.cropping");if(!el)return;e.preventDefault();e.stopPropagation();
   const l=studioDesign().layers.find(x=>x.id===studioCropId);if(!l)return;l.zoom=Math.max(1,Math.min(4,Math.round((l.zoom||1)*Math.exp(-(e.deltaMode===1?e.deltaY*33:e.deltaY)*0.002)*100)/100));studioPatchLayerDom(l);studioPaintCrop();studioSyncPropsSoon();clearTimeout(studioCropDrag&&0);NEON.save()},{passive:false,capture:true});
 document.addEventListener("keydown",e=>{if(studioCropId&&(e.key==="Enter"||e.key==="Escape")){e.preventDefault();e.stopPropagation();studioCropOff()}},true);
+/* ---------- Коллажи: сетки фото ---------- */
+const STUDIO_COLLAGES=[["2 рядом",[[0,0,.5,1],[.5,0,.5,1]]],["2 друг под другом",[[0,0,1,.5],[0,.5,1,.5]]],["3: большое + 2",[[0,0,.6,1],[.6,0,.4,.5],[.6,.5,.4,.5]]],["3 в ряд",[[0,0,1/3,1],[1/3,0,1/3,1],[2/3,0,1/3,1]]],
+  ["4 сеткой",[[0,0,.5,.5],[.5,0,.5,.5],[0,.5,.5,.5],[.5,.5,.5,.5]]],["4: большое + 3",[[0,0,1,.62],[0,.62,1/3,.38],[1/3,.62,1/3,.38],[2/3,.62,1/3,.38]]],["5: 2 + 3",[[0,0,.5,.5],[.5,0,.5,.5],[0,.5,1/3,.5],[1/3,.5,1/3,.5],[2/3,.5,1/3,.5]]],["6 сеткой",[[0,0,1/3,.5],[1/3,0,1/3,.5],[2/3,0,1/3,.5],[0,.5,1/3,.5],[1/3,.5,1/3,.5],[2/3,.5,1/3,.5]]]];
+function studioCollageIcon(cells){return`<svg viewBox="0 0 40 30" width="44" height="33" aria-hidden="true">${cells.map(([x,y,w,h])=>`<rect x="${x*40+1}" y="${y*30+1}" width="${w*40-2}" height="${h*30-2}" rx="2" fill="currentColor" opacity=".22" stroke="currentColor" stroke-width="1"/>`).join("")}</svg>`}
+function studioAddCollage(i){
+  const c=STUDIO_COLLAGES[i];if(!c)return;const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;studioBeforeChange();
+  const m=4,gx=1.2*F.h/F.w,gy=1.2,g="G"+studioUid(),ids=[];
+  c[1].forEach(([x,y,w,h])=>{const l=studioLayerDefaults("image");Object.assign(l,{x:m+x*(100-2*m)+gx/2,y:m+y*(100-2*m)+gy/2,w:w*(100-2*m)-gx,h:h*(100-2*m)-gy,placeholder:true,radius:10,group:g});d.layers.push(l);ids.push(l.id)});
+  d.groupNames=d.groupNames||{};d.groupNames[g]="Коллаж "+c[0];studioNormGroups(d);studioMultiSel=ids;d.selectedId=ids[ids.length-1];studioGroupEnter=null;N.refresh();NEON.save();
+  toast("Коллаж добавлен — перетащите фото в ячейки или кликните ячейку и загрузите");
+}
 /* ---------- «Волшебный ресайз» (как в Canva): копии дизайна под выбранные площадки ---------- */
 function studioMagicResize(){
   const d=studioDesign();if(!d.layers.length){toast("Добавьте хотя бы один слой",{tone:"warning"});return}
@@ -9469,6 +9486,12 @@ document.addEventListener("drop",async e=>{
   if(!studioInEditor())return;const h=e.target.closest&&e.target.closest(".stud-rbox");if(!h)return;const files=[...(e.dataTransfer.files||[])];if(!files.length)return;
   e.preventDefault();h.classList.remove("drop-on");const st=document.querySelector(".stud-stage");if(!st)return;const r=st.getBoundingClientRect();
   let cx=(e.clientX-r.left)/r.width*100,cy=(e.clientY-r.top)/r.height*100;
+  /* бросили на фото/ячейку коллажа — заменяем картинку; остальные файлы — в пустые ячейки той же группы */
+  const hitEl=document.elementFromPoint(e.clientX,e.clientY),cell=hitEl&&hitEl.closest&&hitEl.closest('.stud-layer[data-type="image"]');
+  if(cell){const d=studioDesign(),tl=d.layers.find(x=>x.id===cell.dataset.id),imgs=files.filter(f=>/^image\//.test(f.type)&&f.type!=="image/svg+xml");
+    if(tl&&imgs.length){studioBeforeChange();const queue=[tl,...d.layers.filter(x=>x!==tl&&x.type==="image"&&!x.src&&tl.group&&x.group===tl.group)];
+      for(let i=0;i<imgs.length&&i<queue.length;i++){try{const{dataUrl}=await fileToDataUrl(imgs[i],1600);queue[i].src=dataUrl;delete queue[i].placeholder}catch(err){}}
+      d.selectedId=tl.id;studioMultiSel=[];studioGroupEnter=tl.group||null;N.refresh();NEON.save();toast(imgs.length>1?"Фото разложены по ячейкам":"Фото вставлено в рамку");return}}
   for(const f of files){
     if(f.type==="image/svg+xml"||/\.svg$/i.test(f.name)){if(window.studioImportSvg)studioImportSvg(await f.text(),cx,cy);continue}
     if(/^image\//.test(f.type)){try{await studioAddImageAt(f,cx,cy)}catch(err){toast("Не удалось открыть "+f.name,{tone:"danger"})}cx+=4;cy+=4}
@@ -10009,6 +10032,7 @@ Object.assign(N.acts,{
   studZoomMenu(a){const r=a.getBoundingClientRect(),z=v=>()=>studioSetZoom(v);
     studioMenu(r.left,r.bottom+4,[["Вписать в экран","Ctrl 0",z(1),studioZoom===1],["Увеличить","Ctrl +",()=>N.acts.studZoom(null,{z:"+"}),false],["Уменьшить","Ctrl −",()=>N.acts.studZoom(null,{z:"-"}),false],["50%","",z(0.5),studioZoom===0.5],["150%","",z(1.5),studioZoom===1.5],["200%","",z(2),studioZoom===2]])},
   studGuidesPanel(a){studioGuidesPanel(a)},
+  studCollage(a,d){studioAddCollage(+d.i)},
   studRulers(){S.studio.rulers=S.studio.rulers===false;N.refresh();NEON.save()},
   studGrid(){const seq=[0,2,3,4,6,12],i=seq.indexOf(+S.studio.grid||0);S.studio.grid=seq[(i+1)%seq.length];N.refresh();NEON.save()},
   studAiTexts:studioAiTexts,
