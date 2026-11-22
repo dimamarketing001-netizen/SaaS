@@ -2078,6 +2078,16 @@ body.gl-h,body.gl-h *{cursor:row-resize!important}body.gl-v,body.gl-v *{cursor:c
 .stud-save.dirty{color:#b7791f}.stud-save.err{color:var(--bad)}
 .stud-layer-row .row-ic button.off{opacity:1;color:var(--svc-ink)}
 .stud-swatches{display:flex;flex-wrap:wrap;gap:6px}
+.st-pals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.st-pals button{display:flex;flex-direction:column;gap:4px;padding:5px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;min-width:0}
+.st-pals button:hover{border-color:var(--line-2);background:var(--surface-2)}
+.st-pals button.on{border-color:var(--svc-ink);box-shadow:0 0 0 1px var(--svc-ink) inset}
+.st-sw{display:flex;height:22px;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px color-mix(in srgb,var(--ink) 8%,transparent) inset}.st-sw i{flex:1}.st-sw i:first-child{flex:1.6}
+.st-pals small{font-size:11px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
+.st-fonts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:10px}
+.st-fonts button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;min-width:0;text-align:left}
+.st-fonts button:hover{background:var(--surface-2);border-color:var(--line-2)}
+.st-fonts b{font-size:16px;font-weight:800;color:var(--ink)}.st-fonts small{font-size:11px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .stud-swatches button{width:24px;height:24px;border-radius:6px;border:1px solid var(--line-2);cursor:pointer;padding:0}
 .stud-swatches button.add{display:flex;align-items:center;justify-content:center;background:var(--surface);color:var(--ink-3)}
 .stud-ai-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
@@ -8461,7 +8471,7 @@ function studioBrandHtml(){
   ${b.logo?`<div class="row" style="gap:6px"><nv-button size="sm" variant="secondary" icon="image" data-act="studLogoPlace">Логотип на холст</nv-button><nv-button size="sm" variant="ghost" icon="x" icon-only hint="Убрать логотип" data-act="studLogoClear"></nv-button></div>`:`<label class="nv-btn v-secondary s-sm" for="stud-logo-file" style="width:100%;justify-content:center">${ic("upload",14)}Логотип бренда</label>`}`;
 }
 /* ===================== Студия v3: панели, контекст, меню ===================== */
-const STUDIO_TABS=[["templates","layout-template","Шаблоны"],["elements","shapes","Элементы"],["text","type","Текст"],["uploads","upload","Загрузки"],["photos","image","Фото"],["brand","palette","Бренд"],["ai","sparkles","ИИ"],["layers","layers","Слои"],["history","history","История"]];
+const STUDIO_TABS=[["templates","layout-template","Шаблоны"],["elements","shapes","Элементы"],["text","type","Текст"],["uploads","upload","Загрузки"],["photos","image","Фото"],["brand","palette","Стиль"],["ai","sparkles","ИИ"],["layers","layers","Слои"],["history","history","История"]];
 const STUDIO_TEXT_PRESETS=[
   {k:"headline",label:"Добавить заголовок",style:"font-size:21px;font-weight:800",l:{text:"Заголовок",fontSize:9,weight:"800",x:8,y:12,w:84,h:16,role:"headline"}},
   {k:"subheadline",label:"Добавить подзаголовок",style:"font-size:16px;font-weight:700",l:{text:"Подзаголовок",fontSize:5,weight:"700",x:8,y:32,w:84,h:10,role:"subheadline"}},
@@ -8511,7 +8521,7 @@ function studioPanelHtml(tab){
     return`<h3>Фото</h3><div class="row" style="gap:6px"><input type="search" class="num" data-s2stock placeholder="Например: юрист, офис, семья" value="${esc(st.q)}" style="flex:1;text-align:left;padding:0 10px"><button type="button" class="nv-btn v-secondary s-sm" data-act="studStockGo">${ic("search",14)}</button></div>
     <p class="muted" style="font-size:11.5px;margin:0">Бесплатный сток (Openverse), лицензии с коммерческим использованием. Для CC BY укажите автора (он в подсказке).</p>
     ${st.loading?'<p class="muted">Ищу…</p>':st.results===null?"":st.results.length?`<div class="s2-grid2">${st.results.map((r,i)=>`<div><div class="th" data-act="studUseStock" data-i="${i}" title="${esc(r.title)} — ${esc(r.creator)} (${esc(r.license)})"><img src="${esc(r.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer"></div><div class="cr">${esc(r.creator||"")} · ${esc(r.license)}</div></div>`).join("")}</div>`:'<p class="muted">Ничего не нашлось — попробуйте другие слова.</p>'}`}
-  if(tab==="brand")return`<h3>Бренд</h3>${studioBrandHtml()}
+  if(tab==="brand")return`<h3>Стиль и бренд</h3>${studioStylesHtml()}${studioBrandHtml()}
     <div class="sect-t">Шрифты бренда</div>
     <div class="s2-grid2"><nv-select label="Заголовки" data-brandfont="head" options="${studioFontList().map(f=>f+":"+f).join("|")}" value="${esc(((S.studio.brand||{}).fonts||{}).head||"Montserrat")}"></nv-select><nv-select label="Текст" data-brandfont="body" options="${studioFontList().map(f=>f+":"+f).join("|")}" value="${esc(((S.studio.brand||{}).fonts||{}).body||"Onest")}"></nv-select></div><div class="row" style="gap:6px;flex-wrap:wrap"><nv-button size="sm" variant="secondary" icon="wand-2" data-act="studApplyBrand">Применить бренд к дизайну</nv-button><nv-button size="sm" variant="secondary" icon="pipette" data-act="studPalette">Палитра из фото</nv-button></div><div data-s2pal></div>`;
   if(tab==="ai")return`<h3>ИИ-помощник</h3><div class="s2-tpres">
@@ -8639,6 +8649,68 @@ async function studioAddImageData(dataUrl,w,h){
   N.refresh();NEON.save();
 }
 /* «Применить бренд»: самые заметные цвета дизайна (по площади) → цвета бренда по порядку. */
+/* ---------- Стили (как Styles в Canva): палитра на весь дизайн, «Перемешать цвета», шрифты на весь дизайн ----------
+   Палитра = [фон, акцент, второй акцент, тёмный]. Цвета дизайна ранжируются по площади и получают цвета палитры
+   по порядку (с перестановкой при «Перемешать»); цвет текста подбирается по контрасту с тем, что под ним. */
+const STUDIO_STYLES=[["Свежий",["#ffffff","#16c784","#0ea5e9","#0f172a"]],["Скидки",["#ffffff","#ff3b30","#ffcc00","#111111"]],["Закат",["#fff7ed","#f97316","#e11d48","#431407"]],["Океан",["#e0f2fe","#0284c7","#14b8a6","#0c4a6e"]],
+  ["Лес",["#f0fdf4","#166534","#a3e635","#052e16"]],["Неон",["#0b0b1a","#a855f7","#22d3ee","#f0abfc"]],["Пастель",["#fdf2f8","#f9a8d4","#a5b4fc","#334155"]],["Строгий",["#f8fafc","#1e3a8a","#64748b","#0f172a"]],
+  ["Люкс",["#111111","#d4af37","#f5f5f4","#78716c"]],["Кофе",["#f5efe6","#6f4e37","#c8a27a","#2b1d14"]],["Ягоды",["#fff1f2","#be123c","#7c3aed","#3b0764"]],["Мята",["#ecfdf5","#10b981","#fbbf24","#064e3b"]],
+  ["Ретро",["#fef3c7","#dc2626","#0d9488","#1c1917"]],["Монохром",["#ffffff","#111111","#9ca3af","#404040"]],["Цитрус",["#fefce8","#facc15","#84cc16","#365314"]],["Tech",["#0f172a","#6366f1","#06b6d4","#e2e8f0"]],
+  ["Сканди",["#fafaf9","#a8a29e","#57534e","#1c1917"]],["Конфета",["#fdf4ff","#d946ef","#f59e0b","#4a044e"]]];
+const STUDIO_STYLE_FONTS=STUDIO_FONT_PAIRS.concat([["Oswald","Manrope","Плакатно"],["Montserrat","PT Serif","Журнально"],["Rubik","Inter","Просто"],["PT Serif","Manrope","Элегантно"]]);
+const STUDIO_PERMS=[[0,1,2,3],[1,0,3,2],[0,2,1,3],[3,1,2,0],[2,1,0,3],[0,3,2,1],[1,2,3,0],[3,2,1,0]];
+let studioStyleCur={pal:null,k:0};
+function studioCr(a,b){const la=studioLum(...studioHexRgb(a)),lb=studioLum(...studioHexRgb(b));return(Math.max(la,lb)+0.05)/(Math.min(la,lb)+0.05)}
+function studioDesignColors(d){
+  /* цвета всех страниц по площади (фон считается как вся площадь) */
+  const area={},add=(c,a)=>{if(!c||!/^#[0-9a-f]{6}$/i.test(c))return;c=c.toLowerCase();area[c]=(area[c]||0)+a};
+  for(const pg of studioPagesOf(d)){if(pg.bg.type==="color"||!pg.bg.type)add(pg.bg.color||"#ffffff",10000);
+    pg.layers.forEach(l=>{if(l.hidden)return;const a=Math.max(1,l.w*l.h);if(l.type==="shape"||l.type==="path"){const f=studioFillOf(l);add(f.color,a);if(f.type==="linear"||f.type==="radial"||f.type==="gradient")add(f.color2,a/2)}
+      if(l.type==="text"&&l.bgColor)add(l.bgColor,a);if(l.type==="icon")add(l.color,a/3)})}
+  return Object.entries(area).sort((x,y)=>y[1]-x[1]).map(x=>x[0]);
+}
+function studioApplyPalette(pal,silent){
+  const d=studioDesign(),src=studioDesignColors(d);if(!src.length){toast("В дизайне нет цветных элементов",{tone:"warning"});return}
+  studioBeforeChange();const map={};src.forEach((c,i)=>map[c]=i===0||pal.length<2?pal[0]:pal[1+(i-1)%(pal.length-1)]);
+  const rep=c=>c&&map[String(c).toLowerCase()]||c;
+  for(const pg of studioPagesOf(d)){
+    if(pg.bg.type==="color"||!pg.bg.type)pg.bg.color=rep(pg.bg.color||"#ffffff");
+    pg.layers.forEach(l=>{if((l.type==="shape"||l.type==="path")){if(l.fill)l.fill={...l.fill,color:rep(l.fill.color),color2:rep(l.fill.color2)};else if(l.color)l.color=rep(l.color)}
+      if(l.type==="text"&&l.bgColor)l.bgColor=rep(l.bgColor);if(l.type==="icon")l.color=rep(l.color)});
+    /* текст: самый контрастный из палитры к тому, что под ним (плашка → фигура под центром → фон) */
+    const F=STUDIO_FMT[d.format]||STUDIO_FMT.square;
+    const hex=c=>/^#[0-9a-f]{6}$/i.test(c||"");
+    pg.layers.forEach((l,i)=>{if(l.type!=="text"||l.hidden)return;let backs=l.bgColor&&hex(l.bgColor)?[l.bgColor]:null;
+      if(!backs){const cx=l.x+l.w/2,cy=l.y+l.h/2;for(let j=i-1;j>=0;j--){const u=pg.layers[j];if(u.hidden||!(u.type==="shape"||u.type==="path"))continue;if(cx>=u.x&&cx<=u.x+u.w&&cy>=u.y&&cy<=u.y+u.h){const f=studioFillOf(u);if((u.opacity==null||u.opacity>60)&&hex(f.color)){backs=[f.color];if(f.type&&f.type!=="solid"&&hex(f.color2))backs.push(f.color2);break}}}}
+      if(!backs){if(pg.bg.type==="image")return;backs=[pg.bg.color||"#ffffff"]}
+      const cr=c=>Math.min(...backs.map(b=>studioCr(c,b)));
+      if(hex(l.color)&&pal.includes(l.color.toLowerCase())&&cr(l.color)>=4.5)return;
+      const cands=pal.map(c=>[c,cr(c)]).sort((a,b)=>b[1]-a[1]);
+      l.color=cands[0][1]>=4.5?cands[0][0]:cr("#ffffff")>cr("#141414")?"#ffffff":"#141414"})}
+  studioGoPage(d.page||0,true);N.refresh();NEON.save();if(!silent)toast("Стиль применён ко всем страницам. Отменить — Ctrl+Z");
+}
+function studioStylePick(i){const P=STUDIO_STYLES[i];if(!P)return;studioStyleCur={pal:P[1],k:0,i};studioApplyPalette(P[1]);studioRefreshPanel()}
+function studioStyleShuffle(){
+  const base=studioStyleCur.pal||studioDesignColors(studioDesign()).slice(0,4);if(base.length<2){toast("Мало цветов — выберите палитру",{tone:"warning"});return}
+  studioStyleCur.pal=base;studioStyleCur.k=(studioStyleCur.k+1)%STUDIO_PERMS.length;const pm=STUDIO_PERMS[studioStyleCur.k].filter(x=>x<base.length);
+  studioApplyPalette(pm.map(x=>base[x]),true);
+}
+function studioApplyFonts(head,body){
+  const d=studioDesign();studioBeforeChange();let n=0;
+  for(const pg of studioPagesOf(d)){const texts=pg.layers.filter(l=>l.type==="text");if(!texts.length)continue;const big=Math.max(...texts.map(l=>+l.fontSize||0));
+    texts.forEach(l=>{const h=["headline","cta","badge"].includes(l.role)||(!l.role&&(+l.fontSize||0)>=big*0.8);l.font=h?head:body;n++;
+      studioFitText(l,{...d,bg:pg.bg,layers:pg.layers})})}
+  studioEnsureFont(head);studioEnsureFont(body);N.refresh();NEON.save();toast(n?`Шрифты: ${head} + ${body} — на всех страницах`:"В дизайне нет текста",{tone:n?"success":"warning"});
+}
+function studioStylesHtml(){
+  const cur=studioStyleCur.i;
+  return`<div class="sect-t" style="margin-top:6px">Стили дизайна</div>
+  <button type="button" class="pp-btn pri" data-act="studStyleShuffle" style="width:100%;justify-content:center;margin-bottom:8px">${ic("shuffle",15)}Перемешать цвета</button>
+  <div class="st-pals">${STUDIO_STYLES.map(([n,c],i)=>`<button type="button" class="${cur===i?"on":""}" data-act="studStylePick" data-i="${i}" data-tip="Применить палитру «${esc(n)}» ко всему дизайну"><span class="st-sw">${c.map(x=>`<i style="background:${x}"></i>`).join("")}</span><small>${esc(n)}</small></button>`).join("")}</div>
+  <p class="pp-hint">Клик — палитра на все страницы, ещё «Перемешать» — другие сочетания тех же цветов. Цвет текста подбирается читаемым.</p>
+  <div class="sect-t">Шрифты на весь дизайн</div>
+  <div class="st-fonts">${STUDIO_STYLE_FONTS.map(([a,b,lb],i)=>{studioEnsureFont(a);studioEnsureFont(b);return`<button type="button" data-act="studStyleFonts" data-i="${i}"><b style="font-family:'${a}'">${esc(lb)}</b><small style="font-family:'${b}'">${esc(a)} + ${esc(b)}</small></button>`}).join("")}</div>`;
+}
 function studioApplyBrand(){
   const b=(S.studio.brand||{}).colors||[],bf=(S.studio.brand||{}).fonts;
   if(!b.length&&!bf){toast("Добавьте цвета или шрифты бренда",{tone:"warning"});return}
@@ -10490,6 +10562,8 @@ Object.assign(N.acts,{
   studAiDesign:studioAiDesign,
   studAiCritique:studioAiCritique,
   studAiTranslate:()=>studioAiTranslate(),
+  studStylePick(a,d){studioStylePick(+d.i)},studStyleShuffle(){studioStyleShuffle()},
+  studStyleFonts(a,d){const P=STUDIO_STYLE_FONTS[+d.i];if(P)studioApplyFonts(P[0],P[1])},
   studReload(){studioLoadList()},
   studUseTpl(a,d){const t=STUDIO_TEMPLATES[+d.i];if(!t)return;const fmt=STUDIO_FMT[S.studio.tplFmt]?S.studio.tplFmt:"square";
     const x=studioRefit({...studioNewDesign(),...JSON.parse(JSON.stringify(t))},fmt);x.id=null;x.name=t.name;x.layers.forEach(l=>{l.id=studioUid();studioFitText(l,x)});
