@@ -8447,7 +8447,7 @@ async function studioVersionsDlg(){
 function studioShortcuts(){
   const K=[["Ctrl+Z / Ctrl+Shift+Z","Отменить / повторить"],["Ctrl+S","Сохранить"],["Ctrl+C / Ctrl+X / Ctrl+V","Копировать / вырезать / вставить (в т.ч. в другой дизайн, скриншоты, текст, SVG)"],["Ctrl+Alt+C / Ctrl+Alt+V","Копировать / вставить стиль"],["Ctrl+D","Дублировать"],["Alt + тянуть","Копия при перетаскивании"],["Ctrl + тянуть","Без прилипания"],["Alt (наведение)","Расстояния до соседей и краёв"],
     ["Ctrl+G / Ctrl+Shift+G","Сгруппировать / разгруппировать"],["Двойной клик","Внутрь группы · править текст · кадрировать фото"],["Ctrl + клик","Элемент внутри группы"],["Esc","На уровень выше / выйти из режима"],["Ctrl+A","Выделить всё"],["Delete","Удалить"],["Стрелки / Shift + стрелки","Сдвиг на 1 / 10 px"],
-    ["Ctrl + / Ctrl − / Ctrl 0","Масштаб / вписать"],["Ctrl + колесо, щипок","Масштаб к курсору"],["Пробел + тянуть","Двигать холст"],["Shift + тянуть уголок","Пропорционально"],["Shift + поворот","Шаг 15°"],["Линейка → тянуть","Направляющая"],["Правый клик","Меню действий"],["?","Эта справка"]];
+    ["Ctrl + / Ctrl − / Ctrl 0","Масштаб / вписать"],["Ctrl + колесо, щипок","Масштаб к курсору"],["Пробел + тянуть","Двигать холст"],["Shift + тянуть уголок","Пропорционально"],["Shift + поворот","Шаг 15°"],["Линейка → тянуть","Направляющая"],["Двойной клик по точке","Угол ↔ плавная (правка узлов)"],["Alt + ручка","Разорвать симметрию ручек"],["Клик по контуру","Добавить точку (правка узлов)"],["Правый клик","Меню действий"],["?","Эта справка"]];
   overlay("modal",{title:"Горячие клавиши",service:"studio",body:`<div class="s2-kbd">${K.map(([k,v])=>`<span>${k.split(" / ").map(x=>`<kbd>${esc(x)}</kbd>`).join(" / ")}</span><span>${esc(v)}</span>`).join("")}</div>`,actions:[{label:"Понятно"}]});
 }
 async function studioRemoveBg(){
@@ -8661,6 +8661,15 @@ editor(){
       });
       stage.addEventListener("dblclick",e=>{
         if(studioTool==="pen"){if(studioPenDraft)studioPenFinish(false);return}
+        /* двойной клик по точке в правке узлов: угол ↔ плавная */
+        const an=studioEditingPathId&&e.target.closest(".stud-anchor");
+        if(an){const d=studioDesign(),l=d.layers.find(x=>x.id===studioEditingPathId),i=+an.dataset.pt,P=l&&l.points;if(!P||!P[i])return;studioBeforeChange();const p=P[i];
+          if(p.type==="smooth"){p.type="corner";p.in=null;p.out=null}
+          else{const n=P.length,a=P[(i-1+n)%n],b=P[(i+1)%n],hasA=l.closed||i>0,hasB=l.closed||i<n-1,A=hasA?a:p,B=hasB?b:p;
+            let dx=B.x-A.x,dy=B.y-A.y;const L=Math.hypot(dx,dy)||1;dx/=L;dy/=L;
+            const la=hasA?Math.hypot(p.x-a.x,p.y-a.y)/3:0,lb=hasB?Math.hypot(b.x-p.x,b.y-p.y)/3:0;
+            p.type="smooth";p.in=hasA?{dx:-dx*la,dy:-dy*la}:null;p.out=hasB?{dx:dx*lb,dy:dy*lb}:null}
+          studioEditingPointIndex=i;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();e.preventDefault();return}
         const layerEl=e.target.closest(".stud-layer");if(!layerEl)return;
         const d=studioDesign(),l=d.layers.find(x=>x.id===layerEl.dataset.id);
         const U=l&&studioUnitGroup(d,l,studioGroupEnter);
@@ -9535,6 +9544,8 @@ document.addEventListener("mousemove",e=>{
     if(studioDrag.side==="anchor"){p.x=studioDrag.startDx+dxBox;p.y=studioDrag.startDy+dyBox}
     else{
       const nd=studioDrag.startDx+dxBox,ndy=studioDrag.startDy+dyBox;
+      /* Alt — разорвать симметрию ручек (точка становится угловой, как в Photoshop/Illustrator) */
+      if(e.altKey&&p.type==="smooth")p.type="corner";
       if(studioDrag.side==="out"){p.out={dx:nd,dy:ndy};if(p.type==="smooth")p.in={dx:-nd,dy:-ndy}}
       else{p.in={dx:nd,dy:ndy};if(p.type==="smooth")p.out={dx:-nd,dy:-ndy}}
     }
