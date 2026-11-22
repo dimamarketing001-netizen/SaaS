@@ -2017,6 +2017,7 @@ body.gl-h,body.gl-h *{cursor:row-resize!important}body.gl-v,body.gl-v *{cursor:c
 </style>
 <div id="app"></div>
 <script src="vendor/lucide-0.344.0.min.js"></script>
+<script src="vendor/polygon-clipping-0.15.7.min.js"></script>
 <script>/* Иконки лежат рядом со страницей (CDN бывает недоступен); если файла нет — берём с CDN. */window.lucide||document.write('<script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"><\/script>')</script>
 <script>
 /* NEON UI: библиотека веб-компонентов без сборки и фреймворков.
@@ -7546,7 +7547,9 @@ function studioGroupPropsHtml(ls){
       ${ppColor("Цвет","",t0.color).replace('data-prop=""','data-gprop="color"')}
       <div class="pp-tools">${GB("a-arrow-down","fs-","Все тексты мельче")}${GB("a-arrow-up","fs+","Все тексты крупнее")}${GB("bold","bold","Жирный для всех",bold)}<span class="pp-sp"></span>
       ${ppSeg([["align-left","left","Влево"],["align-center","center","По центру"],["align-right","right","Вправо"]].map(([i,v,t])=>[ic(i,15),`data-gact="align:${v}"`,texts.every(l=>l.align===v),t]),"pp-seg-ic")}</div>`)}
-  if(shapes.length)h+=ppSec("gfill",`Фигуры · ${shapes.length}`,ppColor("Заливка","",studioFillOf(shapes[0]).color).replace('data-prop=""','data-gprop="fill"'));
+  const boolN=ls.filter(studioBoolable).length;
+  if(shapes.length)h+=ppSec("gfill",`Фигуры · ${shapes.length}`,ppColor("Заливка","",studioFillOf(shapes[0]).color).replace('data-prop=""','data-gprop="fill"')
+    +(boolN>=2?ppCap("Контуры (как в Illustrator)")+ppSeg(Object.entries(PP_BOOL).map(([k,[t,g]])=>[ppSvg(g),`data-bool="${k}"`,false,t]),"pp-seg-ic"):""));
   if(icons.length)h+=ppSec("gicon",`Иконки · ${icons.length}`,ppColor("Цвет","",icons[0].color).replace('data-prop=""','data-gprop="iconcolor"'));
   h+=ppSec("glook","Вид группы",`<div class="pp-row"><span class="pp-l">Прозрачность</span><div class="rng"><input type="range" min="0" max="100" step="1" value="${op}" style="--rng-p:${rngPct(op,0,100)}" data-gprop="opacity"><output>${op}%</output></div></div>
     <div class="pp-row"><span class="pp-l">Тень у всех</span>${ppSeg([["Нет",'data-gact="shadow:0"',!hasSh],["Есть",'data-gact="shadow:1"',hasSh]])}</div>`);
@@ -8754,6 +8757,7 @@ editor(){
       });
       ppOn("toggle",e=>{const s=e.target.closest&&e.target.closest(".pp-sec");if(!s||s!==e.target)return;if(s.open)studioPPClosed.delete(s.dataset.sec);else studioPPClosed.add(s.dataset.sec)},true);
       ppOn("click",e=>{
+        const bo=e.target.closest("[data-bool]");if(bo){studioBoolean(bo.dataset.bool);return}
         if(e.target.closest("[data-gexit]")){const d=studioDesign(),g=studioGroupEnter;studioGroupEnter=g?studioGParent(d,g):null;if(g){studioMultiSel=studioDeep(d,g).map(x=>x.id);d.selectedId=studioMultiSel[studioMultiSel.length-1]||null}N.refresh();return}
         if(studioGroupHandle(e,root))return;
         if(e.target.closest("[data-act-topath]")){const l=studioSelected();if(l&&l.type==="shape"){studioBeforeChange();studioShapeToPath(l);studioEditingPathId=l.id;studioEditingPointIndex=null;N.refresh();NEON.save();toast("Фигура стала кривой — тяните точки")}return}
@@ -8879,6 +8883,7 @@ editor(){
         ["На передний план","",()=>studioCtxAction("front")],["Вперёд","",()=>studioCtxAction("fwd")],["Назад","",()=>studioCtxAction("bwd")],["На задний план","",()=>studioCtxAction("back")],"-",
         [l.locked?"Открепить":"Закрепить","",()=>studioCtxAction("lock")],[l.hidden?"Показать":"Скрыть","",()=>studioCtxAction("hide")],
         ...(G?[["Разгруппировать","Ctrl+Shift+G",()=>studioGroup(false)],["Переименовать группу","",()=>studioRenameGroup(G)]]:multi?[["Сгруппировать","Ctrl+G",()=>studioGroup(true)]]:[]),
+        ...(multi&&d.layers.filter(x=>studioMultiSel.includes(x.id)&&studioBoolable(x)).length>=2?["-",...Object.entries(PP_BOOL).map(([k,[t]])=>[t,"контуры",()=>studioBoolean(k)])]:[]),
         ...(window.studioExportSelection?[["Сохранить выделенное в PNG","",()=>studioExportSelection()]]:[]),
         "-",["Удалить","Delete",()=>studioCtxAction("del")]]);
     });
@@ -9241,6 +9246,43 @@ document.addEventListener("mouseup",()=>{if(studioCropDrag){studioCropDrag=null;
 document.addEventListener("wheel",e=>{if(!studioCropId)return;const el=e.target.closest&&e.target.closest(".stud-layer.cropping");if(!el)return;e.preventDefault();e.stopPropagation();
   const l=studioDesign().layers.find(x=>x.id===studioCropId);if(!l)return;l.zoom=Math.max(1,Math.min(4,Math.round((l.zoom||1)*Math.exp(-(e.deltaMode===1?e.deltaY*33:e.deltaY)*0.002)*100)/100));studioPatchLayerDom(l);studioPaintCrop();studioSyncPropsSoon();clearTimeout(studioCropDrag&&0);NEON.save()},{passive:false,capture:true});
 document.addEventListener("keydown",e=>{if(studioCropId&&(e.key==="Enter"||e.key==="Escape")){e.preventDefault();e.stopPropagation();studioCropOff()}},true);
+/* ---------- Булевы операции над фигурами (как Pathfinder в Illustrator) ----------
+   Фигуры/кривые → многоугольники в пикселях макета (с поворотом и отражением), операция —
+   библиотека polygon-clipping, результат — одна составная кривая (even-odd) на месте нижнего слоя. */
+const PP_BOOL={union:["Объединить",'<path d="M4 4h10v6h6v10H10v-6H4z" fill="currentColor" stroke="none"/>'],
+  subtract:["Вычесть верхние",'<path d="M4 4h10v6h-4v4H4z" fill="currentColor" stroke="none"/><rect x="10" y="10" width="10" height="10" stroke-dasharray="2 2"/>'],
+  intersect:["Пересечение",'<rect x="4" y="4" width="10" height="10"/><rect x="10" y="10" width="10" height="10"/><rect x="10" y="10" width="4" height="4" fill="currentColor" stroke="none"/>'],
+  exclude:["Исключить пересечение",'<path d="M4 4h10v6h-4v4H4zM14 10h6v10H10v-6h4z" fill="currentColor" stroke="none"/><rect x="10" y="10" width="4" height="4"/>']};
+function studioBoolable(l){return l&&!l.hidden&&(l.type==="shape"||(l.type==="path"&&(l.closed||(l.subs||[]).some(c=>c.closed))))}
+function studioLayerRings(l,F){
+  let t=l;if(l.type==="shape"){t=JSON.parse(JSON.stringify(l));studioShapeToPath(t)}
+  const W=l.w/100*F.w,H=l.h/100*F.h,X0=l.x/100*F.w,Y0=l.y/100*F.h,cx=X0+W/2,cy=Y0+H/2,a=(l.rotation||0)*Math.PI/180,co=Math.cos(a),si=Math.sin(a);
+  const tp=(px,py)=>{let x=X0+px/100*W,y=Y0+py/100*H;if(l.flipH)x=2*cx-x;if(l.flipV)y=2*cy-y;const dx=x-cx,dy=y-cy;return[cx+dx*co-dy*si,cy+dx*si+dy*co]};
+  const ring=(pts,closed)=>{if(!closed||!pts||pts.length<2)return null;const r=[],n=pts.length;
+    for(let i=0;i<n;i++){const P=studioBez(pts[i],pts[(i+1)%n]),curved=pts[i].out||pts[(i+1)%n].in,steps=curved?16:1;for(let k=0;k<steps;k++){const q=studioBezAt(P,k/steps);r.push(tp(q.x,q.y))}}
+    return r.length>2?r:null};
+  return[ring(t.points,t.closed),...(t.subs||[]).map(c=>ring(c.points,c.closed))].filter(Boolean);
+}
+function studioRdp(pts,eps){if(pts.length<4)return pts;const d2=(p,a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],L=dx*dx+dy*dy;if(!L)return Math.hypot(p[0]-a[0],p[1]-a[1]);const t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/L));return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy)};
+  const rec=(s,e,out)=>{let m=-1,mi=-1;for(let i=s+1;i<e;i++){const v=d2(pts[i],pts[s],pts[e]);if(v>m){m=v;mi=i}}if(m>eps){rec(s,mi,out);rec(mi,e,out)}else out.push(pts[s])};const out=[];rec(0,pts.length-1,out);out.push(pts[pts.length-1]);return out}
+function studioBoolean(op){
+  const PC=window.polygonClipping;if(!PC){toast("Модуль контуров не загрузился",{tone:"danger"});return}
+  const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,ids=studioSelIds(),ls=d.layers.filter(l=>ids.includes(l.id)&&studioBoolable(l));
+  if(ls.length<2){toast("Выделите 2 и больше замкнутых фигур или кривых",{tone:"warning"});return}
+  const geoms=ls.map(l=>studioLayerRings(l,F).reduce((acc,r)=>acc?PC.xor(acc,[[r]]):[[r]],null)).filter(Boolean);
+  let res;try{res=op==="union"?PC.union(...geoms):op==="intersect"?PC.intersection(...geoms):op==="exclude"?PC.xor(...geoms):PC.difference(geoms[0],...geoms.slice(1))}catch(e){toast("Не удалось выполнить операцию: "+e.message,{tone:"danger"});return}
+  const rings=[];(res||[]).forEach(poly=>poly.forEach(r=>{let q=r.slice();if(q.length>1&&q[0][0]===q[q.length-1][0]&&q[0][1]===q[q.length-1][1])q.pop();q=studioRdp(q.concat([q[0]]),0.35);q.pop();if(q.length>2)rings.push(q)}));
+  if(!rings.length){toast(op==="intersect"?"Фигуры не пересекаются":"После операции ничего не осталось",{tone:"warning"});return}
+  studioBeforeChange();
+  let x1=Infinity,y1=Infinity,x2=-Infinity,y2=-Infinity;rings.forEach(r=>r.forEach(([x,y])=>{x1=Math.min(x1,x);y1=Math.min(y1,y);x2=Math.max(x2,x);y2=Math.max(y2,y)}));
+  const w=Math.max(0.5,x2-x1),h=Math.max(0.5,y2-y1),toC=r=>({points:r.map(([x,y])=>({x:(x-x1)/w*100,y:(y-y1)/h*100,type:"corner",in:null,out:null})),closed:true});
+  const base=ls[0],C=rings.map(toC),l=studioLayerDefaults("path");
+  Object.assign(l,{x:x1/F.w*100,y:y1/F.h*100,w:w/F.w*100,h:h/F.h*100,points:C[0].points,closed:true,fillRule:"evenodd",fill:JSON.parse(JSON.stringify(studioFillOf(base))),stroke:JSON.parse(JSON.stringify(studioStrokeOf(base)))});
+  if(base.type==="shape"&&base.fill&&base.fill.type==="none")l.fill=base.fill;
+  ["effect","opacity","blendMode","group"].forEach(k=>{if(base[k]!==undefined)l[k]=JSON.parse(JSON.stringify(base[k]))});if(C.length>1)l.subs=C.slice(1);
+  const idx=d.layers.indexOf(base);d.layers=d.layers.filter(x=>!ls.includes(x));d.layers.splice(Math.min(idx,d.layers.length),0,l);
+  studioNormGroups(d);d.selectedId=l.id;studioMultiSel=[];studioGroupEnter=l.group||null;N.refresh();NEON.save();toast(PP_BOOL[op][0]+": готово");
+}
 /* ---------- Alt — измерение расстояний (как в Figma) ----------
    Выделен элемент + зажат Alt: наведение на другой элемент — зазоры между ними, на пустое место —
    отступы до краёв холста. Линии и числа в пикселях макета. */
