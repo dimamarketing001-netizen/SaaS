@@ -2086,6 +2086,10 @@ body.gl-h,body.gl-h *{cursor:row-resize!important}body.gl-v,body.gl-v *{cursor:c
 .stud-swatches{display:flex;flex-wrap:wrap;gap:6px}
 .tbl-ed input{position:absolute;box-sizing:border-box;border:0;outline:0;margin:0;min-width:0;cursor:text;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--svc-ink) 35%,transparent)}
 .tbl-ed input:focus{box-shadow:inset 0 0 0 2px var(--svc-ink);position:absolute;z-index:1}
+.mk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mk-grid figure{margin:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.mk-img{aspect-ratio:4/3;display:grid;place-items:center;background:var(--surface-2)}.mk-img img{width:100%;height:100%;object-fit:contain;display:block}
+.mk-grid figcaption{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px}.mk-grid figcaption b{font-weight:500;font-size:13px}
 .pres{position:fixed;inset:0;z-index:2000;background:#0b0b0f;display:flex;align-items:center;justify-content:center;flex-direction:column}
 .pres canvas{display:block;box-shadow:0 20px 60px rgba(0,0,0,.5);border-radius:4px;cursor:pointer}
 .pres-bar{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:5px;border-radius:999px;background:rgba(30,30,36,.82);backdrop-filter:blur(10px);color:#e5e7eb;transition:opacity .25s}
@@ -8746,12 +8750,12 @@ function studioMenu(x,y,items){
 function studioDownloadMenu(btn){
   const r=btn.getBoundingClientRect();
   const multi=studioPagesOf(studioDesign()).length>1;
-  studioMenu(r.left,r.bottom+4,[["Проверить макет…","поля, текст, фото, вес",studioCheckDesign],"-",["PNG",multi?"текущая страница":"лучшее качество",()=>studioExport("png")],["JPEG","меньше файл",()=>studioExport("jpeg")],["PNG без фона","прозрачный",()=>studioExport("png-alpha")],["PNG ×2","высокое разрешение",()=>studioExport("scale:2")],["SVG","вектор",()=>studioExportSvg(false)],["Видео MP4","анимация",()=>studioExportVideo()],["GIF","анимация, до 640 px",()=>studioExportGif()],...(studioSelIds().length?[["Выделенное в PNG","без фона",()=>studioExportSelection()],["Выделенное в SVG","вектор",()=>studioExportSvg(true)]]:[]),["PNG нужной ширины…","",studioExportWidth],["JPEG до 1 МБ","сжать",()=>studioExportUnder(1024)],["JPEG до 300 КБ","для соцсетей",()=>studioExportUnder(300)],"-",
+  studioMenu(r.left,r.bottom+4,[["Проверить макет…","поля, текст, фото, вес",studioCheckDesign],["Мокапы…","телефон, ноутбук, печать",studioMockups],"-",["PNG",multi?"текущая страница":"лучшее качество",()=>studioExport("png")],["JPEG","меньше файл",()=>studioExport("jpeg")],["PNG без фона","прозрачный",()=>studioExport("png-alpha")],["PNG ×2","высокое разрешение",()=>studioExport("scale:2")],["SVG","вектор",()=>studioExportSvg(false)],["Видео MP4","анимация",()=>studioExportVideo()],["GIF","анимация, до 640 px",()=>studioExportGif()],...(studioSelIds().length?[["Выделенное в PNG","без фона",()=>studioExportSelection()],["Выделенное в SVG","вектор",()=>studioExportSvg(true)]]:[]),["PNG нужной ширины…","",studioExportWidth],["JPEG до 1 МБ","сжать",()=>studioExportUnder(1024)],["JPEG до 300 КБ","для соцсетей",()=>studioExportUnder(300)],"-",
     ["PDF",multi?"все страницы":"для печати",()=>studioExportPages("pdf")],["ZIP",multi?"все страницы PNG":"PNG в архиве",()=>studioExportPages("zip")],["Все форматы","PNG пачкой",studioExportAll],"-",["В рекламу…","в проект Директа",studioToAds]]);
 }
 function studioMoreMenu(btn){
   const r=btn.getBoundingClientRect();
-  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Найти и заменить…","Ctrl+F",studioFindReplace],"-",["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
+  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Мокапы…","телефон, ноутбук, печать",studioMockups],["Найти и заменить…","Ctrl+F",studioFindReplace],"-",["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
 }
 async function studioSaveAsTemplate(){
   const d=studioDesign();if(!d.layers.length){toast("Пустой дизайн",{tone:"warning"});return}
@@ -8838,6 +8842,68 @@ function studioPresent(start){
     else if(a==="full"){document.fullscreenElement?document.exitFullscreen().catch(()=>{}):ov.requestFullscreen().catch(()=>{})}
     else if(a==="auto"){auto=!auto;b.classList.toggle("on",auto);b.innerHTML=`${ic(auto?"pause":"play",15)}<span>${auto?"Пауза":"Автопоказ"}</span>`;arm()}});
   ov.requestFullscreen&&ov.requestFullscreen().catch(()=>{});show();
+}
+/* ---------- Мокапы: дизайн в нейтральном телефоне (лента/сторис), ноутбуке и как печатный лист ---------- */
+const STUDIO_MOCKS=[["feed","Лента в телефоне"],["story","Сторис в телефоне"],["laptop","Ноутбук"],["print","Печать"]];
+function studioRR(g,x,y,w,h,r){g.beginPath();g.roundRect?g.roundRect(x,y,w,h,r):g.rect(x,y,w,h)}
+async function studioMockupCanvas(kind,art,bgc,brand){
+  const land=kind==="laptop"||kind==="print",W=land?1600:1200,H=land?1200:1500,c=document.createElement("canvas");c.width=W;c.height=H;const g=c.getContext("2d");
+  const dark=studioLum(...studioHexRgb(studioHex6(bgc)))<0.3;g.fillStyle=bgc;g.fillRect(0,0,W,H);
+  const vg=g.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.hypot(W,H)/2);vg.addColorStop(0,"rgba(255,255,255,"+(dark?0.06:0.35)+")");vg.addColorStop(1,"rgba(0,0,0,"+(dark?0.25:0.06)+")");g.fillStyle=vg;g.fillRect(0,0,W,H);
+  const shadow=(b,y,a)=>{g.shadowColor=`rgba(0,0,0,${a})`;g.shadowBlur=b;g.shadowOffsetY=y};const noSh=()=>{g.shadowColor="transparent";g.shadowBlur=0;g.shadowOffsetY=0};
+  const icon=async(n,col,x,y,s)=>{try{g.drawImage(await studioLoadImg(studioIconDataUrl(n,col)),x,y,s,s)}catch(e){}};
+  const cover=(img,x,y,w,h)=>{const r=Math.max(w/img.width,h/img.height),iw=img.width*r,ih=img.height*r;g.save();g.beginPath();g.rect(x,y,w,h);g.clip();g.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);g.restore()};
+  if(kind==="feed"||kind==="story"){
+    const pw=620,ph=1300,px=(W-pw)/2,py=(H-ph)/2,sx=px+20,sy=py+20,sw=pw-40,sh=ph-40;
+    shadow(80,40,0.35);g.fillStyle="#0d0d10";studioRR(g,px,py,pw,ph,92);g.fill();noSh();
+    g.strokeStyle="#2a2a30";g.lineWidth=4;studioRR(g,px+2,py+2,pw-4,ph-4,90);g.stroke();
+    g.save();studioRR(g,sx,sy,sw,sh,74);g.clip();
+    if(kind==="story"){g.fillStyle="#000";g.fillRect(sx,sy,sw,sh);
+      if(art.height/art.width>1.5)cover(art,sx,sy,sw,sh);
+      else{/* не сторис-формат: целиком по центру поверх размытой копии, как показывают площадки */g.save();g.filter="blur(28px) brightness(.7)";cover(art,sx-40,sy-40,sw+80,sh+80);g.restore();const dh=sw*art.height/art.width;g.drawImage(art,sx,sy+(sh-dh)/2,sw,dh)}
+      const tg=g.createLinearGradient(0,sy,0,sy+220);tg.addColorStop(0,"rgba(0,0,0,.45)");tg.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=tg;g.fillRect(sx,sy,sw,220);
+      for(let i=0;i<3;i++){g.fillStyle=i===0?"rgba(255,255,255,.95)":"rgba(255,255,255,.4)";studioRR(g,sx+24+i*((sw-48)/3),sy+70,(sw-48)/3-8,5,3);g.fill()}
+      g.fillStyle=brand;g.beginPath();g.arc(sx+52,sy+120,22,0,7);g.fill();g.fillStyle="#fff";g.font="600 24px Onest, sans-serif";g.textBaseline="middle";g.fillText("Ваш бренд",sx+86,sy+114);g.font="20px Onest, sans-serif";g.fillStyle="rgba(255,255,255,.75)";g.fillText("Реклама",sx+86,sy+140);
+      const bw=300,bx=sx+(sw-bw)/2,by=sy+sh-150;g.fillStyle="#fff";studioRR(g,bx,by,bw,66,33);g.fill();g.fillStyle="#111";g.font="600 26px Onest, sans-serif";g.textAlign="center";g.fillText("Подробнее",bx+bw/2,by+34);g.textAlign="left"}
+    else{g.fillStyle="#fff";g.fillRect(sx,sy,sw,sh);g.fillStyle="#111";g.font="600 24px Onest, sans-serif";g.textBaseline="middle";g.fillText("9:41",sx+56,sy+44);
+      for(let i=0;i<3;i++){g.fillRect(sx+sw-130+i*9,sy+50-i*5,6,8+i*5)}g.fillRect(sx+sw-92,sy+36,40,18);
+      const ty=sy+100;g.fillStyle=brand;g.beginPath();g.arc(sx+46,ty+30,26,0,7);g.fill();g.fillStyle="#111";g.font="600 24px Onest, sans-serif";g.fillText("Ваш бренд",sx+84,ty+20);g.fillStyle="#8a8f98";g.font="20px Onest, sans-serif";g.fillText("Реклама",sx+84,ty+46);
+      g.fillStyle="#8a8f98";[0,1,2].forEach(k=>{g.beginPath();g.arc(sx+sw-70+k*12,ty+30,3.5,0,7);g.fill()});
+      const iy=ty+76,ih=Math.min(sw*Math.min(art.height/art.width,1.25),sh-420);cover(art,sx,iy,sw,ih);
+      const ay=iy+ih+22;for(const[k,n]of["heart","message-circle","send"].entries())await icon(n,"#111111",sx+24+k*58,ay,36);await icon("bookmark","#111111",sx+sw-60,ay,36);
+      g.fillStyle="#111";g.font="600 22px Onest, sans-serif";g.fillText("Нравится: 1 248",sx+28,ay+72);
+      g.fillStyle="#e6e8eb";[0.86,0.64].forEach((f,k)=>{studioRR(g,sx+28,ay+102+k*30,(sw-56)*f,14,7);g.fill()})}
+    g.restore();g.fillStyle="#0d0d10";studioRR(g,W/2-62,sy+18,124,36,18);g.fill();
+  }else if(kind==="laptop"){
+    const lw=1240,lh=780,lx=(W-lw)/2,ly=150,bz=26;
+    shadow(70,30,0.3);g.fillStyle="#1b1c20";studioRR(g,lx,ly,lw,lh,34);g.fill();noSh();
+    const sx=lx+bz,sy=ly+bz,sw=lw-2*bz,sh=lh-2*bz-14;g.fillStyle="#f3f4f6";g.fillRect(sx,sy,sw,sh);
+    g.fillStyle="#e5e7eb";g.fillRect(sx,sy,sw,44);g.fillStyle="#d1d5db";[0,1,2].forEach(k=>{g.beginPath();g.arc(sx+26+k*22,sy+22,7,0,7);g.fill()});g.fillStyle="#fff";studioRR(g,sx+120,sy+10,sw-240,24,12);g.fill();
+    const m=40,aw=sw-2*m,ah=sh-44-2*m,r=Math.min(aw/art.width,ah/art.height),dw=art.width*r,dh=art.height*r;shadow(30,10,0.18);g.drawImage(art,sx+(sw-dw)/2,sy+44+m+(ah-dh)/2,dw,dh);noSh();
+    g.fillStyle="#2a2b30";g.beginPath();g.arc(W/2,ly+13,4,0,7);g.fill();
+    const by=ly+lh;const bgr=g.createLinearGradient(0,by,0,by+46);bgr.addColorStop(0,"#d4d6db");bgr.addColorStop(1,"#9fa3aa");g.fillStyle=bgr;g.beginPath();g.moveTo(lx-90,by+6);g.lineTo(lx+lw+90,by+6);g.lineTo(lx+lw+60,by+46);g.lineTo(lx-60,by+46);g.closePath();shadow(40,20,0.25);g.fill();noSh();
+    g.fillStyle="#c3c6cc";g.fillRect(lx-90,by,lw+180,8);g.fillStyle="#b4b7bd";studioRR(g,W/2-110,by,220,12,6);g.fill();
+  }else{
+    const r=Math.min(1100/art.width,900/art.height),dw=art.width*r,dh=art.height*r,cx=W/2,cy=H/2;
+    g.save();g.translate(cx+40,cy+30);g.rotate(5*Math.PI/180);shadow(50,20,0.2);g.fillStyle="#fafafa";g.fillRect(-dw/2,-dh/2,dw,dh);noSh();g.restore();
+    g.save();g.translate(cx-10,cy);g.rotate(-3*Math.PI/180);shadow(60,28,0.3);g.fillStyle="#fff";g.fillRect(-dw/2,-dh/2,dw,dh);noSh();g.drawImage(art,-dw/2,-dh/2,dw,dh);
+    const sh2=g.createLinearGradient(-dw/2,-dh/2,dw/2,dh/2);sh2.addColorStop(0,"rgba(255,255,255,.18)");sh2.addColorStop(0.5,"rgba(255,255,255,0)");sh2.addColorStop(1,"rgba(0,0,0,.08)");g.fillStyle=sh2;g.fillRect(-dw/2,-dh/2,dw,dh);g.restore();
+  }
+  return c;
+}
+async function studioMockups(){
+  const d=studioDesign();studioPagesSync(d);const des=studioPageDesign(d,studioPagesOf(d)[d.page||0]);
+  if(!des.layers.length&&des.bg.type==="color"){toast("Пустой дизайн",{tone:"warning"});return}
+  const brand=(S.studio.brand&&S.studio.brand.colors||[])[0]||studioDesignColors(d).find(c=>{const L=studioLum(...studioHexRgb(c));return L>0.05&&L<0.8})||"#16c784";
+  const bgs={light:"#eceef1",dark:"#1c1d22",brand:studioMix(brand,"#ffffff",0.75)};let bgk="light",art=null;const canv={};
+  const {root}=overlay("modal",{title:"Мокапы",subtitle:"Как креатив будет выглядеть на устройстве или в печати — для презентации клиенту и согласования. Интерфейсы нейтральные, без логотипов площадок.",size:"lg",service:"studio",
+    body:`<div class="stack" style="gap:12px"><nv-segmented label="Фон" data-mkbg options="light:Светлый|dark:Тёмный|brand:Цвет бренда" value="light"></nv-segmented><div class="mk-grid">${STUDIO_MOCKS.map(([k,t])=>`<figure data-mk="${k}"><div class="mk-img"><span class="muted">Рисую…</span></div><figcaption><b>${t}</b><nv-button size="sm" variant="secondary" icon="download" data-mkdl="${k}">PNG</nv-button></figcaption></figure>`).join("")}</div></div>`,actions:[{label:"Закрыть"}]});
+  const draw=async()=>{const prev=studioImgCache;studioImgCache=new Map();try{if(!art){const F=STUDIO_FMT[d.format]||STUDIO_FMT.square;art=await studioRenderCanvas(des,Math.min(2,1400/Math.max(F.w,F.h)))}
+    for(const[k]of STUDIO_MOCKS){const c=await studioMockupCanvas(k,art,bgs[bgk],brand);canv[k]=c;const f=root.querySelector(`[data-mk="${k}"] .mk-img`);if(f)f.innerHTML=`<img src="${c.toDataURL("image/jpeg",0.85)}" alt="">`}}finally{studioImgCache=prev}};
+  root.addEventListener("nv-change",e=>{if(e.target.closest("[data-mkbg]")){bgk=e.detail.value;draw()}});
+  root.addEventListener("click",async e=>{const b=e.target.closest("[data-mkdl]");if(!b)return;const k=b.dataset.mkdl;if(!canv[k])return;
+    studioDownload(await studioBlob(canv[k],"image/png"),(d.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+"_мокап_"+k+".png")});
+  try{await draw()}catch(e){toast("Не удалось нарисовать мокапы: "+(e.message||""),{tone:"danger"})}
 }
 function studioShortcuts(){
   const K=[["Ctrl+Z / Ctrl+Shift+Z","Отменить / повторить"],["Ctrl+S","Сохранить"],["Ctrl+C / Ctrl+X / Ctrl+V","Копировать / вырезать / вставить (в т.ч. в другой дизайн, скриншоты, текст, SVG)"],["Ctrl+Alt+C / Ctrl+Alt+V","Копировать / вставить стиль"],["Ctrl+D","Дублировать"],["Alt + тянуть","Копия при перетаскивании"],["Ctrl + тянуть","Без прилипания"],["Alt (наведение)","Расстояния до соседей и краёв"],
