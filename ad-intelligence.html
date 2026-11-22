@@ -264,9 +264,9 @@ nv-choice-bar{display:block;min-width:0}
 </head><body>
 <title>ParsYa Ads — Разведка рекламы</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=optional">
+<!-- Шрифты лежат на нашем сервере (кириллица+латиница); Google Fonts — только если локальный файл не загрузился -->
+<link rel="stylesheet" href="vendor/fonts/onest.css" onerror="this.href='https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap'">
+<link rel="stylesheet" href="vendor/fonts/jetbrains-mono.css" onerror="this.href='https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap'">
 <style>
 /* NEON UI: единые токены и стили компонентов для всех сервисов бренда.
    Макет: тёмный рельс сервисов + меню сервиса + рабочая область с мягкими карточками.
@@ -7064,7 +7064,9 @@ function studioEnsureFont(name){
   if(!name||studioFontLoaded.has(name)||studioCustomFonts.some(f=>f.family===name))return;
   studioFontLoaded.add(name);
   const link=document.createElement("link");link.rel="stylesheet";
-  link.href="https://fonts.googleapis.com/css2?family="+encodeURIComponent(name).replace(/%20/g,"+")+":wght@400;700;800&display=swap&subset=cyrillic";
+  const g="https://fonts.googleapis.com/css2?family="+encodeURIComponent(name).replace(/%20/g,"+")+":wght@400;700;800&display=swap&subset=cyrillic";
+  /* шрифты из нашего списка — с нашего сервера, остальные и запасной путь — Google Fonts */
+  if(STUDIO_FONTS.includes(name)){link.href="vendor/fonts/"+name.toLowerCase().replace(/ /g,"-")+".css";link.onerror=()=>{link.onerror=null;link.href=g}}else link.href=g;
   link.onload=()=>{document.fonts&&document.fonts.load(`700 40px "${name}"`).then(()=>studioLayoutStage(document)).catch(()=>{})};
   document.head.append(link);
 }
