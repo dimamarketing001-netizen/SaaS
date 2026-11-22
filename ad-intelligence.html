@@ -2086,6 +2086,11 @@ body.gl-h,body.gl-h *{cursor:row-resize!important}body.gl-v,body.gl-v *{cursor:c
 .stud-swatches{display:flex;flex-wrap:wrap;gap:6px}
 .tbl-ed input{position:absolute;box-sizing:border-box;border:0;outline:0;margin:0;min-width:0;cursor:text;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--svc-ink) 35%,transparent)}
 .tbl-ed input:focus{box-shadow:inset 0 0 0 2px var(--svc-ink);position:absolute;z-index:1}
+.fr-sum{font-size:13px;color:var(--ink-2);margin:2px 0 8px}.fr-sum b{color:var(--ink);font-weight:500}
+.fr-list{display:flex;flex-direction:column;gap:2px;max-height:280px;overflow:auto}
+.fr-list button{display:flex;align-items:center;gap:8px;min-height:32px;padding:4px 8px;border:0;border-radius:8px;background:none;color:var(--ink-2);text-align:left;cursor:pointer;font-size:13px}
+.fr-list button:hover{background:var(--surface-2);color:var(--ink)}.fr-list button span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fr-list small{font:11px var(--font-mono);color:var(--ink-3)}.fr-list mark{background:color-mix(in srgb,#facc15 55%,transparent);color:inherit;border-radius:3px;padding:0 1px}
 .ph-ov{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
 .stud-layer-image{isolation:isolate}
 .duo-pre{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:6px 0}
@@ -8739,7 +8744,7 @@ function studioDownloadMenu(btn){
 }
 function studioMoreMenu(btn){
   const r=btn.getBoundingClientRect();
-  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],"-",["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
+  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Найти и заменить…","Ctrl+F",studioFindReplace],"-",["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
 }
 async function studioSaveAsTemplate(){
   const d=studioDesign();if(!d.layers.length){toast("Пустой дизайн",{tone:"warning"});return}
@@ -8763,9 +8768,39 @@ async function studioVersionsDlg(){
         studioResetEphemeral();S.studio.editor=nd;studioSave.state="saved";studioSave.at=Date.now();close();N.refresh();toast("Версия восстановлена (текущая сохранена в истории)",{tone:"success"})}
       catch(err){toast(err.message,{tone:"danger"})}})}});
 }
+/* ---------- Найти и заменить: тексты и ячейки таблиц на всех страницах ---------- */
+function studioFindReplace(){
+  const d=studioDesign();studioPagesSync(d);let q="",rp="",cs=false,ww=false,hits=[];
+  const rx=()=>{if(!q)return null;const e=q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");try{return new RegExp(ww?`(?<![\\p{L}\\p{N}_])${e}(?![\\p{L}\\p{N}_])`:e,"g"+(cs?"":"i")+"u")}catch(_){return null}};
+  const scan=()=>{hits=[];const R=rx();if(!R)return;studioPagesOf(d).forEach((pg,pi)=>pg.layers.forEach(l=>{
+    if(l.type==="text"&&l.text){const n=(l.text.match(R)||[]).length;if(n)hits.push({pi,l,n,txt:l.text})}
+    if(l.type==="table")studioTableRows(l).forEach((r,ri)=>r.forEach((c,ci)=>{const n=(c.match(R)||[]).length;if(n)hits.push({pi,l,n,txt:c,cell:[ri,ci]})}))}))};
+  const mark=t=>{const R=rx();if(!R)return esc(t);let out="",last=0;for(const m of t.matchAll(R)){out+=esc(t.slice(last,m.index))+`<mark>${esc(m[0])}</mark>`;last=m.index+m[0].length;if(!m[0].length)break}return out+esc(t.slice(last))};
+  const multi=studioPagesOf(d).length>1;
+  const list=()=>{const tot=hits.reduce((a,h)=>a+h.n,0);return q?`<div class="fr-sum">${tot?`Найдено: <b>${tot}</b> в ${hits.length} ${hits.length===1?"месте":"местах"}`:"Ничего не найдено"}</div><div class="fr-list">${hits.slice(0,60).map((h,i)=>`<button type="button" data-frgo="${i}">${ic(h.cell?"table-2":"type",14)}<span>${mark(h.txt.replace(/\s+/g," ").slice(0,90))}</span>${multi?`<small>стр. ${h.pi+1}</small>`:""}</button>`).join("")}</div>`:`<p class="pp-hint">Ищет в текстах и ячейках таблиц${multi?" на всех страницах":""}.</p>`};
+  const {root,close}=overlay("modal",{title:"Найти и заменить",service:"studio",size:"md",
+    body:`<div class="stack" style="gap:10px"><div class="s2-grid2"><nv-input label="Найти" data-frq></nv-input><nv-input label="Заменить на" data-frr></nv-input></div>
+      <div class="row" style="gap:14px;flex-wrap:wrap"><label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-frcs> С учётом регистра</label><label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-frww> Слово целиком</label></div><div data-frout>${list()}</div></div>`,
+    actions:[{label:"Закрыть"},{label:"Заменить всё",variant:"primary",icon:"replace-all",fn:()=>{
+      scan();if(!hits.length){toast("Нечего заменять",{tone:"warning"});return false}
+      const R=rx();studioBeforeChange();let n=0;
+      const keepCase=m=>{if(cs||!rp)return rp;const up=m.toUpperCase()===m&&m.toLowerCase()!==m;if(up&&m.length>1)return rp.toUpperCase();if(m[0]&&m[0]!==m[0].toLowerCase())return rp[0].toUpperCase()+rp.slice(1);return rp};
+      studioPagesOf(d).forEach(pg=>pg.layers.forEach(l=>{
+        if(l.type==="text"&&l.text&&R.test(l.text)){R.lastIndex=0;n+=(l.text.match(R)||[]).length;l.text=l.text.replace(R,keepCase);studioFitText(l,{...d,bg:pg.bg,layers:pg.layers})}R.lastIndex=0;
+        if(l.type==="table"){l.rows=studioTableRows(l).map(r=>r.map(c=>{const m=c.match(R);if(m){n+=m.length;return c.replace(R,keepCase)}return c}))}}));
+      studioGoPage(d.page||0,true);N.refresh();NEON.save();toast(`Заменено: ${n}. Отменить — Ctrl+Z`,{tone:"success"})}}]});
+  const out=root.querySelector("[data-frout]"),upd=()=>{scan();out.innerHTML=list()};
+  const hook=(sel,fn)=>{const t=()=>root.querySelector(sel+" input");const go=()=>{const i=t();if(i&&!i._fr){i._fr=1;i.addEventListener("input",()=>{fn(i.value);upd()})}};go();setTimeout(go,50)};
+  hook("[data-frq]",v=>q=v);hook("[data-frr]",v=>rp=v);
+  root.querySelector("[data-frcs]").addEventListener("change",e=>{cs=e.target.checked;upd()});root.querySelector("[data-frww]").addEventListener("change",e=>{ww=e.target.checked;upd()});
+  const pre=studioSelected();if(pre&&pre.type==="text"){const s0=String(getSelection()||"").trim();if(s0&&s0.length<60){q=s0;setTimeout(()=>{const i=root.querySelector("[data-frq] input");if(i)i.value=s0;upd()},60)}}
+  out.addEventListener("click",e=>{const b=e.target.closest("[data-frgo]");if(!b)return;const h=hits[+b.dataset.frgo];if(!h)return;
+    if((d.page||0)!==h.pi&&Array.isArray(d.pages))studioGoPage(h.pi);d.selectedId=h.l.id;studioMultiSel=[];N.refresh();
+    setTimeout(()=>{const el=document.querySelector(`.stud-layer[data-id="${h.l.id}"]`);if(el)el.scrollIntoView({block:"nearest",inline:"nearest"})},50)});
+}
 function studioShortcuts(){
   const K=[["Ctrl+Z / Ctrl+Shift+Z","Отменить / повторить"],["Ctrl+S","Сохранить"],["Ctrl+C / Ctrl+X / Ctrl+V","Копировать / вырезать / вставить (в т.ч. в другой дизайн, скриншоты, текст, SVG)"],["Ctrl+Alt+C / Ctrl+Alt+V","Копировать / вставить стиль"],["Ctrl+D","Дублировать"],["Alt + тянуть","Копия при перетаскивании"],["Ctrl + тянуть","Без прилипания"],["Alt (наведение)","Расстояния до соседей и краёв"],
-    ["Ctrl+G / Ctrl+Shift+G","Сгруппировать / разгруппировать"],["Двойной клик","Внутрь группы · править текст · кадрировать фото"],["Ctrl + клик","Элемент внутри группы"],["Esc","На уровень выше / выйти из режима"],["Ctrl+A","Выделить всё"],["Delete","Удалить"],["Стрелки / Shift + стрелки","Сдвиг на 1 / 10 px"],
+    ["Ctrl+G / Ctrl+Shift+G","Сгруппировать / разгруппировать"],["Ctrl+F / Ctrl+H","Найти и заменить текст (все страницы)"],["Двойной клик","Внутрь группы · править текст · кадрировать фото"],["Ctrl + клик","Элемент внутри группы"],["Esc","На уровень выше / выйти из режима"],["Ctrl+A","Выделить всё"],["Delete","Удалить"],["Стрелки / Shift + стрелки","Сдвиг на 1 / 10 px"],
     ["Ctrl + / Ctrl − / Ctrl 0","Масштаб / вписать"],["Ctrl + колесо, щипок","Масштаб к курсору"],["Пробел + тянуть","Двигать холст"],["Shift + тянуть уголок","Пропорционально"],["Shift + поворот","Шаг 15°"],["Линейка → тянуть","Направляющая"],["Двойной клик по точке","Угол ↔ плавная (правка узлов)"],["Alt + ручка","Разорвать симметрию ручек"],["Клик по контуру","Добавить точку (правка узлов)"],["Правый клик","Меню действий"],["?","Эта справка"]];
   overlay("modal",{title:"Горячие клавиши",service:"studio",body:`<div class="s2-kbd">${K.map(([k,v])=>`<span>${k.split(" / ").map(x=>`<kbd>${esc(x)}</kbd>`).join(" / ")}</span><span>${esc(v)}</span>`).join("")}</div>`,actions:[{label:"Понятно"}]});
 }
@@ -10681,6 +10716,7 @@ document.addEventListener("keydown",e=>{
   const editing=typing||(document.activeElement&&document.activeElement.isContentEditable);
   if(e.key==="?"&&!editing){e.preventDefault();studioShortcuts();return}
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){e.preventDefault();studioSaveDesign();return}
+  if((e.ctrlKey||e.metaKey)&&!e.altKey&&(e.key.toLowerCase()==="f"||e.key.toLowerCase()==="h")&&!editing&&!document.querySelector(".ov")){e.preventDefault();studioFindReplace();return}
   if(!editing){
     const d=studioDesign(),ids=studioSelIds(),sel=d.layers.filter(x=>ids.includes(x.id)&&!x.locked);
     if(e.key.startsWith("Arrow")&&sel.length){
