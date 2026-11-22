@@ -1606,7 +1606,8 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stud-contrast{font-size:12.5px;padding:6px 9px;border-radius:8px;background:var(--surface-2)}
 .stud-contrast.bad{background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad)}
 .stud-contrast.ok{color:var(--good,#16a34a)}
-.stud-stage{position:relative;display:block;width:100%;max-width:560px;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-2);background-size:cover!important;background-position:center!important;user-select:none;margin:0 auto;text-align:left}
+.stud-stage:not(.bg-pat){background-size:cover!important;background-position:center!important}
+.stud-stage{position:relative;display:block;width:100%;max-width:560px;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-2);user-select:none;margin:0 auto;text-align:left}
 .stud-layer{position:absolute;cursor:move}
 .stud-layer.on{outline:2px solid var(--svc-ink);outline-offset:1px}
 .stud-h{position:absolute;right:-7px;bottom:-7px;width:14px;height:14px;border-radius:50%;background:var(--svc-ink);border:2px solid #fff;cursor:nwse-resize;box-shadow:var(--shadow-1)}
@@ -2078,6 +2079,12 @@ body.gl-h,body.gl-h *{cursor:row-resize!important}body.gl-v,body.gl-v *{cursor:c
 .stud-save.dirty{color:#b7791f}.stud-save.err{color:var(--bad)}
 .stud-layer-row .row-ic button.off{opacity:1;color:var(--svc-ink)}
 .stud-swatches{display:flex;flex-wrap:wrap;gap:6px}
+.bg-pats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:8px 0}
+.bg-pats button{height:34px;border:1px solid var(--line-2);border-radius:8px;cursor:pointer;padding:0}
+.bg-pats button.on{outline:2px solid var(--svc-ink);outline-offset:1px}
+.bg-pre{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.bg-pre button{aspect-ratio:1;border:1px solid var(--line-2);border-radius:8px;cursor:pointer;padding:0}
+.bg-pre button:hover{outline:2px solid var(--svc-ink);outline-offset:1px}
 .st-pals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .st-pals button{display:flex;flex-direction:column;gap:4px;padding:5px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;min-width:0}
 .st-pals button:hover{border-color:var(--line-2);background:var(--surface-2)}
@@ -7340,8 +7347,8 @@ function studioEditOverlayHtml(){
   return`<div class="stud-edit-overlay">${btns}</div>`;
 }
 function studioStageHtml(){
-  const d=studioDesign(),fmt=STUDIO_FMT[d.format],bgStyle=d.bg.type==="image"&&d.bg.image?`background-image:url('${esc(d.bg.image)}')`:`background:${esc(d.bg.color||"#fff")}`;
-  const z=studioZoom;return`<div class="stud-stage${studioTool==="pen"?" pen-on":studioTool==="eyedrop"?" eyedrop-on":""}" style="aspect-ratio:${fmt.w}/${fmt.h};width:${studioStageW(fmt,z)};max-width:none;${bgStyle}">${d.layers.map(l=>studioLayerHtml(l,l.id===d.selectedId,studioMultiSel.includes(l.id))).join("")}${studioPenPreviewHtml()}${studioEditOverlayHtml()}${studioZonesHtml(d)}${studioGuidesHtml(d)}</div>`;
+  const d=studioDesign(),fmt=STUDIO_FMT[d.format],bgStyle=d.bg.type==="image"&&d.bg.image?`background-image:url('${esc(d.bg.image)}')`:`background:${esc(studioBgCss(d.bg))}`;
+  const z=studioZoom;return`<div class="stud-stage${d.bg.type==="pattern"?" bg-pat":""}${studioTool==="pen"?" pen-on":studioTool==="eyedrop"?" eyedrop-on":""}" style="aspect-ratio:${fmt.w}/${fmt.h};width:${studioStageW(fmt,z)};max-width:none;${bgStyle}">${d.layers.map(l=>studioLayerHtml(l,l.id===d.selectedId,studioMultiSel.includes(l.id))).join("")}${studioPenPreviewHtml()}${studioEditOverlayHtml()}${studioZonesHtml(d)}${studioGuidesHtml(d)}</div>`;
 }
 /* Безопасные зоны: поля 5% (текст ближе к краю режут превью площадок) и, для
    вертикальных форматов, полосы под интерфейс сторис (шапка ~14%, низ ~20%). */
@@ -7698,7 +7705,7 @@ function studioPropsHeadHtml(icon,title,sub){
 function studioPropsHtml(){
   let h=studioPropsHtml0();const l=studioSelected();
   if(studioMultiSel.length<2&&l&&!(l.x<=1&&l.y<=1&&l.x+l.w>=99&&l.y+l.h>=99))h+=studioAnimSecHtml(l);
-  if(studioMultiSel.length<2&&!l)h+=studioDesignAnimHtml();
+  if(studioMultiSel.length<2&&!l)h+=studioBgSecHtml()+studioDesignAnimHtml();
   if(studioMultiSel.length>1||!l||!studioGroupEnter||!studioInGroup(studioDesign(),l,studioGroupEnter))return h;
   const bar=`<div class="pp-acts pp-ing">${ic("folder-open",14)}<span>Внутри «${esc(studioGroupName(studioDesign(),studioGroupEnter))}»</span><button type="button" class="nv-btn v-ghost s-sm" data-gexit>Вся группа <kbd>Esc</kbd></button></div>`;
   const i=h.indexOf("</div></div>");return i<0?h:h.slice(0,i+12)+bar+h.slice(i+12);
@@ -7880,12 +7887,101 @@ function studioIconDataUrl(name,color){
   const svg=iconSvg(name).replace('stroke="currentColor"',`stroke="${color}"`).replace("<svg ",'<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" ');
   return"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
 }
+/* ---------- Фоны: цвет, градиент (линейный/радиальный/конический), mesh, векторные узоры ----------
+   bg: {type:"color",color} | {type:"gradient",kind,color,color2,angle} | {type:"mesh",colors:[4]} |
+       {type:"pattern",pattern,color(фон),color2(узор),size(% ширины)} | {type:"image",image} | {type:"none"}.
+   Одна модель для холста (CSS) и экспорта (canvas) — картинка совпадает. */
+const STUDIO_PATTERNS=[["dots","Точки"],["grid","Сетка"],["check","Клетка"],["stripes","Диагональ"],["lines","Полосы"],["waves","Волны"],["zigzag","Зигзаг"],["plus","Плюсы"]];
+const STUDIO_BG_PRESETS=[{type:"gradient",kind:"linear",color:"#7c3aed",color2:"#f97316",angle:135},{type:"gradient",kind:"linear",color:"#0ea5e9",color2:"#16c784",angle:160},{type:"gradient",kind:"radial",color:"#fde68a",color2:"#f97316"},{type:"gradient",kind:"linear",color:"#0f172a",color2:"#334155",angle:180},
+  {type:"mesh",colors:["#c4b5fd","#f9a8d4","#fde68a","#93c5fd"]},{type:"mesh",colors:["#0f172a","#7c3aed","#0ea5e9","#16c784"]},{type:"mesh",colors:["#fff7ed","#fdba74","#f472b6","#fef08a"]},{type:"gradient",kind:"conic",color:"#22d3ee",color2:"#a855f7",angle:0},
+  {type:"pattern",pattern:"dots",color:"#ffffff",color2:"#e5e7eb",size:5},{type:"pattern",pattern:"grid",color:"#0f172a",color2:"#1e293b",size:6},{type:"pattern",pattern:"stripes",color:"#fef3c7",color2:"#fde68a",size:6},{type:"pattern",pattern:"waves",color:"#e0f2fe",color2:"#bae6fd",size:8}];
+const studioHex6=c=>/^#[0-9a-f]{6}$/i.test(c||"")?c:/^#[0-9a-f]{3}$/i.test(c||"")?"#"+[...c.slice(1)].map(x=>x+x).join(""):"#ffffff";
+function studioMeshColors(bg){const C=(bg.colors||[]).slice(0,4).map(studioHex6);while(C.length<4)C.push(C[C.length-1]||"#ffffff");return C}
+function studioPatternSvg(bg){
+  const c=studioHex6(bg.color2||"#e5e7eb"),b=studioHex6(bg.color||"#ffffff");let m="";
+  switch(bg.pattern){
+    case"grid":m=`<path d="M0 .75H48M.75 0V48" stroke="${c}" stroke-width="1.5" fill="none"/>`;break;
+    case"check":m=`<path d="M0 0h24v24H0zM24 24h24v24H24z" fill="${c}"/>`;break;
+    case"stripes":m=`<path d="M24 0H48L0 48V24zM48 24V48H24z" fill="${c}"/>`;break;
+    case"lines":m=`<rect width="48" height="14" fill="${c}"/>`;break;
+    case"waves":m=`<path d="M0 24C8 12 16 12 24 24S40 36 48 24" stroke="${c}" stroke-width="5" fill="none"/>`;break;
+    case"zigzag":m=`<path d="M-6 36L0 30L12 18L24 30L36 18L48 30L54 24" stroke="${c}" stroke-width="4" fill="none"/>`;break;
+    case"plus":m=`<path d="M24 15v18M15 24h18" stroke="${c}" stroke-width="4" stroke-linecap="round"/>`;break;
+    default:m=`<circle cx="24" cy="24" r="6.5" fill="${c}"/>`}
+  return`<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><rect width="48" height="48" fill="${b}"/>${m}</svg>`;
+}
+const studioPatternUrl=bg=>"data:image/svg+xml,"+encodeURIComponent(studioPatternSvg(bg));
+function studioBgCss(bg,tile){
+  bg=bg||{};const t=bg.type||"color",c1=studioHex6(bg.color),c2=studioHex6(bg.color2||"#000000");
+  if(t==="gradient"){const k=bg.kind||"linear",a=bg.angle==null?135:+bg.angle;
+    return k==="radial"?`radial-gradient(circle farthest-corner at 50% 50%,${c1},${c2})`:k==="conic"?`conic-gradient(from ${a}deg at 50% 50%,${c1},${c2},${c1})`:`linear-gradient(${a}deg,${c1},${c2})`}
+  if(t==="mesh"){const C=studioMeshColors(bg),at=["0% 0%","100% 0%","100% 100%","0% 100%"];return[3,2,1,0].map(i=>`radial-gradient(circle farthest-corner at ${at[i]},${C[i]} 0%,${C[i]}00 70%)`).join(",")+","+C[0]}
+  if(t==="pattern")return`${c1} url('${studioPatternUrl(bg)}') 0 0/${tile||((+bg.size||5)+"%")} auto repeat`;
+  if(t==="none")return"transparent";
+  return bg.color||"#fff";
+}
+async function studioPaintBg(ctx,bg,W,H){
+  bg=bg||{};const t=bg.type||"color";
+  if(t==="none")return;
+  if(t==="image"&&bg.image){try{const img=await studioLoadImg(bg.image);ctx.drawImage(img,0,0,W,H)}catch(e){ctx.fillStyle="#fff";ctx.fillRect(0,0,W,H)}return}
+  if(t==="gradient"){const k=bg.kind||"linear",c1=studioHex6(bg.color),c2=studioHex6(bg.color2||"#000000"),a=(bg.angle==null?135:+bg.angle)*Math.PI/180;let g;
+    if(k==="radial")g=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.hypot(W,H)/2);
+    else if(k==="conic"&&ctx.createConicGradient){g=ctx.createConicGradient(a-Math.PI/2,W/2,H/2);g.addColorStop(0,c1);g.addColorStop(0.5,c2);g.addColorStop(1,c1);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);return}
+    else{const L=Math.abs(W*Math.sin(a))+Math.abs(H*Math.cos(a)),dx=Math.sin(a)*L/2,dy=-Math.cos(a)*L/2;g=ctx.createLinearGradient(W/2-dx,H/2-dy,W/2+dx,H/2+dy)}
+    g.addColorStop(0,c1);g.addColorStop(1,c2);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);return}
+  if(t==="mesh"){const C=studioMeshColors(bg),R=Math.hypot(W,H)*0.7;ctx.fillStyle=C[0];ctx.fillRect(0,0,W,H);
+    [[0,0],[W,0],[W,H],[0,H]].forEach(([x,y],i)=>{const g=ctx.createRadialGradient(x,y,0,x,y,R);g.addColorStop(0,C[i]);g.addColorStop(1,C[i]+"00");ctx.fillStyle=g;ctx.fillRect(0,0,W,H)});return}
+  if(t==="pattern"){ctx.fillStyle=studioHex6(bg.color);ctx.fillRect(0,0,W,H);const T=Math.max(4,Math.round(W*(+bg.size||5)/100));
+    try{const img=await studioLoadImg(studioPatternUrl(bg)),tc=document.createElement("canvas");tc.width=T;tc.height=T;tc.getContext("2d").drawImage(img,0,0,T,T);ctx.fillStyle=ctx.createPattern(tc,"repeat");ctx.fillRect(0,0,W,H)}catch(e){}return}
+  ctx.fillStyle=bg.color||"#fff";ctx.fillRect(0,0,W,H);
+}
+function studioBgLive(){const st=document.querySelector(".stud-stage"),bg=studioDesign().bg;if(!st)return;st.classList.toggle("bg-pat",bg.type==="pattern");if(bg.type==="image"&&bg.image){st.style.background="";st.style.backgroundImage=`url('${bg.image}')`}else{st.style.backgroundImage="";st.style.background=studioBgCss(bg)}}
+function studioBgSecHtml(){
+  const bg=studioDesign().bg||{},t=["gradient","pattern","mesh"].includes(bg.type)?bg.type:bg.type==="image"?"image":"color";
+  const pk=(k,lb,v)=>`<div class="pp-row stud-color"><span class="pp-l">${lb}</span><nv-color-picker value="${esc(studioHex6(v))}" data-bgp="${k}"></nv-color-picker></div>`;
+  const rng=(lb,k,v,mi,ma,st,u)=>`<div class="pp-row"><span class="pp-l">${lb}</span><div class="rng"><input type="range" min="${mi}" max="${ma}" step="${st}" value="${v}" style="--rng-p:${rngPct(v,mi,ma)}" data-bgr="${k}" data-u="${u}"><output>${v}${u}</output></div></div>`;
+  let body=ppSeg([["Цвет",'data-bgt="color"',t==="color"],["Градиент",'data-bgt="gradient"',t==="gradient"],["Узор",'data-bgt="pattern"',t==="pattern"],["Mesh",'data-bgt="mesh"',t==="mesh"]],"wide");
+  if(t==="image")body+=`<p class="pp-hint">Сейчас фоном стоит фото. Выберите тип выше, чтобы заменить его.</p>`;
+  if(t==="color")body+=pk("color","Цвет",bg.color);
+  if(t==="gradient"){const k=bg.kind||"linear";body+=ppSeg([["Линейный",'data-bgk="linear"',k==="linear"],["Радиальный",'data-bgk="radial"',k==="radial"],["Конический",'data-bgk="conic"',k==="conic"]],"wide")+pk("color","Цвет 1",bg.color)+pk("color2","Цвет 2",bg.color2)
+    +`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studBgSwap">${ic("arrow-left-right",14)}Поменять цвета</button></div>`+(k!=="radial"?rng("Угол","angle",bg.angle==null?135:+bg.angle,0,360,5,"°"):"")}
+  if(t==="pattern")body+=`<div class="bg-pats">${STUDIO_PATTERNS.map(([k,lb])=>`<button type="button" class="${(bg.pattern||"dots")===k?"on":""}" data-bgpat="${k}" data-tip="${lb}" aria-label="${lb}" style="background:${esc(studioBgCss({...bg,type:"pattern",pattern:k},"18px"))}"></button>`).join("")}</div>`
+    +pk("color","Фон",bg.color)+pk("color2","Узор",bg.color2)+rng("Размер","size",+bg.size||5,2,20,0.5,"%");
+  if(t==="mesh"){const C=studioMeshColors(bg);body+=C.map((c,i)=>pk("m"+i,["Слева сверху","Справа сверху","Справа снизу","Слева снизу"][i],c)).join("")+`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studBgMeshRnd">${ic("shuffle",14)}Случайные цвета</button></div>`}
+  body+=`<div class="sect-t" style="margin:10px 0 6px">Готовые</div><div class="bg-pre">${STUDIO_BG_PRESETS.map((b,i)=>`<button type="button" data-bgpre="${i}" style="background:${esc(studioBgCss(b,"14px"))}" aria-label="Готовый фон ${i+1}"></button>`).join("")}</div>`;
+  return ppSec("bg","Фон",body,t==="color"?"":({gradient:"градиент",pattern:"узор",mesh:"mesh",image:"фото"})[t]);
+}
+function studioBgType(t){
+  const d=studioDesign(),o=d.bg||{},c=studioHex6(o.color||"#ffffff");studioBeforeChange();
+  const dark=studioLum(...studioHexRgb(c))<0.35;
+  if(t==="color")d.bg={type:"color",color:c};
+  else if(t==="gradient")d.bg={type:"gradient",kind:o.kind||"linear",color:c,color2:o.color2&&o.color2.toLowerCase()!==c.toLowerCase()?studioHex6(o.color2):studioHueShift(c,50),angle:o.angle==null?135:o.angle};
+  else if(t==="pattern")d.bg={type:"pattern",pattern:o.pattern||"dots",color:c,color2:o.type==="pattern"&&o.color2?o.color2:studioMix(c,dark?"#ffffff":"#000000",0.12),size:o.size||5};
+  else if(t==="mesh")d.bg={type:"mesh",colors:o.colors||[c,studioHueShift(c,60),studioHueShift(c,150),studioHueShift(c,-60)]};
+  N.refresh();NEON.save();
+}
+function studioHslHex(h,s,l){s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return"#"+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join("")}
+function studioHueShift(c,deg){const[r,g,b]=studioHexRgb(studioHex6(c)).map(v=>v/255),mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,dd=mx-mn;let h=0,s=0;
+  if(dd){s=dd/(1-Math.abs(2*l-1));h=mx===r?((g-b)/dd)%6:mx===g?(b-r)/dd+2:(r-g)/dd+4;h*=60}
+  return studioHslHex(((h+deg)%360+360)%360,Math.max(45,s*100),Math.min(70,Math.max(35,l*100)))}
+function studioMix(a,b,k){const A=studioHexRgb(studioHex6(a)),B=studioHexRgb(studioHex6(b));return"#"+A.map((v,i)=>Math.round(v+(B[i]-v)*k).toString(16).padStart(2,"0")).join("")}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-bgt],[data-bgk],[data-bgpat],[data-bgpre]");if(!b||!b.closest(".s2-props,.pp-sheet,body"))return;const d=studioDesign();
+  if(b.dataset.bgt){if(b.dataset.bgt!==(d.bg.type||"color"))studioBgType(b.dataset.bgt);return}
+  studioBeforeChange();
+  if(b.dataset.bgk)d.bg.kind=b.dataset.bgk;
+  else if(b.dataset.bgpat)d.bg.pattern=b.dataset.bgpat;
+  else if(b.dataset.bgpre)d.bg=JSON.parse(JSON.stringify(STUDIO_BG_PRESETS[+b.dataset.bgpre]));
+  N.refresh();NEON.save()});
+document.addEventListener("mousedown",e=>{if(e.target.closest&&e.target.closest("[data-bgp],[data-bgr]"))studioBeforeChange()},true);
+document.addEventListener("nv-change",e=>{const k=e.target.dataset&&e.target.dataset.bgp;if(!k)return;const bg=studioDesign().bg;
+  if(/^m\d$/.test(k)){bg.colors=studioMeshColors(bg);bg.colors[+k[1]]=e.detail.value;if(k==="m0")bg.color=e.detail.value}else bg[k]=e.detail.value;
+  studioBgLive();NEON.save();const tb=document.querySelector("[data-act-bg-color]");if(tb&&(k==="color"||k==="m0"))tb.setAttribute("value",e.detail.value)});
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.bgr;if(!k)return;const v=+e.target.value;studioDesign().bg[k]=v;
+  e.target.style.setProperty("--rng-p",rngPct(v,e.target.min,e.target.max));e.target.closest(".rng").querySelector("output").textContent=v+(e.target.dataset.u||"");studioBgLive();NEON.save()});
 async function studioRenderCanvas(design,scale,anim){
   const fmt=STUDIO_FMT[design.format],W=Math.round(fmt.w*(scale||1)),H=Math.round(fmt.h*(scale||1));
   const c=document.createElement("canvas");c.width=W;c.height=H;const ctx=c.getContext("2d");
-  if(design.bg.type==="none"){/* прозрачный PNG */}
-  else if(design.bg.type==="image"&&design.bg.image){try{const img=await studioLoadImg(design.bg.image);ctx.drawImage(img,0,0,W,H)}catch(e){ctx.fillStyle="#fff";ctx.fillRect(0,0,W,H)}}
-  else{ctx.fillStyle=design.bg.color||"#fff";ctx.fillRect(0,0,W,H)}
+  await studioPaintBg(ctx,design.bg,W,H);
   await studioFontsReady(design);
   for(const l of design.layers){
     if(l.hidden)continue;
@@ -8664,7 +8760,7 @@ function studioCr(a,b){const la=studioLum(...studioHexRgb(a)),lb=studioLum(...st
 function studioDesignColors(d){
   /* цвета всех страниц по площади (фон считается как вся площадь) */
   const area={},add=(c,a)=>{if(!c||!/^#[0-9a-f]{6}$/i.test(c))return;c=c.toLowerCase();area[c]=(area[c]||0)+a};
-  for(const pg of studioPagesOf(d)){if(pg.bg.type==="color"||!pg.bg.type)add(pg.bg.color||"#ffffff",10000);
+  for(const pg of studioPagesOf(d)){const bt=pg.bg.type||"color";if(bt==="color"||bt==="gradient"||bt==="pattern")add(pg.bg.color||"#ffffff",10000);if(bt==="gradient")add(pg.bg.color2,6000);if(bt==="pattern")add(pg.bg.color2,2000);if(bt==="mesh")studioMeshColors(pg.bg).forEach((c,i)=>add(c,i?3000:10000));
     pg.layers.forEach(l=>{if(l.hidden)return;const a=Math.max(1,l.w*l.h);if(l.type==="shape"||l.type==="path"){const f=studioFillOf(l);add(f.color,a);if(f.type==="linear"||f.type==="radial"||f.type==="gradient")add(f.color2,a/2)}
       if(l.type==="text"&&l.bgColor)add(l.bgColor,a);if(l.type==="icon")add(l.color,a/3)})}
   return Object.entries(area).sort((x,y)=>y[1]-x[1]).map(x=>x[0]);
@@ -8674,7 +8770,7 @@ function studioApplyPalette(pal,silent){
   studioBeforeChange();const map={};src.forEach((c,i)=>map[c]=i===0||pal.length<2?pal[0]:pal[1+(i-1)%(pal.length-1)]);
   const rep=c=>c&&map[String(c).toLowerCase()]||c;
   for(const pg of studioPagesOf(d)){
-    if(pg.bg.type==="color"||!pg.bg.type)pg.bg.color=rep(pg.bg.color||"#ffffff");
+    const bt=pg.bg.type||"color";if(bt==="color"||bt==="gradient"||bt==="pattern"){pg.bg.color=rep(pg.bg.color||"#ffffff");if(pg.bg.color2)pg.bg.color2=rep(pg.bg.color2)}if(bt==="mesh")pg.bg.colors=studioMeshColors(pg.bg).map(rep);
     pg.layers.forEach(l=>{if((l.type==="shape"||l.type==="path")){if(l.fill)l.fill={...l.fill,color:rep(l.fill.color),color2:rep(l.fill.color2)};else if(l.color)l.color=rep(l.color)}
       if(l.type==="text"&&l.bgColor)l.bgColor=rep(l.bgColor);if(l.type==="icon")l.color=rep(l.color)});
     /* текст: самый контрастный из палитры к тому, что под ним (плашка → фигура под центром → фон) */
@@ -8682,7 +8778,7 @@ function studioApplyPalette(pal,silent){
     const hex=c=>/^#[0-9a-f]{6}$/i.test(c||"");
     pg.layers.forEach((l,i)=>{if(l.type!=="text"||l.hidden)return;let backs=l.bgColor&&hex(l.bgColor)?[l.bgColor]:null;
       if(!backs){const cx=l.x+l.w/2,cy=l.y+l.h/2;for(let j=i-1;j>=0;j--){const u=pg.layers[j];if(u.hidden||!(u.type==="shape"||u.type==="path"))continue;if(cx>=u.x&&cx<=u.x+u.w&&cy>=u.y&&cy<=u.y+u.h){const f=studioFillOf(u);if((u.opacity==null||u.opacity>60)&&hex(f.color)){backs=[f.color];if(f.type&&f.type!=="solid"&&hex(f.color2))backs.push(f.color2);break}}}}
-      if(!backs){if(pg.bg.type==="image")return;backs=[pg.bg.color||"#ffffff"]}
+      if(!backs){if(pg.bg.type==="image")return;backs=pg.bg.type==="gradient"?[pg.bg.color,pg.bg.color2].map(studioHex6):pg.bg.type==="mesh"?studioMeshColors(pg.bg):[studioHex6(pg.bg.color||"#ffffff")]}
       const cr=c=>Math.min(...backs.map(b=>studioCr(c,b)));
       if(hex(l.color)&&pal.includes(l.color.toLowerCase())&&cr(l.color)>=4.5)return;
       const cands=pal.map(c=>[c,cr(c)]).sort((a,b)=>b[1]-a[1]);
@@ -9291,7 +9387,7 @@ async function studioToSvg(d,ids){
   const strokeAttrs=l=>{const s=studioStrokeOf(l);return s.enabled?` stroke="${s.color}" stroke-width="${s.width}"${s.dash!=="solid"?` stroke-dasharray="${studioDashArr(s.dash)}"`:""} stroke-linecap="${s.cap||"butt"}" stroke-linejoin="${s.join||"miter"}"`:""};
   const shadowAttr=l=>{const sh=studioShadowOf(l);if(!sh)return"";const id="f"+(++n);defs.push(`<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="${sh.x*k}" dy="${sh.y*k}" stdDeviation="${sh.blur*k/2}" flood-color="${sh.color}" flood-opacity="${sh.op/100}"/></filter>`);return` filter="url(#${id})"`};
   let body="";
-  if(!ids){if(d.bg.type==="image"&&d.bg.image)body+=`<image href="${studioSvgEsc(d.bg.image)}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/>`;else if(d.bg.type!=="none")body+=`<rect width="${W}" height="${H}" fill="${d.bg.color||"#fff"}"/>`}
+  if(!ids){if(d.bg.type==="image"&&d.bg.image)body+=`<image href="${studioSvgEsc(d.bg.image)}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/>`;else if(["gradient","pattern","mesh"].includes(d.bg.type)){const c=document.createElement("canvas");c.width=W;c.height=H;await studioPaintBg(c.getContext("2d"),d.bg,W,H);body+=`<image href="${c.toDataURL("image/png")}" x="0" y="0" width="${W}" height="${H}"/>`}else if(d.bg.type!=="none")body+=`<rect width="${W}" height="${H}" fill="${d.bg.color||"#fff"}"/>`}
   const mc=document.createElement("canvas").getContext("2d");
   for(const l of ls){
     const x=l.x/100*W,y=l.y/100*H,w=l.w/100*W,h=l.h/100*H,cx=x+w/2,cy=y+h/2;
@@ -10562,7 +10658,9 @@ Object.assign(N.acts,{
   studAiDesign:studioAiDesign,
   studAiCritique:studioAiCritique,
   studAiTranslate:()=>studioAiTranslate(),
-  studStylePick(a,d){studioStylePick(+d.i)},studStyleShuffle(){studioStyleShuffle()},
+  studStylePick(a,d){studioStylePick(+d.i)},
+  studBgSwap(){const bg=studioDesign().bg;studioBeforeChange();[bg.color,bg.color2]=[bg.color2,bg.color];N.refresh();NEON.save()},
+  studBgMeshRnd(){const bg=studioDesign().bg;studioBeforeChange();const h=Math.random()*360;bg.colors=[0,70,150,220].map((x,i)=>studioHslHex((h+x+Math.random()*30)%360,60+Math.random()*30,i%2?72:60));bg.color=bg.colors[0];N.refresh();NEON.save()},studStyleShuffle(){studioStyleShuffle()},
   studStyleFonts(a,d){const P=STUDIO_STYLE_FONTS[+d.i];if(P)studioApplyFonts(P[0],P[1])},
   studReload(){studioLoadList()},
   studUseTpl(a,d){const t=STUDIO_TEMPLATES[+d.i];if(!t)return;const fmt=STUDIO_FMT[S.studio.tplFmt]?S.studio.tplFmt:"square";
@@ -10627,7 +10725,7 @@ Object.assign(N.acts,{
 });
 document.body.addEventListener("mousedown",e=>{if(e.target.closest("[data-act-bg-color]"))studioBeforeChange()},true);
 document.body.addEventListener("nv-change",e=>{
-  if(e.target.matches("[data-act-bg-color]")){studioDesign().bg={type:"color",color:e.detail.value};const stage=document.querySelector(".stud-stage");if(stage&&studioDesign().bg.type==="color")stage.style.background=e.detail.value;NEON.save()}
+  if(e.target.matches("[data-act-bg-color]")){const D=studioDesign();if(["gradient","pattern","mesh"].includes(D.bg.type)){D.bg.color=e.detail.value;if(D.bg.type==="mesh"&&D.bg.colors)D.bg.colors[0]=e.detail.value}else D.bg={type:"color",color:e.detail.value};studioBgLive();NEON.save()}
 });
 {const _save=NEON.save;NEON.save=()=>{_save();const r=NEON.route();if(r.s==="studio"&&r.v==="editor"&&!studioSaving&&!studioQuiet)studioMarkDirty()}}
 N.register({id:"studio",name:"Студия креативов",short:"Студия",tag:"Creative Studio",icon:"palette",rail:"main",status:"ready",
