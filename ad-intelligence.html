@@ -7702,19 +7702,25 @@ let studioMultiSel=[];
 /* Вход в группу (двойной клик): клики выбирают отдельные элементы этой группы, а не всю группу. */
 let studioGroupEnter=null;
 const studioHistory={undo:[],redo:[]};
+/* Снимки для отмены: длинные data:-картинки кладём в общее хранилище один раз, в снимке — ссылка.
+   Иначе 60 шагов с парой фото по 2–3 МБ съедали сотни МБ памяти. */
+const studioAssets=new Map();
+function studioAssetKey(v){let h=2166136261;const st=Math.max(1,Math.floor(v.length/8192));for(let i=0;i<v.length;i+=st){h^=v.charCodeAt(i);h=Math.imul(h,16777619)}for(let i=Math.max(0,v.length-256);i<v.length;i++){h^=v.charCodeAt(i);h=Math.imul(h,16777619)}return v.length.toString(36)+"_"+(h>>>0).toString(36)}
+function studioShot(d){return JSON.stringify(d,(k,v)=>{if(typeof v==="string"&&v.length>4096&&v.startsWith("data:")){const key=studioAssetKey(v);if(!studioAssets.has(key))studioAssets.set(key,v);return"\u0001asset:"+key}return v})}
+function studioUnshot(str){return JSON.parse(str,(k,v)=>typeof v==="string"&&v.charCodeAt(0)===1&&v.startsWith("\u0001asset:")?(studioAssets.get(v.slice(7))||""):v)}
 function studioResetEphemeral(){studioGroupEnter=null;studioTool="select";studioPenDraft=null;studioEditingPathId=null;studioEditingPointIndex=null;studioMultiSel=[];studioHistory.undo=[];studioHistory.redo=[]}
-function studioBeforeChange(){studioHistory.undo.push(JSON.stringify(studioDesign()));if(studioHistory.undo.length>60)studioHistory.undo.shift();studioHistory.redo=[];if(S.studio.tab==="history"&&typeof studioHistoryRefresh==="function")studioHistoryRefresh()}
+function studioBeforeChange(){studioHistory.undo.push(studioShot(studioDesign()));if(studioHistory.undo.length>60)studioHistory.undo.shift();studioHistory.redo=[];if(S.studio.tab==="history"&&typeof studioHistoryRefresh==="function")studioHistoryRefresh()}
 function studioUndo(){
   if(!studioHistory.undo.length)return;
-  studioHistory.redo.push(JSON.stringify(studioDesign()));
-  const prev=JSON.parse(studioHistory.undo.pop());
+  studioHistory.redo.push(studioShot(studioDesign()));
+  const prev=studioUnshot(studioHistory.undo.pop());
   S.studio.editor=prev;studioEditingPathId=null;studioEditingPointIndex=null;studioMultiSel=[];
   N.refresh();NEON.save();
 }
 function studioRedo(){
   if(!studioHistory.redo.length)return;
-  studioHistory.undo.push(JSON.stringify(studioDesign()));
-  const next=JSON.parse(studioHistory.redo.pop());
+  studioHistory.undo.push(studioShot(studioDesign()));
+  const next=studioUnshot(studioHistory.redo.pop());
   S.studio.editor=next;studioEditingPathId=null;studioEditingPointIndex=null;studioMultiSel=[];
   N.refresh();NEON.save();
 }
@@ -8719,7 +8725,7 @@ editor(){
       lp.addEventListener("dragend",()=>{drag=null;clr();lp.querySelectorAll(".dragging").forEach(x=>x.classList.remove("dragging"))});
       const where=(e,r)=>{const b=r.getBoundingClientRect(),y=(e.clientY-b.top)/b.height;if(r.dataset.gsel&&drag&&!drag.g&&y>.3&&y<.7)return"into";return y<.5?"before":"after"};
       lp.addEventListener("dragover",e=>{if(!drag)return;const r=e.target.closest(".lr");if(!r)return;e.preventDefault();clr();const w=where(e,r);r.classList.add(w==="into"?"drop-in":w==="before"?"drop-b":"drop-a")});
-      lp.addEventListener("drop",e=>{if(!drag)return;const r=e.target.closest(".lr");if(!r)return;e.preventDefault();const w=where(e,r),t=r.dataset.gsel?{g:r.dataset.gsel}:{id:r.dataset.sel},d=studioDesign(),snap=JSON.stringify(d);
+      lp.addEventListener("drop",e=>{if(!drag)return;const r=e.target.closest(".lr");if(!r)return;e.preventDefault();const w=where(e,r),t=r.dataset.gsel?{g:r.dataset.gsel}:{id:r.dataset.sel},d=studioDesign(),snap=studioShot(d);
         if(studioDropLayers(d,drag,t,w)){studioHistory.undo.push(snap);studioHistory.redo=[];N.refresh();NEON.save()}clr();drag=null});
     }
     const pp=root.querySelector(".s2"),ctxHost=document.getElementById("stud-ctx"),ppOn=(t,f,c)=>{pp.addEventListener(t,f,c);if(ctxHost)ctxHost.addEventListener(t,f,c)},rootOn=(t,f)=>{root.addEventListener(t,f);if(ctxHost)ctxHost.addEventListener(t,f)};
@@ -9200,7 +9206,7 @@ function studioDiffLabel(a,b){
   return[what[0]+": "+(ch.length>1?ch.length+" слоя":nm(ch[0])),what[1]];
 }
 function studioHistoryHtml(){
-  const U=studioHistory.undo,R=studioHistory.redo,cur=JSON.stringify(studioDesign());
+  const U=studioHistory.undo,R=studioHistory.redo,cur=studioShot(studioDesign());
   if(!U.length&&!R.length)return'<p class="pp-hint" style="padding:6px 2px">Пока пусто — шаги появятся, когда вы начнёте менять дизайн.</p>';
   const rows=[];
   /* сверху — самое новое; пустые шаги (снимок без изменений) не показываем */
@@ -9211,9 +9217,9 @@ function studioHistoryHtml(){
 }
 /* Перейти на n шагов назад/вперёд одним действием (без промежуточных перерисовок). */
 function studioHistoryJump(n,back){
-  const U=studioHistory.undo,R=studioHistory.redo;let cur=JSON.stringify(studioDesign());
+  const U=studioHistory.undo,R=studioHistory.redo;let cur=studioShot(studioDesign());
   for(let i=0;i<n;i++){if(back){if(!U.length)break;R.push(cur);cur=U.pop()}else{if(!R.length)break;U.push(cur);cur=R.pop()}}
-  S.studio.editor=JSON.parse(cur);studioEditingPathId=null;studioEditingPointIndex=null;studioMultiSel=[];studioGroupEnter=null;N.refresh();NEON.save();
+  S.studio.editor=studioUnshot(cur);studioEditingPathId=null;studioEditingPointIndex=null;studioMultiSel=[];studioGroupEnter=null;N.refresh();NEON.save();
 }
 let studioHistT=0;
 function studioHistoryRefresh(){clearTimeout(studioHistT);studioHistT=setTimeout(()=>{const h=document.getElementById("stud-history");if(h)h.innerHTML=studioHistoryHtml()},250)}
