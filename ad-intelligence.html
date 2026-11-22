@@ -8236,7 +8236,7 @@ function studioAiTexts(){
     actions:[{label:"Закрыть"}],
     mount(root,close){
       const out=root.querySelector("[data-out]"),msg=root.querySelector("[data-msg]");
-      const draw=()=>{out.innerHTML=variants.map((v,i)=>`<div class="stud-var">${fields.map(f=>v[f]?`<div><span class="muted" style="font-size:11.5px">${STUDIO_ROLES[f]}:</span> ${f==="headline"?`<b>${esc(v[f])}</b>`:esc(v[f])}</div>`:"").join("")}<div class="row" style="gap:6px"><nv-button size="sm" data-apply="${i}">Применить</nv-button></div></div>`).join("")+(variants.length>1?`<div class="row"><nv-button variant="secondary" icon="copy" data-ab>A/B-копии: ${variants.length} дизайнов</nv-button></div>`:"")};
+      const draw=()=>{out.innerHTML=variants.map((v,i)=>`<div class="stud-var">${fields.map(f=>v[f]?`<div><span class="muted" style="font-size:11.5px">${STUDIO_ROLES[f]}:</span> ${f==="headline"?`<b>${esc(v[f])}</b>`:esc(v[f])}</div>`:"").join("")}<div class="row" style="gap:6px"><nv-button size="sm" data-apply="${i}">Применить</nv-button></div></div>`).join("")+(variants.length>1?`<div class="row" style="gap:8px;flex-wrap:wrap"><nv-button variant="secondary" icon="gallery-horizontal" data-abp>A/B страницами: +${variants.length}</nv-button><nv-button variant="secondary" icon="copy" data-ab>A/B-копии: ${variants.length} дизайнов</nv-button></div>`:"")};
       root.querySelector("[data-sgo]").addEventListener("click",async()=>{
         const brief=studioReadBrief(root),cnt=+((root.querySelector("[data-count]")||{}).value||5);
         const current={};fields.forEach(f=>{const l=studioTextByRole(d,f);if(l)current[f]=l.text});
@@ -8247,6 +8247,12 @@ function studioAiTexts(){
       out.addEventListener("click",async e=>{
         const ap=e.target.closest("[data-apply]");
         if(ap){studioBeforeChange();const added=studioApplyTexts(studioDesign(),variants[+ap.dataset.apply]);N.refresh();NEON.save();toast(added?`Тексты применены, новых слоёв: ${added}`:"Тексты применены",{tone:"success"});close();return}
+        if(e.target.closest("[data-abp]")){
+          /* каждый вариант — новая страница после текущей (копия текущей страницы с новыми текстами) */
+          const D=studioDesign();studioBeforeChange();studioPagesSync(D);if(!Array.isArray(D.pages)){D.pages=[{bg:D.bg,layers:D.layers}];D.page=0}
+          const cur=D.page||0,src=D.pages[cur];
+          variants.forEach((v,i)=>{const c=JSON.parse(JSON.stringify(src));c.layers.forEach(l=>l.id=studioUid());const tmp={...D,bg:c.bg,layers:c.layers,pages:undefined};studioApplyTexts(tmp,v);D.pages.splice(cur+1+i,0,{bg:tmp.bg,layers:tmp.layers})});
+          studioGoPage(cur+1,true);NEON.save();toast(`Добавлено страниц: ${variants.length} — по одной на вариант. Скачать все: «Скачать → ZIP»`,{tone:"success"});close();return}
         if(e.target.closest("[data-ab]")){
           msg.textContent="Создаю копии…";let n=0;
           for(const[i,v]of variants.entries()){
@@ -8257,6 +8263,31 @@ function studioAiTexts(){
         }
       });
     }});
+}
+/* Перевод всех текстов дизайна (все страницы) через /ai/translate; длинный перевод ужимается под рамку. */
+const STUDIO_LANGS=["английский","казахский","узбекский","киргизский","армянский","грузинский","азербайджанский","белорусский","татарский","немецкий","французский","испанский","итальянский","турецкий","китайский (упрощённый)","арабский"];
+function studioAiTranslate(){
+  const d=studioDesign();studioPagesSync(d);
+  const layers=studioPagesOf(d).flatMap(p=>p.layers).filter(l=>l.type==="text"&&(l.text||"").trim());
+  if(!layers.length){toast("В дизайне нет текста",{tone:"warning"});return}
+  let busy=false;
+  overlay("modal",{title:"Перевести дизайн",subtitle:`Текстов: ${layers.length}${(d.pages||[]).length>1?" на всех страницах":""}. Цены, телефоны, ссылки и бренды остаются как есть.`,service:"studio",
+    body:`<div class="stack" style="gap:12px"><nv-select label="Язык" data-lang options="${STUDIO_LANGS.map(x=>x+":"+x[0].toUpperCase()+x.slice(1)).join("|")}" value="английский"></nv-select>
+      <nv-segmented label="Куда" data-where options="copy:Копией в «Мои дизайны»|here:В этом дизайне" value="copy"></nv-segmented><span class="muted" data-msg style="font-size:12.5px"></span></div>`,
+    actions:[{label:"Отмена"},{label:"Перевести",variant:"primary",icon:"languages",fn:(root,close)=>{if(busy)return false;busy=true;
+      const lang=root.querySelector("[data-lang]").value,where=root.querySelector("[data-where]").value,msg=root.querySelector("[data-msg]");msg.textContent="ИИ переводит… 5–30 секунд";
+      const uniq=[...new Set(layers.map(l=>l.text))];
+      apiPost("/api/v1/studio/ai/translate",{texts:uniq,lang}).then(async r=>{
+        const tr=new Map(uniq.map((t,i)=>[t,r.texts[i]||t]));
+        const apply=x=>{for(const pg of studioPagesOf(x))for(const l of pg.layers)if(l.type==="text"&&tr.has(l.text)){l.text=tr.get(l.text);studioFitText(l,{...x,bg:pg.bg,layers:pg.layers})}};
+        if(where==="here"){studioBeforeChange();apply(d);studioGoPage(d.page||0,true);N.refresh();NEON.save();close();toast("Дизайн переведён: "+lang+". Отменить — Ctrl+Z",{tone:"success"});return}
+        const x=JSON.parse(JSON.stringify(studioPack(d)));x.id=null;x.name=(d.name||"Дизайн")+" · "+lang;
+        if(Array.isArray(x.pages)&&x.pages.length){x.page=0;x.bg=x.pages[0].bg;x.layers=x.pages[0].layers}
+        await studioFontsReady(x);apply(x);
+        const meta=await apiPost("/api/v1/studio/designs",{name:x.name,format:x.format,data:studioPack(x),thumb:await studioThumb(x)});studioUpsertList(meta);NEON.save();close();
+        toast(`Копия «${x.name}» — в «Мои дизайны»`,{tone:"success",action:{label:"Открыть",fn:()=>studioOpenServer(meta.id)}});
+      }).catch(e=>{busy=false;msg.textContent="";toast(e.message||"ИИ не ответил",{tone:"danger"})});
+      return false}}]});
 }
 function studioAiDesign(){
   let designs=[];
@@ -8487,6 +8518,7 @@ function studioPanelHtml(tab){
     <button type="button" data-act="studAiDesign"><b>${ic("sparkles",14)} Макет по брифу</b><div class="muted" style="font-size:12px">3 готовых варианта креатива под ваш оффер</div></button>
     <button type="button" data-act="studAiTexts"><b>${ic("type",14)} Тексты и A/B</b><div class="muted" style="font-size:12px">Заголовки, кнопки, плашки — несколько вариантов</div></button>
     <button type="button" data-act="studAiImage"><b>${ic("image-plus",14)} Сгенерировать изображение</b><div class="muted" style="font-size:12px">По описанию или по примеру</div></button>
+    <button type="button" data-act="studAiTranslate"><b>${ic("languages",14)} Перевести дизайн</b><div class="muted" style="font-size:12px">Все тексты на другой язык — здесь или копией</div></button>
     <button type="button" data-act="studAiCritique"><b>${ic("scan-search",14)} Разбор креатива</b><div class="muted" style="font-size:12px">Оценка, ошибки, риски модерации</div></button></div>`;
   if(tab==="history")return`<h3>История</h3><div id="stud-history">${studioHistoryHtml()}</div><p class="pp-hint">Клик по шагу — вернуть дизайн к этому моменту. Отменённые шаги можно вернуть (Ctrl+Shift+Z), пока не сделано новое изменение.</p>`;
   if(tab==="layers")return`<h3>Слои</h3><div id="stud-layers">${studioLayersListHtml()}</div><p class="pp-hint">Перетаскивайте слои мышью — в том числе в группу и из неё. Shift+клик — несколько, Ctrl+G — сгруппировать, двойной клик по группе — переименовать.</p>`;
@@ -10396,6 +10428,7 @@ Object.assign(N.acts,{
   studAiTexts:studioAiTexts,
   studAiDesign:studioAiDesign,
   studAiCritique:studioAiCritique,
+  studAiTranslate:()=>studioAiTranslate(),
   studReload(){studioLoadList()},
   studUseTpl(a,d){const t=STUDIO_TEMPLATES[+d.i];if(!t)return;const fmt=STUDIO_FMT[S.studio.tplFmt]?S.studio.tplFmt:"square";
     const x=studioRefit({...studioNewDesign(),...JSON.parse(JSON.stringify(t))},fmt);x.id=null;x.name=t.name;x.layers.forEach(l=>{l.id=studioUid();studioFitText(l,x)});
