@@ -2079,6 +2079,11 @@ body.gl-h,body.gl-h *{cursor:row-resize!important}body.gl-v,body.gl-v *{cursor:c
 .stud-save.dirty{color:#b7791f}.stud-save.err{color:var(--bad)}
 .stud-layer-row .row-ic button.off{opacity:1;color:var(--svc-ink)}
 .stud-swatches{display:flex;flex-wrap:wrap;gap:6px}
+.ph-ov{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
+.stud-layer-image{isolation:isolate}
+.duo-pre{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:6px 0}
+.duo-pre button{height:22px;border:1px solid var(--line-2);border-radius:6px;cursor:pointer;padding:0}
+.duo-pre button:hover{outline:2px solid var(--svc-ink);outline-offset:1px}
 .bg-pats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:8px 0}
 .bg-pats button{height:34px;border:1px solid var(--line-2);border-radius:8px;cursor:pointer;padding:0}
 .bg-pats button.on{outline:2px solid var(--svc-ink);outline-offset:1px}
@@ -7263,7 +7268,7 @@ function studioLayerInner(l){
   if(l.type==="text"&&+l.curve){studioEnsureFont(studioFontOf(l));return`<canvas class="stud-curve" style="position:absolute;left:-50%;top:-100%;width:200%;height:300%;display:block;pointer-events:none"></canvas>`}
   if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(l.text)}</span>`:esc(l.text)}</div>`}
   if(l.type==="image"){const bd=l.border&&l.border.enabled?`box-shadow:inset 0 0 0 ${l.border.width||4}px ${esc(l.border.color||"#fff")};`:"";
-    return l.src?`<div style="width:100%;height:100%;filter:${studioDropCss(l,true)}"><div class="stud-layer-image" style="${studioMaskCss(l)};position:relative"><img src="${esc(l.src)}" alt="" draggable="false" style="object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1});filter:${studioFilterCss(l.filter)}">${bd?`<span style="position:absolute;inset:0;${bd};border-radius:inherit"></span>`:""}</div></div>`:`<div class="stud-layer-image stud-layer-empty" style="${studioMaskCss(l)}">${ic("image",22)}</div>`}
+    return l.src?`<div style="width:100%;height:100%;filter:${studioDropCss(l,true)}"><div class="stud-layer-image" style="${studioMaskCss(l)};position:relative">${studioPhotoDefs(l)}<img src="${esc(l.src)}" alt="" draggable="false" style="object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1});filter:${studioPhotoFilter(l)}">${studioPhotoOverlays(l)}${bd?`<span style="position:absolute;inset:0;${bd};border-radius:inherit"></span>`:""}</div></div>`:`<div class="stud-layer-image stud-layer-empty" style="${studioMaskCss(l)}">${ic("image",22)}</div>`}
   if(l.type==="qr"||l.type==="chart")return`<div class="stud-layer-data">${studioDataSvg(l)}</div>`;
   if(l.type==="icon")return`<div class="stud-layer-icon" style="color:${esc(l.color)}">${iconSvg(l.icon||"star")}</div>`;
   if(l.type==="path"){
@@ -7283,6 +7288,27 @@ function studioLayerInner(l){
    обводка/неон текста. Одни и те же значения → CSS на холсте и ctx.* в экспорте. */
 const STUDIO_FILTERS={none:{},bright:{brightness:115,contrast:105},contrast:{contrast:130,saturate:110},bw:{grayscale:100,contrast:110},sepia:{sepia:70},warm:{sepia:25,saturate:125,hue:-8},cold:{saturate:90,hue:12,brightness:103},vintage:{sepia:35,contrast:90,brightness:105,saturate:80},vivid:{saturate:150,contrast:110}};
 const STUDIO_FILTER_LABELS={none:"Оригинал",bright:"Ярче",contrast:"Контраст",bw:"Ч/Б",sepia:"Сепия",warm:"Тёплый",cold:"Холодный",vintage:"Винтаж",vivid:"Сочный"};
+/* ---------- Эффекты фото: дуотон (SVG-фильтр на холсте, попиксельно в экспорте), виньетка, зерно ---------- */
+const STUDIO_DUOS=[["#1e1b4b","#f472b6"],["#0c4a6e","#5eead4"],["#3b0764","#fde047"],["#111827","#f97316"],["#14532d","#bef264"],["#7f1d1d","#fecaca"],["#0f172a","#e2e8f0"],["#1e3a8a","#fbbf24"]];
+const studioPhotoOf=l=>l.photo||{};
+const studioNoiseUrl="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><filter id="n" x="0" y="0"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="160" height="160" filter="url(#n)"/></svg>');
+function studioPhotoDefs(l){const P=studioPhotoOf(l);if(!P.duo)return"";const a=studioHexRgb(studioHex6(P.duo1||"#1e1b4b")),b=studioHexRgb(studioHex6(P.duo2||"#f472b6")),t=i=>`${(a[i]/255).toFixed(3)} ${(b[i]/255).toFixed(3)}`;
+  return`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="duo-${l.id}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".2126 .7152 .0722 0 0 .2126 .7152 .0722 0 0 .2126 .7152 .0722 0 0 0 0 0 1 0"/><feComponentTransfer><feFuncR type="table" tableValues="${t(0)}"/><feFuncG type="table" tableValues="${t(1)}"/><feFuncB type="table" tableValues="${t(2)}"/></feComponentTransfer></filter></svg>`}
+function studioPhotoFilter(l){const f=studioFilterCss(l.filter),P=studioPhotoOf(l);return P.duo?(f==="none"?"":f+" ")+`url(#duo-${l.id})`:f}
+function studioPhotoOverlays(l){const P=studioPhotoOf(l);let h="";
+  if(+P.vig)h+=`<span class="ph-ov" style="background:radial-gradient(ellipse farthest-corner at center,rgba(0,0,0,0) 45%,rgba(0,0,0,${(+P.vig/100*0.85).toFixed(3)}) 100%)"></span>`;
+  if(+P.grain)h+=`<span class="ph-ov" style="background:url('${studioNoiseUrl}') 0 0/calc(var(--k,1) * 160px) auto repeat;mix-blend-mode:overlay;opacity:${(+P.grain/100).toFixed(2)}"></span>`;
+  return h}
+function studioDuotonePx(cv,P){const g=cv.getContext("2d"),im=g.getImageData(0,0,cv.width,cv.height),d=im.data,a=studioHexRgb(studioHex6(P.duo1||"#1e1b4b")),b=studioHexRgb(studioHex6(P.duo2||"#f472b6"));
+  for(let i=0;i<d.length;i+=4){const y=(0.2126*d[i]+0.7152*d[i+1]+0.0722*d[i+2])/255;d[i]=a[0]+(b[0]-a[0])*y;d[i+1]=a[1]+(b[1]-a[1])*y;d[i+2]=a[2]+(b[2]-a[2])*y}g.putImageData(im,0,0)}
+async function studioPhotoPost(ctx,l,x,y,w,h,W){const P=studioPhotoOf(l);
+  if(+P.vig){ctx.save();ctx.translate(x+w/2,y+h/2);ctx.scale(w/Math.SQRT2,h/Math.SQRT2);const g=ctx.createRadialGradient(0,0,0,0,0,1);g.addColorStop(0.45,"rgba(0,0,0,0)");g.addColorStop(1,`rgba(0,0,0,${+P.vig/100*0.85})`);ctx.fillStyle=g;ctx.fillRect(-2,-2,4,4);ctx.restore()}
+  if(+P.grain){try{const img=await studioLoadImg(studioNoiseUrl),T=Math.max(8,Math.round(160*W/560)),tc=document.createElement("canvas");tc.width=T;tc.height=T;tc.getContext("2d").drawImage(img,0,0,T,T);
+    ctx.save();ctx.globalAlpha=+P.grain/100;ctx.globalCompositeOperation="overlay";ctx.fillStyle=ctx.createPattern(tc,"repeat");ctx.fillRect(x,y,w,h);ctx.restore()}catch(e){}}}
+function studioPhotoFxHtml(l){const P=studioPhotoOf(l),on=!!P.duo,n=[on?"дуотон":"",+P.vig?"виньетка":"",+P.grain?"зерно":""].filter(Boolean);
+  return ppSec("photofx","Эффекты фото",`<div class="pp-row"><span class="pp-l">Дуотон</span>${ppSeg([["Выкл",'data-prop-set="photo.duo" data-val="0"',!on],["Вкл",'data-prop-set="photo.duo" data-val="1"',on]])}</div>
+    ${on?`<div class="duo-pre">${STUDIO_DUOS.map(([a,b],i)=>`<button type="button" data-act-duo="${i}" style="background:linear-gradient(90deg,${a},${b})" aria-label="Дуотон ${i+1}"></button>`).join("")}</div>`+ppColor("Тени","photo.duo1",studioHex6(P.duo1||"#1e1b4b"))+ppColor("Света","photo.duo2",studioHex6(P.duo2||"#f472b6")):""}
+    ${ppRng("Виньетка","photo.vig",+P.vig||0,0,100,1)}${ppRng("Зерно","photo.grain",+P.grain||0,0,100,1)}`,n.join(", "))}
 function studioFilterCss(f){if(!f)return"none";const p=[];if(f.brightness!=null&&f.brightness!==100)p.push(`brightness(${f.brightness}%)`);if(f.contrast!=null&&f.contrast!==100)p.push(`contrast(${f.contrast}%)`);if(f.saturate!=null&&f.saturate!==100)p.push(`saturate(${f.saturate}%)`);if(f.grayscale)p.push(`grayscale(${f.grayscale}%)`);if(f.sepia)p.push(`sepia(${f.sepia}%)`);if(f.hue)p.push(`hue-rotate(${f.hue}deg)`);if(f.blur)p.push(`blur(${f.blur}px)`);return p.join(" ")||"none"}
 function studioShadowOf(l){return l.fx&&typeof l.fx==="object"?l.fx:null}
 /* Тень: у текста — l.shadow (вкл) + l.shadowSet, у остальных — l.effect.shadow.
@@ -7794,6 +7820,7 @@ function studioPropsHtml0(){
       ${bd?ppColor("Цвет рамки","border.color",l.border.color||"#ffffff")+ppRng("Толщина","border.width",l.border.width||4,1,20,1):""}`)
     +(l.src?ppSec("filters","Фильтры",`<div class="stud-presets">${Object.keys(STUDIO_FILTERS).map(k=>`<button type="button" class="${(l.filterName||"none")===k?"on":""}" data-act-filter="${k}"><i style="filter:${studioFilterCss(STUDIO_FILTERS[k])}"></i>${STUDIO_FILTER_LABELS[k]}</button>`).join("")}</div>
       ${["brightness:Яркость:50:150","contrast:Контраст:50:160","saturate:Насыщенность:0:200","blur:Размытие:0:12"].map(x=>{const[k,lb,mn,mx]=x.split(":"),v=fl[k]!=null?fl[k]:(k==="blur"?0:100);return ppRng(lb,"filter."+k,v,+mn,+mx,1)}).join("")}`,l.filterName&&l.filterName!=="none"?STUDIO_FILTER_LABELS[l.filterName]:""):"")
+    +(l.src?studioPhotoFxHtml(l):"")
     +studioShadowSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
   }
   return"";
@@ -7972,7 +7999,6 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
   else if(b.dataset.bgpat)d.bg.pattern=b.dataset.bgpat;
   else if(b.dataset.bgpre)d.bg=JSON.parse(JSON.stringify(STUDIO_BG_PRESETS[+b.dataset.bgpre]));
   N.refresh();NEON.save()});
-document.addEventListener("mousedown",e=>{if(e.target.closest&&e.target.closest("[data-bgp],[data-bgr]"))studioBeforeChange()},true);
 document.addEventListener("nv-change",e=>{const k=e.target.dataset&&e.target.dataset.bgp;if(!k)return;const bg=studioDesign().bg;
   if(/^m\d$/.test(k)){bg.colors=studioMeshColors(bg);bg.colors[+k[1]]=e.detail.value;if(k==="m0")bg.color=e.detail.value}else bg[k]=e.detail.value;
   studioBgLive();NEON.save();const tb=document.querySelector("[data-act-bg-color]");if(tb&&(k==="color"||k==="m0"))tb.setAttribute("value",e.detail.value)});
@@ -8040,7 +8066,9 @@ async function studioRenderCanvas(design,scale,anim){
           const sw=(+l.sticker.width||5)/2*W/560,f0=ctx.filter;ctx.filter="none";
           for(let i=0;i<16;i++){const a=i*Math.PI/8;ctx.drawImage(sil,dx+Math.cos(a)*sw,dy+Math.sin(a)*sw,dw,dh)}ctx.filter=f0;
         }
-        ctx.drawImage(img,dx,dy,dw,dh);ctx.filter="none";
+        if(studioPhotoOf(l).duo){const oc=document.createElement("canvas");oc.width=Math.max(1,Math.round(dw));oc.height=Math.max(1,Math.round(dh));const og=oc.getContext("2d");og.filter=ctx.filter;og.drawImage(img,0,0,oc.width,oc.height);studioDuotonePx(oc,studioPhotoOf(l));ctx.filter="none";ctx.drawImage(oc,dx,dy,dw,dh)}
+        else ctx.drawImage(img,dx,dy,dw,dh);ctx.filter="none";
+        await studioPhotoPost(ctx,l,x,y,w,h,W);
         if(l.border&&l.border.enabled){const bw=(l.border.width||4)*W/560;studioMaskPath(l.mask,x,y,w,h,rad,ctx);ctx.lineWidth=bw*2;ctx.strokeStyle=l.border.color||"#fff";ctx.stroke()}}catch(e){}
     }else if(l.type==="text"){
       const cx=x+w/2,cy=y+h/2;let x2=x,y2=y,w2=w,h2=h;
@@ -9157,6 +9185,8 @@ editor(){
         if(bdB){studioBeforeChange();l.border={color:"#ffffff",width:4,...(l.border||{}),enabled:!!bdB.dataset.actBorder};studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const olB=e.target.closest("[data-act-outline]");
         if(olB){studioBeforeChange();l.outline={color:"#000000",width:2,...(l.outline||{}),enabled:!!olB.dataset.actOutline};studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
+        const duB=e.target.closest("[data-act-duo]");
+        if(duB){const D=STUDIO_DUOS[+duB.dataset.actDuo];studioBeforeChange();l.photo={...(l.photo||{}),duo:true,duo1:D[0],duo2:D[1]};studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const flB=e.target.closest("[data-act-filter]");
         if(flB){studioBeforeChange();l.filterName=flB.dataset.actFilter;l.filter={...STUDIO_FILTERS[flB.dataset.actFilter]};studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const fitB=e.target.closest("[data-act-fit]");
@@ -9165,7 +9195,7 @@ editor(){
         if(tbg){studioBeforeChange();if(tbg.dataset.actTextbg){l.bgColor=l.bgColor||"#16c784";l.bgRadius=l.bgRadius==null?24:l.bgRadius}else delete l.bgColor;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const set=e.target.closest("[data-prop-set]");
         if(set){
-          const k=set.dataset.propSet,boolKeys=["closed","stroke.enabled","vertical","upper","shadow","neon","lockRatio","showValues","qrMargin"];
+          const k=set.dataset.propSet,boolKeys=["closed","stroke.enabled","vertical","upper","shadow","neon","lockRatio","showValues","qrMargin","photo.duo"];
           studioSetPath(l,k,boolKeys.includes(k)?set.dataset.val==="1":set.dataset.val);
           studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return;
         }
