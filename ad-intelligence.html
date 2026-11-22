@@ -7538,7 +7538,7 @@ document.addEventListener("mousemove",e=>{
     g.items.forEach(it=>{const l=it.l;l.x=ax+(it.x-ax)*k;l.y=ay+(it.y-ay)*k;l.w=it.w*k;l.h=it.h*k;if(it.fs!=null)l.fontSize=Math.max(0.5,Math.round(it.fs*k*100)/100);studioApplyBox(l)});
     studioLive(e,Math.round(W*k/100*F.w)+" × "+Math.round(H*k/100*F.h)+" px");
   }
-  studioLayoutStage(document);studioPaintGroupBox();studioSyncPropsSoon();
+  studioLayoutStage(document,g.items.map(it=>it.l.id));studioPaintGroupBox();studioSyncPropsSoon();
 });
 document.addEventListener("mouseup",()=>{if(!studioGDrag)return;studioGDrag=null;const lv=document.querySelector(".stud-live");if(lv)lv.remove();studioRenderSidebar(document);NEON.save()});
 const STUDIO_TYPE_NAMES={text:["текст","текста","текстов"],shape:["фигура","фигуры","фигур"],image:["фото","фото","фото"],icon:["иконка","иконки","иконок"],path:["кривая","кривые","кривых"]};
@@ -7565,7 +7565,7 @@ function studioGroupPropsHtml(ls){
 function studioGroupHandle(e,root){
   if(studioMultiSel.length<2)return false;
   const d=studioDesign(),ids=studioMultiSel,ls=d.layers.filter(x=>ids.includes(x.id));if(!ls.length)return false;
-  const texts=ls.filter(l=>l.type==="text"),done=(re)=>{ls.forEach(studioPatchLayerDom);studioLayoutStage(document);studioPaintGroupBox();if(re)studioRenderSidebar(root||document);NEON.save();return true};
+  const texts=ls.filter(l=>l.type==="text"),done=(re)=>{ls.forEach(studioPatchLayerDom);studioPaintGroupBox();if(re)studioRenderSidebar(root||document);NEON.save();return true};
   if(e.type==="input"){const r=e.target.closest('[data-gprop="opacity"]');if(!r)return false;const v=+r.value;ls.forEach(l=>l.opacity=v);r.style.setProperty("--rng-p",rngPct(v,0,100));r.closest(".rng").querySelector("output").textContent=v+"%";return done(false)}
   if(e.type==="nv-change"){const el=e.target.closest("[data-gprop]");if(!el)return false;const k=el.dataset.gprop,v=e.detail.value;studioBeforeChange();
     if(k==="font"){texts.forEach(l=>{l.font=v;studioEnsureFont(v)})}
@@ -7674,11 +7674,14 @@ function studioPropsHtml0(){
   }
   return"";
 }
-function studioLayoutStage(root){
+/* ids — пересчитать только эти слои (правка одного слоя не трогает остальные тексты на холсте). */
+function studioLayoutStage(root,ids){
   const stage=(root||document).querySelector(".stud-stage");if(!stage)return;
-  const h=stage.getBoundingClientRect().height;stage.style.setProperty("--k",(stage.getBoundingClientRect().width/560).toFixed(4));
-  stage.querySelectorAll('.stud-layer[data-type="text"]').forEach(el=>{
-    const d=studioDesign(),l=d.layers.find(x=>x.id===el.dataset.id);if(!l)return;
+  const sr=stage.getBoundingClientRect(),h=sr.height;stage.style.setProperty("--k",(sr.width/560).toFixed(4));
+  const d=studioDesign(),by=new Map(d.layers.map(x=>[x.id,x]));
+  const els=ids?ids.map(id=>stage.querySelector(`.stud-layer[data-id="${id}"][data-type="text"]`)).filter(Boolean):stage.querySelectorAll('.stud-layer[data-type="text"]');
+  els.forEach(el=>{
+    const l=by.get(el.dataset.id);if(!l)return;
     if(+l.curve)studioPaintCurved(el,l);
     const t=el.querySelector(".stud-layer-text");if(t){t.style.fontSize=Math.max(8,h*l.fontSize/100)+"px";t.style.borderRadius=l.bgColor?Math.min(el.offsetHeight,el.offsetWidth)/2*Math.min(50,+l.bgRadius||0)/50+"px":""}
   });
@@ -7690,7 +7693,7 @@ function studioPatchLayerDom(l){
   el.style.transform=studioLayerTransform(l);el.style.filter=studioDropCss(l);
   el.style.left=l.x+"%";el.style.top=l.y+"%";el.style.width=l.w+"%";el.style.height=l.h+"%";el.style.opacity=studioOpacityOf(l)/100;el.style.mixBlendMode=l.blendMode||"normal";
   if(studioEditingPathId===l.id){const ov=document.querySelector(".stud-edit-overlay");if(ov)ov.outerHTML=studioEditOverlayHtml()}
-  studioLayoutStage(document);
+  studioLayoutStage(document,[l.id]);
 }
 /* Эфемерное состояние редактора — НЕ сохраняется в дизайне (NEON.save()),
    чтобы перезагрузка страницы никогда не "застревала" в режиме рисования
@@ -8745,7 +8748,7 @@ editor(){
         studioSetPath(l,k,v);
         if(e.target.type==="range")e.target.style.setProperty("--rng-p",rngPct(v,e.target.min,e.target.max));
         const out=e.target.closest(".rng");if(out)out.querySelector("output").textContent=studioOutFmt(k,v);
-        if(k==="bgRadius"||k==="lineHeight"||k==="letterSpacing"||k==="curve")studioLayoutStage(document);
+        if(k==="bgRadius"||k==="lineHeight"||k==="letterSpacing"||k==="curve")studioLayoutStage(document,[l.id]);
         studioPatchLayerDom(l);studioSyncProps(e.target);NEON.save();
       });
       /* nv-textarea/nv-color-picker (FieldEl-like) stop their native events from
@@ -9540,7 +9543,7 @@ document.addEventListener("mousemove",e=>{
     const F=STUDIO_FMT[d.format]||STUDIO_FMT.square;studioLive(e,Math.round(l.w/100*F.w)+" × "+Math.round(l.h/100*F.h)+" px");
   }
   const el=document.querySelector(`.stud-layer[data-id="${l.id}"]`);
-  if(el){el.style.left=l.x+"%";el.style.top=l.y+"%";el.style.width=l.w+"%";el.style.height=l.h+"%";if(l.type==="text")studioLayoutStage(document)}
+  if(el){el.style.left=l.x+"%";el.style.top=l.y+"%";el.style.width=l.w+"%";el.style.height=l.h+"%";if(l.type==="text"&&studioDrag.mode!=="move")studioLayoutStage(document,[l.id])}
   studioSyncPropsSoon();
 });
 function studioLive(e,txt){let t=document.querySelector(".stud-live");if(!t){t=document.createElement("div");t.className="stud-live";document.body.append(t)}t.textContent=txt;t.style.left=(e.clientX+14)+"px";t.style.top=(e.clientY+14)+"px"}
