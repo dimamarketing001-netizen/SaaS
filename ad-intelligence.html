@@ -1715,6 +1715,7 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s2-menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
 .s2-coll{grid-template-columns:repeat(2,1fr)!important}
 .s2-coll button{color:var(--ink-2)}.s2-coll button:hover{color:var(--svc-ink)}
+.stud-layer-data{width:100%;height:100%}.stud-layer-data svg{width:100%;height:100%;display:block}
 .mr{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
 .mr-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}.mr-h b{font-weight:500;font-size:13px}
 .mr-f{display:flex;flex-direction:column;gap:3px}
@@ -2051,6 +2052,7 @@ body.gl-h,body.gl-h *{cursor:row-resize!important}body.gl-v,body.gl-v *{cursor:c
 <div id="app"></div>
 <script src="vendor/lucide-0.344.0.min.js"></script>
 <script src="vendor/polygon-clipping-0.15.7.min.js"></script>
+<script src="vendor/qrcode-generator-1.4.4.js"></script>
 <script>/* Иконки лежат рядом со страницей (CDN бывает недоступен); если файла нет — берём с CDN. */window.lucide||document.write('<script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"><\/script>')</script>
 <script>
 /* NEON UI: библиотека веб-компонентов без сборки и фреймворков.
@@ -7174,8 +7176,8 @@ function studioGradLine(x,y,w,h,angle){
   const rad=(angle-90)*Math.PI/180,dx=Math.cos(rad),dy=Math.sin(rad),cx=x+w/2,cy=y+h/2,half=Math.sqrt(w*w+h*h)/2;
   return{x0:cx-half*dx,y0:cy-half*dy,x1:cx+half*dx,y1:cy+half*dy};
 }
-function studioLayerIcon(l){if(l.type==="text")return"type";if(l.type==="image")return"image";if(l.type==="icon")return l.icon||"star";if(l.type==="path")return"spline";return l.shape==="ellipse"?"circle":l.shape==="triangle"?"triangle":l.shape==="line"?"minus":"square"}
-function studioLayerLabel(l){if(l.type==="text")return(l.text||"Текст").slice(0,22);if(l.type==="image")return"Изображение";if(l.type==="icon")return"Иконка";if(l.type==="path")return"Кривая";return{rect:"Прямоугольник",ellipse:"Эллипс",triangle:"Треугольник",line:"Линия"}[l.shape]||"Фигура"}
+function studioLayerIcon(l){if(l.type==="qr")return"qr-code";if(l.type==="chart")return{line:"line-chart",pie:"pie-chart",donut:"pie-chart"}[l.chartKind]||"bar-chart-3";if(l.type==="text")return"type";if(l.type==="image")return"image";if(l.type==="icon")return l.icon||"star";if(l.type==="path")return"spline";return l.shape==="ellipse"?"circle":l.shape==="triangle"?"triangle":l.shape==="line"?"minus":"square"}
+function studioLayerLabel(l){if(l.type==="qr")return"QR-код";if(l.type==="chart")return"График";if(l.type==="text")return(l.text||"Текст").slice(0,22);if(l.type==="image")return"Изображение";if(l.type==="icon")return"Иконка";if(l.type==="path")return"Кривая";return{rect:"Прямоугольник",ellipse:"Эллипс",triangle:"Треугольник",line:"Линия"}[l.shape]||"Фигура"}
 function studioFillCss(f){if(f.type==="none")return"transparent";if(f.type==="gradient")return`linear-gradient(${f.angle||90}deg,${esc(f.color)},${esc(f.color2)})`;if(f.type==="radial")return`radial-gradient(circle,${esc(f.color)},${esc(f.color2)})`;return esc(f.color)}
 function studioPolyPoints(sides,innerRadius){
   const n=Math.max(3,sides||6),inner=(innerRadius==null?100:innerRadius)/100,star=innerRadius!=null,pts=[];
@@ -7201,6 +7203,7 @@ function studioLayerInner(l){
   if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${esc(l.text)}</span>`:esc(l.text)}</div>`}
   if(l.type==="image"){const bd=l.border&&l.border.enabled?`box-shadow:inset 0 0 0 ${l.border.width||4}px ${esc(l.border.color||"#fff")};`:"";
     return l.src?`<div style="width:100%;height:100%;filter:${studioDropCss(l,true)}"><div class="stud-layer-image" style="${studioMaskCss(l)};position:relative"><img src="${esc(l.src)}" alt="" draggable="false" style="object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1});filter:${studioFilterCss(l.filter)}">${bd?`<span style="position:absolute;inset:0;${bd};border-radius:inherit"></span>`:""}</div></div>`:`<div class="stud-layer-image stud-layer-empty" style="${studioMaskCss(l)}">${ic("image",22)}</div>`}
+  if(l.type==="qr"||l.type==="chart")return`<div class="stud-layer-data">${studioDataSvg(l)}</div>`;
   if(l.type==="icon")return`<div class="stud-layer-icon" style="color:${esc(l.color)}">${iconSvg(l.icon||"star")}</div>`;
   if(l.type==="path"){
     const f=studioFillOf(l),s=studioStrokeOf(l),gid="pg-"+l.id;
@@ -7696,6 +7699,19 @@ function studioPropsHtml0(){
       ${pt?`<div class="pp-row"><span class="pp-l">Точка</span><div class="pp-ibs">${ppSeg([["Излом",'data-act-pttype="corner"',pt.type==="corner"],["Плавная",'data-act-pttype="smooth"',pt.type==="smooth"]])}${ppIb("trash-2","data-act-ptdel",false,"Удалить точку")}</div></div>`:""}`)
     +studioFillSecHtml(l)+studioStrokeSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
   }
+  if(l.type==="qr")return studioPropsHeadHtml("qr-code","QR-код",grp&&"в группе «"+grp+"»")
+    +ppSec("qr","QR-код",`<nv-textarea rows="2" value="${esc(l.qr||"")}" data-prop="qr" aria-label="Ссылка или текст"></nv-textarea><p class="pp-hint">Ссылка, телефон (tel:+7…), текст. Проверьте камерой телефона перед публикацией.</p>
+      ${ppColor("Цвет","color",l.color||"#111111")}${ppColor("Фон","bg",l.bg||"#ffffff")}
+      <div class="pp-row"><span class="pp-l">Надёжность</span>${ppSeg([["L","7%"],["M","15%"],["Q","25%"],["H","30%"]].map(([v,t])=>[v,`data-prop-set="qrLevel" data-val="${v}"`,(l.qrLevel||"M")===v,"Восстановление при повреждении: "+t]))}</div>
+      ${ppOnOff("Поля",l.qrMargin!==false,'data-prop-set="qrMargin" data-val=""','data-prop-set="qrMargin" data-val="1"')}`)+studioPosHtml(l)+studioLayerSecHtml(l);
+  if(l.type==="chart"){const cs=l.colors&&l.colors.length?l.colors:STUDIO_CHART_COLORS;
+    return studioPropsHeadHtml(studioLayerIcon(l),"График",grp&&"в группе «"+grp+"»")
+    +ppSec("chart","График",`${ppSeg([["bar","bar-chart-3","Столбцы"],["line","line-chart","Линия"],["pie","pie-chart","Круговая"],["donut","circle-dashed","Кольцо"]].map(([v,i,t])=>[ic(i,15),`data-prop-set="chartKind" data-val="${v}"`,(l.chartKind||"bar")===v,t]),"pp-seg-ic")}
+      ${ppCap("Данные — по строке: «Метка: число»")}<nv-textarea rows="5" value="${esc(l.chartText||"")}" data-prop="chartText" aria-label="Данные графика"></nv-textarea>
+      ${ppOnOff("Значения",l.showValues!==false,'data-prop-set="showValues" data-val=""','data-prop-set="showValues" data-val="1"')}
+      ${ppColor("Подписи","color",l.color||"#1f2937")}
+      ${ppCap("Цвета")}${cs.slice(0,(l.chartKind||"bar")==="bar"?Math.max(1,(l.colors||[]).length):Math.min(6,Math.max(studioChartData(l).length,2))).map((c,i)=>ppColor("Цвет "+(i+1),"colors."+i,c)).join("")}
+      ${(l.chartKind||"bar")==="bar"?`<button type="button" class="pp-btn" data-act-chartmulti>${ic("palette",14)}${(l.colors||[]).length>1?"Один цвет для всех":"Свой цвет каждому столбцу"}</button>`:""}`)+studioPosHtml(l)+studioLayerSecHtml(l)}
   if(l.type==="icon")return studioPropsHeadHtml(l.icon||"star","Иконка",grp&&"в группе «"+grp+"»")
     +ppSec("icon","Иконка",`${ppColor("Цвет","color",l.color)}<button type="button" class="pp-btn" data-act-icon2path>${ic("spline",14)}Разобрать на кривые</button><div class="stud-icon-pick">${STUDIO_ICONS.map(n=>`<button type="button" class="${l.icon===n?"on":""}" data-prop-set="icon" data-val="${n}" aria-label="${n}">${ic(n,16)}</button>`).join("")}</div>`)
     +studioShadowSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
@@ -7847,6 +7863,9 @@ async function studioRenderCanvas(design,scale){
         if(f.type!=="none"){ctx.fillStyle=f.type==="gradient"?(()=>{const g=studioGradLine(x,y,w,h,f.angle||90);const gr=ctx.createLinearGradient(g.x0,g.y0,g.x1,g.y1);gr.addColorStop(0,f.color);gr.addColorStop(1,f.color2);return gr})():f.type==="radial"?(()=>{const gr=ctx.createRadialGradient(x+w/2,y+h/2,0,x+w/2,y+h/2,Math.max(w,h)/2);gr.addColorStop(0,f.color);gr.addColorStop(1,f.color2);return gr})():f.color;ctx.fill(l.fillRule||"nonzero")}
         if(s.enabled){ctx.strokeStyle=s.color;ctx.lineWidth=s.width*(scale||1);ctx.lineCap=s.cap||"butt";ctx.lineJoin=s.join||"miter";ctx.setLineDash(studioDashArr(s.dash,scale).split(",").filter(Boolean).map(Number));ctx.stroke()}
       }
+    }else if(l.type==="qr"||l.type==="chart"){
+      try{const svg=l.type==="qr"?studioQrSvg(l):studioChartSvg(l,Math.max(40,Math.round(l.w/100*fmt.w)),Math.max(30,Math.round(l.h/100*fmt.h)));const img=await studioLoadImg("data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg));
+        if(l.type==="qr"){const sz=Math.min(w,h);ctx.imageSmoothingEnabled=false;ctx.drawImage(img,x+(w-sz)/2,y+(h-sz)/2,sz,sz);ctx.imageSmoothingEnabled=true}else ctx.drawImage(img,x,y,w,h)}catch(e){}
     }else if(l.type==="icon"){
       try{const img=await studioLoadImg(studioIconDataUrl(l.icon||"star",l.color));ctx.drawImage(img,x,y,w,h)}catch(e){}
     }else if(l.type==="image"&&l.src){
@@ -8392,6 +8411,7 @@ function studioPanelHtml(tab){
     ${built.length?`${mine.length?'<div class="sect-t">Готовые</div>':""}<div class="s2-grid2">${built.map(([t,i])=>`<div class="th" data-act="studUseTplHere" data-i="${i}" title="${esc(t.name)}"><img data-s2tpl="${i}" alt=""></div>`).join("")}</div>`:""}`}
   if(tab==="elements")return`<h3>Элементы</h3><div class="sect-t">Фигуры</div><div class="s2-tiles">${STUDIO_SHAPES.map(([sh,icn,lb])=>`<button type="button" data-act="studAdd" data-type="shape" data-shape="${sh}">${ic(icn,20)}${lb}</button>`).join("")}</div>
     <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
+    <div class="sect-t">Данные</div><div class="s2-tiles">${[["qr","qr-code","QR-код"],["bar","bar-chart-3","Столбцы"],["line","line-chart","Линия"],["pie","pie-chart","Круговая"],["donut","circle-dashed","Кольцо"]].map(([k,i,t])=>`<button type="button" data-act="studAddData" data-k="${k}">${ic(i,20)}${t}</button>`).join("")}</div>
     <div class="sect-t">Коллажи</div><div class="s2-tiles s2-coll">${STUDIO_COLLAGES.map(([n,c],i)=>`<button type="button" data-act="studCollage" data-i="${i}" data-tip="${esc(n)}">${studioCollageIcon(c)}<span>${esc(n)}</span></button>`).join("")}</div>
     <div class="sect-t">Иконки</div><input type="search" class="num" data-s2icon placeholder="Поиск: телефон, скидка, house…" value="${esc(studioIconQ)}" style="width:100%;text-align:left;padding:0 10px">
     <div class="s2-icons" data-s2icons>${studioIconList().map(n=>`<button type="button" data-act="studAddIcon" data-icon="${esc(n)}" title="${esc(n)}">${ic(n,18)}</button>`).join("")}</div>`;
@@ -8846,6 +8866,7 @@ editor(){
         if(e.target.closest("[data-gexit]")){const d=studioDesign(),g=studioGroupEnter;studioGroupEnter=g?studioGParent(d,g):null;if(g){studioMultiSel=studioDeep(d,g).map(x=>x.id);d.selectedId=studioMultiSel[studioMultiSel.length-1]||null}N.refresh();return}
         if(studioGroupHandle(e,root))return;
         if(e.target.closest("[data-act-topath]")){const l=studioSelected();if(l&&l.type==="shape"){studioBeforeChange();studioShapeToPath(l);studioEditingPathId=l.id;studioEditingPointIndex=null;N.refresh();NEON.save();toast("Фигура стала кривой — тяните точки")}return}
+        if(e.target.closest("[data-act-chartmulti]")){const l=studioSelected();if(l&&l.type==="chart"){studioBeforeChange();l.colors=(l.colors||[]).length>1?[l.colors[0]]:STUDIO_CHART_COLORS.slice();studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save()}return}
         if(e.target.closest("[data-act-icon2path]")){const l=studioSelected();if(l&&l.type==="icon")studioIconToPaths(l);return}
         if(e.target.closest("[data-act-contpath]")){const l=studioSelected();if(l&&l.type==="path")studioContinuePath(l);return}
         const gr=e.target.closest("[data-act-grename]");if(gr){studioRenameGroup(gr.dataset.actGrename);return}
@@ -8891,7 +8912,7 @@ editor(){
         if(tbg){studioBeforeChange();if(tbg.dataset.actTextbg){l.bgColor=l.bgColor||"#16c784";l.bgRadius=l.bgRadius==null?24:l.bgRadius}else delete l.bgColor;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const set=e.target.closest("[data-prop-set]");
         if(set){
-          const k=set.dataset.propSet,boolKeys=["closed","stroke.enabled","vertical","upper","shadow","neon","lockRatio"];
+          const k=set.dataset.propSet,boolKeys=["closed","stroke.enabled","vertical","upper","shadow","neon","lockRatio","showValues","qrMargin"];
           studioSetPath(l,k,boolKeys.includes(k)?set.dataset.val==="1":set.dataset.val);
           studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return;
         }
@@ -9129,6 +9150,7 @@ async function studioToSvg(d,ids){
       for(let i=1;i<P.length;i++)dd+=seg(P[i-1],P[i]);if(l.closed)dd+=seg(P[P.length-1],P[0])+"Z";
       (l.subs||[]).forEach(c=>{const Q=c.points||[];if(Q.length<2)return;dd+=` M${X(Q[0])} ${Y(Q[0])}`;for(let i=1;i<Q.length;i++)dd+=seg(Q[i-1],Q[i]);if(c.closed)dd+=seg(Q[Q.length-1],Q[0])+"Z"});
       el=`<path d="${dd}" fill-rule="${l.fillRule||"nonzero"}" fill="${fillOf(l)}"${strokeAttrs(l)}/>`}}
+    else if(l.type==="qr"||l.type==="chart"){const sv=l.type==="qr"?studioQrSvg(l):studioChartSvg(l,Math.round(w),Math.round(h));el=sv.replace("<svg ",`<svg x="${x}" y="${y}" width="${w}" height="${h}" `)}
     else if(l.type==="icon"){const inner=(iconSvg(l.icon||"star").match(/<svg[^>]*>([\s\S]*)<\/svg>/)||[])[1]||"";el=`<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 24 24" fill="none" stroke="${l.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`}
     else if(l.type==="image"&&l.src){const cid="c"+(++n),m=l.mask||"none";
       defs.push(`<clipPath id="${cid}">${m==="circle"?`<ellipse cx="${cx}" cy="${cy}" rx="${w/2}" ry="${h/2}"/>`:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min((l.radius||0)*k,w/2,h/2)}"/>`}</clipPath>`);
@@ -9331,6 +9353,51 @@ document.addEventListener("mouseup",()=>{if(studioCropDrag){studioCropDrag=null;
 document.addEventListener("wheel",e=>{if(!studioCropId)return;const el=e.target.closest&&e.target.closest(".stud-layer.cropping");if(!el)return;e.preventDefault();e.stopPropagation();
   const l=studioDesign().layers.find(x=>x.id===studioCropId);if(!l)return;l.zoom=Math.max(1,Math.min(4,Math.round((l.zoom||1)*Math.exp(-(e.deltaMode===1?e.deltaY*33:e.deltaY)*0.002)*100)/100));studioPatchLayerDom(l);studioPaintCrop();studioSyncPropsSoon();clearTimeout(studioCropDrag&&0);NEON.save()},{passive:false,capture:true});
 document.addEventListener("keydown",e=>{if(studioCropId&&(e.key==="Enter"||e.key==="Escape")){e.preventDefault();e.stopPropagation();studioCropOff()}},true);
+/* ---------- Данные: QR-код и графики ----------
+   Оба рисуются как SVG: на холсте — вставкой, в PNG — через картинку из SVG, в SVG-экспорт — как есть. */
+const STUDIO_CHART_COLORS=["#7c3aed","#f97316","#0ea5e9","#facc15","#e11d48","#14b8a6","#64748b","#a855f7"];
+function studioQrSvg(l){
+  const q=window.qrcode;if(!q)return'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#eee"/></svg>';
+  try{q.stringToBytes=q.stringToBytesFuncs["UTF-8"]}catch(e){}
+  const qr=q(0,l.qrLevel||"M");qr.addData(String(l.qr||" ").slice(0,900));qr.make();
+  const n=qr.getModuleCount(),m=l.qrMargin===false?0:2,N=n+2*m;let d="";
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(qr.isDark(r,c))d+=`M${c+m} ${r+m}h1v1h-1z`;
+  return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${N} ${N}" preserveAspectRatio="xMidYMid meet" shape-rendering="crispEdges"><rect width="${N}" height="${N}" fill="${esc(l.bg||"#ffffff")}"/><path d="${d}" fill="${esc(l.color||"#111111")}"/></svg>`;
+}
+function studioChartData(l){return String(l.chartText||"").split(/\n+/).map(r=>{const m=/^(.*?)[:\t;=–—-]\s*(-?[\d\s]+(?:[.,]\d+)?)\s*$/.exec(r.trim());return m?{label:m[1].trim(),value:+m[2].replace(/\s/g,"").replace(",",".")}:null}).filter(x=>x&&isFinite(x.value)).slice(0,16)}
+function studioChartSvg(l,W,H){
+  const D=studioChartData(l),C=(l.colors&&l.colors.length?l.colors:STUDIO_CHART_COLORS),tc=esc(l.color||"#1f2937"),fs=Math.max(9,Math.min(W,H)*0.055),font=`font-family="Onest, Manrope, Arial, sans-serif"`,fmt=v=>Math.abs(v)>=1000?(Math.round(v/100)/10+"к").replace(".",","):String(Math.round(v*10)/10).replace(".",",");
+  let g="";const head=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">`;
+  if(!D.length)return head+`<text x="${W/2}" y="${H/2}" text-anchor="middle" ${font} font-size="${fs}" fill="${tc}">Добавьте данные: «Метка: число»</text></svg>`;
+  const kind=l.chartKind||"bar";
+  if(kind==="pie"||kind==="donut"){
+    const tot=D.reduce((a,x)=>a+Math.max(0,x.value),0)||1,R=Math.min(H*0.46,W*0.3),cx=R+W*0.04,cy=H/2,ri=kind==="donut"?R*0.58:0;let a=-Math.PI/2;
+    D.forEach((x,i)=>{const da=Math.max(0,x.value)/tot*Math.PI*2;if(da<=0)return;const a2=a+Math.min(da,Math.PI*2-1e-4),lg=da>Math.PI?1:0,P=(r,t)=>[cx+r*Math.cos(t),cy+r*Math.sin(t)],[x1,y1]=P(R,a),[x2,y2]=P(R,a2);
+      g+=ri?`<path d="M${x1} ${y1}A${R} ${R} 0 ${lg} 1 ${x2} ${y2}L${P(ri,a2).join(" ")}A${ri} ${ri} 0 ${lg} 0 ${P(ri,a).join(" ")}Z" fill="${C[i%C.length]}"/>`:`<path d="M${cx} ${cy}L${x1} ${y1}A${R} ${R} 0 ${lg} 1 ${x2} ${y2}Z" fill="${C[i%C.length]}"/>`;
+      if(l.showValues!==false&&da>0.25){const[mx,my]=P(ri?(R+ri)/2:R*0.62,a+da/2);g+=`<text x="${mx}" y="${my}" text-anchor="middle" dominant-baseline="central" ${font} font-size="${fs*0.9}" font-weight="700" fill="#fff">${Math.round(x.value/tot*100)}%</text>`}a+=da});
+    const lx=cx+R+W*0.06,lh=Math.min(fs*1.7,H/D.length);D.forEach((x,i)=>{const y=cy-lh*D.length/2+lh*i+lh/2;g+=`<rect x="${lx}" y="${y-fs*0.4}" width="${fs*0.8}" height="${fs*0.8}" rx="${fs*0.2}" fill="${C[i%C.length]}"/><text x="${lx+fs*1.2}" y="${y}" dominant-baseline="central" ${font} font-size="${fs}" fill="${tc}">${esc(x.label)}${l.showValues!==false?` · ${fmt(x.value)}`:""}</text>`});
+    return head+g+"</svg>";
+  }
+  const pl=W*0.04,pr=W*0.04,pt=fs*1.8,pb=fs*2.2,cw=W-pl-pr,ch=H-pt-pb,max=Math.max(...D.map(x=>x.value),0)||1,min=Math.min(0,...D.map(x=>x.value)),rng=max-min||1,Y=v=>pt+ch-(v-min)/rng*ch,step=cw/D.length;
+  g+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(0)}" y2="${Y(0)}" stroke="${tc}" stroke-opacity=".25" stroke-width="${Math.max(1,fs*0.08)}"/>`;
+  if(kind==="line"){const pts=D.map((x,i)=>[pl+step*(i+0.5),Y(x.value)]);
+    g+=`<path d="M${pts[0][0]} ${Y(0)}L${pts.map(p=>p.join(" ")).join("L")}L${pts[pts.length-1][0]} ${Y(0)}Z" fill="${C[0]}" fill-opacity=".14"/><polyline points="${pts.map(p=>p.join(",")).join(" ")}" fill="none" stroke="${C[0]}" stroke-width="${Math.max(2,fs*0.28)}" stroke-linejoin="round" stroke-linecap="round"/>`;
+    pts.forEach((p,i)=>{g+=`<circle cx="${p[0]}" cy="${p[1]}" r="${fs*0.32}" fill="#fff" stroke="${C[0]}" stroke-width="${fs*0.16}"/>`;if(l.showValues!==false)g+=`<text x="${p[0]}" y="${p[1]-fs*0.8}" text-anchor="middle" ${font} font-size="${fs*0.85}" font-weight="700" fill="${tc}">${fmt(D[i].value)}</text>`})}
+  else D.forEach((x,i)=>{const bw=step*0.62,bx=pl+step*i+(step-bw)/2,y1=Y(Math.max(0,x.value)),y2=Y(Math.min(0,x.value));
+    g+=`<rect x="${bx}" y="${y1}" width="${bw}" height="${Math.max(1,y2-y1)}" rx="${Math.min(bw*0.18,fs*0.5)}" fill="${C[(l.colors&&l.colors.length>1?i:0)%C.length]}"/>`;
+    if(l.showValues!==false)g+=`<text x="${bx+bw/2}" y="${y1-fs*0.45}" text-anchor="middle" ${font} font-size="${fs*0.85}" font-weight="700" fill="${tc}">${fmt(x.value)}</text>`});
+  D.forEach((x,i)=>{g+=`<text x="${pl+step*(i+0.5)}" y="${H-pb+fs*1.3}" text-anchor="middle" ${font} font-size="${fs*0.85}" fill="${tc}" fill-opacity=".75">${esc(x.label.slice(0,14))}</text>`});
+  return head+g+"</svg>";
+}
+function studioDataSvg(l){const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;return l.type==="qr"?studioQrSvg(l):studioChartSvg(l,Math.max(40,Math.round(l.w/100*F.w)),Math.max(30,Math.round(l.h/100*F.h)))}
+function studioAddData(kind){
+  const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;studioBeforeChange();
+  const l=studioLayerDefaults("icon");delete l.icon;
+  if(kind==="qr"){const w=32;Object.assign(l,{type:"qr",w,h:w*F.w/F.h,x:34,y:30,qr:"https://example.ru",color:"#111111",bg:"#ffffff",qrLevel:"M"})}
+  else Object.assign(l,{type:"chart",chartKind:kind,x:12,y:25,w:76,h:(kind==="pie"||kind==="donut"?40:46)*F.w/F.h,chartText:kind==="pie"||kind==="donut"?"Реклама: 45\nСоцсети: 30\nСайт: 15\nДругое: 10":"Янв: 120\nФев: 180\nМар: 150\nАпр: 240\nМай: 310",color:"#1f2937",colors:STUDIO_CHART_COLORS.slice(0,kind==="bar"?1:4),showValues:true});
+  if(l.h>90){const k=90/l.h;l.h*=k;l.w*=k}
+  d.layers.push(l);d.selectedId=l.id;studioMultiSel=[];N.refresh();NEON.save();
+}
 /* ---------- Коллажи: сетки фото ---------- */
 const STUDIO_COLLAGES=[["2 рядом",[[0,0,.5,1],[.5,0,.5,1]]],["2 друг под другом",[[0,0,1,.5],[0,.5,1,.5]]],["3: большое + 2",[[0,0,.6,1],[.6,0,.4,.5],[.6,.5,.4,.5]]],["3 в ряд",[[0,0,1/3,1],[1/3,0,1/3,1],[2/3,0,1/3,1]]],
   ["4 сеткой",[[0,0,.5,.5],[.5,0,.5,.5],[0,.5,.5,.5],[.5,.5,.5,.5]]],["4: большое + 3",[[0,0,1,.62],[0,.62,1/3,.38],[1/3,.62,1/3,.38],[2/3,.62,1/3,.38]]],["5: 2 + 3",[[0,0,.5,.5],[.5,0,.5,.5],[0,.5,1/3,.5],[1/3,.5,1/3,.5],[2/3,.5,1/3,.5]]],["6 сеткой",[[0,0,1/3,.5],[1/3,0,1/3,.5],[2/3,0,1/3,.5],[0,.5,1/3,.5],[1/3,.5,1/3,.5],[2/3,.5,1/3,.5]]]];
@@ -9722,6 +9789,7 @@ document.addEventListener("mouseup",()=>{
   }
   if(dr.mode==="rotate"){const st=document.querySelector(".stud-stage");if(st)studioRenderSidebar(document)}
   else if(dr.mode==="point"){const st=document.querySelector(".stud-stage");if(st)studioRenderSidebar(document)}
+  else if(dr.mode==="resize"){const l=studioDesign().layers.find(x=>x.id===dr.id);if(l&&(l.type==="chart"||l.type==="qr"))studioPatchLayerDom(l);studioSyncProps(null,true)}
   else studioSyncProps(null,true);
   NEON.save();
 });
@@ -10033,6 +10101,7 @@ Object.assign(N.acts,{
     studioMenu(r.left,r.bottom+4,[["Вписать в экран","Ctrl 0",z(1),studioZoom===1],["Увеличить","Ctrl +",()=>N.acts.studZoom(null,{z:"+"}),false],["Уменьшить","Ctrl −",()=>N.acts.studZoom(null,{z:"-"}),false],["50%","",z(0.5),studioZoom===0.5],["150%","",z(1.5),studioZoom===1.5],["200%","",z(2),studioZoom===2]])},
   studGuidesPanel(a){studioGuidesPanel(a)},
   studCollage(a,d){studioAddCollage(+d.i)},
+  studAddData(a,d){studioAddData(d.k)},
   studRulers(){S.studio.rulers=S.studio.rulers===false;N.refresh();NEON.save()},
   studGrid(){const seq=[0,2,3,4,6,12],i=seq.indexOf(+S.studio.grid||0);S.studio.grid=seq[(i+1)%seq.length];N.refresh();NEON.save()},
   studAiTexts:studioAiTexts,
