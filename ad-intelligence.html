@@ -1747,6 +1747,7 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stl-h{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:ew-resize}
 .stl-out{position:absolute;top:2px;bottom:2px;border-radius:5px;background:repeating-linear-gradient(135deg,var(--line) 0 4px,transparent 4px 8px);pointer-events:none}
 .s2-emo{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;max-height:240px;overflow:auto}.s2-emo button{border:0;background:none;border-radius:8px;font-size:22px;line-height:1;height:34px;cursor:pointer;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}.s2-emo button:hover{background:var(--surface-2)}.s2-emo-g{grid-column:1/-1;font-size:11px;color:var(--ink-3);margin:6px 0 2px}
+.st-doc{display:grid;grid-template-columns:1fr 1fr;gap:4px 6px}.st-docr nv-color-picker{display:block}
 .stud-vprev{position:absolute;inset:0;width:100%;height:100%;z-index:50;pointer-events:none}
 .vid-prog{position:fixed;right:18px;bottom:18px;z-index:9600;width:280px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-2);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
 .vid-prog b{font-weight:500;font-size:13px}.vid-prog i{display:block;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}.vid-prog i span{display:block;height:100%;width:0;background:var(--svc-ink);transition:width .2s}.vid-prog small{font:11px var(--font-mono);color:var(--ink-3)}
@@ -9102,12 +9103,35 @@ function studioApplyFonts(head,body){
       studioFitText(l,{...d,bg:pg.bg,layers:pg.layers})})}
   studioEnsureFont(head);studioEnsureFont(body);N.refresh();NEON.save();toast(n?`Шрифты: ${head} + ${body} — на всех страницах`:"В дизайне нет текста",{tone:n?"success":"warning"});
 }
+/* ---------- Цвета дизайна: все hex-цвета всех страниц (фон и слои, вглубь объектов) и замена «везде» ---------- */
+const STUDIO_COLOR_SKIP=new Set(["text","src","id","name","points","subs","rows","icon","font","image","thumb","group"]);
+function studioWalkColors(o,fn,key){if(o==null)return o;
+  if(typeof o==="string"){return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(o)?fn(studioHex6(o).toLowerCase(),o):o}
+  if(Array.isArray(o)){for(let i=0;i<o.length;i++)o[i]=studioWalkColors(o[i],fn);return o}
+  if(typeof o==="object"){for(const k of Object.keys(o)){if(STUDIO_COLOR_SKIP.has(k))continue;o[k]=studioWalkColors(o[k],fn,k)}return o}
+  return o}
+function studioDocColors(){const d=studioDesign(),M=new Map();
+  studioPagesOf(d).forEach(pg=>{studioWalkColors(pg.bg,c=>{M.set(c,(M.get(c)||0)+3);return c});(pg.layers||[]).filter(l=>!l.hidden).forEach(l=>studioWalkColors(l,(c,o)=>{M.set(c,(M.get(c)||0)+1);return o}))});
+  return[...M.entries()].sort((a,b)=>b[1]-a[1]).map(([c,n])=>({c,n}))}
+function studioReplaceColor(from,to){const d=studioDesign();from=studioHex6(from).toLowerCase();to=studioHex6(to);let n=0;
+  studioPagesOf(d).forEach(pg=>{const f=(c,o)=>{if(c===from){n++;return to}return o};studioWalkColors(pg.bg,f);(pg.layers||[]).forEach(l=>studioWalkColors(l,f))});
+  return n}
+function studioDocColorsHtml(){const L=studioDocColors().slice(0,16);
+  return`<div class="sect-t">Цвета в дизайне</div>${L.length?`<div class="st-doc">${L.map(x=>`<div class="st-docr"><nv-color-picker value="${esc(x.c)}" data-doccolor="${esc(x.c)}"></nv-color-picker></div>`).join("")}</div>
+  <p class="pp-hint">Смените цвет — он заменится везде: фон, тексты, фигуры, на всех страницах.</p>`:'<p class="pp-hint">В дизайне пока нет цветов.</p>'}`}
+let studioDocColorT=0;
+document.addEventListener("nv-change",e=>{const el=e.target.closest&&e.target.closest("[data-doccolor]");if(!el)return;
+  const from=el.dataset.doccolor,to=studioHex6(e.detail&&e.detail.value||"");if(!to||to.toLowerCase()===from)return;
+  if(Date.now()-studioDocColorT>1500)studioBeforeChange();studioDocColorT=Date.now();
+  studioReplaceColor(from,to);el.dataset.doccolor=to.toLowerCase();
+  const d=studioDesign();d.layers.forEach(studioPatchLayerDom);studioBgLive();studioLayoutStage(document);NEON.save()});
 function studioStylesHtml(){
   const cur=studioStyleCur.i;
   return`<div class="sect-t" style="margin-top:6px">Стили дизайна</div>
   <button type="button" class="pp-btn pri" data-act="studStyleShuffle" style="width:100%;justify-content:center;margin-bottom:8px">${ic("shuffle",15)}Перемешать цвета</button>
   <div class="st-pals">${STUDIO_STYLES.map(([n,c],i)=>`<button type="button" class="${cur===i?"on":""}" data-act="studStylePick" data-i="${i}" data-tip="Применить палитру «${esc(n)}» ко всему дизайну"><span class="st-sw">${c.map(x=>`<i style="background:${x}"></i>`).join("")}</span><small>${esc(n)}</small></button>`).join("")}</div>
   <p class="pp-hint">Клик — палитра на все страницы, ещё «Перемешать» — другие сочетания тех же цветов. Цвет текста подбирается читаемым.</p>
+  ${studioDocColorsHtml()}
   <div class="sect-t">Шрифты на весь дизайн</div>
   <div class="st-fonts">${STUDIO_STYLE_FONTS.map(([a,b,lb],i)=>{studioEnsureFont(a);studioEnsureFont(b);return`<button type="button" data-act="studStyleFonts" data-i="${i}"><b style="font-family:'${a}'">${esc(lb)}</b><small style="font-family:'${b}'">${esc(a)} + ${esc(b)}</small></button>`}).join("")}</div>`;
 }
