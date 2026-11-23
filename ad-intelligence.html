@@ -346,6 +346,17 @@ nv-icon svg{width:1em;height:1em;stroke-width:2}
 .shell{display:grid;grid-template-columns:78px 228px minmax(0,1fr);height:100%;transition:grid-template-columns .15s ease}
 .shell.side-collapsed{grid-template-columns:78px 68px minmax(0,1fr)}
 .rail{background:var(--rail);color:var(--rail-ink);display:flex;flex-direction:column;gap:2px;padding:12px 8px;overflow-y:auto;scrollbar-width:none}
+.tm-ws{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.tm-ws button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;cursor:pointer;color:var(--ink);font-size:13px}.tm-ws button.on{border-color:var(--svc-ink,var(--ink));background:var(--svc-soft,var(--surface-2))}.tm-ws small{color:var(--ink-3);font-size:11px}
+.tm-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.tm-head h3{margin:0;font-size:18px;font-weight:600}
+.tm-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:12px;align-items:start}@media (max-width:900px){.tm-grid{grid-template-columns:1fr}}
+.tm-list{display:flex;flex-direction:column}.tm-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.tm-row:last-child{border-bottom:0}
+.tm-who{flex:1;min-width:0;display:flex;flex-direction:column}.tm-who b{font-weight:500;font-size:14px}.tm-who small{color:var(--ink-3);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm-role{height:32px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:0 8px;font:inherit;font-size:13px}
+.tm-badge{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}.tm-badge.owner{background:#fef3c7;color:#92400e}.tm-badge.admin{background:#ede9fe;color:#5b21b6}.tm-badge.editor{background:#dcfce7;color:#166534}
+.tm-add{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}.tm-add nv-input{flex:1;min-width:180px}
+.tm-inv{display:flex;flex-direction:column;gap:6px;margin-top:8px}.tm-invr{display:flex;align-items:center;gap:8px}.tm-invr small{color:var(--ink-3);font-size:12px}
+.tm-roles{display:flex;flex-direction:column;gap:8px}.tm-roles div{display:flex;align-items:center;gap:8px}.tm-roles small{color:var(--ink-2);font-size:12.5px}
+.rail-bottom{margin-top:auto;display:flex;flex-direction:column;gap:2px;padding-top:8px}
 .rail-logo{width:40px;height:40px;margin:0 auto 12px;border-radius:12px;background:#39ff88;color:#0d1211;display:grid;place-items:center;font:800 19px var(--font-display);flex:none;border:0;cursor:pointer}
 .rail-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px 7px;border:0;background:none;border-radius:10px;color:var(--rail-ink-2);font-size:11px;line-height:1.15;cursor:pointer;text-align:center;flex:none;width:100%;position:relative}
 .rail-item nv-icon{font-size:19px}
@@ -3290,6 +3301,8 @@ const NOTIF_TYPES={
   captcha_required:{icon:"shield-alert",label:"Нужна капча"},
   collection_created:{icon:"folder-plus",label:"Новая подборка"},
   landing_mismatch:{icon:"link-2-off",label:"Несовпадение посадочной"},
+  team:{icon:"users",label:"Команда"},
+  post:{icon:"calendar-clock",label:"Публикации"},
 };
 const NOTIF={items:[],unreadCount:0,loaded:false};
 const PROFILE={name:"",email:"",role:"",avatarDataUrl:"",prefs:{},loaded:false};
@@ -3338,6 +3351,7 @@ function shell(){
   <nav class="rail" aria-label="Сервисы NEON">
     <button type="button" class="rail-logo" data-go="${mainIds[0]}-${Object.keys(NEON.services[mainIds[0]].views)[0]}" aria-label="NEON, на главную">N</button>
     ${mainIds.map(railBtn).join("")}
+    <div class="rail-bottom">${NEON.order.filter(i=>NEON.services[i].rail==="bottom").map(railBtn).join("")}</div>
   </nav>
   <aside class="side" aria-label="Разделы сервиса"><div class="side-head"><div class="side-head-t"><h2>${esc(svc.name)}</h2><p>${esc(svc.tag||"")}</p></div><nv-button class="side-collapse-btn" variant="ghost" size="sm" icon="${collapsed?"chevrons-right":"chevrons-left"}" icon-only data-act="sideCollapse" hint="${collapsed?"Развернуть меню":"Свернуть меню"}">${collapsed?"Развернуть меню":"Свернуть меню"}</nv-button></div>
     <button type="button" class="side-search" data-act="palette" aria-label="Поиск и команды">${ic("search",14)}<span>Поиск…</span><kbd>Ctrl K</kbd></button>
@@ -7293,6 +7307,96 @@ N.register({id:"conv",name:"Конверсия в Метрику",short:"Кон�
   views:views_conv,seed:convSeed});
 Object.assign(S.conv,{idsLoaded:false,sourcesLoaded:false,mappingsLoaded:false,unmappedLoaded:false,usersLoaded:false});
 S.conv.log.loaded=false;
+
+/* ---------- Команда (2026-11-23): общий раздел внизу меню. Роли owner/admin/editor/viewer; данные — /api/v1/teams ----------
+   S.core.teamId — активная команда (null = личное пространство) для Студии и Публикаций. */
+const TEAM_ROLES={owner:"Владелец",admin:"Админ",editor:"Редактор",viewer:"Наблюдатель"};
+const TEAM_ROLE_DESC={admin:"управляет участниками и бренд-китом",editor:"создаёт и правит дизайны и посты",viewer:"только смотрит"};
+const TEAM={list:[],loaded:false,detail:null,busy:false};window.NEON_TEAM=TEAM;
+function teamCur(){return TEAM.list.find(t=>t.id===S.core.teamId)||null}
+function teamCan(min){const t=teamCur();if(!t)return true;const R=["viewer","editor","admin","owner"];return R.indexOf(t.role)>=R.indexOf(min)}
+async function teamLoad(force){
+  if(TEAM.loaded&&!force)return TEAM.list;
+  try{TEAM.list=(await api("/api/v1/teams")).teams||[]}catch(e){TEAM.list=[]}
+  TEAM.loaded=true;if(S.core.teamId&&!TEAM.list.some(t=>t.id===S.core.teamId)){S.core.teamId=null;NEON.save()}
+  return TEAM.list;
+}
+async function teamLoadDetail(id){TEAM.detail=null;try{TEAM.detail=await api("/api/v1/teams/"+id)}catch(e){toast("Команда недоступна: "+e.message,{tone:"danger"})}}
+function teamInviteUrl(tok){return location.origin+location.pathname+"?join="+encodeURIComponent(tok)+"#team-members"}
+function teamWsHtml(){/* переключатель пространства: личное / команды */
+  return`<div class="tm-ws">${[{id:null,name:"Личное",role:""},...TEAM.list].map(t=>`<button type="button" class="${(S.core.teamId||null)===t.id?"on":""}" data-act="teamWs" data-id="${t.id==null?"":t.id}">${ic(t.id==null?"user":"users",14)}<span>${esc(t.name)}</span>${t.role?`<small>${esc(TEAM_ROLES[t.role]||t.role)}</small>`:""}</button>`).join("")}</div>`}
+function teamMembersBody(){
+  const T=TEAM.detail;if(!T)return'<nv-skeleton count="3"></nv-skeleton>';
+  const adm=T.role==="owner"||T.role==="admin",me=session.email;
+  const roleSel=m=>adm&&m.role!=="owner"?`<select class="tm-role" data-team-role="${m.user_id}">${["admin","editor","viewer"].concat(T.role==="owner"?["owner"]:[]).map(r=>`<option value="${r}" ${m.role===r?"selected":""}>${r==="owner"?"Передать владение":TEAM_ROLES[r]}</option>`).join("")}</select>`:`<span class="tm-badge ${m.role}">${esc(TEAM_ROLES[m.role]||m.role)}</span>`;
+  return`<div class="tm-grid">
+    <nv-card heading="Участники · ${T.members.length}">
+      <div class="tm-list">${T.members.map(m=>`<div class="tm-row"><nv-avatar name="${esc(m.name||m.email)}" size="34"></nv-avatar><div class="tm-who"><b>${esc(m.name||m.email.split("@")[0])}${m.email===me?' <small class="muted">(вы)</small>':""}</b><small>${esc(m.email)}</small></div>${roleSel(m)}
+        ${adm&&m.role!=="owner"&&m.email!==me?`<nv-button variant="ghost" size="sm" icon="user-minus" icon-only data-team-kick="${m.user_id}">Убрать из команды</nv-button>`:""}</div>`).join("")}</div>
+      ${adm?`<div class="tm-add"><nv-input data-team-email placeholder="email участника в ЛК" aria-label="Email участника"></nv-input><select class="tm-role" data-team-addrole>${["editor","viewer","admin"].map(r=>`<option value="${r}">${TEAM_ROLES[r]}</option>`).join("")}</select><nv-button variant="primary" icon="user-plus" data-team-add>Добавить</nv-button></div>
+        <p class="muted" style="font-size:12.5px;margin:6px 0 0">Добавить можно того, у кого уже есть вход в ЛК. Остальным — ссылка-приглашение ниже.</p>`:""}
+    </nv-card>
+    <div class="stack" style="gap:12px">
+      ${adm?`<nv-card heading="Ссылки-приглашения"><p class="muted" style="font-size:12.5px;margin:0 0 8px">Действует 7 дней. Открывший ссылку после входа в ЛК попадёт в команду с выбранной ролью.</p>
+        <div class="tm-add"><select class="tm-role" data-team-invrole>${["editor","viewer","admin"].map(r=>`<option value="${r}">${TEAM_ROLES[r]}</option>`).join("")}</select><nv-button icon="link" data-team-invite>Создать ссылку</nv-button></div>
+        <div class="tm-inv">${(T.invites||[]).map(i=>`<div class="tm-invr"><span class="tm-badge ${i.role}">${esc(TEAM_ROLES[i.role])}</span><small>до ${new Date(i.expires_at*1000).toLocaleDateString("ru",{day:"numeric",month:"short"})} · вошли: ${i.uses}</small><span style="flex:1"></span><nv-button size="sm" variant="ghost" icon="copy" data-team-copy="${esc(i.token)}">Копировать</nv-button><nv-button size="sm" variant="ghost" icon="trash-2" icon-only data-team-uninv="${esc(i.token)}">Удалить ссылку</nv-button></div>`).join("")||""}</div></nv-card>`:""}
+      <nv-card heading="Роли"><div class="tm-roles">${Object.entries(TEAM_ROLE_DESC).map(([r,d])=>`<div><span class="tm-badge ${r}">${TEAM_ROLES[r]}</span><small>${d}</small></div>`).join("")}<div><span class="tm-badge owner">Владелец</span><small>всё, включая удаление команды</small></div></div></nv-card>
+      <nv-card heading="Команда"><div class="stack" style="gap:8px">${adm?`<nv-button size="sm" variant="secondary" icon="pencil" data-team-rename>Переименовать</nv-button>`:""}
+        ${T.role==="owner"?`<nv-button size="sm" variant="danger" icon="trash-2" data-team-del>Удалить команду</nv-button><p class="muted" style="font-size:12px;margin:0">Общие дизайны вернутся авторам как личные.</p>`:`<nv-button size="sm" variant="ghost" icon="log-out" data-team-leave>Выйти из команды</nv-button>`}</div></nv-card>
+    </div></div>`;
+}
+const views_team={
+members(){
+  return{title:"Команда",sub:"Общие дизайны, бренд-кит и публикации для всех участников. Слева вверху — чьё пространство сейчас открыто.",
+  actions:`<nv-button icon="plus" data-act="teamNew">Новая команда</nv-button>`,
+  body:`<div id="tm-root"><nv-skeleton count="3"></nv-skeleton></div>`,
+  async after(root){
+    await teamLoad();const el=root.querySelector("#tm-root");if(!el)return;
+    if(!TEAM.list.length){el.innerHTML=`<nv-card><nv-empty icon="users" heading="Команды пока нет" text="Создайте команду и добавьте коллег: общие дизайны в Студии, единый бренд-кит, общий календарь публикаций и роли (редактор, наблюдатель)."><nv-button variant="primary" icon="plus" data-act="teamNew">Создать команду</nv-button></nv-empty></nv-card>`;return}
+    const t=teamCur()||TEAM.list[0];
+    el.innerHTML=`${teamWsHtml()}<div class="tm-head"><h3>${esc(t.name)}</h3><span class="tm-badge ${t.role}">${esc(TEAM_ROLES[t.role])}</span>${teamCur()?"":`<span class="muted" style="font-size:12.5px">Сейчас открыто личное пространство — выберите команду выше, чтобы работать в ней.</span>`}</div><div id="tm-body">${teamMembersBody()}</div>`;
+    if(!TEAM.detail||TEAM.detail.id!==t.id){await teamLoadDetail(t.id);const b=root.querySelector("#tm-body");if(b)b.innerHTML=teamMembersBody()}
+    teamBind(root,t);
+  }}
+}};
+function teamBind(root,t){
+  const reload=async()=>{await teamLoad(true);await teamLoadDetail(t.id);N.refresh()};
+  const run=async fn=>{try{await fn()}catch(e){toast(e.message||String(e),{tone:"danger"})}};
+  root.onchange=e=>{const r=e.target.closest("[data-team-role]");if(!r)return;const v=r.value;
+    if(v==="owner"){teamConfirm("Передать владение?","Вы станете админом, а участник — владельцем команды.",()=>run(async()=>{await apiPatch("/api/v1/teams/"+t.id+"/members/"+r.dataset.teamRole,{role:v});await reload();toast("Владение передано",{tone:"success"})}),()=>N.refresh());return}
+    run(async()=>{await apiPatch("/api/v1/teams/"+t.id+"/members/"+r.dataset.teamRole,{role:v});await reload();toast("Роль изменена",{tone:"success"})})};
+  root.onclick=e=>{const g=s=>e.target.closest(s);let b;
+    if(g("[data-team-add]"))run(async()=>{const inp=root.querySelector("[data-team-email]"),em=((inp.value||inp.getAttribute("value")||"")+"").trim();if(!em){toast("Впишите email",{tone:"warning"});return}
+      await apiPost("/api/v1/teams/"+t.id+"/members",{email:em,role:root.querySelector("[data-team-addrole]").value});await reload();toast("Участник добавлен",{tone:"success"})});
+    else if(g("[data-team-invite]"))run(async()=>{const r=await apiPost("/api/v1/teams/"+t.id+"/invites",{role:root.querySelector("[data-team-invrole]").value});await reload();teamCopy(r.token)});
+    else if(b=g("[data-team-copy]"))teamCopy(b.dataset.teamCopy);
+    else if(b=g("[data-team-uninv]"))run(async()=>{await apiDelete("/api/v1/teams/"+t.id+"/invites/"+encodeURIComponent(b.dataset.teamUninv));await reload()});
+    else if(b=g("[data-team-kick]"))teamConfirm("Убрать участника?","Он потеряет доступ к общим дизайнам и публикациям команды.",()=>run(async()=>{await apiDelete("/api/v1/teams/"+t.id+"/members/"+b.dataset.teamKick);await reload()}));
+    else if(g("[data-team-rename]"))teamNameDlg(t.name,async nm=>{await apiPatch("/api/v1/teams/"+t.id,{name:nm});await reload()});
+    else if(g("[data-team-leave]"))teamConfirm("Выйти из команды?","Общие дизайны и публикации команды станут недоступны.",()=>run(async()=>{const me=TEAM.detail.members.find(m=>m.email===session.email);await apiDelete("/api/v1/teams/"+t.id+"/members/"+(me&&me.user_id));S.core.teamId=null;NEON.save();TEAM.detail=null;await teamLoad(true);N.refresh()}));
+    else if(g("[data-team-del]"))teamConfirm("Удалить команду «"+t.name+"»?","Участники потеряют доступ. Общие дизайны вернутся авторам как личные. Отменить нельзя.",()=>run(async()=>{await apiDelete("/api/v1/teams/"+t.id);S.core.teamId=null;NEON.save();TEAM.detail=null;await teamLoad(true);N.refresh();toast("Команда удалена")}));
+  };
+}
+function teamCopy(tok){const u=teamInviteUrl(tok);const ok=()=>toast("Ссылка-приглашение скопирована",{tone:"success"});if(navigator.clipboard)navigator.clipboard.writeText(u).then(ok,()=>prompt("Скопируйте ссылку",u));else prompt("Скопируйте ссылку",u)}
+function teamConfirm(title,text,yes,no){overlay("modal",{title,service:"team",body:`<p style="margin:0">${esc(text)}</p>`,actions:[{label:"Отмена",fn:()=>{no&&no()}},{label:"Да",variant:"primary",fn:()=>{yes()}}]})}
+function teamNameDlg(cur,save){overlay("modal",{title:cur?"Название команды":"Новая команда",service:"team",body:`<nv-input label="Название" data-tmname value="${esc(cur||"")}" placeholder="Например: Отдел маркетинга"></nv-input>`,
+  actions:[{label:"Отмена"},{label:cur?"Сохранить":"Создать",variant:"primary",fn:root=>{const i=root.querySelector("[data-tmname]");const nm=((i&&(i.value||i.getAttribute("value")))||"").trim();if(!nm){toast("Впишите название",{tone:"warning"});return false}Promise.resolve(save(nm.slice(0,80))).catch(e=>toast(e.message,{tone:"danger"}))}}]})}
+Object.assign(NEON.acts,{
+  teamNew(){teamNameDlg("",async nm=>{const t=await apiPost("/api/v1/teams",{name:nm});S.core.teamId=t.id;NEON.save();TEAM.detail=null;await teamLoad(true);if(NEON.route().s==="team")N.refresh();else NEON.go("team-members");toast("Команда создана — добавьте участников",{tone:"success"})})},
+  teamWs(a,d){S.core.teamId=d.id?+d.id:null;NEON.save();TEAM.detail=null;if(window.studioOnWsChange)window.studioOnWsChange();N.refresh()},
+});
+/* приглашение по ссылке ?join=… — после входа в ЛК */
+async function teamJoinFromUrl(){const q=new URLSearchParams(location.search),tok=q.get("join");if(!tok)return;
+  history.replaceState(null,"",location.pathname+location.hash);
+  let info;try{info=await api("/api/v1/teams/join/"+encodeURIComponent(tok))}catch(e){toast("Приглашение не найдено или истекло",{tone:"danger"});return}
+  if(info.already){S.core.teamId=info.team_id;NEON.save();toast("Вы уже в команде «"+info.team_name+"»");return}
+  overlay("modal",{title:"Приглашение в команду",service:"team",body:`<p style="margin:0">Вас приглашают в команду <b>${esc(info.team_name)}</b> с ролью «${esc(TEAM_ROLES[info.role]||info.role)}».</p>`,
+    actions:[{label:"Не сейчас"},{label:"Вступить",variant:"primary",fn:async()=>{try{await apiPost("/api/v1/teams/join/"+encodeURIComponent(tok),{});S.core.teamId=info.team_id;NEON.save();await teamLoad(true);TEAM.detail=null;NEON.go("team-members");toast("Вы в команде «"+info.team_name+"»",{tone:"success"})}catch(e){toast(e.message,{tone:"danger"})}}}]})}
+setTimeout(()=>{if(typeof session!=="undefined"&&session&&session.token){teamLoad();teamJoinFromUrl()}},600);
+N.register({id:"team",name:"Команда",short:"Команда",tag:"Team",icon:"users",rail:"bottom",status:"ready",
+  desc:"Участники, роли, приглашения и общее пространство",
+  nav:[{group:"Команда",items:[{id:"members",label:"Участники и роли",icon:"users"}]}],
+  views:views_team});
 
 /* ---------- Студия креативов: canvas-редактор, только в браузере (2026-11-06) ---------- */
 const STUDIO_FMT={square:{w:1080,h:1080,label:"Квадрат 1:1"},wide:{w:1080,h:607,label:"Директ 16:9"},landscape:{w:1200,h:628,label:"Лента 1.91:1"},r45:{w:1080,h:1350,label:"Лента 4:5"},r43:{w:1080,h:810,label:"4:3"},r34:{w:810,h:1080,label:"3:4"},story:{w:1080,h:1920,label:"Сторис 9:16"}};
