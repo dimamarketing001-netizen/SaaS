@@ -359,6 +359,40 @@ nv-icon svg{width:1em;height:1em;stroke-width:2}
 .pf-team{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
 .tm-roles{display:flex;flex-direction:column;gap:8px}.tm-roles div{display:flex;align-items:center;gap:8px}.tm-roles small{color:var(--ink-2);font-size:12.5px}
 .grid.stud-designs-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr))}
+.pl-calbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}.pl-calbar h3{margin:0 0 0 6px;font-size:17px;font-weight:600;text-transform:capitalize}.pl-mode{width:auto}
+.pl-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.pl-wd{font-size:11.5px;color:var(--ink-3);padding:2px 6px}
+.pl-day{background:var(--surface);border:1px solid var(--line);border-radius:10px;min-height:108px;padding:4px;display:flex;flex-direction:column;gap:3px;min-width:0}.pl-cal.week .pl-day{min-height:340px}
+.pl-day.other{opacity:.5}.pl-day.today{border-color:var(--svc-ink,#7c3aed);box-shadow:inset 0 0 0 1px var(--svc-ink,#7c3aed)}.pl-day.drop{background:var(--svc-soft,#efe8fd)}
+.pl-dh{display:flex;align-items:center;gap:4px;padding:0 2px}.pl-dh b{font:500 12.5px var(--font-mono)}.pl-dh small{color:var(--ink-3);font-size:11px}.pl-add{margin-left:auto;border:0;background:none;color:var(--ink-3);cursor:pointer;border-radius:6px;width:22px;height:22px;display:grid;place-items:center;opacity:0}.pl-day:hover .pl-add{opacity:1}.pl-add:hover{background:var(--surface-2);color:var(--ink)}
+.pl-dl{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pl-chip{display:flex;align-items:center;gap:4px;border:0;border-radius:7px;padding:3px 5px;font-size:11.5px;cursor:pointer;text-align:left;min-width:0;background:var(--surface-2);color:var(--ink)}
+.pl-chip img{width:18px;height:18px;border-radius:4px;object-fit:cover;flex:none}.pl-chip .tm{font:11px var(--font-mono);color:var(--ink-3);flex:none}.pl-chip .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-chip.st-info{background:#e0f2fe}.pl-chip.st-ok{background:#dcfce7}.pl-chip.st-warn{background:#fef3c7}.pl-chip.st-err{background:#fee2e2}
+.pl-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}.pl-row{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px}
+.pl-thumbs{display:flex;gap:4px;flex:none}.pl-thumbs img,.pl-thumbs span{width:56px;height:56px;border-radius:8px;object-fit:cover;background:var(--surface-2);display:grid;place-items:center;color:var(--ink-3)}
+.pl-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.pl-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--ink-2)}
+.pl-st{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:var(--surface-2)}.pl-st.st-ok{background:#dcfce7;color:#166534}.pl-st.st-err{background:#fee2e2;color:#991b1b}.pl-st.st-warn{background:#fef3c7;color:#92400e}.pl-st.st-info{background:#e0f2fe;color:#075985}
+.pl-chn{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:999px;padding:1px 8px}.pl-chn.ok{border-color:#86efac}.pl-chn.bad{border-color:#fca5a5}.pl-chn.man{border-color:#fcd34d}
+.pl-text{margin:0;font-size:13.5px;white-space:pre-wrap;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}.pl-err{margin:0;font-size:12px;color:#b91c1c}
+.pl-acts{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;flex:none}
+.pl-chgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:8px}.pl-chcard{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px}.pl-chcard small{color:var(--ink-3);font-size:12px}
+.pl-chi{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--surface-2);flex:none}.pl-chi.telegram{background:#e0f2fe;color:#0284c7}
+.pl-how{margin:0 0 10px;padding-left:18px;font-size:13px;color:var(--ink-2)}.pl-lbl{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--ink-2)}
+.pl-comp{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px}@media (max-width:760px){.pl-comp{grid-template-columns:1fr}}
+.pl-cl{display:flex;flex-direction:column;gap:8px}.pl-ta{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:14px/1.45 inherit;resize:vertical;background:var(--surface);color:var(--ink)}
+.pl-cnt{font:11.5px var(--font-mono);color:var(--ink-3);margin-top:-4px}.pl-warn{color:#b45309;font-weight:500}
+.pl-media{display:flex;gap:6px;flex-wrap:wrap}.pl-mi{position:relative;width:72px;height:72px;border-radius:9px;overflow:hidden;background:var(--surface-2);display:grid;place-items:center}.pl-mi img{width:100%;height:100%;object-fit:cover}
+.pl-mi button{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;cursor:pointer}.pl-mi em{position:absolute;left:4px;bottom:4px;color:#fff;background:rgba(0,0,0,.55);border-radius:4px;padding:1px 3px;display:flex}
+.pl-mi.busy svg{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.pl-chks{display:flex;flex-wrap:wrap;gap:6px}.pl-chk{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:13px;cursor:pointer}.pl-chk:has(input:checked){border-color:var(--svc-ink,#7c3aed);background:var(--svc-soft,#efe8fd)}
+.pl-when{width:auto}.pl-when button.on{background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.1)}.pl-dt{width:220px}
+.pl-cr{display:flex;flex-direction:column;gap:6px}.pl-tg{background:#c9dbc4 linear-gradient(135deg,#d7e6c9,#b8d1c6);border-radius:14px;padding:16px;min-height:260px;display:flex;align-items:flex-end}
+.pl-bubble{background:#fff;color:#111;border-radius:14px 14px 14px 4px;max-width:100%;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.15);display:flex;flex-direction:column}
+.pl-pt{padding:8px 10px 2px;font-size:13.5px;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto}.pl-ptime{align-self:flex-end;padding:0 8px 5px;font-size:11px;color:#8a8a8a}
+.pl-pgrid{display:grid;gap:2px}.pl-pgrid img{width:100%;height:100%;object-fit:cover;display:block}.pl-pgrid.n1 img{max-height:260px}.pl-pgrid.n2,.pl-pgrid.n4{grid-template-columns:1fr 1fr}.pl-pgrid.n3{grid-template-columns:1fr 1fr}.pl-pgrid.n3 img:first-child{grid-column:1/-1}.pl-pgrid.n2 img,.pl-pgrid.n3 img,.pl-pgrid.n4 img{aspect-ratio:1}
+.pl-up{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:13px;cursor:pointer}.pl-up:hover{border-color:var(--ink-3)}
+.pl-pick{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:12px;flex-wrap:wrap}
+.pl-pickgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;max-height:50vh;overflow:auto}.pl-pk{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:6px;cursor:pointer;display:flex;flex-direction:column;gap:4px;font-size:12px;text-align:left}.pl-pk img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px}.pl-pk:hover{border-color:var(--svc-ink,#7c3aed)}
 .rail-bottom{margin-top:auto;display:flex;flex-direction:column;gap:2px;padding-top:8px}
 .rail-logo{width:40px;height:40px;margin:0 auto 12px;border-radius:12px;background:#39ff88;color:#0d1211;display:grid;place-items:center;font:800 19px var(--font-display);flex:none;border:0;cursor:pointer}
 .rail-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px 7px;border:0;background:none;border-radius:10px;color:var(--rail-ink-2);font-size:11px;line-height:1.15;cursor:pointer;text-align:center;flex:none;width:100%;position:relative}
@@ -9140,7 +9174,7 @@ function studioDownloadMenu(btn){
 }
 function studioMoreMenu(btn){
   const r=btn.getBoundingClientRect();
-  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Мокапы…","телефон, ноутбук, печать",studioMockups],["Найти и заменить…","Ctrl+F",studioFindReplace],"-",["Ссылка на просмотр…","клиенту без входа",studioShareDlg],["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
+  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Мокапы…","телефон, ноутбук, печать",studioMockups],["Найти и заменить…","Ctrl+F",studioFindReplace],"-",["В планировщик…","пост в Telegram и др.",studioToPlanner],["Ссылка на просмотр…","клиенту без входа",studioShareDlg],["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
 }
 async function studioSaveAsTemplate(){
   const d=studioDesign();if(!d.layers.length){toast("Пустой дизайн",{tone:"warning"});return}
@@ -10485,8 +10519,8 @@ function studioTimeline(d){
     return o}};
 }
 window.studioTimeline=studioTimeline;
-async function studioExportVideo(){
-  const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;
+async function studioExportVideo(o){
+  o=o||{};const d=o.design||studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;
   if(!window.VideoEncoder||!window.Mp4Muxer){toast("Браузер не умеет собирать видео — откройте в свежем Chrome, Edge или Яндекс Браузере",{tone:"warning"});return}
   const TL=studioTimeline(d);if(!TL){toast("Сначала добавьте анимацию — «Анимировать всё» или у элементов",{tone:"warning"});return}
   const sc=Math.min(1,1920/Math.max(F.w,F.h)),W=Math.round(F.w*sc/2)*2,H=Math.round(F.h*sc/2)*2,fps=30,len=TL.len,N2=Math.round(len*fps);
@@ -10507,6 +10541,7 @@ async function studioExportVideo(){
     }
     await enc.flush();if(failed)throw failed;muxer.finalize();
     const blob=new Blob([muxer.target.buffer],{type:"video/mp4"});
+    if(o.blob)return blob;
     studioDownload(blob,(d.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+"_"+W+"x"+H+".mp4");toast("Видео готово: "+(blob.size/1048576).toFixed(1)+" МБ, "+len+" с",{tone:"success"});
   }catch(e){toast("Не удалось собрать видео: "+(e.message||e),{tone:"danger"})}
   finally{studioImgCache=null;try{enc.close()}catch(e){}bar.remove()}
@@ -11685,6 +11720,176 @@ N.register({id:"studio",name:"Студия креативов",short:"Студи
   /* Первый экран сервиса — «Мои дизайны» (клик по «Студии» в рельсе); шаблоны — вкладкой внутри редактора. */
   views:{library:views_studio.library,editor:views_studio.editor,templates:views_studio.templates},seed:studioSeed,
   commands:[{label:"Новый дизайн",icon:"plus",run(){N.acts.studNew()}}]});
+/* ---------- Публикации (v8-6/7): планировщик постов — календарь, лента, каналы; /api/v1/planner ----------
+   Пространство — как в Студии: личное или активная команда (S.core.teamId). */
+const PL={channels:[],posts:[],loaded:false,loading:false,team:undefined,at:0};
+const PL_ST={draft:["Черновик","pencil-line","muted"],scheduled:["Запланирован","clock","info"],publishing:["Публикуется","loader","info"],published:["Опубликован","check-circle-2","ok"],partial:["Частично","alert-triangle","warn"],failed:["Ошибка","alert-octagon","err"],due:["Выложить вручную","hand","warn"]};
+const PL_PLATFORMS=["Instagram","ВКонтакте","Одноклассники","Дзен","YouTube","TikTok","Авито","Сайт","Другое"];
+function plTeam(){const t=teamCur();return t?t.id:null}
+function plQ(){const t=plTeam();return t?{team:t}:{}}
+async function plLoad(force){
+  if(PL.loading)return;if(PL.loaded&&!force&&PL.team===plTeam()&&Date.now()-PL.at<15000)return;PL.loading=true;PL.at=Date.now();
+  try{await teamLoad();const q=plQ();const [c,p]=await Promise.all([api("/api/v1/planner/channels",q),api("/api/v1/planner/posts",q)]);PL.channels=c.channels||[];PL.posts=p.posts||[];PL.team=plTeam();PL.loaded=true}
+  catch(e){toast("Публикации не загрузились: "+e.message,{tone:"danger"})}
+  PL.loading=false;
+}
+const plPad=n=>String(n).padStart(2,"0");
+function plDayKey(t){const d=new Date(t*1000);return d.getFullYear()+"-"+plPad(d.getMonth()+1)+"-"+plPad(d.getDate())}
+function plTime(t){const d=new Date(t*1000);return plPad(d.getHours())+":"+plPad(d.getMinutes())}
+function plLocalInput(t){const d=new Date(t*1000);return d.getFullYear()+"-"+plPad(d.getMonth()+1)+"-"+plPad(d.getDate())+"T"+plPad(d.getHours())+":"+plPad(d.getMinutes())}
+function plCh(id){return PL.channels.find(c=>c.id===id)}
+function plChIcon(c){return c&&c.kind==="telegram"?"send":"hand"}
+function plChip(p){const S_=PL_ST[p.status]||PL_ST.draft,txt=(p.text||"").trim().split("\n")[0]||(p.media.length?"Медиа · "+p.media.length:"Пустой пост");
+  return`<button type="button" class="pl-chip st-${S_[2]}" data-pledit="${p.id}" draggable="${["published","publishing"].includes(p.status)?"false":"true"}" title="${esc(S_[0])}: ${esc(txt)}">${p.media[0]&&p.media[0].thumb?`<img src="${esc(p.media[0].thumb)}" alt="">`:""}<span class="tm">${p.scheduled_at?plTime(p.scheduled_at):""}</span><span class="tx">${esc(txt)}</span>${ic(S_[1],12)}</button>`}
+function plCalHtml(){
+  const st=S.posts,base=new Date(st.month||Date.now());base.setDate(1);base.setHours(0,0,0,0);
+  const week=st.mode==="week";let start;
+  if(week){start=new Date(st.weekStart||Date.now());start.setHours(0,0,0,0);start.setDate(start.getDate()-((start.getDay()+6)%7))}
+  else{start=new Date(base);start.setDate(1-((base.getDay()+6)%7))}
+  const days=week?7:42,byDay={};PL.posts.filter(p=>p.scheduled_at).forEach(p=>(byDay[plDayKey(p.scheduled_at)]=byDay[plDayKey(p.scheduled_at)]||[]).push(p));
+  const today=plDayKey(Date.now()/1000),cells=[];
+  for(let i=0;i<days;i++){const d=new Date(start);d.setDate(start.getDate()+i);const k=plDayKey(d/1000),L=(byDay[k]||[]).sort((a,b)=>a.scheduled_at-b.scheduled_at),other=!week&&d.getMonth()!==base.getMonth();
+    cells.push(`<div class="pl-day${other?" other":""}${k===today?" today":""}" data-plday="${k}"><div class="pl-dh"><b>${d.getDate()}</b>${week?`<small>${d.toLocaleDateString("ru",{weekday:"short"})}</small>`:""}<button type="button" class="pl-add" data-plnew="${k}" aria-label="Пост на ${d.toLocaleDateString("ru",{day:"numeric",month:"long"})}">${ic("plus",13)}</button></div><div class="pl-dl">${L.map(plChip).join("")}</div></div>`)}
+  const title=week?`${start.toLocaleDateString("ru",{day:"numeric",month:"short"})} — ${new Date(start.getTime()+6*864e5).toLocaleDateString("ru",{day:"numeric",month:"short",year:"numeric"})}`:base.toLocaleDateString("ru",{month:"long",year:"numeric"});
+  return`<div class="pl-calbar"><div class="row" style="gap:6px"><nv-button size="sm" variant="ghost" icon="chevron-left" icon-only data-plnav="-1">Назад</nv-button><nv-button size="sm" variant="secondary" data-plnav="0">Сегодня</nv-button><nv-button size="sm" variant="ghost" icon="chevron-right" icon-only data-plnav="1">Вперёд</nv-button><h3>${esc(title)}</h3></div>
+    <div class="pp-seg pl-mode">${[["month","Месяц"],["week","Неделя"]].map(([k,t])=>`<button type="button" class="${(st.mode||"month")===k?"on":""}" data-plmode="${k}">${t}</button>`).join("")}</div></div>
+    <div class="pl-cal${week?" week":""}">${["Пн","Вт","Ср","Чт","Пт","Сб","Вс"].map(x=>`<div class="pl-wd">${x}</div>`).join("")}${cells.join("")}</div>
+    <p class="muted" style="font-size:12.5px;margin-top:8px">Перетащите пост на другой день — время сохранится. «+» в дне — новый пост на эту дату.</p>`;
+}
+function plFeedHtml(){
+  const now=Date.now()/1000,G=[["Требуют внимания",p=>["failed","partial","due"].includes(p.status)],["Запланированы",p=>["scheduled","publishing"].includes(p.status)],["Черновики",p=>p.status==="draft"],["Опубликованы",p=>p.status==="published"]];
+  const row=p=>{const S_=PL_ST[p.status]||PL_ST.draft,res=p.results||{};
+    return`<div class="pl-row"><div class="pl-thumbs">${p.media.slice(0,3).map(m=>m.thumb?`<img src="${esc(m.thumb)}" alt="">`:`<span>${ic(m.kind==="video"?"film":"image",16)}</span>`).join("")||`<span>${ic("align-left",16)}</span>`}</div>
+      <div class="pl-main"><div class="pl-meta"><span class="pl-st st-${S_[2]}">${ic(S_[1],12)}${S_[0]}</span>${p.scheduled_at?`<span>${new Date(p.scheduled_at*1000).toLocaleString("ru",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span>`:""}${p.channels.map(id=>{const c=plCh(id),r=res[id];return`<span class="pl-chn${r?(r.ok?" ok":r.manual?" man":" bad"):""}" title="${esc(r&&r.error||"")}">${ic(plChIcon(c),12)}${esc(c?c.name:"канал удалён")}${r&&r.link?` <a href="${esc(r.link)}" target="_blank" rel="noopener">открыть</a>`:""}</span>`}).join("")}</div>
+        <p class="pl-text">${esc((p.text||"").slice(0,240))||'<span class="muted">Без текста</span>'}</p>
+        ${Object.values(res).filter(r=>r.error).map(r=>`<p class="pl-err">${ic("alert-triangle",12)} ${esc(r.name)}: ${esc(r.error)}</p>`).join("")}</div>
+      <div class="pl-acts">${p.status==="due"?`<nv-button size="sm" variant="primary" icon="check" data-pldone="${p.id}">Выложено</nv-button><nv-button size="sm" variant="ghost" icon="download" data-plpack="${p.id}">Файлы и текст</nv-button>`:""}
+        <nv-button size="sm" variant="ghost" icon="${["published","publishing"].includes(p.status)?"copy":"pencil"}" icon-only data-pledit="${p.id}">${["published","publishing"].includes(p.status)?"Копия":"Изменить"}</nv-button><nv-button size="sm" variant="ghost" icon="trash-2" icon-only data-pldel="${p.id}">Удалить</nv-button></div></div>`};
+  const blocks=G.map(([t,f])=>{const L=PL.posts.filter(f).sort((a,b)=>(a.scheduled_at||9e12)-(b.scheduled_at||9e12));return L.length?`<div class="sect-t">${t} · ${L.length}</div><div class="pl-list">${L.map(row).join("")}</div>`:""}).join("");
+  return blocks||`<nv-card><nv-empty icon="calendar-clock" heading="Постов пока нет" text="Создайте пост или отправьте дизайн из Студии кнопкой «В планировщик»."><nv-button variant="primary" icon="plus" data-act="plNew">Новый пост</nv-button></nv-empty></nv-card>`;
+}
+function plChannelsHtml(){
+  const card=c=>`<div class="pl-chcard"><div class="pl-chi ${c.kind}">${ic(plChIcon(c),18)}</div><div class="pl-main"><b>${esc(c.name)}</b><small>${c.kind==="telegram"?`Telegram · ${esc(c.title||c.chat)}${c.bot?" · бот @"+esc(c.bot):""}`:`Вручную · ${esc(c.platform)}`}</small></div><nv-button size="sm" variant="ghost" icon="trash-2" icon-only data-plchdel="${c.id}">Удалить канал</nv-button></div>`;
+  return`<div class="pl-chgrid">${PL.channels.map(card).join("")||'<nv-card><p class="muted" style="margin:0">Каналов пока нет — добавьте Telegram-канал или площадку для ручной выкладки.</p></nv-card>'}</div>
+  <div class="grid g2" style="margin-top:14px">
+    <nv-card heading="Telegram-канал"><ol class="pl-how"><li>В Telegram откройте <b>@BotFather</b> → /newbot → получите токен.</li><li>Добавьте бота в канал <b>администратором</b> с правом публикации.</li><li>Впишите токен и адрес канала (@имя или ссылку t.me/…).</li></ol>
+      <div class="stack" style="gap:8px"><nv-input data-plf="tgname" label="Название в ЛК" placeholder="Например: Канал компании"></nv-input><nv-input data-plf="tgtoken" label="Токен бота" placeholder="123456789:AA…"></nv-input><nv-input data-plf="tgchat" label="Канал" placeholder="@my_channel"></nv-input><div><nv-button variant="primary" icon="send" data-plchadd="telegram">Проверить и подключить</nv-button></div></div></nv-card>
+    <nv-card heading="Площадка без API (вручную)"><p class="muted" style="font-size:12.5px;margin:0 0 8px">Instagram, ВКонтакте, Дзен и другие: в назначенное время придёт уведомление, а пост попадёт в «Требуют внимания» — с готовым текстом и файлами для скачивания.</p>
+      <div class="stack" style="gap:8px"><nv-input data-plf="mname" label="Название" placeholder="Instagram бренда"></nv-input><label class="pl-lbl">Площадка<select class="tm-role" data-plf="mplat">${PL_PLATFORMS.map(x=>`<option>${x}</option>`).join("")}</select></label><div><nv-button icon="plus" data-plchadd="manual">Добавить</nv-button></div></div></nv-card></div>`;
+}
+function plWrap(inner){const tm=teamCur();return(TEAM.list.length?teamWsHtml():"")+(tm&&tm.role==="viewer"?`<nv-callout tone="info" style="margin-bottom:10px">В команде «${esc(tm.name)}» у вас роль «наблюдатель» — посты можно смотреть.</nv-callout>`:"")+inner}
+function plView(kind,title,sub){return{title,sub,actions:`<nv-button variant="primary" icon="plus" data-act="plNew">Новый пост</nv-button>`,
+  body:`<div id="pl-root"><nv-skeleton count="4"></nv-skeleton></div>`,
+  async after(root){await plLoad();const el=root.querySelector("#pl-root");if(!el)return;el.innerHTML=plWrap(kind==="cal"?plCalHtml():kind==="feed"?plFeedHtml():plChannelsHtml());plBind(el)}}}
+const views_posts={
+  calendar(){return plView("cal","Календарь публикаций","Посты по дням: перетаскивайте, чтобы перенести. Telegram публикуется сам, остальные площадки — с напоминанием.")},
+  feed(){return plView("feed","Лента постов","Всё по статусам: что требует внимания, что запланировано, черновики и опубликованное.")},
+  channels(){return plView("ch","Каналы","Куда публикуем: Telegram-каналы (автоматически) и площадки без API (напоминание + готовый пакет).")},
+};
+function plBind(el){
+  const run=async fn=>{try{await fn()}catch(e){toast(e.message||String(e),{tone:"danger"})}};
+  el.onclick=e=>{const g=s=>e.target.closest(s);let b;
+    if(b=g("[data-plnav]")){const st=S.posts,d=+b.dataset.plnav;if(st.mode==="week"){const w=new Date(st.weekStart||Date.now());if(!d)st.weekStart=Date.now();else{w.setDate(w.getDate()+7*d);st.weekStart=w.getTime()}}else{const m=new Date(st.month||Date.now());m.setDate(1);if(!d)st.month=Date.now();else{m.setMonth(m.getMonth()+d);st.month=m.getTime()}}NEON.save();N.refresh()}
+    else if(b=g("[data-plmode]")){S.posts.mode=b.dataset.plmode;NEON.save();N.refresh()}
+    else if(b=g("[data-plnew]")){const [y,m,d]=b.dataset.plnew.split("-").map(Number);const t=new Date(y,m-1,d,12,0);plComposer(null,{at:t.getTime()/1000})}
+    else if(b=g("[data-pledit]")){const p=PL.posts.find(x=>x.id===+b.dataset.pledit);if(p)plComposer(["published","publishing"].includes(p.status)?{...p,id:null,status:"draft",scheduled_at:null}:p)}
+    else if(b=g("[data-pldel]"))teamConfirm("Удалить пост?","Из Telegram уже опубликованное не удалится — только из планировщика.",()=>run(async()=>{await apiDelete("/api/v1/planner/posts/"+b.dataset.pldel);await plLoad(true);N.refresh()}));
+    else if(b=g("[data-pldone]"))run(async()=>{await apiPost("/api/v1/planner/posts/"+b.dataset.pldone+"/done",{});await plLoad(true);N.refresh();toast("Отмечено как выложенное",{tone:"success"})});
+    else if(b=g("[data-plpack]"))plPack(PL.posts.find(x=>x.id===+b.dataset.plpack));
+    else if(b=g("[data-plchdel]"))teamConfirm("Удалить канал?","Запланированные посты в этот канал не уйдут.",()=>run(async()=>{await apiDelete("/api/v1/planner/channels/"+b.dataset.plchdel);await plLoad(true);N.refresh()}));
+    else if(b=g("[data-plchadd]"))run(async()=>{const v=k=>{const i=el.querySelector(`[data-plf="${k}"]`);return((i&&(i.value||i.getAttribute("value")))||"").trim()};const kind=b.dataset.plchadd;
+      const body=kind==="telegram"?{kind,name:v("tgname")||v("tgchat")||"Telegram",bot_token:v("tgtoken"),chat:v("tgchat")}:{kind,name:v("mname")||v("mplat"),platform:v("mplat")};
+      if(plTeam())body.team_id=plTeam();b.setAttribute("loading","");try{await apiPost("/api/v1/planner/channels",body)}finally{b.removeAttribute("loading")}await plLoad(true);N.refresh();toast("Канал подключён",{tone:"success"})});
+  };
+  /* перенос перетаскиванием */
+  el.addEventListener("dragstart",e=>{const c=e.target.closest("[data-pledit]");if(!c)return;e.dataTransfer.setData("text/plpost",c.dataset.pledit);e.dataTransfer.effectAllowed="move"});
+  el.addEventListener("dragover",e=>{const d=e.target.closest("[data-plday]");if(d&&[...e.dataTransfer.types].includes("text/plpost")){e.preventDefault();el.querySelectorAll(".pl-day.drop").forEach(x=>x.classList.remove("drop"));d.classList.add("drop")}});
+  el.addEventListener("drop",e=>{const d=e.target.closest("[data-plday]");const id=+e.dataTransfer.getData("text/plpost");if(!d||!id)return;e.preventDefault();const p=PL.posts.find(x=>x.id===id);if(!p)return;
+    const o=new Date(p.scheduled_at*1000),[y,m,dd]=d.dataset.plday.split("-").map(Number),t=new Date(y,m-1,dd,o.getHours(),o.getMinutes()).getTime()/1000;
+    if(t<Date.now()/1000-60){toast("Нельзя перенести в прошлое",{tone:"warning"});N.refresh();return}
+    run(async()=>{await apiPatch("/api/v1/planner/posts/"+id+"/time",{scheduled_at:t});await plLoad(true);N.refresh();toast("Пост перенесён на "+new Date(t*1000).toLocaleString("ru",{day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"}),{tone:"success"})})});
+}
+/* пакет для ручной выкладки: текст в буфер + файлы скачиваются */
+async function plPack(p){if(!p)return;try{await navigator.clipboard.writeText(p.text||"")}catch(e){}
+  for(const m of p.media){try{const r=await netFetch(API_BASE+"/api/v1/planner/media/"+m.id,{headers:{Authorization:"Bearer "+session.token}});const bl=await r.blob();studioDownload(bl,m.name||m.id+"."+(m.mime.split("/")[1]||"bin"))}catch(e){}}
+  toast("Текст скопирован, файлы скачиваются",{tone:"success"})}
+/* медиа: файл/blob → data URL + превью → /planner/media */
+async function plThumbOf(blob){const url=URL.createObjectURL(blob);try{
+  if(blob.type.startsWith("video/")){const v=document.createElement("video");v.muted=true;v.src=url;await new Promise((ok,no)=>{v.onloadeddata=ok;v.onerror=no;setTimeout(ok,4000)});try{v.currentTime=Math.min(0.5,(v.duration||1)/2);await new Promise(r=>{v.onseeked=r;setTimeout(r,1500)})}catch(e){}
+    const c=document.createElement("canvas"),k=Math.min(1,320/Math.max(v.videoWidth||320,v.videoHeight||320));c.width=Math.max(1,(v.videoWidth||320)*k);c.height=Math.max(1,(v.videoHeight||180)*k);c.getContext("2d").drawImage(v,0,0,c.width,c.height);return{thumb:c.toDataURL("image/jpeg",0.75),w:v.videoWidth,h:v.videoHeight}}
+  const im=new Image();im.src=url;await im.decode();const c=document.createElement("canvas"),k=Math.min(1,320/Math.max(im.naturalWidth,im.naturalHeight));c.width=Math.max(1,im.naturalWidth*k);c.height=Math.max(1,im.naturalHeight*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);return{thumb:c.toDataURL("image/jpeg",0.75),w:im.naturalWidth,h:im.naturalHeight}}
+  finally{URL.revokeObjectURL(url)}}
+async function plUpload(blob,name){const data_url=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(blob)});const th=await plThumbOf(blob).catch(()=>({}));
+  return apiPost("/api/v1/planner/media"+(plTeam()?"?team="+plTeam():""),{data_url,name:name||"",thumb:th.thumb||"",width:th.w||null,height:th.h||null})}
+/* окно поста */
+function plComposer(p,o){o=o||{};p=p||{text:o.text||"",media:o.media||[],channels:PL.channels.filter(c=>c.kind==="telegram").slice(0,1).map(c=>c.id),scheduled_at:o.at||null,status:"draft",design_id:o.design_id||null};
+  const M={media:[...p.media],when:p.status==="draft"&&!p.scheduled_at?"draft":"at",at:p.scheduled_at||o.at||(Math.ceil(Date.now()/36e5)*3600+3600)};if(o.at)M.when="at";
+  const chs=()=>PL.channels.map(c=>`<label class="pl-chk"><input type="checkbox" value="${c.id}" ${p.channels.includes(c.id)?"checked":""}>${ic(plChIcon(c),13)}<span>${esc(c.name)}</span></label>`).join("")||`<p class="muted" style="font-size:12.5px;margin:0">Каналов нет — <a href="#posts-channels" data-plgo>подключите</a>. Пока можно сохранить черновик.</p>`;
+  const {root,close}=overlay("modal",{title:p.id?"Пост":"Новый пост",service:"posts",size:"lg",
+    body:`<div class="pl-comp"><div class="pl-cl">
+      <label class="pl-lbl">Текст<textarea class="pl-ta" rows="7" placeholder="Что публикуем? Ссылки, эмодзи и переносы строк сохраняются.">${esc(p.text||"")}</textarea></label><div class="pl-cnt"></div>
+      <div class="pl-lbl">Медиа <small class="muted">до 10 файлов: картинки или видео, несколько — уйдут альбомом</small></div>
+      <div class="pl-media"></div>
+      <div class="row" style="gap:6px;flex-wrap:wrap"><label class="pl-up">${ic("upload",14)} Загрузить<input type="file" accept="image/*,video/mp4,video/webm,video/quicktime" multiple hidden data-plfile></label><nv-button size="sm" variant="ghost" icon="palette" data-plstudio>Из Студии</nv-button></div>
+      <div class="pl-lbl" style="margin-top:6px">Каналы</div><div class="pl-chks">${chs()}</div>
+      <div class="pl-lbl" style="margin-top:6px">Когда</div>
+      <div class="pp-seg pl-when">${[["draft","Черновик"],["now","Сейчас"],["at","Запланировать"]].map(([k,t])=>`<button type="button" data-plwhen="${k}">${t}</button>`).join("")}</div>
+      <input type="datetime-local" class="tm-role pl-dt" value="${plLocalInput(M.at)}">
+      <label class="pl-lbl">Заметка для команды<input class="tm-role pl-note" maxlength="500" value="${esc(p.note||"")}" placeholder="необязательно"></label>
+    </div><div class="pl-cr"><div class="pl-lbl">Предпросмотр · Telegram</div><div class="pl-tg"><div class="pl-bubble"><div class="pl-pm"></div><div class="pl-pt"></div><small class="pl-ptime"></small></div></div></div></div>`,
+    actions:[{label:"Отмена"},{label:"Сохранить",variant:"primary",icon:"check",fn:root=>{save(root);return false}}]});
+  const q=s=>root.querySelector(s),ta=q(".pl-ta");
+  const paint=()=>{const t=ta.value,cap=M.media.length&&t.length>1024;
+    q(".pl-cnt").innerHTML=`${t.length} симв.${M.media.length?` · подпись к медиа до 1024${cap?' — <b class="pl-warn">длинный текст уйдёт отдельным сообщением</b>':""}`:" · до 4096 в сообщении"}`;
+    q(".pl-media").innerHTML=M.media.map((m,i)=>`<div class="pl-mi">${m.thumb?`<img src="${esc(m.thumb)}" alt="">`:`<span>${ic(m.kind==="video"?"film":"image",18)}</span>`}${m.kind==="video"?`<em>${ic("play",11)}</em>`:""}<button type="button" data-plrm="${i}" aria-label="Убрать">${ic("x",12)}</button></div>`).join("")+(M.busy?`<div class="pl-mi busy">${ic("loader",16)}</div>`:"");
+    root.querySelectorAll("[data-plwhen]").forEach(b=>b.classList.toggle("on",b.dataset.plwhen===M.when));q(".pl-dt").hidden=M.when!=="at";
+    q(".pl-pm").innerHTML=M.media.length?`<div class="pl-pgrid n${Math.min(M.media.length,4)}">${M.media.slice(0,4).map(m=>m.thumb?`<img src="${esc(m.thumb)}" alt="">`:"<span></span>").join("")}</div>`:"";
+    q(".pl-pt").textContent=t||(M.media.length?"":"Текст поста");q(".pl-ptime").textContent=M.when==="at"?new Date(M.at*1000).toLocaleString("ru",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):M.when==="now"?"сейчас":"черновик"};
+  paint();ta.addEventListener("input",paint);
+  q(".pl-dt").addEventListener("change",e=>{const v=new Date(e.target.value);if(!isNaN(v))M.at=v.getTime()/1000;paint()});
+  root.addEventListener("click",e=>{const b=e.target.closest("[data-plwhen],[data-plrm],[data-plstudio],[data-plgo]");if(!b)return;
+    if(b.dataset.plwhen){M.when=b.dataset.plwhen;paint()}else if(b.dataset.plrm!=null){M.media.splice(+b.dataset.plrm,1);paint()}
+    else if(b.hasAttribute("data-plgo")){close()}
+    else if(b.hasAttribute("data-plstudio"))plFromStudioPick(async items=>{M.media.push(...items);paint()},v=>{M.busy=v;paint()})});
+  q("[data-plfile]").addEventListener("change",async e=>{const fs=[...e.target.files].slice(0,10-M.media.length);e.target.value="";M.busy=true;paint();
+    try{for(const f of fs){if(f.size>60e6){toast("«"+f.name+"» больше 60 МБ",{tone:"warning"});continue}M.media.push(await plUpload(f,f.name));paint()}}catch(er){toast("Файл не загрузился: "+er.message,{tone:"danger"})}M.busy=false;paint()});
+  const save=async root=>{const channels=[...root.querySelectorAll(".pl-chk input:checked")].map(i=>+i.value);
+    if(M.when!=="draft"&&!channels.length){toast("Выберите канал или сохраните черновиком",{tone:"warning"});return}
+    if(M.when==="at"&&M.at<Date.now()/1000-30){toast("Время уже прошло — выберите будущее или «Сейчас»",{tone:"warning"});return}
+    const body={text:ta.value,media:M.media.map(m=>m.id),channels,scheduled_at:M.when==="at"?M.at:null,publish_now:M.when==="now",design_id:p.design_id||null,note:q(".pl-note").value};
+    if(!p.id&&plTeam())body.team_id=plTeam();
+    try{p.id?await apiPut("/api/v1/planner/posts/"+p.id,body):await apiPost("/api/v1/planner/posts",body);close();await plLoad(true);
+      toast(M.when==="now"?"Публикую…":M.when==="at"?"Запланировано на "+new Date(M.at*1000).toLocaleString("ru",{day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"}):"Черновик сохранён",{tone:"success"});
+      if(NEON.route().s==="posts")N.refresh();if(M.when==="now")setTimeout(async()=>{await plLoad(true);if(NEON.route().s==="posts")N.refresh()},4000)}
+    catch(er){toast(er.message,{tone:"danger"})}};
+}
+Object.assign(NEON.acts,{plNew(){plLoad().then(()=>plComposer(null))}});
+/* v8-8: из Студии в пост — страницы дизайна картинками (альбом) или ролик MP4 */
+async function plDesignMedia(d,kind,busy){busy&&busy(true);const out=[];
+  try{if(kind==="video"){const bl=await studioExportVideo({blob:true,design:d});if(bl)out.push(await plUpload(bl,(d.name||"design")+".mp4"))}
+    else{const pages=studioPagesOf(d).slice(0,10);studioImgCache=new Map();
+      try{for(const [i,pg] of pages.entries()){const c=await studioRenderCanvas(studioPageDesign(d,pg),1);const bl=await new Promise(r=>c.toBlob(r,"image/jpeg",0.92));out.push(await plUpload(bl,(d.name||"design")+(pages.length>1?"_"+(i+1):"")+".jpg"))}}finally{studioImgCache=null}}}
+  catch(e){toast("Не удалось подготовить файлы: "+(e.message||e),{tone:"danger"})}
+  busy&&busy(false);return out}
+async function plFromStudioPick(onItems,busy){
+  let list=[];try{list=(await api("/api/v1/studio/designs",plQ())).designs||[]}catch(e){}
+  const cur=studioDesign(),hasCur=cur&&cur.layers&&cur.layers.length;
+  const {root,close}=overlay("modal",{title:"Из Студии",subtitle:"Страницы дизайна уйдут картинками (несколько — альбомом), анимированный дизайн — роликом MP4.",service:"posts",size:"lg",
+    body:`${hasCur?`<div class="pl-pick cur"><b>Открытый в редакторе: «${esc(cur.name||"дизайн")}»</b><div class="row" style="gap:6px"><nv-button size="sm" variant="primary" icon="image" data-plpk="cur:img">Картинки</nv-button>${studioHasAnim(cur.layers)||cur.vidPages?`<nv-button size="sm" icon="film" data-plpk="cur:video">Видео MP4</nv-button>`:""}</div></div>`:""}
+      <div class="pl-pickgrid">${list.slice(0,40).map(x=>`<button type="button" class="pl-pk" data-plpk="${x.id}:img">${x.thumb?`<img src="${esc(x.thumb)}" alt="">`:""}<span>${esc(x.name)}</span></button>`).join("")||'<p class="muted">Дизайнов пока нет</p>'}</div>`,actions:[{label:"Отмена"}]});
+  root.addEventListener("click",async e=>{const b=e.target.closest("[data-plpk]");if(!b)return;const [id,kind]=b.dataset.plpk.split(":");close();let d=cur;
+    if(id!=="cur"){try{const r=await api("/api/v1/studio/designs/"+id);d=Object.assign(studioNewDesign(),r.data||{});d.name=r.name;d.format=STUDIO_FMT[r.format]?r.format:"square";if(Array.isArray(d.pages)&&d.pages.length){d.bg=d.pages[0].bg;d.layers=d.pages[0].layers}}catch(er){toast(er.message,{tone:"danger"});return}}
+    const items=await plDesignMedia(d,kind,busy);if(items.length)onItems(items)})}
+async function studioToPlanner(){const d=studioDesign();if(!d.layers.length){toast("Пустой дизайн",{tone:"warning"});return}
+  await plLoad();const anim=studioHasAnim(d.layers)||d.vidPages&&studioPagesOf(d).length>1;
+  const go=async kind=>{const t=toast("Готовлю "+(kind==="video"?"ролик":"картинки")+"…");const items=await plDesignMedia(d,kind);if(items.length)plComposer(null,{media:items,design_id:typeof d.id==="number"?d.id:null})};
+  if(!anim)return go("img");
+  overlay("modal",{title:"В планировщик",service:"studio",body:`<p style="margin:0">В дизайне есть анимация. Отправить его роликом MP4 или картинками страниц?</p>`,actions:[{label:"Картинки",fn:()=>{go("img")}},{label:"Видео MP4",variant:"primary",fn:()=>{go("video")}}]})}
+N.register({id:"posts",name:"Публикации",short:"Посты",tag:"Content Planner",icon:"calendar-clock",rail:"main",status:"ready",
+  desc:"Календарь постов: Telegram публикуется сам, другие площадки — с напоминанием",
+  nav:[{group:"Публикации",items:[{id:"calendar",label:"Календарь",icon:"calendar-days"},{id:"feed",label:"Лента постов",icon:"list",count:()=>PL.posts.filter(p=>["failed","partial","due"].includes(p.status)).length||""},{id:"channels",label:"Каналы",icon:"radio-tower"}]}],
+  views:views_posts,seed:()=>({mode:"month",month:null,weekStart:null})});
+
 
 NEON.loadNotifications();
 NEON.loadProfile();
