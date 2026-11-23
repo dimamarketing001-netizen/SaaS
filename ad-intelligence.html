@@ -1719,6 +1719,7 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s2-menu button.on{font-weight:500;background:var(--surface-2)}
 .s2-menu button .ck{width:14px;flex:none;display:flex;color:var(--svc-ink);margin-left:-8px}
 .s2-menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.stud-vprev{position:absolute;inset:0;width:100%;height:100%;z-index:50;pointer-events:none}
 .vid-prog{position:fixed;right:18px;bottom:18px;z-index:9600;width:280px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-2);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
 .vid-prog b{font-weight:500;font-size:13px}.vid-prog i{display:block;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}.vid-prog i span{display:block;height:100%;width:0;background:var(--svc-ink);transition:width .2s}.vid-prog small{font:11px var(--font-mono);color:var(--ink-3)}
 .ck-list{display:flex;flex-direction:column;gap:6px}
@@ -9864,6 +9865,17 @@ function studioAutoAnimate(){
 let studioAnimRaf=0;
 function studioAnimPreview(){
   cancelAnimationFrame(studioAnimRaf);const d=studioDesign(),st=document.querySelector(".stud-stage");if(!st)return;
+  if(d.vidPages&&studioPagesOf(d).length>1){
+    /* весь ролик: кадры рисуются на canvas поверх холста (как в файле, с переходами) */
+    const TL=studioTimeline(d),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,sr=st.getBoundingClientRect(),sc=Math.min(1,sr.width*(devicePixelRatio||1)/F.w);
+    st.querySelector(".stud-vprev")?.remove();const cv=document.createElement("canvas");cv.className="stud-vprev";st.append(cv);const g=cv.getContext("2d");
+    const t0=performance.now();let busy=false;studioImgCache=new Map();
+    const stop=()=>{cv.remove();studioImgCache=null;document.removeEventListener("pointerdown",stop,true)};document.addEventListener("pointerdown",stop,true);
+    const step=async()=>{if(!cv.isConnected)return;const t=(performance.now()-t0)/1000;if(t>=TL.len){stop();return}
+      if(!busy){busy=true;try{const c=await TL.frame(t,sc);if(cv.width!==c.width){cv.width=c.width;cv.height=c.height}g.drawImage(c,0,0)}catch(e){}busy=false}
+      studioAnimRaf=requestAnimationFrame(step)};
+    studioAnimRaf=requestAnimationFrame(step);return;
+  }
   const len=d.animLen||5,t0=performance.now(),sr=st.getBoundingClientRect();
   const step=()=>{const t=(performance.now()-t0)/1000;
     d.layers.forEach(l=>{const el=st.querySelector(`.stud-layer[data-id="${l.id}"]`);if(!el)return;const A=studioAnimAt(l,t);
@@ -9871,11 +9883,32 @@ function studioAnimPreview(){
     if(t<len)studioAnimRaf=requestAnimationFrame(step);else d.layers.forEach(studioPatchLayerDom)};
   studioAnimRaf=requestAnimationFrame(step);
 }
+/* Ролик: одна страница (d.animLen) или все страницы подряд (d.vidPages) — по d.pageDur секунд,
+   переход d.pageTrans (fade/slide/zoom/none) длиной 0,5 с в начале каждой следующей страницы. */
+const STUDIO_TRANS=[["fade","Затухание"],["slide","Сдвиг"],["zoom","Масштаб"],["none","Без перехода"]];
+function studioHasAnim(layers){return layers.some(l=>l.anim&&l.anim.type&&l.anim.type!=="none")}
+function studioTimeline(d){
+  const pages=studioPagesOf(d),multi=d.vidPages&&pages.length>1;
+  if(!multi){if(!studioHasAnim(d.layers))return null;return{len:d.animLen||5,multi:false,frame:(t,sc)=>studioRenderCanvas(d,sc,l=>studioAnimAt(l,t))}}
+  const dur=+d.pageDur||3,tr=d.pageTrans||"fade",T=tr==="none"?0:Math.min(0.5,dur/3),last=new Map();
+  const pd=pages.map(p=>studioPageDesign(d,p));
+  const draw=(i,t,sc)=>studioRenderCanvas(pd[i],sc,l=>studioAnimAt(l,t));
+  return{len:dur*pages.length,multi:true,pages:pages.length,frame:async(t,sc)=>{
+    const i=Math.min(pages.length-1,Math.floor(t/dur)),lt=t-i*dur,cur=await draw(i,lt,sc);
+    if(!i||lt>=T)return cur;
+    let prev=last.get(i-1);if(!prev){prev=await draw(i-1,dur,sc);last.set(i-1,prev)}
+    const W=cur.width,H=cur.height,o=document.createElement("canvas");o.width=W;o.height=H;const g=o.getContext("2d"),p=lt/T,e=p<0.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+    g.fillStyle="#fff";g.fillRect(0,0,W,H);
+    if(tr==="slide"){g.drawImage(prev,-e*W,0);g.drawImage(cur,(1-e)*W,0)}
+    else if(tr==="zoom"){g.drawImage(prev,0,0);g.globalAlpha=e;const s=0.85+0.15*e;g.drawImage(cur,W*(1-s)/2,H*(1-s)/2,W*s,H*s);g.globalAlpha=1}
+    else{g.drawImage(prev,0,0);g.globalAlpha=e;g.drawImage(cur,0,0);g.globalAlpha=1}
+    return o}};
+}
 async function studioExportVideo(){
   const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;
   if(!window.VideoEncoder||!window.Mp4Muxer){toast("Браузер не умеет собирать видео — откройте в свежем Chrome, Edge или Яндекс Браузере",{tone:"warning"});return}
-  if(!d.layers.some(l=>l.anim&&l.anim.type&&l.anim.type!=="none")){toast("Сначала добавьте анимацию — «Анимировать всё» или у элементов",{tone:"warning"});return}
-  const sc=Math.min(1,1920/Math.max(F.w,F.h)),W=Math.round(F.w*sc/2)*2,H=Math.round(F.h*sc/2)*2,fps=30,len=d.animLen||5,N2=Math.round(len*fps);
+  const TL=studioTimeline(d);if(!TL){toast("Сначала добавьте анимацию — «Анимировать всё» или у элементов",{tone:"warning"});return}
+  const sc=Math.min(1,1920/Math.max(F.w,F.h)),W=Math.round(F.w*sc/2)*2,H=Math.round(F.h*sc/2)*2,fps=30,len=TL.len,N2=Math.round(len*fps);
   let codec=null;for(const c of ["avc1.640028","avc1.4d0028","avc1.42002a","avc1.640033"]){try{const r=await VideoEncoder.isConfigSupported({codec:c,width:W,height:H,bitrate:8e6,framerate:fps});if(r.supported){codec=c;break}}catch(e){}}
   if(!codec){toast("Кодек H.264 недоступен в этом браузере",{tone:"danger"});return}
   const bar=document.createElement("div");bar.className="vid-prog";bar.innerHTML=`<b>Собираю видео…</b><i><span></span></i><small>0 / ${N2}</small>`;document.body.append(bar);
@@ -9886,7 +9919,7 @@ async function studioExportVideo(){
   studioImgCache=new Map();
   try{
     for(let i=0;i<N2&&!failed;i++){
-      const c=await studioRenderCanvas(d,sc,l=>studioAnimAt(l,i/fps));octx.clearRect(0,0,W,H);octx.drawImage(c,0,0,W,H);
+      const c=await TL.frame(i/fps,sc);octx.clearRect(0,0,W,H);octx.drawImage(c,0,0,W,H);
       const fr=new VideoFrame(out,{timestamp:Math.round(i*1e6/fps),duration:Math.round(1e6/fps)});enc.encode(fr,{keyFrame:i%(fps*2)===0});fr.close();
       if(enc.encodeQueueSize>8)await new Promise(r=>setTimeout(r,10));
       if(i%5===0){bar.querySelector("span").style.width=(i/N2*100)+"%";bar.querySelector("small").textContent=i+" / "+N2}
@@ -9919,11 +9952,11 @@ function studioGifLzw(idx,out){
 }
 async function studioExportGif(){
   const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;
-  if(!d.layers.some(l=>l.anim&&l.anim.type&&l.anim.type!=="none")){toast("Сначала добавьте анимацию — «Анимировать всё» или у элементов",{tone:"warning"});return}
-  const sc=Math.min(1,640/Math.max(F.w,F.h)),W=Math.round(F.w*sc),H=Math.round(F.h*sc),dl=7,len=d.animLen||5,N2=Math.round(len*100/dl);
+  const TL=studioTimeline(d);if(!TL){toast("Сначала добавьте анимацию — «Анимировать всё» или у элементов",{tone:"warning"});return}
+  const sc=Math.min(1,640/Math.max(F.w,F.h)),W=Math.round(F.w*sc),H=Math.round(F.h*sc),dl=7,len=TL.len,N2=Math.round(len*100/dl);
   const bar=document.createElement("div");bar.className="vid-prog";bar.innerHTML=`<b>Собираю GIF…</b><i><span></span></i><small>0 / ${N2}</small>`;document.body.append(bar);
   const cv=document.createElement("canvas");cv.width=W;cv.height=H;const g=cv.getContext("2d",{willReadFrequently:true});
-  const frameAt=async t=>{const c=await studioRenderCanvas(d,sc,l=>studioAnimAt(l,t));g.fillStyle="#fff";g.fillRect(0,0,W,H);g.drawImage(c,0,0,W,H);return g.getImageData(0,0,W,H).data};
+  const frameAt=async t=>{const c=await TL.frame(Math.min(t,len-0.001),sc);g.fillStyle="#fff";g.fillRect(0,0,W,H);g.drawImage(c,0,0,W,H);return g.getImageData(0,0,W,H).data};
   studioImgCache=new Map();
   try{
     /* палитра — по нескольким кадрам (начало, середина, конец) */
@@ -9964,12 +9997,20 @@ function studioAnimSecHtml(l){
     ${a.type&&a.type!=="none"?ppRng("Задержка","anim.delay",+a.delay||0,0,8,0.1)+ppRng("Длительность","anim.dur",+a.dur||0.6,0.2,2,0.1)+`<button type="button" class="pp-btn" data-act="studAnimPlay">${ic("play",14)}Просмотр</button>`:""}`,a.type&&a.type!=="none"?"вкл":"");
 }
 function studioDesignAnimHtml(){
-  const d=studioDesign(),n=d.layers.filter(l=>l.anim&&l.anim.type&&l.anim.type!=="none").length;
+  const d=studioDesign(),n=d.layers.filter(l=>l.anim&&l.anim.type&&l.anim.type!=="none").length,np=studioPagesOf(d).length,all=d.vidPages&&np>1,dur=+d.pageDur||3;
+  const can=all||n;
   return ppSec("danim","Анимация и видео",`<p class="pp-hint">${n?`Анимировано элементов: ${n}.`:"Элементы пока без анимации."} Видео MP4 — для сторис, клипов и рекламы.</p>
-    <div class="pp-row"><span class="pp-l">Длина ролика</span><div class="rng"><input type="range" min="2" max="20" step="1" value="${d.animLen||5}" style="--rng-p:${rngPct(d.animLen||5,2,20)}" data-danimlen><output>${d.animLen||5} с</output></div></div>
-    <div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studAnimAuto">${ic("wand-2",14)}Анимировать всё</button>${n?`<button type="button" class="pp-btn" data-act="studAnimPlay">${ic("play",14)}Просмотр</button>`:""}</div>
-    ${n?`<div class="pp-ibs wide"><button type="button" class="pp-btn pri" data-act="studVideo">${ic("film",14)}Видео MP4</button><button type="button" class="pp-btn" data-act="studGif">${ic("clapperboard",14)}GIF</button></div><div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studAnimClear">${ic("x",14)}Убрать анимацию</button></div>`:""}`);
+    ${np>1?ppSeg([["Эта страница",'data-vidpages=""',!all],["Все страницы · "+np,'data-vidpages="1"',all]]):""}
+    ${all?`<div class="pp-row"><span class="pp-l">На страницу</span><div class="rng"><input type="range" min="1" max="10" step="0.5" value="${dur}" style="--rng-p:${rngPct(dur,1,10)}" data-dpagedur><output>${dur} с</output></div></div>
+      <div class="pp-row"><span class="pp-l">Переход</span><nv-select options="${STUDIO_TRANS.map(([k,t])=>k+":"+t).join("|")}" value="${esc(d.pageTrans||"fade")}" data-dpagetrans aria-label="Переход между страницами"></nv-select></div>
+      <p class="pp-hint">Ролик ${Math.round(dur*np*10)/10} с. Анимация элементов на каждой странице начинается заново.</p>`
+    :`<div class="pp-row"><span class="pp-l">Длина ролика</span><div class="rng"><input type="range" min="2" max="20" step="1" value="${d.animLen||5}" style="--rng-p:${rngPct(d.animLen||5,2,20)}" data-danimlen><output>${d.animLen||5} с</output></div></div>`}
+    <div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studAnimAuto">${ic("wand-2",14)}Анимировать всё</button>${can?`<button type="button" class="pp-btn" data-act="studAnimPlay">${ic("play",14)}Просмотр</button>`:""}</div>
+    ${can?`<div class="pp-ibs wide"><button type="button" class="pp-btn pri" data-act="studVideo">${ic("film",14)}Видео MP4</button><button type="button" class="pp-btn" data-act="studGif">${ic("clapperboard",14)}GIF</button></div>${n?`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studAnimClear">${ic("x",14)}Убрать анимацию</button></div>`:""}`:""}`);
 }
+document.addEventListener("input",e=>{if(e.target.matches&&e.target.matches("[data-dpagedur]")){const v=+e.target.value;studioDesign().pageDur=v;e.target.style.setProperty("--rng-p",rngPct(v,1,10));e.target.closest(".rng").querySelector("output").textContent=v+" с";NEON.save()}});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-vidpages]");if(!b)return;studioDesign().vidPages=!!b.dataset.vidpages;NEON.save();N.refresh()});
+document.addEventListener("nv-change",e=>{if(e.target.matches&&e.target.matches("[data-dpagetrans]")){studioDesign().pageTrans=e.detail&&e.detail.value!=null?e.detail.value:e.target.value;NEON.save()}});
 document.addEventListener("input",e=>{if(e.target.matches&&e.target.matches("[data-danimlen]")){const v=+e.target.value;studioDesign().animLen=v;e.target.style.setProperty("--rng-p",rngPct(v,2,20));e.target.closest(".rng").querySelector("output").textContent=v+" с";NEON.save()}});
 /* ---------- Проверка макета перед скачиванием ---------- */
 async function studioCheckDesign(){
