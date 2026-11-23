@@ -1863,7 +1863,7 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .pp-seg button.on{background:var(--surface);color:var(--ink);font-weight:500;box-shadow:var(--shadow-1)}
 .pp-seg.pp-seg-ic button{padding:0}
 .pp-seg.tight button{font-size:11px;padding:0 2px}
-.pp-tools{display:flex;align-items:center;gap:4px}
+.pp-tools{display:flex;align-items:center;gap:4px;flex-wrap:wrap;row-gap:6px}
 .pp-tools .pp-sp{flex:1}
 .pp-tools .pp-seg{flex:none;width:96px}
 .pp-chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -8134,8 +8134,15 @@ async function studioRenderCanvas(design,scale,anim){
         for(const word of words){const test=cur?cur+" "+word:word;if(ctx.measureText(test).width>mw&&cur){push(cur);cur=word}else cur=test}
         if(cur)push(cur);
       }
-      const drawL=fn=>lines.forEach((ln,i)=>{const yy=startY+i*lh;if(typeof ln==="string"){fn(ln,tx,yy);return}
-        const al=ctx.textAlign;ctx.textAlign="left";const wT=ctx.measureText(ln.t).width,st=l.align==="center"?tx-(ln.dx+wT)/2:l.align==="right"?tx-(ln.dx+wT):tx;if(ln.m)fn(ln.m,st,yy);fn(ln.t,st+ln.dx,yy);ctx.textAlign=al});
+      const U=A&&A.units;let uN=0;if(U)lines.forEach(ln=>{const t=typeof ln==="string"?ln:ln.t;uN+=U.kind==="words"?(t.match(/\S+/g)||[]).length:[...t.replace(/\s/g,"")].length});
+      const drawL=fn=>{let ui=0;const ga=ctx.globalAlpha;lines.forEach((ln,i)=>{const yy=startY+i*lh;if(typeof ln==="string"&&!U){fn(ln,tx,yy);return}
+        const t=typeof ln==="string"?ln:ln.t,ldx=typeof ln==="string"?0:ln.dx,m=typeof ln==="string"?"":ln.m;
+        const al=ctx.textAlign;ctx.textAlign="left";const wT=ctx.measureText(t).width,st=l.align==="center"?tx-(ldx+wT)/2:l.align==="right"?tx-(ldx+wT):tx;
+        if(m){if(U)ctx.globalAlpha=ga*U.f(ui,uN);fn(m,st,yy);ctx.globalAlpha=ga}
+        if(!U)fn(t,st+ldx,yy);
+        else{let pre="";for(const tk of t.match(/\S+|\s+/g)||[]){if(/\S/.test(tk)){if(U.kind==="words"){const a=U.f(ui++,uN);if(a>0.003){ctx.globalAlpha=ga*a;fn(tk,st+ldx+ctx.measureText(pre).width,yy)}}
+          else{let p2=pre;for(const ch of tk){const a=U.f(ui++,uN);if(a>0.003){ctx.globalAlpha=ga*a;fn(ch,st+ldx+ctx.measureText(p2).width,yy)}p2+=ch}}}pre+=tk}ctx.globalAlpha=ga}
+        ctx.textAlign=al})};
       const lh=fs*(+l.lineHeight||1.18),totalH=lh*lines.length,startY=y2+h2/2-totalH/2+lh/2;
       if(l.grad&&l.grad.enabled){const g=studioGradLine(x2,y2,w2,h2,+l.grad.angle||90),gr=ctx.createLinearGradient(g.x0,g.y0,g.x1,g.y1);gr.addColorStop(0,l.color);gr.addColorStop(1,l.grad.color2||"#0ea5e9");ctx.fillStyle=gr}
       if(l.shadow){const sh=studioShadowOf(l),k=W/560;ctx.shadowColor=studioShadowRgba(sh);ctx.shadowBlur=sh.blur*k;ctx.shadowOffsetX=sh.x*k;ctx.shadowOffsetY=sh.y*k}
@@ -9310,6 +9317,7 @@ editor(){
         if(studioGroupHandle(e,root))return;
         const l=studioSelected();if(!l)return;const k=e.target.dataset.prop;if(!k)return;
         studioSetPath(l,k,e.detail.value);
+        if(k==="anim.type"&&/^(type|words|chars)$/.test(e.detail.value)&&(+l.anim.dur||0.6)<1)l.anim.dur=Math.round(Math.min(4,Math.max(1,String(l.text||"").length*(e.detail.value==="words"?0.03:0.045)))*10)/10;
         studioPatchLayerDom(l);
         if(e.target.tagName!=="NV-COLOR-PICKER")studioRenderSidebar(root);else{studioPaintContrast(root);studioSyncProps(e.target)}
         NEON.save();
@@ -9843,17 +9851,32 @@ document.addEventListener("touchend",e=>{
    l.anim={type,delay,dur} — в секундах; d.animLen — длина ролика. Кадр = studioRenderCanvas с поправками
    studioAnimAt; MP4 — WebCodecs (H.264) + mp4-muxer с явными метками времени (ровный ролик при любой скорости). */
 const STUDIO_ANIMS=[["none","Без анимации"],["fade","Проявление"],["up","Выезд снизу"],["left","Выезд слева"],["right","Выезд справа"],["zoom","Увеличение"],["pop","Прыжок"],["pulse","Пульс (кнопки)"]];
-function studioAnimAt(l,t){
-  const a=l.anim;if(!a||!a.type||a.type==="none")return null;
+/* Анимация текста по частям: R.units={kind:"chars"|"words",f(i,n)→прозрачность части} — на холсте спаны, в файле посимвольная отрисовка */
+const STUDIO_TEXT_ANIMS=[["type","Печать по буквам"],["words","По словам"],["chars","Буквы волной"]];
+const STUDIO_ANIM_OUT=[["","Не исчезать"],["fade","Растворение"],["down","Уход вниз"],["zoom","Уменьшение"]];
+function studioAnimAt(l,t,len){
+  const a=l.anim;if(!a||((!a.type||a.type==="none")&&!a.out))return null;
   const dl=+a.delay||0,du=Math.max(0.1,+a.dur||0.6),p=Math.max(0,Math.min(1,(t-dl)/du)),e=1-Math.pow(1-p,3),R={op:1,dx:0,dy:0,s:1};
-  if(a.type==="fade")R.op=e;
-  else if(a.type==="up"){R.op=e;R.dy=(1-e)*0.08}
-  else if(a.type==="left"){R.op=e;R.dx=-(1-e)*0.1}
-  else if(a.type==="right"){R.op=e;R.dx=(1-e)*0.1}
-  else if(a.type==="zoom"){R.op=e;R.s=0.7+0.3*e}
-  else if(a.type==="pop"){R.op=Math.min(1,p*3);R.s=p<0.7?0.5+0.58*(p/0.7):1.08-0.08*((p-0.7)/0.3)}
-  else if(a.type==="pulse"){R.op=Math.min(1,p*2);if(p>=1)R.s=1+0.05*Math.sin(2*Math.PI*(t-dl-du)/0.9)}
+  let ty=a.type||"none";const isU=ty==="type"||ty==="words"||ty==="chars";
+  if(isU&&(l.type!=="text"||l.vertical||+l.curve))ty="fade";
+  else if(isU){const kind=ty==="words"?"words":"chars",fade=ty==="type"?0:ty==="words"?0.35:0.3;
+    R.op=t>=dl?1:0;R.units={kind,f:(i,n)=>{const st=dl+du*i/Math.max(1,n);if(!fade)return t>=st?1:0;return Math.max(0,Math.min(1,(t-st)/fade))}}}
+  if(a.out&&len){const od=0.5,os=len-od-0.15,q=Math.max(0,Math.min(1,(t-os)/od)),qe=q*q;
+    if(q>0){R.op*=1-qe;if(a.out==="down")R.dy+=qe*0.08;else if(a.out==="zoom")R.s*=1-0.3*qe}}
+  if(ty==="none"||isU&&ty!=="fade")return R;
+  if(ty==="fade")R.op*=e;else return studioAnimIn(R,ty,p,e,t,dl,du);
   return R;
+}
+function studioAnimIn(R,ty,p,e,t,dl,du){
+  const op0=R.op;R.op=1;const a={type:ty};
+  if(a.type==="fade")R.op=e;
+  else if(a.type==="up"){R.op=e;R.dy+=(1-e)*0.08}
+  else if(a.type==="left"){R.op=e;R.dx+=-(1-e)*0.1}
+  else if(a.type==="right"){R.op=e;R.dx+=(1-e)*0.1}
+  else if(a.type==="zoom"){R.op=e;R.s*=0.7+0.3*e}
+  else if(a.type==="pop"){R.op=Math.min(1,p*3);R.s*=p<0.7?0.5+0.58*(p/0.7):1.08-0.08*((p-0.7)/0.3)}
+  else if(a.type==="pulse"){R.op=Math.min(1,p*2);if(p>=1)R.s*=1+0.05*Math.sin(2*Math.PI*(t-dl-du)/0.9)}
+  R.op*=op0;return R;
 }
 function studioAutoAnimate(){
   const d=studioDesign();studioBeforeChange();let i=0;
@@ -9863,6 +9886,20 @@ function studioAutoAnimate(){
   d.animLen=Math.max(d.animLen||0,Math.ceil(0.2+i*0.18+2.5));N.refresh();NEON.save();toast("Анимация расставлена: "+i+" элементов. Нажмите «Просмотр»");
 }
 let studioAnimRaf=0;
+/* Текст слоя на холсте → спаны по буквам или словам (для предпросмотра анимации по частям); маркеры списков — отдельно */
+function studioUnitSpans(el,kind){
+  const box0=el.querySelector(".stud-layer-text"),parts=[],marks=[];if(!box0)return{parts,marks};
+  /* контейнер текста — flex: голые текстовые узлы рядом со спанами стали бы отдельными элементами и потеряли пробелы */
+  const box=document.createElement("span");box.style.cssText="display:block;width:100%";box.append(...box0.childNodes);box0.append(box);
+  const tw=document.createTreeWalker(box,NodeFilter.SHOW_TEXT),nodes=[];while(tw.nextNode())nodes.push(tw.currentNode);
+  nodes.forEach(n=>{const mk=n.parentElement&&n.parentElement.closest(".stl-m");if(mk){marks.push({el:mk,i:parts.length});return}
+    const f=document.createDocumentFragment();for(const tk of n.textContent.match(/\S+|\s+/g)||[]){
+      if(!/\S/.test(tk)){f.append(tk);continue}
+      if(kind==="words"){const sp=document.createElement("span");sp.textContent=tk;parts.push(sp);f.append(sp)}
+      else for(const ch of tk){const sp=document.createElement("span");sp.textContent=ch;parts.push(sp);f.append(sp)}}
+    n.replaceWith(f)});
+  return{parts,marks};
+}
 function studioAnimPreview(){
   cancelAnimationFrame(studioAnimRaf);const d=studioDesign(),st=document.querySelector(".stud-stage");if(!st)return;
   if(d.vidPages&&studioPagesOf(d).length>1){
@@ -9876,9 +9913,10 @@ function studioAnimPreview(){
       studioAnimRaf=requestAnimationFrame(step)};
     studioAnimRaf=requestAnimationFrame(step);return;
   }
-  const len=d.animLen||5,t0=performance.now(),sr=st.getBoundingClientRect();
+  const len=d.animLen||5,t0=performance.now(),sr=st.getBoundingClientRect(),US=new Map();
   const step=()=>{const t=(performance.now()-t0)/1000;
-    d.layers.forEach(l=>{const el=st.querySelector(`.stud-layer[data-id="${l.id}"]`);if(!el)return;const A=studioAnimAt(l,t);
+    d.layers.forEach(l=>{const el=st.querySelector(`.stud-layer[data-id="${l.id}"]`);if(!el)return;const A=studioAnimAt(l,t,len);
+      if(A&&A.units){let u=US.get(l.id);if(!u){u=studioUnitSpans(el,A.units.kind);US.set(l.id,u)}u.parts.forEach((sp,i)=>sp.style.opacity=A.units.f(i,u.parts.length));u.marks.forEach(m=>m.el.style.opacity=A.units.f(m.i,u.parts.length))}
       el.style.opacity=(A?A.op:1)*studioOpacityOf(l)/100;el.style.transform=(A?`translate(${A.dx*sr.width}px,${A.dy*sr.height}px) scale(${A.s}) `:"")+studioLayerTransform(l)});
     if(t<len)studioAnimRaf=requestAnimationFrame(step);else d.layers.forEach(studioPatchLayerDom)};
   studioAnimRaf=requestAnimationFrame(step);
@@ -9886,13 +9924,13 @@ function studioAnimPreview(){
 /* Ролик: одна страница (d.animLen) или все страницы подряд (d.vidPages) — по d.pageDur секунд,
    переход d.pageTrans (fade/slide/zoom/none) длиной 0,5 с в начале каждой следующей страницы. */
 const STUDIO_TRANS=[["fade","Затухание"],["slide","Сдвиг"],["zoom","Масштаб"],["none","Без перехода"]];
-function studioHasAnim(layers){return layers.some(l=>l.anim&&l.anim.type&&l.anim.type!=="none")}
+function studioHasAnim(layers){return layers.some(l=>l.anim&&(l.anim.type&&l.anim.type!=="none"||l.anim.out))}
 function studioTimeline(d){
   const pages=studioPagesOf(d),multi=d.vidPages&&pages.length>1;
-  if(!multi){if(!studioHasAnim(d.layers))return null;return{len:d.animLen||5,multi:false,frame:(t,sc)=>studioRenderCanvas(d,sc,l=>studioAnimAt(l,t))}}
+  if(!multi){if(!studioHasAnim(d.layers))return null;const len=d.animLen||5;return{len,multi:false,frame:(t,sc)=>studioRenderCanvas(d,sc,l=>studioAnimAt(l,t,len))}}
   const dur=+d.pageDur||3,tr=d.pageTrans||"fade",T=tr==="none"?0:Math.min(0.5,dur/3),last=new Map();
   const pd=pages.map(p=>studioPageDesign(d,p));
-  const draw=(i,t,sc)=>studioRenderCanvas(pd[i],sc,l=>studioAnimAt(l,t));
+  const draw=(i,t,sc)=>studioRenderCanvas(pd[i],sc,l=>studioAnimAt(l,t,i<pages.length-1?dur:0));
   return{len:dur*pages.length,multi:true,pages:pages.length,frame:async(t,sc)=>{
     const i=Math.min(pages.length-1,Math.floor(t/dur)),lt=t-i*dur,cur=await draw(i,lt,sc);
     if(!i||lt>=T)return cur;
@@ -9904,6 +9942,7 @@ function studioTimeline(d){
     else{g.drawImage(prev,0,0);g.globalAlpha=e;g.drawImage(cur,0,0);g.globalAlpha=1}
     return o}};
 }
+window.studioTimeline=studioTimeline;
 async function studioExportVideo(){
   const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;
   if(!window.VideoEncoder||!window.Mp4Muxer){toast("Браузер не умеет собирать видео — откройте в свежем Chrome, Edge или Яндекс Браузере",{tone:"warning"});return}
@@ -9992,12 +10031,14 @@ async function studioExportGif(){
   finally{studioImgCache=null;bar.remove()}
 }
 function studioAnimSecHtml(l){
-  const a=l.anim||{};
-  return ppSec("anim","Анимация",`<nv-select options="${STUDIO_ANIMS.map(([k,t])=>k+":"+t).join("|")}" value="${esc(a.type||"none")}" data-prop="anim.type" aria-label="Анимация появления"></nv-select>
-    ${a.type&&a.type!=="none"?ppRng("Задержка","anim.delay",+a.delay||0,0,8,0.1)+ppRng("Длительность","anim.dur",+a.dur||0.6,0.2,2,0.1)+`<button type="button" class="pp-btn" data-act="studAnimPlay">${ic("play",14)}Просмотр</button>`:""}`,a.type&&a.type!=="none"?"вкл":"");
+  const a=l.anim||{},on=a.type&&a.type!=="none",txt=l.type==="text"&&!l.vertical&&!+l.curve,opts=STUDIO_ANIMS.concat(txt?STUDIO_TEXT_ANIMS:[]);
+  return ppSec("anim","Анимация",`<div class="pp-row"><span class="pp-l">Появление</span><nv-select options="${opts.map(([k,t])=>k+":"+t).join("|")}" value="${esc(a.type||"none")}" data-prop="anim.type" aria-label="Анимация появления"></nv-select></div>
+    ${on?ppRng("Задержка","anim.delay",+a.delay||0,0,8,0.1)+ppRng("Длительность","anim.dur",+a.dur||0.6,0.2,4,0.1):""}
+    <div class="pp-row"><span class="pp-l">В конце</span><nv-select options="${STUDIO_ANIM_OUT.map(([k,t])=>k+":"+t).join("|")}" value="${esc(a.out||"")}" data-prop="anim.out" aria-label="Исчезновение в конце"></nv-select></div>
+    ${on||a.out?`<button type="button" class="pp-btn" data-act="studAnimPlay">${ic("play",14)}Просмотр</button>`:""}`,on||a.out?"вкл":"");
 }
 function studioDesignAnimHtml(){
-  const d=studioDesign(),n=d.layers.filter(l=>l.anim&&l.anim.type&&l.anim.type!=="none").length,np=studioPagesOf(d).length,all=d.vidPages&&np>1,dur=+d.pageDur||3;
+  const d=studioDesign(),n=d.layers.filter(l=>studioHasAnim([l])).length,np=studioPagesOf(d).length,all=d.vidPages&&np>1,dur=+d.pageDur||3;
   const can=all||n;
   return ppSec("danim","Анимация и видео",`<p class="pp-hint">${n?`Анимировано элементов: ${n}.`:"Элементы пока без анимации."} Видео MP4 — для сторис, клипов и рекламы.</p>
     ${np>1?ppSeg([["Эта страница",'data-vidpages=""',!all],["Все страницы · "+np,'data-vidpages="1"',all]]):""}
