@@ -356,6 +356,7 @@ nv-icon svg{width:1em;height:1em;stroke-width:2}
 .tm-add{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}.tm-add nv-input{flex:1;min-width:180px}
 .tm-inv{display:flex;flex-direction:column;gap:6px;margin-top:8px}.tm-invr{display:flex;align-items:center;gap:8px}.tm-invr small{color:var(--ink-3);font-size:12px}
 .tm-brand{display:flex;flex-direction:column;gap:14px}.tm-sw{display:flex;gap:6px;flex-wrap:wrap}.tm-sw span{width:34px;height:34px;border-radius:9px;border:1px solid var(--line)}.tm-logo{max-height:64px;max-width:200px;object-fit:contain}
+.pf-team{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
 .tm-roles{display:flex;flex-direction:column;gap:8px}.tm-roles div{display:flex;align-items:center;gap:8px}.tm-roles small{color:var(--ink-2);font-size:12.5px}
 .grid.stud-designs-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr))}
 .rail-bottom{margin-top:auto;display:flex;flex-direction:column;gap:2px;padding-top:8px}
@@ -3439,6 +3440,7 @@ NEON.acts.account=async(a,d)=>{
     <div class="st-tiles pf-tiles">${tile("Запусков",st.runs,"intel-scans")}${tile("Найдено объявлений",st.creatives,"intel-library")}${tile("Подборок",st.collections,"intel-collections")}${tile("Расписаний",st.schedules,"intel-schedules")}</div>
     <nv-tabs items="main:Профиль|sec:Безопасность|notif:Уведомления" value="${tab}" id="pf-tabs"></nv-tabs>
     <section data-pf="main" class="pf-sec" ${tab==="main"?"":"hidden"}>
+      <div class="pf-team" id="pf-team"></div>
       <nv-avatar-upload name="${esc(P.name||session.email||"?")}" image="${esc(P.avatarDataUrl||"")}" hint="PNG или JPG, обрежется квадратом"></nv-avatar-upload>
       <nv-input name="name" label="Имя" value="${esc(P.name||"")}" placeholder="Как к вам обращаться" hint="Видно в шапке и в уведомлениях"></nv-input>
       <div><nv-button variant="primary" size="sm" icon="check" data-act-save-profile>Сохранить</nv-button></div>
@@ -3460,6 +3462,7 @@ NEON.acts.account=async(a,d)=>{
     <nv-button variant="danger" full icon="log-out" data-act="logout" style="margin-top:18px">Выйти из аккаунта</nv-button>`,
     mount(root,close){
       const q=x=>root.querySelector(x);
+      if(window.NEON_fillProfileTeam)window.NEON_fillProfileTeam(root.querySelector("#pf-team"),close);
       q("#pf-tabs").addEventListener("nv-change",e=>root.querySelectorAll("[data-pf]").forEach(x=>x.hidden=x.dataset.pf!==e.detail.value));
       root.querySelectorAll("[data-pgo]").forEach(b=>b.onclick=()=>{close();NEON.go(b.dataset.pgo)});
       const setAvatar=url=>{PROFILE.avatarDataUrl=url;document.querySelectorAll(".top-av nv-avatar,.pf-head nv-avatar").forEach(el=>{if(url)el.setAttribute("src",url);else el.removeAttribute("src")})};
@@ -7410,6 +7413,20 @@ async function teamJoinFromUrl(){const q=new URLSearchParams(location.search),to
   overlay("modal",{title:"Приглашение в команду",service:"team",body:`<p style="margin:0">Вас приглашают в команду <b>${esc(info.team_name)}</b> с ролью «${esc(TEAM_ROLES[info.role]||info.role)}».</p>`,
     actions:[{label:"Не сейчас"},{label:"Вступить",variant:"primary",fn:async()=>{try{await apiPost("/api/v1/teams/join/"+encodeURIComponent(tok),{});S.core.teamId=info.team_id;NEON.save();await teamLoad(true);TEAM.detail=null;NEON.go("team-members");toast("Вы в команде «"+info.team_name+"»",{tone:"success"})}catch(e){toast(e.message,{tone:"danger"})}}}]})}
 setTimeout(()=>{if(typeof session!=="undefined"&&session&&session.token){teamLoad();teamJoinFromUrl()}},600);
+/* Профиль (v8-5): блок «Команда и пространство» + статистика Студии и Публикаций */
+window.NEON_fillProfileTeam=async(el,close)=>{if(!el)return;await teamLoad(true);
+  let designs=null,posts=null;try{designs=((await api("/api/v1/studio/designs")).designs||[]).length}catch(e){}
+  try{const r=await api("/api/v1/planner/stats");posts=r}catch(e){}
+  const paint=()=>{const cur=teamCur();
+    el.innerHTML=`<div class="sect-t">Рабочее пространство</div>${teamWsHtml()}
+      <p class="muted" style="font-size:12.5px;margin:0 0 10px">${cur?`Сейчас открыта команда «${esc(cur.name)}» (${esc(TEAM_ROLES[cur.role]||cur.role)}): Студия и Публикации показывают общие дизайны и посты.`:"Сейчас открыто личное пространство."} ${TEAM.list.length?"":"Команды пока нет."}</p>
+      <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:12px"><nv-button size="sm" icon="users" data-pf-team="open">${TEAM.list.length?"Участники и роли":"Создать команду"}</nv-button>${TEAM.list.length?`<nv-button size="sm" variant="ghost" icon="palette" data-pf-team="brand">Бренд-кит команды</nv-button>`:""}</div>
+      <div class="st-tiles pf-tiles">${designs!=null?`<button type="button" class="st-tile pf-tile" data-pf-team="studio"><span>Личных дизайнов</span><b class="num">${designs}</b></button>`:""}${posts?`<button type="button" class="st-tile pf-tile" data-pf-team="posts"><span>Запланировано постов</span><b class="num">${posts.scheduled||0}</b></button><button type="button" class="st-tile pf-tile" data-pf-team="posts"><span>Опубликовано</span><b class="num">${posts.published||0}</b></button>`:""}<button type="button" class="st-tile pf-tile" data-pf-team="open"><span>Команд</span><b class="num">${TEAM.list.length}</b></button></div>`};
+  paint();
+  el.onclick=e=>{const ws=e.target.closest('[data-act="teamWs"]');if(ws){e.stopPropagation();S.core.teamId=ws.dataset.id?+ws.dataset.id:null;NEON.save();TEAM.detail=null;if(window.studioOnWsChange)window.studioOnWsChange();paint();toast(teamCur()?"Открыта команда «"+teamCur().name+"»":"Открыто личное пространство");return}
+    const b=e.target.closest("[data-pf-team]");if(!b)return;const k=b.dataset.pfTeam;close&&close();
+    if(k==="open"){if(TEAM.list.length)NEON.go("team-members");else NEON.acts.teamNew()}else if(k==="brand")NEON.go("team-brand");else if(k==="studio")NEON.go("studio-library");else if(k==="posts")NEON.go("posts-calendar")}};
+
 N.register({id:"team",name:"Команда",short:"Команда",tag:"Team",icon:"users",rail:"bottom",status:"ready",
   desc:"Участники, роли, приглашения и общее пространство",
   nav:[{group:"Команда",items:[{id:"members",label:"Участники и роли",icon:"users"},{id:"brand",label:"Бренд-кит",icon:"palette"}]}],
