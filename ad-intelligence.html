@@ -1821,7 +1821,7 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .ts-rows{display:flex;flex-direction:column;gap:4px}.ts-row{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:6px 6px 6px 10px}.ts-row span{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ts-row small{font:11px var(--font-mono);color:var(--ink-3)}.ts-row button{border:0;background:none;color:var(--ink-3);cursor:pointer;width:24px;height:24px;border-radius:6px;display:grid;place-items:center}.ts-row button:hover{background:var(--surface-2);color:var(--ink)}
 .stud-stage.note-on,.stud-stage.note-on *{cursor:copy!important}
 .stn-pin{position:absolute;z-index:60;transform:translate(-4px,-100%);min-width:26px;height:26px;padding:0 6px;border-radius:13px 13px 13px 2px;border:2px solid #fff;background:#f59e0b;color:#fff;font:600 12px var(--font-mono);display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.25);cursor:pointer}
-.stn-pin.done{background:#94a3b8}.stn-pin:hover{transform:translate(-4px,-100%) scale(1.08)}
+.stn-pin.done{background:#94a3b8}.stn-pin.client:not(.done){background:#0ea5e9}.stn-pin:hover{transform:translate(-4px,-100%) scale(1.08)}
 .stn-pop{position:absolute;z-index:70;transform:translate(8px,8px);width:260px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-2);padding:8px;display:flex;flex-direction:column;gap:6px}
 .stn-pop.r{transform:translate(-100%,8px)}.stn-pop.up{transform:translate(8px,calc(-100% - 34px))}.stn-pop.r.up{transform:translate(-100%,calc(-100% - 34px))}
 .stn-pop textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:13px var(--font-body,inherit);resize:vertical;background:var(--surface);color:var(--ink)}
@@ -3363,6 +3363,7 @@ const NOTIF_TYPES={
   collection_created:{icon:"folder-plus",label:"Новая подборка"},
   landing_mismatch:{icon:"link-2-off",label:"Несовпадение посадочной"},
   team:{icon:"users",label:"Команда"},
+  studio_comment:{icon:"message-square",label:"Комментарии к дизайнам"},
   post:{icon:"calendar-clock",label:"Публикации"},
 };
 const NOTIF={items:[],unreadCount:0,loaded:false};
@@ -7841,9 +7842,14 @@ function studioStageHtml(){
 let studioZoom=1;
 function studioGridX(){const n=+S.studio.grid||0;if(!n)return[];const out=[];for(let i=0;i<=n;i++)out.push(5+i*90/n);return out}
 /* ---------- Заметки для согласования: d.notes=[{id,page,x,y,text,done,at}] — булавки поверх холста, в файл не попадают ---------- */
+/* v8-17: комментарии клиента со страницы просмотра → заметки дизайна (n.cid — id комментария) */
+async function studioPullComments(d){if(typeof d.id!=="number")return;let L=[];try{L=(await api("/api/v1/studio/designs/"+d.id+"/comments")).comments||[]}catch(e){return}
+  const have=new Set((d.notes||[]).map(n=>n.cid).filter(Boolean)),add=L.filter(c=>!have.has(c.id));if(!add.length)return;
+  d.notes=d.notes||[];add.forEach(c=>d.notes.push({id:"c"+c.id,cid:c.id,client:true,page:c.page,x:c.x,y:c.y,text:(c.name||"Клиент")+": "+c.text,done:false,at:c.created_at*1000}));
+  S.studio.notesOff=false;if(studioDesign()===d){studioNotesRepaint();NEON.save()}toast(`Новых комментариев клиента: ${add.length} — они на холсте булавками`,{tone:"info"})}
 function studioNotesOf(d){return(d.notes||[]).filter(n=>(n.page||0)===(d.page||0))}
 function studioNotesHtml(d){if(S.studio.notesOff)return"";const L=studioNotesOf(d);if(!L.length)return"";const all=d.notes||[];
-  return L.map(n=>`<button type="button" class="stn-pin${n.done?" done":""}" data-note="${esc(n.id)}" style="left:${n.x}%;top:${n.y}%" title="${esc((n.text||"Заметка").slice(0,80))}">${n.done?ic("check",12):all.indexOf(n)+1}</button>`).join("")}
+  return L.map(n=>`<button type="button" class="stn-pin${n.done?" done":""}${n.client?" client":""}" data-note="${esc(n.id)}" style="left:${n.x}%;top:${n.y}%" title="${esc((n.text||"Заметка").slice(0,80))}">${n.done?ic("check",12):all.indexOf(n)+1}</button>`).join("")}
 function studioNoteOpen(id){const d=studioDesign(),n=(d.notes||[]).find(x=>x.id===id),st=document.querySelector(".stud-stage");if(!n||!st)return;
   document.querySelector(".stn-pop")?.remove();
   const pop=document.createElement("div");pop.className="stn-pop";pop.style.left=Math.min(n.x,70)+"%";pop.style.top=n.y+"%";if(n.x>70)pop.classList.add("r");if(n.y>55)pop.classList.add("up");
@@ -8850,7 +8856,7 @@ async function studioOpenServer(id,o){
   try{
     const r=await api("/api/v1/studio/designs/"+id);
     const d=Object.assign(studioNewDesign(),r.data||{});d.id=r.id;d.name=r.name;d.format=STUDIO_FMT[r.format]?r.format:"square";d.selectedId=null;
-    d.teamId=r.team_id||null;d.access=r.access||"author";d.serverAt=r.updated_at;if(d.teamId)teamNames(d.teamId);
+    d.teamId=r.team_id||null;d.access=r.access||"author";d.serverAt=r.updated_at;if(d.teamId)teamNames(d.teamId);studioPullComments(d);
     if(Array.isArray(d.pages)&&d.pages.length){d.page=0;d.bg=d.pages[0].bg;d.layers=d.pages[0].layers}
     studioResetEphemeral();S.studio.editor=d;S.studio.lastId=r.id;studioSave.state="saved";studioSave.at=r.updated_at*1000;
     studioQuiet=true;if(o.go!==false)N.go("studio-editor");else N.refresh();NEON.save();studioQuiet=false;
