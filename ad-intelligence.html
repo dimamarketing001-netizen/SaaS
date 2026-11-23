@@ -7584,7 +7584,7 @@ if(session&&session.role==="superuser")N.register({id:"console",name:"Консо
 const STUDIO_FMT={square:{w:1080,h:1080,label:"Квадрат 1:1"},wide:{w:1080,h:607,label:"Директ 16:9"},landscape:{w:1200,h:628,label:"Лента 1.91:1"},r45:{w:1080,h:1350,label:"Лента 4:5"},r43:{w:1080,h:810,label:"4:3"},r34:{w:810,h:1080,label:"3:4"},story:{w:1080,h:1920,label:"Сторис 9:16"}};
 /* Форматы площадок (как в Canva): ключи выше + свои размеры. */
 Object.assign(STUDIO_FMT,{vk_cover:{w:1920,h:768,label:"Обложка сообщества"},hd:{w:1280,h:720,label:"Широкий 16:9 HD"},yt_banner:{w:2560,h:1440,label:"Шапка YouTube"},
-  mp_card:{w:900,h:1200,label:"Карточка товара 3:4"},og:{w:1200,h:630,label:"Обложка ссылки"},slides:{w:1920,h:1080,label:"Слайд 16:9"},a4:{w:1240,h:1754,label:"Листовка A4"},bcard:{w:1063,h:591,label:"Визитка"}});
+  mp_card:{w:900,h:1200,label:"Карточка товара 3:4"},a5:{w:1748,h:2480,label:"Флаер A5"},a4p:{w:2480,h:3508,label:"Листовка A4, 300 dpi"},euro:{w:1169,h:2480,label:"Евро 99×210"},og:{w:1200,h:630,label:"Обложка ссылки"},slides:{w:1920,h:1080,label:"Слайд 16:9"},a4:{w:1240,h:1754,label:"Листовка A4"},bcard:{w:1063,h:591,label:"Визитка"}});
 const STUDIO_PLATFORMS=[
   {k:"popular",n:"Популярное",ic:"sparkles",f:[["square","Пост 1:1"],["r45","Пост 4:5"],["story","История 9:16"],["wide","Баннер 16:9"],["hd","Превью 16:9"]]},
   {k:"vk",n:"ВКонтакте",b:"VK",c:"#0077ff",f:[["square","Пост"],["r45","Пост вертикальный"],["story","История / клип"],["vk_cover","Обложка сообщества"],["wide","Реклама 16:9"]]},
@@ -7597,7 +7597,7 @@ const STUDIO_PLATFORMS=[
   {k:"avito",n:"Авито",b:"Av",c:"#00aaff",f:[["r43","Фото объявления 4:3"],["square","Квадрат"]]},
   {k:"mp",n:"Ozon · Wildberries",b:"WB",c:"#cb11ab",f:[["mp_card","Карточка 3:4"],["square","Квадрат"]]},
   {k:"web",n:"Сайт и ссылки",b:"WWW",c:"#16a34a",f:[["og","Обложка ссылки"],["hd","Баннер 16:9"],["landscape","Баннер 1,91:1"]]},
-  {k:"print",n:"Печать и слайды",ic:"printer",f:[["a4","Листовка A4"],["bcard","Визитка"],["slides","Слайд 16:9"]]}];
+  {k:"print",n:"Печать и слайды",ic:"printer",f:[["bcard","Визитка 90×50"],["euro","Евро 99×210"],["a5","Флаер A5"],["a4p","Листовка A4"],["a4","A4 (экран)"],["slides","Слайд 16:9"]]}];
 function studioPfBadge(P,size){return P.b?`<i class="pf-b" style="--pf:${P.c};${size?`width:${size}px;height:${size}px;font-size:${Math.round(size*0.36)}px`:""}">${esc(P.b)}</i>`:ic(P.ic||"sparkles",size?Math.round(size*0.6):14)}
 
 /* Шрифты холста: Onest уже подключён интерфейсом, остальные — Google Fonts по требованию.
@@ -8760,7 +8760,7 @@ function studioPdf(pages){
   put("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
   offs[1]=pos;put("1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n");
   offs[2]=pos;put(`2 0 obj<</Type/Pages/Kids[${kids}]/Count ${n}>>endobj\n`);
-  pages.forEach((p,i)=>{const o=3+i*3,W=(p.w*0.75).toFixed(2),H=(p.h*0.75).toFixed(2),cs=`q ${W} 0 0 ${H} 0 0 cm /Im${i} Do Q`;
+  pages.forEach((p,i)=>{const o=3+i*3,W=(p.pw||p.w*0.75).toFixed(2),H=(p.ph||p.h*0.75).toFixed(2),im=p.img||[0,0,+W,+H],cs=`q ${im[2].toFixed(2)} 0 0 ${im[3].toFixed(2)} ${im[0].toFixed(2)} ${im[1].toFixed(2)} cm /Im${i} Do Q`+(p.ops?"\n"+p.ops:"");
     offs[o]=pos;put(`${o} 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${W} ${H}]/Resources<</XObject<</Im${i} ${o+1} 0 R>>>>/Contents ${o+2} 0 R>>endobj\n`);
     offs[o+1]=pos;put(`${o+1} 0 obj<</Type/XObject/Subtype/Image/Width ${p.w}/Height ${p.h}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length ${p.jpeg.length}>>stream\n`);put(p.jpeg);put("\nendstream endobj\n");
     offs[o+2]=pos;put(`${o+2} 0 obj<</Length ${cs.length}>>stream\n${cs}\nendstream endobj\n`)});
@@ -9335,7 +9335,7 @@ function studioDownloadMenu(btn){
   const r=btn.getBoundingClientRect();
   const multi=studioPagesOf(studioDesign()).length>1;
   studioMenu(r.left,r.bottom+4,[["Проверить макет…","поля, текст, фото, вес",studioCheckDesign],["Мокапы…","телефон, ноутбук, печать",studioMockups],"-",["PNG",multi?"текущая страница":"лучшее качество",()=>studioExport("png")],["JPEG","меньше файл",()=>studioExport("jpeg")],["PNG без фона","прозрачный",()=>studioExport("png-alpha")],["PNG ×2","высокое разрешение",()=>studioExport("scale:2")],["SVG","вектор",()=>studioExportSvg(false)],["Видео MP4","анимация",()=>studioExportVideo()],["GIF","анимация, до 640 px",()=>studioExportGif()],...(studioSelIds().length?[["Выделенное в PNG","без фона",()=>studioExportSelection()],["Выделенное в SVG","вектор",()=>studioExportSvg(true)]]:[]),["PNG нужной ширины…","",studioExportWidth],["JPEG до 1 МБ","сжать",()=>studioExportUnder(1024)],["JPEG до 300 КБ","для соцсетей",()=>studioExportUnder(300)],"-",
-    ["PDF",multi?"все страницы":"для печати",()=>studioExportPages("pdf")],["ZIP",multi?"все страницы PNG":"PNG в архиве",()=>studioExportPages("zip")],["Все форматы","PNG пачкой",studioExportAll],"-",["В рекламу…","в проект Директа",studioToAds]]);
+    ["PDF",multi?"все страницы":"для печати",()=>studioExportPages("pdf")],["PDF для типографии","вылеты и метки реза",studioPrintDlg],["ZIP",multi?"все страницы PNG":"PNG в архиве",()=>studioExportPages("zip")],["Все форматы","PNG пачкой",studioExportAll],"-",["В рекламу…","в проект Директа",studioToAds]]);
 }
 function studioMoreMenu(btn){
   const r=btn.getBoundingClientRect();
@@ -11152,6 +11152,29 @@ async function studioBulkRun(d,tpl,slots,head,rows,map,mode){
     if(fails.length)toast(`Не загрузились фото (${fails.length}): ${[...new Set(fails)].slice(0,3).join(", ")}`,{tone:"warning",timeout:9000});
   }catch(e){prog.done("");toast("Массовое создание прервано: "+(e.message||""),{tone:"danger"})}
 }
+/* ---------- v8-16: PDF для типографии — размер в мм, 300 dpi, вылеты 3 мм (продолжение краёв), метки реза ---------- */
+const STUDIO_PRINT_MM={bcard:[90,50],euro:[99,210],a5:[148,210],a4p:[210,297],a4:[210,297]};
+async function studioPrintPdf(o){o=o||{};const d=studioDesign();studioPagesSync(d);const F=STUDIO_FMT[d.format]||STUDIO_FMT.square;
+  const mm=STUDIO_PRINT_MM[d.format]||[Math.round(F.w/300*25.4),Math.round(F.h/300*25.4)],bleed=o.bleed===false?0:3,mark=o.marks===false?0:6;
+  const pxmm=300/25.4,sc=Math.min(4,mm[0]*pxmm/F.w),pt=72/25.4,pages=[];const prog=toastProgress("Готовлю PDF для печати…");studioImgCache=new Map();
+  try{for(const pg of studioPagesOf(d)){const c=await studioRenderCanvas(studioPageDesign(d,pg),sc),Wt=c.width,Ht=c.height,b=Math.round(bleed*Wt/mm[0]);
+      const k=document.createElement("canvas");k.width=Wt+2*b;k.height=Ht+2*b;const g=k.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,k.width,k.height);
+      if(b){g.drawImage(c,0,0,1,Ht,0,b,b,Ht);g.drawImage(c,Wt-1,0,1,Ht,b+Wt,b,b,Ht);g.drawImage(c,0,0,Wt,1,b,0,Wt,b);g.drawImage(c,0,Ht-1,Wt,1,b,b+Ht,Wt,b);
+        g.drawImage(c,0,0,1,1,0,0,b,b);g.drawImage(c,Wt-1,0,1,1,b+Wt,0,b,b);g.drawImage(c,0,Ht-1,1,1,0,b+Ht,b,b);g.drawImage(c,Wt-1,Ht-1,1,1,b+Wt,b+Ht,b,b)}
+      g.drawImage(c,b,b);const jpeg=await studioBytes(await studioBlob(k,"image/jpeg",0.95));
+      const PW=(mm[0]+2*bleed+2*mark)*pt,PH=(mm[1]+2*bleed+2*mark)*pt,x0=(mark+bleed)*pt,y0=(mark+bleed)*pt,x1=x0+mm[0]*pt,y1=y0+mm[1]*pt,bl=bleed*pt;
+      let ops="";if(mark){const L=(a,b2,c2,d2)=>`${a.toFixed(2)} ${b2.toFixed(2)} m ${c2.toFixed(2)} ${d2.toFixed(2)} l S`,gap=bl+1*pt;
+        ops="q 0 0 0 RG 0.3 w "+[[x0,y0],[x1,y0],[x0,y1],[x1,y1]].map(([x,y])=>{const sx=x===x0?-1:1,sy=y===y0?-1:1;return L(x,y+sy*gap,x,y+sy*(gap+4*pt))+" "+L(x+sx*gap,y,x+sx*(gap+4*pt),y)}).join(" ")+" Q"}
+      pages.push({jpeg,w:k.width,h:k.height,pw:PW,ph:PH,img:[mark*pt,mark*pt,(mm[0]+2*bleed)*pt,(mm[1]+2*bleed)*pt],ops});prog.set(`Готовлю PDF: страница ${pages.length}`)}
+    studioDownload(studioPdf(pages),(d.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+`_печать_${mm[0]}x${mm[1]}мм.pdf`);
+    prog.done(`PDF для типографии: ${mm[0]}×${mm[1]} мм${bleed?", вылеты "+bleed+" мм":""}${mark?", метки реза":""}, 300 dpi`)}
+  catch(e){prog.done("");toast("PDF не собрался: "+(e.message||e),{tone:"danger"})}finally{studioImgCache=null}}
+function studioPrintDlg(){const d=studioDesign(),mm=STUDIO_PRINT_MM[d.format];
+  overlay("modal",{title:"PDF для типографии",subtitle:mm?`${(STUDIO_FMT[d.format]||{}).label} · ${mm[0]}×${mm[1]} мм`:"Формат не печатный — размер посчитаем из пикселей при 300 dpi. Для печати удобнее «Размер → Печать».",service:"studio",
+    body:`<div class="stack" style="gap:8px"><label class="pl-chk" style="border-radius:10px"><input type="checkbox" data-pr="bleed" checked><span>Вылеты 3 мм — фон продолжается за край, чтобы при резке не осталось белой полосы</span></label>
+      <label class="pl-chk" style="border-radius:10px"><input type="checkbox" data-pr="marks" checked><span>Метки реза по углам</span></label>
+      <p class="muted" style="font-size:12.5px;margin:0">Важный текст держите не ближе 4–5 мм к краю. Цвета — RGB: большинство типографий переводят в CMYK сами; если требуют CMYK — уточните у них.</p></div>`,
+    actions:[{label:"Отмена"},{label:"Скачать PDF",variant:"primary",icon:"printer",fn:r=>{studioPrintPdf({bleed:r.querySelector('[data-pr="bleed"]').checked,marks:r.querySelector('[data-pr="marks"]').checked})}}]})}
 /* ---------- v8-15: «Быстрый старт» для собственника — данные бизнеса → бренд-кит + набор креативов из шаблонов ---------- */
 const STUDIO_QS_SPHERES=[["sale","Магазин, товары"],["service","Услуги"],["legal","Юридические услуги"],["bankrupt","Банкротство"],["beauty","Салон красоты"],["dental","Медицина, стоматология"],["auto","Автосервис"],["cafe","Кафе, еда"],["fitness","Спорт, фитнес"],["course","Обучение"],["realty","Недвижимость"],["delivery","Доставка"]];
 const STUDIO_QS_SET=[["square","Пост 1:1"],["r45","Пост 4:5"],["story","Сторис 9:16"],["wide","Баннер 16:9"],["landscape","Реклама 1,91:1"]];
