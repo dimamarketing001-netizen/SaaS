@@ -9343,7 +9343,7 @@ function studioDownloadMenu(btn){
   const r=btn.getBoundingClientRect();
   const multi=studioPagesOf(studioDesign()).length>1;
   studioMenu(r.left,r.bottom+4,[["Проверить макет…","поля, текст, фото, вес",studioCheckDesign],["Мокапы…","телефон, ноутбук, печать",studioMockups],"-",["PNG",multi?"текущая страница":"лучшее качество",()=>studioExport("png")],["JPEG","меньше файл",()=>studioExport("jpeg")],["PNG без фона","прозрачный",()=>studioExport("png-alpha")],["PNG ×2","высокое разрешение",()=>studioExport("scale:2")],["SVG","вектор",()=>studioExportSvg(false)],["Видео MP4","анимация",()=>studioExportVideo()],["GIF","анимация, до 640 px",()=>studioExportGif()],...(studioSelIds().length?[["Выделенное в PNG","без фона",()=>studioExportSelection()],["Выделенное в SVG","вектор",()=>studioExportSvg(true)]]:[]),["PNG нужной ширины…","",studioExportWidth],["JPEG до 1 МБ","сжать",()=>studioExportUnder(1024)],["JPEG до 300 КБ","для соцсетей",()=>studioExportUnder(300)],"-",
-    ["PDF",multi?"все страницы":"для печати",()=>studioExportPages("pdf")],["PDF для типографии","вылеты и метки реза",studioPrintDlg],["ZIP",multi?"все страницы PNG":"PNG в архиве",()=>studioExportPages("zip")],["Все форматы","PNG пачкой",studioExportAll],"-",["В рекламу…","в проект Директа",studioToAds]]);
+    ["PDF",multi?"все страницы":"для печати",()=>studioExportPages("pdf")],["PDF для типографии","вылеты и метки реза",studioPrintDlg],["PDF векторный","фигуры и текст кривыми",studioVectorPdf],["ZIP",multi?"все страницы PNG":"PNG в архиве",()=>studioExportPages("zip")],["Все форматы","PNG пачкой",studioExportAll],"-",["В рекламу…","в проект Директа",studioToAds]]);
 }
 function studioMoreMenu(btn){
   const r=btn.getBoundingClientRect();
@@ -11161,6 +11161,85 @@ async function studioBulkRun(d,tpl,slots,head,rows,map,mode){
     if(fails.length)toast(`Не загрузились фото (${fails.length}): ${[...new Set(fails)].slice(0,3).join(", ")}`,{tone:"warning",timeout:9000});
   }catch(e){prog.done("");toast("Массовое создание прервано: "+(e.message||""),{tone:"danger"})}
 }
+/* ---------- v8-20: векторный PDF — фигуры и кривые вектором, текст кривыми (контуры букв из Fontsource WOFF через opentype.js),
+   фото/графики/QR/эффекты — картинками с прозрачностью (SMask). Координаты страницы = пиксели макета (cm с отражением по Y). ---------- */
+const studioOtFonts=new Map();
+async function studioOtFont(family,weight,subset){const id=String(family).toLowerCase().replace(/\s+/g,"-"),w=Math.round((+weight||400)/100)*100,key=id+"/"+w+"/"+subset;
+  if(studioOtFonts.has(key))return studioOtFonts.get(key);
+  const pr=(async()=>{for(const ww of [w,w>=600?700:400,400]){try{const r=await fetch(`https://cdn.jsdelivr.net/npm/@fontsource/${id}/files/${id}-${subset}-${ww}-normal.woff`);if(r.ok)return opentype.parse(await r.arrayBuffer())}catch(e){}}return null})();
+  studioOtFonts.set(key,pr);return pr}
+async function studioDeflate(u8){const cs=new CompressionStream("deflate"),w=cs.writable.getWriter();w.write(u8);w.close();return new Uint8Array(await new Response(cs.readable).arrayBuffer())}
+const pdfN=v=>(Math.round(v*100)/100).toString();
+function pdfRgb(hex){const h=studioHex6(hex||"#000");return[1,3,5].map(i=>(parseInt(h.slice(i,i+2),16)/255).toFixed(3)).join(" ")}
+async function studioVectorPdf(){
+  const d=studioDesign();studioPagesSync(d);const F=STUDIO_FMT[d.format]||STUDIO_FMT.square,mm=STUDIO_PRINT_MM[d.format];
+  const PW=mm?mm[0]*72/25.4:F.w*0.75,PH=mm?mm[1]*72/25.4:F.h*0.75,k=PW/F.w;
+  const prog=toastProgress("Собираю векторный PDF…");
+  try{await studioLoadScript("vendor/opentype-1.3.4.min.js","https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js");
+    const objs=[],add=b=>{objs.push(b);return objs.length},pagesRefs=[],rasterized=[];const enc=new TextEncoder();
+    const catalog=add(null),pagesObj=add(null);
+    const imgObj=async(c)=>{/* canvas → RGB+alpha (Flate) */const g=c.getContext("2d"),px=g.getImageData(0,0,c.width,c.height).data,n=c.width*c.height,rgb=new Uint8Array(n*3),a=new Uint8Array(n);
+      for(let i=0;i<n;i++){rgb[i*3]=px[i*4];rgb[i*3+1]=px[i*4+1];rgb[i*3+2]=px[i*4+2];a[i]=px[i*4+3]}
+      const sm=await studioDeflate(a),im=await studioDeflate(rgb);
+      const smId=add({dict:`<</Type/XObject/Subtype/Image/Width ${c.width}/Height ${c.height}/ColorSpace/DeviceGray/BitsPerComponent 8/Filter/FlateDecode/Length ${sm.length}>>`,data:sm});
+      return add({dict:`<</Type/XObject/Subtype/Image/Width ${c.width}/Height ${c.height}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/FlateDecode/SMask ${smId} 0 R/Length ${im.length}>>`,data:im})};
+    for(const [pi,pg] of studioPagesOf(d).entries()){
+      const pd=studioPageDesign(d,pg),xo={},gs={};let ops=`${pdfN(k)} 0 0 ${pdfN(-k)} 0 ${pdfN(PH)} cm\n`,ni=0;
+      const placeRaster=async(design,box)=>{/* слой/фон картинкой: рендер страницы только с ним, обрезка по рамке */
+        const sc=Math.min(3,2400/Math.max(F.w,F.h)),c=await studioRenderCanvas(design,sc),x0=Math.max(0,Math.floor(box.x*sc)),y0=Math.max(0,Math.floor(box.y*sc)),x1=Math.min(c.width,Math.ceil((box.x+box.w)*sc)),y1=Math.min(c.height,Math.ceil((box.y+box.h)*sc));
+        if(x1<=x0||y1<=y0)return;const cc=document.createElement("canvas");cc.width=x1-x0;cc.height=y1-y0;cc.getContext("2d").drawImage(c,-x0,-y0);
+        const id=await imgObj(cc),nm="I"+(ni++);xo[nm]=id;ops+=`q ${pdfN(cc.width/sc)} 0 0 ${pdfN(-cc.height/sc)} ${pdfN(x0/sc)} ${pdfN((y0+cc.height)/sc)} cm /${nm} Do Q\n`};
+      /* фон */
+      const bg=pg.bg||{type:"color",color:"#ffffff"};
+      if((bg.type||"color")==="color")ops+=`${pdfRgb(bg.color||"#ffffff")} rg 0 0 ${F.w} ${F.h} re f\n`;else await placeRaster({...pd,layers:[]},{x:0,y:0,w:F.w,h:F.h});
+      for(const l of pg.layers){if(l.hidden)continue;
+        const X=l.x/100*F.w,Y=l.y/100*F.h,W=l.w/100*F.w,H=l.h/100*F.h,op=studioOpacityOf(l)/100;
+        const fx=studioFillOf(l),sk=studioStrokeOf(l),eff=(l.effect&&l.effect.shadow)||(l.blendMode&&l.blendMode!=="normal")||l.skewX||l.skewY;
+        const vecShape=l.type==="shape"&&!eff&&["solid","none"].includes(fx.type)&&(!sk.enabled||sk.dash==="solid"||!sk.dash);
+        const vecPath=l.type==="path"&&!eff&&["solid","none"].includes(fx.type)&&(!sk.enabled||!sk.dash||sk.dash==="solid");
+        const vecText=l.type==="text"&&!eff&&!l.shadow&&!l.neon&&!(l.outline&&l.outline.enabled)&&!l.tfx&&!(l.grad&&l.grad.enabled)&&!+l.curve&&!l.vertical&&!studioListOf(l);
+        if(!vecShape&&!vecPath&&!vecText){const r=studioRotBox?studioRotBox(l):null,mg=Math.max(24,0.15*Math.max(W,H)),bx=r?{x:r.x1/100*F.w-mg,y:r.y1/100*F.h-mg,w:(r.x2-r.x1)/100*F.w+2*mg,h:(r.y2-r.y1)/100*F.h+2*mg}:{x:X-W*0.3,y:Y-H*0.3,w:W*1.6,h:H*1.6};
+          await placeRaster({...pd,bg:{type:"color",color:"transparent"},layers:[l]},bx);rasterized.push(studioLayerLabel(l));continue}
+        let pre="q ";if(op<1){const g="G"+Object.keys(gs).length;gs[g]=op;pre+=`/${g} gs `}
+        const cx=X+W/2,cy=Y+H/2,rot=(l.rotation||0)*Math.PI/180;if(rot||l.flipH||l.flipV){const c=Math.cos(rot),s=Math.sin(rot),sx=l.flipH?-1:1,sy=l.flipV?-1:1;
+          pre+=`1 0 0 1 ${pdfN(cx)} ${pdfN(cy)} cm ${pdfN(c*sx)} ${pdfN(s*sx)} ${pdfN(-s*sy)} ${pdfN(c*sy)} 0 0 cm 1 0 0 1 ${pdfN(-cx)} ${pdfN(-cy)} cm `}
+        if(l.type==="shape"||l.type==="path"){let path="";
+          if(l.type==="shape"){if(l.shape==="ellipse"){const K=0.5523,rx=W/2,ry=H/2;path=`${pdfN(cx+rx)} ${pdfN(cy)} m ${pdfN(cx+rx)} ${pdfN(cy+ry*K)} ${pdfN(cx+rx*K)} ${pdfN(cy+ry)} ${pdfN(cx)} ${pdfN(cy+ry)} c ${pdfN(cx-rx*K)} ${pdfN(cy+ry)} ${pdfN(cx-rx)} ${pdfN(cy+ry*K)} ${pdfN(cx-rx)} ${pdfN(cy)} c ${pdfN(cx-rx)} ${pdfN(cy-ry*K)} ${pdfN(cx-rx*K)} ${pdfN(cy-ry)} ${pdfN(cx)} ${pdfN(cy-ry)} c ${pdfN(cx+rx*K)} ${pdfN(cy-ry)} ${pdfN(cx+rx)} ${pdfN(cy-ry*K)} ${pdfN(cx+rx)} ${pdfN(cy)} c h`}
+            else if(l.shape==="triangle")path=`${pdfN(X+W/2)} ${pdfN(Y)} m ${pdfN(X+W)} ${pdfN(Y+H)} l ${pdfN(X)} ${pdfN(Y+H)} l h`;
+            else if(l.shape==="polygon"||l.shape==="star")path=studioPolyPoints(l.sides,l.shape==="star"?l.innerRadius:null).map((p,i)=>`${pdfN(X+p.x/100*W)} ${pdfN(Y+p.y/100*H)} ${i?"l":"m"}`).join(" ")+" h";
+            else{const r=Math.min(+l.radius||0,W/2,H/2),K=0.5523*r;path=r?`${pdfN(X+r)} ${pdfN(Y)} m ${pdfN(X+W-r)} ${pdfN(Y)} l ${pdfN(X+W-r+K)} ${pdfN(Y)} ${pdfN(X+W)} ${pdfN(Y+r-K)} ${pdfN(X+W)} ${pdfN(Y+r)} c ${pdfN(X+W)} ${pdfN(Y+H-r)} l ${pdfN(X+W)} ${pdfN(Y+H-r+K)} ${pdfN(X+W-r+K)} ${pdfN(Y+H)} ${pdfN(X+W-r)} ${pdfN(Y+H)} c ${pdfN(X+r)} ${pdfN(Y+H)} l ${pdfN(X+r-K)} ${pdfN(Y+H)} ${pdfN(X)} ${pdfN(Y+H-r+K)} ${pdfN(X)} ${pdfN(Y+H-r)} c ${pdfN(X)} ${pdfN(Y+r)} l ${pdfN(X)} ${pdfN(Y+r-K)} ${pdfN(X+r-K)} ${pdfN(Y)} ${pdfN(X+r)} ${pdfN(Y)} c h`:`${pdfN(X)} ${pdfN(Y)} ${pdfN(W)} ${pdfN(H)} re`}}
+          else{const P=q=>({x:X+q.x/100*W,y:Y+q.y/100*H}),tr=(pts,closed)=>{if(!pts||pts.length<2)return"";const a=P(pts[0]);let o=`${pdfN(a.x)} ${pdfN(a.y)} m `;
+              const seg=(p0,p1)=>{const c1=P(p0.out?{x:p0.x+p0.out.dx,y:p0.y+p0.out.dy}:p0),c2=P(p1.in?{x:p1.x+p1.in.dx,y:p1.y+p1.in.dy}:p1),b=P(p1);return`${pdfN(c1.x)} ${pdfN(c1.y)} ${pdfN(c2.x)} ${pdfN(c2.y)} ${pdfN(b.x)} ${pdfN(b.y)} c `};
+              for(let i=1;i<pts.length;i++)o+=seg(pts[i-1],pts[i]);if(closed)o+=seg(pts[pts.length-1],pts[0])+"h ";return o};
+            path=tr(l.points,l.closed)+(l.subs||[]).map(c=>tr(c.points,c.closed)).join("")}
+          const fill=fx.type!=="none"&&(l.type==="shape"||l.closed||(l.subs||[]).length),strk=sk.enabled;
+          ops+=pre+(fill?`${pdfRgb(fx.color)} rg `:"")+(strk?`${pdfRgb(sk.color)} RG ${pdfN(+sk.width||1)} w ${l.type==="path"?({round:1,square:2}[sk.cap]||0)+" J "+({round:1,bevel:2}[sk.join]||0)+" j ":""}`:"")+path+" "+(fill&&strk?(l.fillRule==="evenodd"?"B*":"B"):fill?(l.fillRule==="evenodd"?"f*":"f"):strk?"S":"n")+" Q\n";continue}
+        /* текст → кривые */
+        const fs=Math.max(8,F.h*l.fontSize/100),fam=studioFontOf(l),wt=String(l.weight||"700"),fonts=(await Promise.all(["cyrillic","latin"].map(sb=>studioOtFont(fam,wt,sb)))).filter(Boolean);
+        if(!fonts.length){await placeRaster({...pd,bg:{type:"color",color:"transparent"},layers:[l]},{x:X-W*0.3,y:Y-H*0.3,w:W*1.6,h:H*1.6});rasterized.push(studioLayerLabel(l)+" (шрифт)");continue}
+        const fontFor=ch=>fonts.find(f=>f.charToGlyphIndex(ch)>0)||fonts[0],ls=(+l.letterSpacing||0)/100*fs;
+        const adv=t=>{let w=0;for(const ch of t){const f=fontFor(ch);w+=f.getAdvanceWidth(ch,fs)+ls}return w};
+        const txt=l.upper?String(l.text||"").toUpperCase():String(l.text||""),pad=l.bgColor?W*0.04:0,maxW=W-pad*2,lines=[];
+        for(const para of txt.split("\n")){const words=para.split(/\s+/).filter(Boolean);if(!words.length){lines.push("");continue}let cur="";for(const w2 of words){const t=cur?cur+" "+w2:w2;if(adv(t)>maxW&&cur){lines.push(cur);cur=w2}else cur=t}if(cur)lines.push(cur)}
+        if(l.bgColor){const r=Math.min(W,H)/2*Math.min(50,+l.bgRadius||0)/50;ops+=pre+`${pdfRgb(l.bgColor)} rg `+(r?`${pdfN(X+r)} ${pdfN(Y)} m ${pdfN(X+W-r)} ${pdfN(Y)} l ${pdfN(X+W)} ${pdfN(Y)} ${pdfN(X+W)} ${pdfN(Y+r)} v ${pdfN(X+W)} ${pdfN(Y+H-r)} l ${pdfN(X+W)} ${pdfN(Y+H)} ${pdfN(X+W-r)} ${pdfN(Y+H)} v ${pdfN(X+r)} ${pdfN(Y+H)} l ${pdfN(X)} ${pdfN(Y+H)} ${pdfN(X)} ${pdfN(Y+H-r)} v ${pdfN(X)} ${pdfN(Y+r)} l ${pdfN(X)} ${pdfN(Y)} ${pdfN(X+r)} ${pdfN(Y)} v h f`:`${pdfN(X)} ${pdfN(Y)} ${pdfN(W)} ${pdfN(H)} re f`)+" Q\n"}
+        const lh=fs*(+l.lineHeight||1.18),f0=fonts[0],asc=f0.ascender/f0.unitsPerEm*fs,desc=-f0.descender/f0.unitsPerEm*fs,start=Y+H/2-lh*lines.length/2+lh/2+(asc-desc)/2;
+        let gl="";lines.forEach((ln,i)=>{const lw=adv(ln),x0=l.align==="center"?X+W/2-lw/2:l.align==="right"?X+W-pad-lw:X+pad;let x=x0;const y=start+i*lh;
+          for(const ch of ln){const f=fontFor(ch),path=f.getPath(ch,x,y,fs);let px=0,py=0,sx0=0,sy0=0;
+            for(const c of path.commands){if(c.type==="M"){gl+=`${pdfN(c.x)} ${pdfN(c.y)} m `;px=sx0=c.x;py=sy0=c.y}else if(c.type==="L"){gl+=`${pdfN(c.x)} ${pdfN(c.y)} l `;px=c.x;py=c.y}
+              else if(c.type==="C"){gl+=`${pdfN(c.x1)} ${pdfN(c.y1)} ${pdfN(c.x2)} ${pdfN(c.y2)} ${pdfN(c.x)} ${pdfN(c.y)} c `;px=c.x;py=c.y}
+              else if(c.type==="Q"){/* квадратичная → кубическая: P0 + 2/3(Q-P0), P2 + 2/3(Q-P2) */gl+=`${pdfN(px+2/3*(c.x1-px))} ${pdfN(py+2/3*(c.y1-py))} ${pdfN(c.x+2/3*(c.x1-c.x))} ${pdfN(c.y+2/3*(c.y1-c.y))} ${pdfN(c.x)} ${pdfN(c.y)} c `;px=c.x;py=c.y}
+              else if(c.type==="Z"){gl+="h ";px=sx0;py=sy0}}x+=f.getAdvanceWidth(ch,fs)+ls}});
+        if(gl)ops+=pre+`${pdfRgb(l.color)} rg ${gl}f Q\n`}
+      const cont=enc.encode(ops),cId=add({dict:`<</Length ${cont.length}>>`,data:cont});
+      const res=`<</XObject<<${Object.entries(xo).map(([n,id])=>`/${n} ${id} 0 R`).join("")}>>/ExtGState<<${Object.entries(gs).map(([n,a])=>`/${n}<</ca ${a}/CA ${a}>>`).join("")}>>>>`;
+      pagesRefs.push(add({dict:`<</Type/Page/Parent ${pagesObj} 0 R/MediaBox[0 0 ${pdfN(PW)} ${pdfN(PH)}]/Resources ${res}/Contents ${cId} 0 R>>`}));prog.set(`Векторный PDF: страница ${pi+1}`)}
+    objs[catalog-1]={dict:`<</Type/Catalog/Pages ${pagesObj} 0 R>>`};objs[pagesObj-1]={dict:`<</Type/Pages/Kids[${pagesRefs.map(r=>r+" 0 R").join(" ")}]/Count ${pagesRefs.length}>>`};
+    const parts=[],off=[];let pos=0;const put=x=>{const b=typeof x==="string"?enc.encode(x):x;parts.push(b);pos+=b.length};put("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+    objs.forEach((o,i)=>{off[i+1]=pos;put(`${i+1} 0 obj${o.dict}`);if(o.data){put("stream\n");put(o.data);put("\nendstream")}put("endobj\n")});
+    const xr=pos;let x=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`;for(let i=1;i<=objs.length;i++)x+=String(off[i]).padStart(10,"0")+" 00000 n \n";put(x+`trailer<</Size ${objs.length+1}/Root ${catalog} 0 R>>\nstartxref\n${xr}\n%%EOF`);
+    studioDownload(new Blob(parts,{type:"application/pdf"}),(d.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+"_вектор.pdf");
+    prog.done("Векторный PDF готов"+(rasterized.length?` · картинками: ${[...new Set(rasterized)].slice(0,4).join(", ")}${rasterized.length>4?"…":""}`:""))}
+  catch(e){prog.done("");toast("Векторный PDF не собрался: "+(e.message||e),{tone:"danger"})}}
 /* ---------- v8-19: импорт PDF (страницы → страницы дизайна) и PSD (слои → картинки, текстовые слои → текст) ---------- */
 const studioScripts={};function studioLoadScript(src,cdn){return studioScripts[src]=studioScripts[src]||new Promise((ok,no)=>{const s=document.createElement("script");s.src=src;s.onload=ok;
   s.onerror=()=>{if(!cdn)return no(new Error("не загрузилась библиотека"));const c=document.createElement("script");c.src=cdn;c.onload=ok;c.onerror=()=>no(new Error("не загрузилась библиотека"));document.head.append(c)};document.head.append(s)})}
