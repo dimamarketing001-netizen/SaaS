@@ -1827,6 +1827,8 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stn-pop textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:13px var(--font-body,inherit);resize:vertical;background:var(--surface);color:var(--ink)}
 .stn-acts{display:flex;align-items:center;gap:6px}.stn-acts small{flex:1;font-size:11px;color:var(--ink-3)}.stn-acts .pp-btn{width:auto;height:28px;padding:0 9px;font-size:12px}
 .shr{display:flex;flex-direction:column;gap:10px}.shr-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.shr-row input{flex:1;min-width:200px;text-align:left;padding:0 10px;height:36px}
+.ad-use{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px}.ad-use-h{display:flex;justify-content:space-between;gap:6px;align-items:baseline}.ad-use-h b{font-weight:500;font-size:13px}.ad-use-h small{color:var(--ink-3);font-size:11.5px}
+.ad-use-g{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.ad-use-g span{display:flex;flex-direction:column;background:var(--surface-2);border-radius:7px;padding:4px 6px}.ad-use-g small{font-size:10.5px;color:var(--ink-3)}.ad-use-g b{font:500 12.5px var(--font-mono)}
 .pp-mus{border:1px solid var(--line);border-radius:10px;padding:8px;margin:6px 0}.pp-track{display:flex;align-items:center;gap:6px;margin-bottom:6px}.pp-track span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.pp-x{border:0;background:none;cursor:pointer;color:var(--ink-3);width:26px;height:26px;border-radius:6px;display:grid;place-items:center}
 .mus-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:50vh;overflow:auto}.mus-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:6px 8px}.mus-t{flex:1;min-width:0;display:flex;flex-direction:column}.mus-t b{font-weight:500;font-size:13.5px}.mus-t small{color:var(--ink-3);font-size:12px}
 .vid-badge{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;padding:2px 4px;display:flex;pointer-events:none}
@@ -8214,7 +8216,7 @@ function studioPropsHeadHtml(icon,title,sub){
 function studioPropsHtml(){
   let h=studioPropsHtml0();const l=studioSelected();
   if(studioMultiSel.length<2&&l&&!(l.x<=1&&l.y<=1&&l.x+l.w>=99&&l.y+l.h>=99))h+=studioAnimSecHtml(l);
-  if(studioMultiSel.length<2&&!l)h+=studioBgSecHtml()+studioDesignAnimHtml();
+  if(studioMultiSel.length<2&&!l)h+=studioBgSecHtml()+studioDesignAnimHtml()+studioAdUsesHtml(studioDesign());
   if(studioMultiSel.length>1||!l||!studioGroupEnter||!studioInGroup(studioDesign(),l,studioGroupEnter))return h;
   const bar=`<div class="pp-acts pp-ing">${ic("folder-open",14)}<span>Внутри «${esc(studioGroupName(studioDesign(),studioGroupEnter))}»</span><button type="button" class="nv-btn v-ghost s-sm" data-gexit>Вся группа <kbd>Esc</kbd></button></div>`;
   const i=h.indexOf("</div></div>");return i<0?h:h.slice(0,i+12)+bar+h.slice(i+12);
@@ -8471,6 +8473,22 @@ async function studioPaintBg(ctx,bg,W,H){
   ctx.fillStyle=bg.color||"#fff";ctx.fillRect(0,0,W,H);
 }
 function studioBgLive(){const st=document.querySelector(".stud-stage"),bg=studioDesign().bg;if(!st)return;st.classList.toggle("bg-pat",bg.type==="pattern");if(bg.type==="image"&&bg.image){st.style.background="";st.style.backgroundImage=`url('${bg.image}')`}else{st.style.backgroundImage="";st.style.background=studioBgCss(bg)}}
+/* v8-12: креатив ↔ реклама — d.adUses=[{project_id,project,ref,at}] пишется при «В рекламу»; цифры — по проектам (Click.ru, 30 дней) */
+const studioAdStatsCache=new Map();
+function studioAdUsesHtml(d){const U=d.adUses||[];if(!U.length)return"";const ids=[...new Set(U.map(u=>u.project_id))];
+  const key=ids.join(","),st=studioAdStatsCache.get(key);if(!st){studioAdStatsCache.set(key,{loading:true});studioLoadAdStats(ids,key)}
+  const fmt=v=>v==null?"—":Math.round(v).toLocaleString("ru-RU");
+  return ppSec("adsuse","В рекламе",`<p class="pp-hint">Дизайн отправлен в проекты рекламы. Цифры — по всему проекту за 30 дней (по отдельной картинке Директ их пока не даёт).</p>
+    ${ids.map(id=>{const u=U.filter(x=>x.project_id===id),last=u[u.length-1],m=st&&st.by&&st.by[id];
+      return`<div class="ad-use"><div class="ad-use-h"><b>${esc(last.project)}</b><small>${u.length>1?u.length+" раза · ":""}${new Date(last.at).toLocaleDateString("ru",{day:"numeric",month:"short"})}</small></div>
+        ${st&&st.loading?'<p class="pp-hint">Загружаю цифры…</p>':m?`<div class="ad-use-g"><span><small>Показы</small><b>${fmt(m.impressions)}</b></span><span><small>Клики</small><b>${fmt(m.clicks)}</b></span><span><small>CTR</small><b>${m.impressions?(m.clicks/m.impressions*100).toFixed(2).replace(".",",")+"%":"—"}</b></span><span><small>Расход</small><b>${fmt(m.spend)} ₽</b></span><span><small>Конверсии</small><b>${fmt(m.leads)}</b></span></div>`:'<p class="pp-hint">Статистики пока нет — кампании ещё не крутились.</p>'}
+        <button type="button" class="pp-btn" data-adproj="${id}">${ic("external-link",13)}Открыть проект</button></div>`}).join("")}`,ids.length)}
+async function studioLoadAdStats(ids,key){let by={};
+  try{const r=await api("/api/v1/ads/ads-dashboard",{days:30,project_ids:ids.join(",")});
+    (r.items||[]).forEach(a=>{const pid=a.project_id||(ids.length===1?ids[0]:null);if(!pid)return;const o=by[pid]=by[pid]||{impressions:0,clicks:0,spend:0,leads:0};["impressions","clicks","spend","leads"].forEach(k=>o[k]+=+a[k]||0)})}catch(e){}
+  studioAdStatsCache.set(key,{by,at:Date.now()});const el=document.querySelector('[data-sec="adsuse"]');if(el)studioRenderSidebar(document)}
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest("[data-adproj]");if(!b)return;
+  try{const L=(await api("/api/v1/ads/projects",{})).items||[],p=L.find(x=>x.id===+b.dataset.adproj);if(!p){toast("Проект не найден — возможно, удалён",{tone:"warning"});return}openProjectPanel(p)}catch(er){toast(er.message,{tone:"danger"})}});
 function studioBgSecHtml(){
   const bg=studioDesign().bg||{},t=["gradient","pattern","mesh"].includes(bg.type)?bg.type:bg.type==="image"?"image":"color";
   const pk=(k,lb,v)=>`<div class="pp-row stud-color"><span class="pp-l">${lb}</span><nv-color-picker value="${esc(studioHex6(v))}" data-bgp="${k}"></nv-color-picker></div>`;
@@ -9136,7 +9154,10 @@ async function studioToAds(){
         let blob=await new Promise(r=>c.toBlob(r,"image/png"));
         if(!blob||blob.size>9.5*1024*1024)blob=await new Promise(r=>c.toBlob(r,"image/jpeg",0.9));
         const file=new File([blob],(dsg.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+(blob.type==="image/png"?".png":".jpg"),{type:blob.type});
-        urls.push(await uploadCreativeImage(file));added++;
+        const ref=await uploadCreativeImage(file);urls.push(ref);added++;
+        try{const use={project_id:p.id,project:p.name||("Проект "+p.id),ref,at:Date.now()};
+          if(id===cur.id){(cur.adUses=cur.adUses||[]).push(use);studioPersist({silent:true})}
+          else{const full=await api("/api/v1/studio/designs/"+id);const dd=full.data||{};(dd.adUses=dd.adUses||[]).push(use);await apiPut("/api/v1/studio/designs/"+id,{name:full.name,format:full.format,data:dd,thumb:""})}}catch(e){}
       }catch(e){failed++}
     }
     if(!added){toast("Не удалось подготовить картинки",{tone:"danger"});return}
