@@ -7903,8 +7903,12 @@ function studioPosHtml(l){
       <div class="pp-ibs">${ppIb(l.lockRatio?"link":"unlink",`data-prop-set="lockRatio" data-val="${l.lockRatio?"":"1"}"`,l.lockRatio,"Сохранять пропорции")}${ppIb("flip-horizontal-2",'data-act-flip="flipH"',l.flipH,"Отразить по горизонтали")}${ppIb("flip-vertical-2",'data-act-flip="flipV"',l.flipV,"Отразить по вертикали")}</div></div>
     <div class="pp-row"><span class="pp-l">На холсте</span><div class="pp-ibs">${ppIb("align-horizontal-justify-center",'data-act-center="h"',false,"По центру по горизонтали")}${ppIb("align-vertical-justify-center",'data-act-center="v"',false,"По центру по вертикали")}${ppIb("copy","data-act-dup",false,"Дублировать")}</div></div>`);
 }
+/* Закреплённые элементы шаблона (v8-4): l.lockTpl — у редакторов и наблюдателей команды не двигаются и не открепляются. */
+function studioTplAdmin(){const d=studioDesign(),id=d.teamId||(teamCur()&&teamCur().id);if(!id)return true;const t=TEAM.list.find(x=>x.id===id);return!t||["owner","admin"].includes(t.role)}
+function studioCanUnlock(l){if(!l.lockTpl||!l.locked||studioTplAdmin())return true;toast("Элемент закреплён в шаблоне команды — открепить может админ",{tone:"warning"});return false}
 function studioLayerSecHtml(l){
   return ppSec("look","Слой",`${ppRng("Прозрачность","opacity",studioOpacityOf(l),0,100,1)}
+    ${studioTplAdmin()?ppOnOff("Закрепить в шаблоне",!!l.lockTpl,'data-act-locktpl=""','data-act-locktpl="1"'):l.lockTpl?'<p class="pp-hint">Закреплён в шаблоне команды</p>':""}
     <div class="pp-row"><span class="pp-l">Наложение</span><nv-select options="normal:Обычный|multiply:Умножение|screen:Экран|overlay:Перекрытие|darken:Затемнение|lighten:Осветление|difference:Разница|color-dodge:Выбеливание|color-burn:Затемнение цвета" value="${esc(l.blendMode||"normal")}" data-prop="blendMode"></nv-select></div>`)
   +ppSec("xform","Наклон",`${ppRng("По X","skewX",l.skewX||0,-60,60,1)}${ppRng("По Y","skewY",l.skewY||0,-60,60,1)}`,(l.skewX||l.skewY)?"вкл":"");
 }
@@ -9016,7 +9020,9 @@ function studioPanelHtml(tab){
     const mine=studioTplCat===""||studioTplCat==="Мои шаблоны"?(studioUserTpls||[]):[];
     const built=studioTplCat==="Мои шаблоны"?[]:STUDIO_TEMPLATES.map((t,i)=>[t,i]).filter(([t])=>!studioTplCat||(STUDIO_TPL_CAT[t.key]||"Разное")===studioTplCat);
     return`<h3>Шаблоны</h3>${studioTplCatsHtml()}<p class="muted" style="font-size:12px;margin:0">Откроется новым дизайном в формате «${esc(STUDIO_FMT[d.format].label)}». Свой дизайн — в шаблоны через «⋯ → Сохранить как шаблон».</p>
-    ${mine.length?`<div class="sect-t">Мои шаблоны</div><div class="s2-grid2">${mine.map(t=>`<div class="th" data-act="studUseUserTpl" data-id="${t.id}" title="${esc(t.name)} · ${esc(t.category||"")}"><img src="${esc(t.thumb||"")}" alt=""><button type="button" class="x" data-act="studDelUserTpl" data-id="${t.id}" aria-label="Удалить шаблон">×</button></div>`).join("")}</div>`:""}
+    ${(()=>{const pers=mine.filter(t=>!t.team_id),grp={};mine.filter(t=>t.team_id).forEach(t=>(grp[t.team_id]=grp[t.team_id]||[]).push(t));
+      const blk=(title,mine)=>mine.length?`<div class="sect-t">${title}</div><div class="s2-grid2">${mine.map(t=>`<div class="th" data-act="studUseUserTpl" data-id="${t.id}" title="${esc(t.name)} · ${esc(t.category||"")}"><img src="${esc(t.thumb||"")}" alt=""><button type="button" class="x" data-act="studDelUserTpl" data-id="${t.id}" aria-label="Удалить шаблон">×</button></div>`).join("")}</div>`:"";
+      return Object.entries(grp).map(([id,L])=>blk("Шаблоны команды «"+esc((TEAM.list.find(t=>t.id===+id)||{}).name||"команда")+"»",L)).join("")+blk("Мои шаблоны",pers)})()}
     ${built.length?`${mine.length?'<div class="sect-t">Готовые</div>':""}<div class="s2-grid2">${built.map(([t,i])=>`<div class="th" data-act="studUseTplHere" data-i="${i}" title="${esc(t.name)}"><img data-s2tpl="${i}" alt=""></div>`).join("")}</div>`:""}`}
   if(tab==="elements")return`<h3>Элементы</h3><div class="sect-t">Фигуры</div><div class="s2-tiles">${STUDIO_SHAPES.map(([sh,icn,lb])=>`<button type="button" data-act="studAdd" data-type="shape" data-shape="${sh}">${ic(icn,20)}${lb}</button>`).join("")}</div>
     <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><button type="button" data-act="studTool" data-tool="draw">${ic("brush",20)}Рисовать</button><button type="button" data-act="studTool" data-tool="note" data-tip="Булавка с комментарием для согласования — в файл не попадает">${ic("message-square-plus",20)}Заметка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
@@ -9088,9 +9094,9 @@ function studioCtxAction(k){
   else if(k==="back"){while(studioMoveUnit(d,mv,-1,P));}
   else if(k==="fwd")studioMoveUnit(d,mv,1,P);
   else if(k==="bwd")studioMoveUnit(d,mv,-1,P);
-  else if(k==="lock")l.locked=!l.locked;
+  else if(k==="lock"){if(studioCanUnlock(l))l.locked=!l.locked}
   else if(k==="hide")l.hidden=!l.hidden;
-  else if(k==="del"){d.layers.splice(i,1);d.selectedId=null}
+  else if(k==="del"){if(l.lockTpl&&l.locked&&!studioTplAdmin()){toast("Элемент закреплён в шаблоне команды",{tone:"warning"})}else{d.layers.splice(i,1);d.selectedId=null}}
   else if(k==="fs+"||k==="fs-"){l.fontSize=Math.max(1,Math.round((l.fontSize+(k==="fs+"?0.5:-0.5))*10)/10)}
   N.refresh();NEON.save();
 }
@@ -9123,9 +9129,9 @@ async function studioSaveAsTemplate(){
   if(typeof d.id!=="number")return;
   const cats=["Мои","Товары и акции","Юр. услуги","Услуги","Недвижимость","Обучение","Разное"];
   overlay("modal",{title:"Сохранить как шаблон",subtitle:"Шаблон появится во вкладке «Шаблоны → Мои шаблоны». Сам дизайн не изменится.",service:"studio",
-    body:`<div class="stack" style="gap:10px"><nv-input label="Название шаблона" data-tn value="${esc(d.name)}"></nv-input><nv-select label="Категория" data-tc options="${cats.map(c=>c+":"+c).join("|")}" value="Мои"></nv-select></div>`,
+    body:`<div class="stack" style="gap:10px"><nv-input label="Название шаблона" data-tn value="${esc(d.name)}"></nv-input>${(()=>{const T=TEAM.list.filter(t=>["owner","admin","editor"].includes(t.role));return T.length?`<nv-select label="Где сохранить" data-tteam options=":Мои шаблоны|${T.map(t=>t.id+":Команда «"+t.name.replace(/[|:]/g," ")+"»").join("|")}" value="${(teamCur()&&T.some(t=>t.id===teamCur().id))?teamCur().id:""}"></nv-select>`:""})()}<nv-select label="Категория" data-tc options="${cats.map(c=>c+":"+c).join("|")}" value="Мои"></nv-select></div>`,
     actions:[{label:"Отмена"},{label:"Сохранить",variant:"primary",fn:r=>{const nm=(r.querySelector("[data-tn]")||{}).value||d.name,ct=(r.querySelector("[data-tc]")||{}).value||"Мои";
-      apiPost("/api/v1/studio/designs/"+d.id+"/as-template",{name:nm,category:ct}).then(t=>{(studioUserTpls=studioUserTpls||[]).unshift(t);studioRefreshPanel();toast("Шаблон сохранён",{tone:"success"})}).catch(e=>toast(e.message,{tone:"danger"}))}}]});
+      apiPost("/api/v1/studio/designs/"+d.id+"/as-template",{name:nm,category:ct,team_id:+((r.querySelector("[data-tteam]")||{}).value||0)||null}).then(t=>{(studioUserTpls=studioUserTpls||[]).unshift(t);studioRefreshPanel();toast("Шаблон сохранён",{tone:"success"})}).catch(e=>toast(e.message,{tone:"danger"}))}}]});
 }
 /* ---------- Ссылка на просмотр для клиента: картинки страниц → сервер → /app/share.html?t=… (без входа) ---------- */
 function studioShareUrl(tok){return location.origin+location.pathname.replace(/[^/]*$/,"")+"share.html?t="+encodeURIComponent(tok)}
@@ -9661,7 +9667,7 @@ editor(){
       const d=studioDesign();
       const sel=e.target.closest("[data-sel]"),mv=e.target.closest("[data-mv]"),del=e.target.closest("[data-del]");
       const vis=e.target.closest("[data-vis]"),lck=e.target.closest("[data-lock]");
-      if(vis||lck){studioBeforeChange();const l=d.layers.find(x=>x.id===(vis||lck).dataset[vis?"vis":"lock"]);if(l){if(vis)l.hidden=!l.hidden;else l.locked=!l.locked}N.refresh();NEON.save();return}
+      if(vis||lck){studioBeforeChange();const l=d.layers.find(x=>x.id===(vis||lck).dataset[vis?"vis":"lock"]);if(l){if(vis)l.hidden=!l.hidden;else if(studioCanUnlock(l))l.locked=!l.locked}N.refresh();NEON.save();return}
       if(del){studioBeforeChange();const i=d.layers.findIndex(x=>x.id===del.dataset.del);if(i>=0){d.layers.splice(i,1);if(d.selectedId===del.dataset.del)d.selectedId=null}studioMultiSel=studioMultiSel.filter(x=>x!==del.dataset.del);N.refresh();NEON.save();return}
       if(mv){studioBeforeChange();if(studioMoveLayer(d,mv.dataset.mv,+mv.dataset.dir)){N.refresh();NEON.save()}return}
       const gt=e.target.closest("[data-gtog]");if(gt){const g=gt.dataset.gtog;studioGrpClosed.has(g)?studioGrpClosed.delete(g):studioGrpClosed.add(g);studioRenderSidebar(root);return}
@@ -9785,6 +9791,8 @@ editor(){
         if(fxS){studioBeforeChange();l.effect={...(l.effect||{})};if(fxS.dataset.actFxshadow)l.effect.shadow={...STUDIO_SHADOW_DEF.other};else delete l.effect.shadow;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const bdB=e.target.closest("[data-act-border]");
         if(bdB){studioBeforeChange();l.border={color:"#ffffff",width:4,...(l.border||{}),enabled:!!bdB.dataset.actBorder};studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
+        const ltB=e.target.closest("[data-act-locktpl]");
+        if(ltB){studioBeforeChange();const on=!!ltB.dataset.actLocktpl;l.lockTpl=on;l.locked=on;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();toast(on?"Элемент закреплён: у редакторов команды не сдвигается":"Элемент откреплён");return}
         const tfB=e.target.closest("[data-act-tfx]");
         if(tfB){const k=tfB.dataset.actTfx;studioBeforeChange();if(l.tfx&&l.tfx.type===k)delete l.tfx;else{l.tfx={type:k,...STUDIO_TFX_DEF[k]};l.neon=false;l.shadow=false;if(l.outline)l.outline.enabled=false}studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const olB=e.target.closest("[data-act-outline]");
@@ -11475,7 +11483,8 @@ document.addEventListener("keydown",e=>{
       studioSyncProps(null,true);NEON.save();return;
     }
     if((e.key==="Delete"||e.key==="Backspace")&&sel.length&&!studioEditingPathId){
-      e.preventDefault();studioBeforeChange();d.layers=d.layers.filter(x=>!sel.includes(x));d.selectedId=null;studioMultiSel=[];N.refresh();NEON.save();return;
+      e.preventDefault();const pin=studioTplAdmin()?[]:sel.filter(x=>x.lockTpl&&x.locked);if(pin.length)toast("Закреплённые в шаблоне элементы не удаляются — это может админ команды",{tone:"warning"});
+      studioBeforeChange();d.layers=d.layers.filter(x=>!sel.includes(x)||pin.includes(x));d.selectedId=null;studioMultiSel=[];N.refresh();NEON.save();return;
     }
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="g"){e.preventDefault();studioGroup(!e.shiftKey);return}
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="a"){e.preventDefault();studioMultiSel=d.layers.filter(x=>!x.hidden&&!x.locked).map(x=>x.id);d.selectedId=studioMultiSel[studioMultiSel.length-1]||null;N.refresh();return}
