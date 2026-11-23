@@ -3362,7 +3362,7 @@ async function loadNotifications(){
   NOTIF.loaded=true;updBell();
 }
 async function loadProfile(){
-  try{const d=await api("/api/v1/profile",{});Object.assign(PROFILE,{createdAt:d.created_at||"",stats:d.stats||{},name:d.name||"",email:d.email||"",role:d.role||"",avatarDataUrl:d.avatar_data_url||"",prefs:d.notification_prefs||{}})}catch(e){}
+  try{const d=await api("/api/v1/profile",{});/* роль могли сменить в Консоли — обновляем сессию и один раз перезагружаемся, чтобы меню соответствовало правам */if(d.role&&session.role!==d.role&&!sessionStorage.getItem("neon_role_sync")){session.role=d.role;try{localStorage.setItem("parsya_session",JSON.stringify(session));sessionStorage.setItem("neon_role_sync","1")}catch(e){}location.reload();return}Object.assign(PROFILE,{createdAt:d.created_at||"",stats:d.stats||{},name:d.name||"",email:d.email||"",role:d.role||"",avatarDataUrl:d.avatar_data_url||"",prefs:d.notification_prefs||{}})}catch(e){}
   PROFILE.loaded=true;
   const av=document.querySelector(".top-av nv-avatar");
   if(av){av.setAttribute("name",PROFILE.name||session.email||"?");if(PROFILE.avatarDataUrl)av.setAttribute("src",PROFILE.avatarDataUrl)}
@@ -10634,6 +10634,20 @@ document.addEventListener("pointermove",e=>{const g=studioTlDrag;if(!g)return;
 document.addEventListener("pointerup",()=>{const g=studioTlDrag;if(!g)return;studioTlDrag=null;
   if(g.scrub){studioDesign().layers.forEach(studioPatchLayerDom);const ph=document.querySelector(".stl-ph");if(ph)ph.style.left="0%";return}
   NEON.save();N.refresh()});
+/* v8-10: ролик сразу во всех форматах — дизайн подгоняется под каждый (studioRefit), анимация и видео сохраняются, MP4 → ZIP */
+const STUDIO_VID_FMTS=[["story","Reels / Stories / Shorts 9:16"],["r45","Лента 4:5"],["square","Квадрат 1:1"],["hd","Горизонтальный 16:9"]];
+function studioVideoSet(){const d=studioDesign();if(!studioTimeline(d)){toast("Сначала добавьте анимацию или видео",{tone:"warning"});return}
+  if(!window.VideoEncoder){toast("Браузер не умеет собирать видео — откройте в свежем Chrome, Edge или Яндекс Браузере",{tone:"warning"});return}
+  overlay("modal",{title:"Ролик во всех форматах",subtitle:"Дизайн подгонится под каждый размер с той же анимацией. Готовые MP4 скачаются одним архивом.",service:"studio",
+    body:`<div class="stack" style="gap:8px">${STUDIO_VID_FMTS.map(([k,t])=>`<label class="pl-chk" style="border-radius:10px"><input type="checkbox" value="${k}" ${k!==d.format?"checked":""}><span>${esc(t)}</span><small class="muted">${STUDIO_FMT[k].w}×${STUDIO_FMT[k].h}${k===d.format?" · текущий":""}</small></label>`).join("")}</div><p class="muted" style="font-size:12.5px">Сборка идёт в браузере — около 10–30 секунд на формат. Не закрывайте вкладку.</p>`,
+    actions:[{label:"Отмена"},{label:"Собрать",variant:"primary",icon:"film",fn:root=>{const ks=[...root.querySelectorAll("input:checked")].map(i=>i.value);if(!ks.length){toast("Отметьте формат",{tone:"warning"});return false}
+      (async()=>{studioPagesSync(d);const files=[];
+        for(const k of ks){let x;const src=JSON.parse(JSON.stringify(d));
+          if(Array.isArray(d.pages)&&d.pages.length>1){const pages=d.pages.map(pg=>studioRefit({...src,bg:pg.bg,layers:JSON.parse(JSON.stringify(pg.layers)),pages:undefined},k));x={...src,format:k,pages:pages.map(r=>({bg:r.bg,layers:r.layers})),bg:pages[0].bg,layers:pages[0].layers}}
+          else x=studioRefit(src,k);
+          (x.pages||[{layers:x.layers}]).forEach(pg=>pg.layers.forEach(l=>studioFitText(l,x)));
+          const bl=await studioExportVideo({blob:true,design:x});if(bl)files.push({name:(d.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+"_"+STUDIO_FMT[k].w+"x"+STUDIO_FMT[k].h+".mp4",data:new Uint8Array(await bl.arrayBuffer())})}
+        if(files.length){studioDownload(studioZip(files),(d.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+"_видео.zip");toast("Готово: "+files.length+" MP4 в архиве",{tone:"success"})}})()}}]})}
 /* Ролик: одна страница (d.animLen) или все страницы подряд (d.vidPages) — по d.pageDur секунд,
    переход d.pageTrans (fade/slide/zoom/none) длиной 0,5 с в начале каждой следующей страницы. */
 const STUDIO_TRANS=[["fade","Затухание"],["slide","Сдвиг"],["zoom","Масштаб"],["none","Без перехода"]];
@@ -10762,7 +10776,7 @@ function studioDesignAnimHtml(){
     :`<div class="pp-row"><span class="pp-l">Длина ролика</span><div class="rng"><input type="range" min="2" max="20" step="1" value="${d.animLen||5}" style="--rng-p:${rngPct(d.animLen||5,2,20)}" data-danimlen><output>${d.animLen||5} с</output></div></div>`}
     <div class="pp-ibs wide"><button type="button" class="pp-btn${S.studio.timeline?" on":""}" data-act="studTimeline">${ic("gantt-chart",14)}${S.studio.timeline?"Скрыть таймлайн":"Таймлайн"}</button></div>
     <div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studAnimAuto">${ic("wand-2",14)}Анимировать всё</button>${can?`<button type="button" class="pp-btn" data-act="studAnimPlay">${ic("play",14)}Просмотр</button>`:""}</div>
-    ${can?`<div class="pp-ibs wide"><button type="button" class="pp-btn pri" data-act="studVideo">${ic("film",14)}Видео MP4</button><button type="button" class="pp-btn" data-act="studGif">${ic("clapperboard",14)}GIF</button></div>${n?`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studAnimClear">${ic("x",14)}Убрать анимацию</button></div>`:""}`:""}`);
+    ${can?`<div class="pp-ibs wide"><button type="button" class="pp-btn pri" data-act="studVideo">${ic("film",14)}Видео MP4</button><button type="button" class="pp-btn" data-act="studGif">${ic("clapperboard",14)}GIF</button></div><div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studVideoSet">${ic("layout-grid",14)}Во всех форматах…</button></div>${n?`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studAnimClear">${ic("x",14)}Убрать анимацию</button></div>`:""}`:""}`);
 }
 document.addEventListener("input",e=>{if(e.target.matches&&e.target.matches("[data-dpagedur]")){const v=+e.target.value;studioDesign().pageDur=v;e.target.style.setProperty("--rng-p",rngPct(v,1,10));e.target.closest(".rng").querySelector("output").textContent=v+" с";NEON.save()}});
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-vidpages]");if(!b)return;studioDesign().vidPages=!!b.dataset.vidpages;NEON.save();N.refresh()});
@@ -11769,7 +11783,7 @@ Object.assign(N.acts,{
   studAddData(a,d){studioAddData(d.k)},
   studAddGfx(a,d){studioAddGfx(+d.i)},
   studMProps(){const on=!document.body.classList.contains("pp-open");if(on&&S.studio.tab){S.studio.tab="";N.refresh()}document.body.classList.toggle("pp-open",on)},
-  studAddEmoji(a,d){studioAddEmoji(d.e)},studMove(a,d){studioMoveDlg(+d.id)},studAnimAuto(){studioAutoAnimate()},studTimeline(){S.studio.timeline=!S.studio.timeline;NEON.save();N.refresh()},studTlPlay(){studioAnimPreview(true)},studAnimPlay(){studioAnimPreview()},studVideo(){studioExportVideo()},studGif(){studioExportGif()},
+  studAddEmoji(a,d){studioAddEmoji(d.e)},studMove(a,d){studioMoveDlg(+d.id)},studAnimAuto(){studioAutoAnimate()},studVideoSet(){studioVideoSet()},studTimeline(){S.studio.timeline=!S.studio.timeline;NEON.save();N.refresh()},studTlPlay(){studioAnimPreview(true)},studAnimPlay(){studioAnimPreview()},studVideo(){studioExportVideo()},studGif(){studioExportGif()},
   studAnimClear(){const d=studioDesign();studioBeforeChange();d.layers.forEach(l=>delete l.anim);N.refresh();NEON.save()},
   studRulers(){S.studio.rulers=S.studio.rulers===false;N.refresh();NEON.save()},
   studGrid(){const seq=[0,2,3,4,6,12],i=seq.indexOf(+S.studio.grid||0);S.studio.grid=seq[(i+1)%seq.length];N.refresh();NEON.save()},
