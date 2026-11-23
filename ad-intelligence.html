@@ -1829,6 +1829,9 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .shr{display:flex;flex-direction:column;gap:10px}.shr-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.shr-row input{flex:1;min-width:200px;text-align:left;padding:0 10px;height:36px}
 .ad-use{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px}.ad-use-h{display:flex;justify-content:space-between;gap:6px;align-items:baseline}.ad-use-h b{font-weight:500;font-size:13px}.ad-use-h small{color:var(--ink-3);font-size:11.5px}
 .ad-use-g{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.ad-use-g span{display:flex;flex-direction:column;background:var(--surface-2);border-radius:7px;padding:4px 6px}.ad-use-g small{font-size:10.5px;color:var(--ink-3)}.ad-use-g b{font:500 12.5px var(--font-mono)}
+.s2-qs{display:flex;align-items:center;gap:12px;width:100%;max-width:640px;margin:0 0 14px;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 14px;cursor:pointer;text-align:left;color:var(--ink)}.s2-qs:hover{border-color:var(--svc-ink,#7c3aed)}.s2-qs span{flex:1;display:flex;flex-direction:column;gap:2px}.s2-qs b{font-weight:500;font-size:14px}.s2-qs small{color:var(--ink-3);font-size:12.5px}.s2-qs>svg:first-child{color:var(--svc-ink,#7c3aed)}
+.qs{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px}@media (max-width:720px){.qs{grid-template-columns:1fr}}.qs-l{display:flex;flex-direction:column;gap:8px}.qs-r{display:flex;flex-direction:column;gap:6px}
+.qs-logo{width:96px;height:96px;border:1px dashed var(--line);border-radius:12px;display:grid;place-items:center;color:var(--ink-3);overflow:hidden;background:var(--surface-2)}.qs-logo img{max-width:100%;max-height:100%;object-fit:contain}
 .mk-prev{border:1px dashed var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;color:var(--ink-2)}
 .ab-list{display:flex;flex-direction:column;gap:12px;max-height:56vh;overflow:auto}.ab-row{display:flex;flex-direction:column;gap:6px}.ab-h{display:flex;align-items:center;gap:8px}.ab-h b{width:24px;height:24px;border-radius:7px;background:var(--svc-soft,#efe8fd);color:var(--svc-ink,#6d28d9);display:grid;place-items:center;font:600 12px var(--font-mono)}.ab-h span{flex:1;font-size:13.5px}.ab-h small{color:var(--ink-3);font-size:12px}
 .ab-add{cursor:pointer;border:1px dashed var(--line);background:none}.ab-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap}.ab-mode{width:auto}
@@ -9336,7 +9339,7 @@ function studioDownloadMenu(btn){
 }
 function studioMoreMenu(btn){
   const r=btn.getBoundingClientRect();
-  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Матрица A/B…","все сочетания вариантов",studioAbMatrix],["Маркировка рекламы…","«Реклама», рекламодатель, erid",studioAdMark],["Мокапы…","телефон, ноутбук, печать",studioMockups],["Найти и заменить…","Ctrl+F",studioFindReplace],"-",["В планировщик…","пост в Telegram и др.",studioToPlanner],["Ссылка на просмотр…","клиенту без входа",studioShareDlg],["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
+  studioMenu(r.left,r.bottom+4,[["Быстрый старт…","бренд-кит и набор креативов",studioQuickStart],["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Матрица A/B…","все сочетания вариантов",studioAbMatrix],["Маркировка рекламы…","«Реклама», рекламодатель, erid",studioAdMark],["Мокапы…","телефон, ноутбук, печать",studioMockups],["Найти и заменить…","Ctrl+F",studioFindReplace],"-",["В планировщик…","пост в Telegram и др.",studioToPlanner],["Ссылка на просмотр…","клиенту без входа",studioShareDlg],["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
 }
 async function studioSaveAsTemplate(){
   const d=studioDesign();if(!d.layers.length){toast("Пустой дизайн",{tone:"warning"});return}
@@ -9692,6 +9695,7 @@ function studioStartHtml(){
   const T=STUDIO_TEMPLATES.map((t,i)=>[t,i]).filter(([t])=>(!studioTplCat||(STUDIO_TPL_CAT[t.key]||"Разное")===studioTplCat)&&(!q||(t.name+" "+(STUDIO_TPL_CAT[t.key]||"")+" "+t.layers.filter(l=>l.type==="text").map(l=>l.text).join(" ")).toLowerCase().includes(q)));
   return`<div class="s2-start">
     <h2>Что создаём?</h2>
+    <button type="button" class="s2-qs" data-act="studQuickStart">${ic("rocket",18)}<span><b>Быстрый старт для бизнеса</b><small>Название, телефон, логотип — и готовый набор постов, сторис и баннеров в ваших цветах</small></span>${ic("chevron-right",16)}</button>
     <div class="pf-tabs" role="tablist">${STUDIO_PLATFORMS.map(x=>`<button type="button" class="${x.k===pk?"on":""}" data-act="studStartPf" data-pf="${x.k}" role="tab" aria-selected="${x.k===pk}">${studioPfBadge(x)}<span>${esc(x.n)}</span></button>`).join("")}</div>
     <div class="s2-fmts">${P.f.map(([k,lb])=>{const v=STUDIO_FMT[k],sc=56/Math.max(v.w,v.h);return`<button type="button" class="${k===fmt?"sel":""}" data-act="studStartFmt" data-fmt="${k}" data-tip="Пустой дизайн ${v.w}×${v.h}"><i style="width:${Math.round(v.w*sc)}px;height:${Math.round(v.h*sc)}px"></i>${esc(lb)}<span class="muted" style="font-size:10.5px">${v.w}×${v.h}</span></button>`}).join("")}</div>
     <div class="sect-t">Или опишите креатив — ИИ соберёт 3 макета</div>
@@ -11148,6 +11152,57 @@ async function studioBulkRun(d,tpl,slots,head,rows,map,mode){
     if(fails.length)toast(`Не загрузились фото (${fails.length}): ${[...new Set(fails)].slice(0,3).join(", ")}`,{tone:"warning",timeout:9000});
   }catch(e){prog.done("");toast("Массовое создание прервано: "+(e.message||""),{tone:"danger"})}
 }
+/* ---------- v8-15: «Быстрый старт» для собственника — данные бизнеса → бренд-кит + набор креативов из шаблонов ---------- */
+const STUDIO_QS_SPHERES=[["sale","Магазин, товары"],["service","Услуги"],["legal","Юридические услуги"],["bankrupt","Банкротство"],["beauty","Салон красоты"],["dental","Медицина, стоматология"],["auto","Автосервис"],["cafe","Кафе, еда"],["fitness","Спорт, фитнес"],["course","Обучение"],["realty","Недвижимость"],["delivery","Доставка"]];
+const STUDIO_QS_SET=[["square","Пост 1:1"],["r45","Пост 4:5"],["story","Сторис 9:16"],["wide","Баннер 16:9"],["landscape","Реклама 1,91:1"]];
+function studioLogoColors(src){return new Promise(ok=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas");c.width=c.height=48;const g=c.getContext("2d");g.drawImage(img,0,0,48,48);const px=g.getImageData(0,0,48,48).data,bins={};
+  for(let i=0;i<px.length;i+=4){if(px[i+3]<128)continue;const r=px[i],gg=px[i+1],b=px[i+2],mx=Math.max(r,gg,b),mn=Math.min(r,gg,b);if(mx>235&&mn>235||mx<25)continue;if(mx-mn<25)continue;const k=[r>>5,gg>>5,b>>5].join(",");(bins[k]=bins[k]||{n:0,r:0,g:0,b:0}).n++;bins[k].r+=r;bins[k].g+=gg;bins[k].b+=b}
+  const cols=Object.values(bins).sort((a,b)=>b.n-a.n).map(x=>"#"+[x.r/x.n,x.g/x.n,x.b/x.n].map(v=>Math.round(v).toString(16).padStart(2,"0")).join(""));ok(cols.slice(0,2))};img.onerror=()=>ok([]);img.src=src})}
+function studioQuickStart(){
+  const B=S.studio.brand||{},Q={...(S.studio.qs||{}),logo:(S.studio.qs||{}).logo||B.logo||"",c1:(B.colors||[])[0]||"#7c3aed",c2:(B.colors||[])[1]||"#f59e0b",tone:"light",sphere:"service",fmts:["square","story","wide"]};
+  const {root,close}=overlay("modal",{title:"Быстрый старт",subtitle:"Расскажите о бизнесе — соберём бренд-кит и готовый набор креативов: посты, сторис и баннеры в ваших цветах. Потом любой можно поправить.",service:"studio",size:"lg",
+    body:`<div class="qs"><div class="qs-l">
+      <nv-input label="Название компании" data-qs="name" value="${esc(Q.name||"")}" placeholder="Например: Союз юристов"></nv-input>
+      <nv-input label="Главное предложение" data-qs="offer" value="${esc(Q.offer||"")}" placeholder="Например: Спишем долги законно"></nv-input>
+      <nv-input label="Коротко о выгоде" data-qs="sub" value="${esc(Q.sub||"")}" placeholder="Например: Бесплатная консультация и рассрочка"></nv-input>
+      <div class="row" style="gap:8px"><nv-input label="Телефон" data-qs="phone" value="${esc(Q.phone||"")}" placeholder="+7 900 000-00-00" style="flex:1"></nv-input><nv-input label="Сайт" data-qs="site" value="${esc(Q.site||"")}" placeholder="example.ru" style="flex:1"></nv-input></div>
+      <label class="pl-lbl">Сфера<select class="tm-role" data-qs="sphere">${STUDIO_QS_SPHERES.map(([k,t])=>`<option value="${k}" ${Q.sphere===k?"selected":""}>${t}</option>`).join("")}</select></label>
+    </div><div class="qs-r">
+      <div class="pl-lbl">Логотип</div><div class="qs-logo">${Q.logo?`<img src="${esc(Q.logo)}" alt="">`:ic("image-plus",22)}</div><label class="pl-up">${ic("upload",14)} Загрузить<input type="file" accept="image/*" hidden data-qslogo></label>
+      <div class="pl-lbl" style="margin-top:8px">Цвета бренда <small class="muted">возьмём из логотипа</small></div>
+      <div class="row" style="gap:8px"><nv-color-picker value="${esc(Q.c1)}" data-qsc="c1"></nv-color-picker><nv-color-picker value="${esc(Q.c2)}" data-qsc="c2"></nv-color-picker></div>
+      <div class="pp-seg" style="margin-top:8px">${[["light","Светлый фон"],["dark","Тёмный фон"]].map(([k,t])=>`<button type="button" data-qstone="${k}" class="${Q.tone===k?"on":""}">${t}</button>`).join("")}</div>
+      <div class="pl-lbl" style="margin-top:8px">Что собрать</div><div class="pl-chks">${STUDIO_QS_SET.map(([k,t])=>`<label class="pl-chk"><input type="checkbox" value="${k}" data-qsf ${Q.fmts.includes(k)?"checked":""}>${t}</label>`).join("")}</div>
+    </div></div>`,
+    actions:[{label:"Отмена"},{label:"Собрать набор",variant:"primary",icon:"sparkles",fn:r=>build()}]});
+  const val=k=>{const i=root.querySelector(`[data-qs="${k}"]`);return i?((i.value!=null?i.value:i.getAttribute("value"))||"").trim():""};
+  root.addEventListener("nv-change",e=>{const c=e.target.closest("[data-qsc]");if(c&&e.detail)Q[c.dataset.qsc]=studioHex6(e.detail.value)});
+  root.addEventListener("click",e=>{const t=e.target.closest("[data-qstone]");if(t){Q.tone=t.dataset.qstone;root.querySelectorAll("[data-qstone]").forEach(b=>b.classList.toggle("on",b===t))}});
+  root.querySelector("[data-qslogo]").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{const{dataUrl}=await fileToDataUrl(f,600);Q.logo=dataUrl;root.querySelector(".qs-logo").innerHTML=`<img src="${esc(dataUrl)}" alt="">`;
+    const cols=await studioLogoColors(dataUrl);cols.forEach((c,i)=>{const k=i?"c2":"c1";Q[k]=c;const pk=root.querySelector(`[data-qsc="${k}"]`);if(pk)pk.setAttribute("value",c)});if(cols.length)toast("Цвета взяты из логотипа")}catch(er){toast("Логотип не прочитался",{tone:"danger"})}});
+  const build=()=>{const o={name:val("name"),offer:val("offer"),sub:val("sub"),phone:val("phone"),site:val("site"),sphere:val("sphere")||"service"},fmts=[...root.querySelectorAll("[data-qsf]:checked")].map(i=>i.value);
+    if(!o.name||!o.offer){toast("Впишите название и главное предложение",{tone:"warning"});return false}if(!fmts.length){toast("Отметьте хотя бы один формат",{tone:"warning"});return false}
+    S.studio.qs={...o,logo:Q.logo};NEON.save();close();studioQuickBuild(o,Q,fmts)};
+}
+async function studioQuickBuild(o,Q,fmts){
+  const prog=toastProgress("Собираю набор…");const keep=S.studio.editor,made=[];
+  /* бренд-кит */
+  const b=S.studio.brand=S.studio.brand||{colors:[]};b.colors=[...new Set([Q.c1,Q.c2,...(b.colors||[])].filter(Boolean).map(c=>c.toLowerCase()))].slice(0,10);if(Q.logo)b.logo=Q.logo;NEON.save();
+  const pal=Q.tone==="dark"?["#0f172a",Q.c1,Q.c2,"#f8fafc"]:["#ffffff",Q.c1,Q.c2,"#111827"];
+  let lar=1;if(Q.logo){try{const im=new Image();im.src=Q.logo;await im.decode();lar=im.naturalWidth/im.naturalHeight||1}catch(e){}}
+  const tpl=STUDIO_TEMPLATES.find(t=>t.key===o.sphere)||STUDIO_TEMPLATES[0],cta=o.phone?"Звоните: "+o.phone:o.site?"Подробнее: "+o.site.replace(/^https?:\/\//,""):"Узнать подробнее";
+  try{for(const [i,fmt] of fmts.entries()){
+    const x=studioRefit({...studioNewDesign(),...JSON.parse(JSON.stringify(tpl))},fmt);x.id=null;x.name=o.name+" · "+(STUDIO_QS_SET.find(f=>f[0]===fmt)||[0,fmt])[1];
+    x.layers.forEach(l=>{l.id=studioUid();if(l.type!=="text")return;
+      if(l.role==="headline")l.text=o.offer;else if(l.role==="subheadline")l.text=o.sub||o.name;else if(l.role==="cta")l.text=cta;else if(l.role==="badge")l.text=o.name;else if(l.role==="disclaimer")l.text=[o.site,o.phone].filter(Boolean).join(" · ")||o.name});
+    if(Q.logo){const F=STUDIO_FMT[fmt];let w=(fmt==="story"?24:14)*Math.min(1.8,Math.max(0.7,lar)),h=w*F.w/F.h/lar;if(h>14){h=14;w=h*lar*F.h/F.w}const lg=studioLayerDefaults("image");Object.assign(lg,{src:Q.logo,x:100-w-4,y:3.5,w,h,name:"Логотип"});x.layers.push(lg)}
+    S.studio.editor=x;studioApplyPalette(pal,true);x.layers.forEach(l=>studioFitText(l,x));await studioFontsReady(x);
+    const meta=await apiPost("/api/v1/studio/designs",{name:x.name,format:x.format,data:studioPack(x),thumb:await studioThumb(x),...(teamCur()&&teamCan("editor")?{team_id:teamCur().id}:{})});studioUpsertList(meta);made.push(meta);
+    prog.set(`Собираю набор: ${i+1} / ${fmts.length}`)}}
+  catch(e){toast("Не всё собралось: "+(e.message||e),{tone:"danger"})}
+  finally{S.studio.editor=keep;studioResetEphemeral()}
+  prog.done(made.length?`Готово: ${made.length} креативов в «Мои дизайны». Бренд-кит сохранён.`:"");NEON.save();if(made.length)N.go("studio-library");
+}
 /* ---------- v8-14: маркировка рекламы (38-ФЗ): «Реклама. Рекламодатель, ИНН · erid: …» отдельным слоем ---------- */
 function studioAdMarkText(o){const parts=["Реклама"];if(o.name)parts[0]+=". "+o.name.trim()+(o.inn?", ИНН "+o.inn.trim():"");return parts[0]+(o.erid?" · erid: "+o.erid.trim():"")}
 function studioAdMarkLayer(d){return d.layers.find(l=>l.adMark)}
@@ -11923,7 +11978,7 @@ Object.assign(N.acts,{
   studAddData(a,d){studioAddData(d.k)},
   studAddGfx(a,d){studioAddGfx(+d.i)},
   studMProps(){const on=!document.body.classList.contains("pp-open");if(on&&S.studio.tab){S.studio.tab="";N.refresh()}document.body.classList.toggle("pp-open",on)},
-  studAddEmoji(a,d){studioAddEmoji(d.e)},studMove(a,d){studioMoveDlg(+d.id)},studAnimAuto(){studioAutoAnimate()},studVideoSet(){studioVideoSet()},studTimeline(){S.studio.timeline=!S.studio.timeline;NEON.save();N.refresh()},studTlPlay(){studioAnimPreview(true)},studAnimPlay(){studioAnimPreview()},studVideo(){studioExportVideo()},studGif(){studioExportGif()},
+  studAddEmoji(a,d){studioAddEmoji(d.e)},studMove(a,d){studioMoveDlg(+d.id)},studAnimAuto(){studioAutoAnimate()},studQuickStart(){studioQuickStart()},studVideoSet(){studioVideoSet()},studTimeline(){S.studio.timeline=!S.studio.timeline;NEON.save();N.refresh()},studTlPlay(){studioAnimPreview(true)},studAnimPlay(){studioAnimPreview()},studVideo(){studioExportVideo()},studGif(){studioExportGif()},
   studAnimClear(){const d=studioDesign();studioBeforeChange();d.layers.forEach(l=>delete l.anim);N.refresh();NEON.save()},
   studRulers(){S.studio.rulers=S.studio.rulers===false;N.refresh();NEON.save()},
   studGrid(){const seq=[0,2,3,4,6,12],i=seq.indexOf(+S.studio.grid||0);S.studio.grid=seq[(i+1)%seq.length];N.refresh();NEON.save()},
