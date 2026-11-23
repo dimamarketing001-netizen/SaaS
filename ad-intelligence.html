@@ -355,6 +355,7 @@ nv-icon svg{width:1em;height:1em;stroke-width:2}
 .tm-badge{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}.tm-badge.owner{background:#fef3c7;color:#92400e}.tm-badge.admin{background:#ede9fe;color:#5b21b6}.tm-badge.editor{background:#dcfce7;color:#166534}
 .tm-add{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}.tm-add nv-input{flex:1;min-width:180px}
 .tm-inv{display:flex;flex-direction:column;gap:6px;margin-top:8px}.tm-invr{display:flex;align-items:center;gap:8px}.tm-invr small{color:var(--ink-3);font-size:12px}
+.tm-brand{display:flex;flex-direction:column;gap:14px}.tm-sw{display:flex;gap:6px;flex-wrap:wrap}.tm-sw span{width:34px;height:34px;border-radius:9px;border:1px solid var(--line)}.tm-logo{max-height:64px;max-width:200px;object-fit:contain}
 .tm-roles{display:flex;flex-direction:column;gap:8px}.tm-roles div{display:flex;align-items:center;gap:8px}.tm-roles small{color:var(--ink-2);font-size:12.5px}
 .grid.stud-designs-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr))}
 .rail-bottom{margin-top:auto;display:flex;flex-direction:column;gap:2px;padding-top:8px}
@@ -3278,14 +3279,14 @@ function mergeState(fresh,savedPart){
   }
   return fresh;
 }
-S.core=mergeState({sideCollapsed:false},saved.core);
+S.core=mergeState({sideCollapsed:false,teamId:null},saved.core);
 let saveT;
 /* Дизайны Студии (картинки в data URL) в localStorage НЕ пишем — они на сервере
    (2026-11-19). Пока старые дизайны не перенесены, их исходная копия из localStorage
    сохраняется как есть, чтобы перенос не потерял их. Переполнение — предупреждаем. */
 let saveWarned=false;
 NEON.save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{
-  const st=S.studio,snap=st?{...S,studio:{lastId:st.lastId,migrated:st.migrated,brief:st.brief,q:st.q,fmtF:st.fmtF,tplFmt:st.tplFmt,tab:st.tab,brand:st.brand,zones:st.zones,grid:st.grid,rulers:st.rulers,guidesOff:st.guidesOff,guideSnap:st.guideSnap,startPf:st.startPf,startFmt:st.startFmt,
+  const st=S.studio,snap=st?{...S,studio:{lastId:st.lastId,migrated:st.migrated,brief:st.brief,q:st.q,fmtF:st.fmtF,tplFmt:st.tplFmt,tab:st.tab,brand:st.brand,zones:st.zones,grid:st.grid,rulers:st.rulers,guidesOff:st.guidesOff,guideSnap:st.guideSnap,startPf:st.startPf,startFmt:st.startFmt,brandMine:st.brandMine,timeline:st.timeline,notesOff:st.notesOff,draw:st.draw,
     ...(!st.migrated&&saved.studio&&saved.studio.designs?{designs:saved.studio.designs,editor:saved.studio.editor}:{})}}:S;
   try{localStorage.setItem(KEY,JSON.stringify(snap))}
   catch(e){if(!saveWarned){saveWarned=true;toast("Браузер не смог сохранить настройки кабинета (переполнено хранилище)",{tone:"warning"})}}
@@ -7359,7 +7360,21 @@ members(){
     if(!TEAM.detail||TEAM.detail.id!==t.id){await teamLoadDetail(t.id);const b=root.querySelector("#tm-body");if(b)b.innerHTML=teamMembersBody()}
     teamBind(root,t);
   }}
-}};
+},
+brand(){
+  return{title:"Бренд-кит команды",sub:"Цвета, шрифты и логотип — общие для всех участников. Используются в Студии (вкладка «Стиль»), в ИИ-сборке и «Быстром старте».",
+  body:`<div id="tm-brand"><nv-skeleton count="2"></nv-skeleton></div>`,
+  async after(root){await teamLoad();const el=root.querySelector("#tm-brand");if(!el)return;
+    if(!TEAM.list.length){el.innerHTML=`<nv-card><nv-empty icon="palette" heading="Сначала создайте команду" text="Бренд-кит команды появится после создания команды."><nv-button variant="primary" icon="plus" data-act="teamNew">Создать команду</nv-button></nv-empty></nv-card>`;return}
+    const t=teamCur()||TEAM.list[0];let b={};try{b=(await api("/api/v1/teams/"+t.id)).brand||{}}catch(e){}
+    const adm=["owner","admin"].includes(t.role),f=b.fonts||{};
+    el.innerHTML=`${teamWsHtml()}<div class="tm-grid"><nv-card heading="«${esc(t.name)}»"><div class="tm-brand">
+      <div><div class="sect-t">Цвета</div>${(b.colors||[]).length?`<div class="tm-sw">${b.colors.map(c=>`<span style="background:${esc(c)}" title="${esc(c)}"></span>`).join("")}</div>`:'<p class="muted">Пока нет</p>'}</div>
+      <div><div class="sect-t">Шрифты</div>${f.head||f.body?`<p style="margin:0">Заголовки: <b>${esc(f.head||"—")}</b> · текст: <b>${esc(f.body||"—")}</b></p>`:'<p class="muted">Пока не выбраны</p>'}</div>
+      <div><div class="sect-t">Логотип</div>${b.logo?`<img class="tm-logo" src="${esc(b.logo)}" alt="Логотип">`:'<p class="muted">Не загружен</p>'}</div></div></nv-card>
+      <nv-card heading="Как изменить">${teamCur()&&teamCur().id===t.id?"":`<p class="muted" style="font-size:12.5px">Сначала переключитесь на команду выше.</p>`}<p style="font-size:13px;margin:0 0 10px">${adm?"Откройте Студию → вкладка «Стиль»: добавьте цвета, шрифты и логотип. Всё сохранится для всей команды.":"Бренд-кит меняют админы и владелец. Вы можете пользоваться им в Студии."}</p><nv-button icon="palette" data-act="teamBrandOpen">Открыть в Студии</nv-button></nv-card></div>`}}
+}
+};
 function teamBind(root,t){
   const reload=async()=>{await teamLoad(true);await teamLoadDetail(t.id);N.refresh()};
   const run=async fn=>{try{await fn()}catch(e){toast(e.message||String(e),{tone:"danger"})}};
@@ -7384,6 +7399,7 @@ function teamNameDlg(cur,save){overlay("modal",{title:cur?"Название ко
   actions:[{label:"Отмена"},{label:cur?"Сохранить":"Создать",variant:"primary",fn:root=>{const i=root.querySelector("[data-tmname]");const nm=((i&&(i.value||i.getAttribute("value")))||"").trim();if(!nm){toast("Впишите название",{tone:"warning"});return false}Promise.resolve(save(nm.slice(0,80))).catch(e=>toast(e.message,{tone:"danger"}))}}]})}
 Object.assign(NEON.acts,{
   teamNew(){teamNameDlg("",async nm=>{const t=await apiPost("/api/v1/teams",{name:nm});S.core.teamId=t.id;NEON.save();TEAM.detail=null;await teamLoad(true);if(NEON.route().s==="team")N.refresh();else NEON.go("team-members");toast("Команда создана — добавьте участников",{tone:"success"})})},
+  teamBrandOpen(){S.studio.tab="brand";NEON.save();NEON.go("studio-editor")},
   teamWs(a,d){S.core.teamId=d.id?+d.id:null;NEON.save();TEAM.detail=null;if(window.studioOnWsChange)window.studioOnWsChange();N.refresh()},
 });
 /* приглашение по ссылке ?join=… — после входа в ЛК */
@@ -7396,7 +7412,7 @@ async function teamJoinFromUrl(){const q=new URLSearchParams(location.search),to
 setTimeout(()=>{if(typeof session!=="undefined"&&session&&session.token){teamLoad();teamJoinFromUrl()}},600);
 N.register({id:"team",name:"Команда",short:"Команда",tag:"Team",icon:"users",rail:"bottom",status:"ready",
   desc:"Участники, роли, приглашения и общее пространство",
-  nav:[{group:"Команда",items:[{id:"members",label:"Участники и роли",icon:"users"}]}],
+  nav:[{group:"Команда",items:[{id:"members",label:"Участники и роли",icon:"users"},{id:"brand",label:"Бренд-кит",icon:"palette"}]}],
   views:views_team});
 
 /* ---------- Студия креативов: canvas-редактор, только в браузере (2026-11-06) ---------- */
@@ -7457,7 +7473,7 @@ function studioUid(){return"L"+Date.now().toString(36)+Math.random().toString(36
 function studioNewDesign(){return{id:null,name:"Новый дизайн",format:"square",bg:{type:"color",color:"#16c784"},layers:[],selectedId:null,updatedAt:null,thumb:""}}
 /* Дизайны живут на сервере (parsya-control /api/v1/studio, 2026-11-19). В localStorage —
    только мелочи: id последнего дизайна, бриф, бренд-кит. Список — кэш в памяти. */
-const studioSeed=()=>({list:[],listState:"idle",lastId:null,migrated:false,editor:studioNewDesign(),brief:"",q:"",fmtF:"",tplFmt:"square",tab:"elements",brand:{colors:[],logo:""}});
+const studioSeed=()=>({list:[],listState:"idle",lastId:null,migrated:false,editor:studioNewDesign(),brief:"",q:"",fmtF:"",tplFmt:"square",tab:"elements",brand:{colors:[],logo:""},brandMine:null,timeline:false,notesOff:false,draw:null});
 function studioDesign(){return S.studio.editor}
 function studioSelected(){const d=studioDesign();return d.layers.find(l=>l.id===d.selectedId)||null}
 /* Стартовые шаблоны (собраны ИИ-арт-директором Студии 19.11.2026 и проверены глазами).
@@ -8603,7 +8619,7 @@ async function studioMoveDlg(id){const x=(S.studio.list||[]).find(v=>v.id===id);
   overlay("modal",{title:"Перенести дизайн",subtitle:x?"«"+x.name+"»":"",service:"studio",body:`<div class="tm-ws">${opts.map(t=>`<button type="button" data-mv="${t.id==null?"":t.id}">${ic(t.id==null?"user":"users",14)}<span>${esc(t.name)}</span></button>`).join("")}</div><p class="muted" style="font-size:12.5px;margin:0">В команде дизайн увидят все участники, править смогут редакторы.</p>`,
     actions:[{label:"Отмена"}],mount(root,close){root.addEventListener("click",async e=>{const b=e.target.closest("[data-mv]");if(!b)return;
       try{await apiPut("/api/v1/studio/designs/"+id+"/team",{team_id:b.dataset.mv?+b.dataset.mv:null});close();toast("Дизайн перенесён",{tone:"success"});studioLoadList()}catch(er){toast(er.message,{tone:"danger"})}})}})}
-window.studioOnWsChange=()=>{S.studio.list=[];S.studio.listState="loading";studioLoadList()};
+window.studioOnWsChange=()=>{S.studio.list=[];S.studio.listState="loading";studioLoadList();studioBrandWs()};
 async function studioLoadList(){
   S.studio.listState="loading";
   try{await teamLoad();const tm=teamCur();const r=await api("/api/v1/studio/designs",tm?{team:tm.id}:{});S.studio.list=r.designs||[];S.studio.listTeam=tm?tm.id:null;S.studio.listState="ok";if(tm)await teamNames(tm.id)}
@@ -8635,7 +8651,7 @@ async function studioMigrate(){
   if(moved){toast(`Дизайны из браузера перенесены на сервер: ${moved}`,{tone:"success"});studioLoadList()}
 }
 function studioBoot(){
-  if(studioBooted)return;studioBooted=true;studioLoadCustomFonts();
+  if(studioBooted)return;studioBooted=true;studioLoadCustomFonts();studioBrandWs();
   studioMigrate().finally(()=>{
     studioLoadList();
     const d=studioDesign();
@@ -8948,9 +8964,26 @@ function studioImageByUrl(){
         studioDesign().layers.push(l);studioDesign().selectedId=l.id;N.refresh();NEON.save()}
       catch(e){toast(e.message||"Не удалось скачать картинку",{tone:"danger"})}}}]});
 }
+/* ---------- Бренд-кит команды (v8-3): в командном пространстве S.studio.brand = бренд команды с сервера ----------
+   Личный бренд хранится в S.studio.brandMine. Правки команды уходят на сервер (админ и владелец), у редакторов — только чтение. */
+const TEAM_BRAND={pushed:{},t:null};
+async function studioBrandWs(){
+  const st=S.studio;if(!st)return;await teamLoad();const tm=teamCur(),b=st.brand||{colors:[]};
+  if(!b._team)st.brandMine=JSON.parse(JSON.stringify(b));
+  if(!tm){st.brand=st.brandMine||{colors:[]};delete st.brand._team;NEON.save();return}
+  let tb={};try{tb=(await api("/api/v1/teams/"+tm.id)).brand||{}}catch(e){}
+  st.brand={colors:[],...tb,_team:tm.id};TEAM_BRAND.pushed[tm.id]=studioBrandJson(st.brand);NEON.save();
+  if(NEON.route().s==="studio")N.refresh();
+}
+function studioBrandJson(b){const o={...b};delete o._team;return JSON.stringify(o)}
+function studioBrandPush(){const st=S.studio,b=st&&st.brand;if(!b||!b._team)return;const id=b._team,j=studioBrandJson(b);if(TEAM_BRAND.pushed[id]===j)return;
+  const tm=TEAM.list.find(t=>t.id===id);
+  if(!tm||!["owner","admin"].includes(tm.role)){st.brand={...JSON.parse(TEAM_BRAND.pushed[id]||"{}"),_team:id};toast("Бренд-кит команды меняют админы и владелец",{tone:"warning"});setTimeout(()=>N.refresh(),0);return}
+  clearTimeout(TEAM_BRAND.t);TEAM_BRAND.t=setTimeout(async()=>{try{await apiPut("/api/v1/teams/"+id+"/brand",{brand:JSON.parse(j)});TEAM_BRAND.pushed[id]=j}catch(e){toast("Бренд-кит команды не сохранился: "+e.message,{tone:"danger"})}},900)}
+{const _save=NEON.save;NEON.save=(...a)=>{const r=_save(...a);try{studioBrandPush()}catch(e){}return r}}
 function studioBrandHtml(){
-  const b=S.studio.brand||{colors:[]};
-  return`<div class="sect-t" style="margin-top:6px">Бренд</div>
+  const b=S.studio.brand||{colors:[]},tm=b._team&&TEAM.list.find(t=>t.id===b._team);
+  return`<div class="sect-t" style="margin-top:6px">${tm?"Бренд команды «"+esc(tm.name)+"»":"Бренд"}</div>${tm&&!["owner","admin"].includes(tm.role)?'<p class="pp-hint">Общий бренд-кит команды: пользоваться может каждый, менять — админы.</p>':tm?'<p class="pp-hint">Изменения видят все участники команды.</p>':""}
   <div class="stud-swatches">${(b.colors||[]).map((c,i)=>`<button type="button" style="background:${esc(c)}" data-act="studBrandApply" data-i="${i}" data-tip="Применить ${esc(c)} к слою (Shift+клик — убрать из бренда)"></button>`).join("")}<button type="button" class="add" data-act="studBrandAdd" data-tip="Добавить цвет выбранного слоя">${ic("plus",13)}</button></div>
   <input type="file" id="stud-logo-file" accept="image/*" class="sr">
   ${b.logo?`<div class="row" style="gap:6px"><nv-button size="sm" variant="secondary" icon="image" data-act="studLogoPlace">Логотип на холст</nv-button><nv-button size="sm" variant="ghost" icon="x" icon-only hint="Убрать логотип" data-act="studLogoClear"></nv-button></div>`:`<label class="nv-btn v-secondary s-sm" for="stud-logo-file" style="width:100%;justify-content:center">${ic("upload",14)}Логотип бренда</label>`}`;
