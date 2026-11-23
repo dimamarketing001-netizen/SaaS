@@ -356,6 +356,7 @@ nv-icon svg{width:1em;height:1em;stroke-width:2}
 .tm-add{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}.tm-add nv-input{flex:1;min-width:180px}
 .tm-inv{display:flex;flex-direction:column;gap:6px;margin-top:8px}.tm-invr{display:flex;align-items:center;gap:8px}.tm-invr small{color:var(--ink-3);font-size:12px}
 .tm-roles{display:flex;flex-direction:column;gap:8px}.tm-roles div{display:flex;align-items:center;gap:8px}.tm-roles small{color:var(--ink-2);font-size:12.5px}
+.grid.stud-designs-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr))}
 .rail-bottom{margin-top:auto;display:flex;flex-direction:column;gap:2px;padding-top:8px}
 .rail-logo{width:40px;height:40px;margin:0 auto 12px;border-radius:12px;background:#39ff88;color:#0d1211;display:grid;place-items:center;font:800 19px var(--font-display);flex:none;border:0;cursor:pointer}
 .rail-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px 7px;border:0;background:none;border-radius:10px;color:var(--rail-ink-2);font-size:11px;line-height:1.15;cursor:pointer;text-align:center;flex:none;width:100%;position:relative}
@@ -8447,7 +8448,7 @@ async function studioExportPng(){
 }
 /* ---------- Сервер: дизайны, автосохранение, перенос из localStorage ---------- */
 const studioSave={state:"saved",at:0,err:""};let studioAutoT=null,studioSaving=null,studioSaveAgain=false,studioBooted=false,studioQuiet=false;
-function studioSaveLabel(){const st=studioSave;return st.state==="saving"?"Сохраняю…":st.state==="dirty"?"Есть изменения":st.state==="err"?"Не сохранено":st.at?"Сохранено "+new Date(st.at).toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"}):""}
+function studioSaveLabel(){const st=studioSave;if((studioDesign()||{}).access==="viewer")return"Только просмотр";return st.state==="saving"?"Сохраняю…":st.state==="dirty"?"Есть изменения":st.state==="err"?"Не сохранено":st.at?"Сохранено "+new Date(st.at).toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"}):""}
 function studioPaintSave(){const el=document.getElementById("stud-save");if(el){el.textContent=studioSaveLabel();el.className="stud-save "+(studioSave.state==="dirty"?"dirty":studioSave.state==="err"?"err":"");el.title=studioSave.err||studioSaveLabel()}}
 function studioMarkDirty(){
   const d=studioDesign();if(!d.layers.length&&!d.id)return;
@@ -8560,17 +8561,23 @@ async function studioExportUnder(kb){
     studioDownload(best,studioFileBase(d)+`_${Math.round(best.size/1024)}KB.jpg`);toast(`JPEG ${Math.round(best.size/1024)} КБ`,{tone:"success"})}
   catch(e){toast("Не удалось сжать: "+(e.message||""),{tone:"danger"})}
 }
-function studioPack(d){studioPagesSync(d);const o=JSON.parse(JSON.stringify(d));delete o.thumb;o.selectedId=null;return o}
+function studioPack(d){studioPagesSync(d);const o=JSON.parse(JSON.stringify(d));delete o.thumb;delete o.access;delete o.serverAt;delete o.teamId;o.selectedId=null;return o}
 async function studioThumb(d){try{return(await studioRenderCanvas(d,240/STUDIO_FMT[d.format].w)).toDataURL("image/jpeg",0.8)}catch(e){return""}}
 function studioUpsertList(meta){const L=S.studio.list,i=L.findIndex(x=>x.id===meta.id);if(i>=0)L[i]=meta;else L.unshift(meta)}
 function studioPersist(o){
   o=o||{};const d=studioDesign();
+  if(d.access==="viewer"){studioSave.state="err";studioSave.err="Только просмотр";studioPaintSave();if(!o.silent)toast("В этой команде у вас роль «наблюдатель» — изменения не сохраняются. «Дублировать дизайн» сделает личную копию",{tone:"warning"});return Promise.resolve(null)}
   if(!d.layers.length&&!d.id){if(!o.silent)toast("Добавьте хотя бы один слой",{tone:"warning"});return Promise.resolve(null)}
   if(studioSaving){studioSaveAgain=true;return studioSaving}
   clearTimeout(studioAutoT);studioSave.state="saving";studioPaintSave();
   studioSaving=(async()=>{
     const body={name:d.name||"Новый дизайн",format:d.format,data:studioPack(d),thumb:await studioThumb(d)};
-    const meta=typeof d.id==="number"?await apiPut("/api/v1/studio/designs/"+d.id,body):await apiPost("/api/v1/studio/designs",body);
+    if(typeof d.id!=="number"){const tm=teamCur();if(tm&&teamCan("editor")){body.team_id=tm.id;d.teamId=tm.id}}
+    else if(d.serverAt&&!o.force)body.base_updated_at=d.serverAt;
+    let meta;
+    try{meta=typeof d.id==="number"?await apiPut("/api/v1/studio/designs/"+d.id,body):await apiPost("/api/v1/studio/designs",body)}
+    catch(e){if(/conflict|409/.test(String(e.message))){studioConflict(d);throw new Error("дизайн изменил другой участник команды")}throw e}
+    d.serverAt=meta.updated_at;
     d.id=meta.id;d.updatedAt=Date.now();S.studio.lastId=meta.id;studioUpsertList(meta);
     if(studioSave.state==="saving")studioSave.state="saved";studioSave.at=Date.now();studioSave.err="";studioPaintSave();NEON.save();
     if(!o.silent)toast("Дизайн сохранён",{tone:"success"});
@@ -8580,9 +8587,26 @@ function studioPersist(o){
   return studioSaving;
 }
 async function studioSaveDesign(){return studioPersist({silent:false})}
+/* Общие дизайны команды: имена участников (кто менял), конфликт правок, перенос в команду */
+const TEAM_NAMES={};
+async function teamNames(id){if(TEAM_NAMES[id])return TEAM_NAMES[id];try{const t=await api("/api/v1/teams/"+id);TEAM_NAMES[id]=Object.fromEntries(t.members.map(m=>[m.user_id,m.name||m.email.split("@")[0]]))}catch(e){TEAM_NAMES[id]={}}return TEAM_NAMES[id]}
+function studioWhoName(teamId,uid){const m=TEAM_NAMES[teamId]||{};return m[uid]||""}
+let studioConflictOpen=false;
+function studioConflict(d){if(studioConflictOpen)return;studioConflictOpen=true;
+  overlay("modal",{title:"Дизайн изменили параллельно",subtitle:"Пока вы работали, другой участник команды сохранил свою версию.",service:"studio",
+    body:`<p style="margin:0">Можно загрузить его версию (ваши несохранённые правки пропадут) или сохранить свою поверх. Чужая версия останется в «Истории версий».</p>`,
+    actions:[{label:"Загрузить их версию",fn:()=>{studioConflictOpen=false;studioOpenServer(d.id,{go:false})}},{label:"Сохранить мою",variant:"primary",fn:()=>{studioConflictOpen=false;studioPersist({force:true})}}]});
+  setTimeout(()=>{studioConflictOpen=false},60000)}
+async function studioMoveDlg(id){const x=(S.studio.list||[]).find(v=>v.id===id);await teamLoad();
+  const opts=[{id:null,name:"Личные дизайны"},...TEAM.list.filter(t=>["owner","admin","editor"].includes(t.role))].filter(t=>(t.id||null)!==((x&&x.team_id)||null));
+  if(!opts.length){toast("Нет команды, куда можно перенести — создайте её в разделе «Команда»",{tone:"warning"});return}
+  overlay("modal",{title:"Перенести дизайн",subtitle:x?"«"+x.name+"»":"",service:"studio",body:`<div class="tm-ws">${opts.map(t=>`<button type="button" data-mv="${t.id==null?"":t.id}">${ic(t.id==null?"user":"users",14)}<span>${esc(t.name)}</span></button>`).join("")}</div><p class="muted" style="font-size:12.5px;margin:0">В команде дизайн увидят все участники, править смогут редакторы.</p>`,
+    actions:[{label:"Отмена"}],mount(root,close){root.addEventListener("click",async e=>{const b=e.target.closest("[data-mv]");if(!b)return;
+      try{await apiPut("/api/v1/studio/designs/"+id+"/team",{team_id:b.dataset.mv?+b.dataset.mv:null});close();toast("Дизайн перенесён",{tone:"success"});studioLoadList()}catch(er){toast(er.message,{tone:"danger"})}})}})}
+window.studioOnWsChange=()=>{S.studio.list=[];S.studio.listState="loading";studioLoadList()};
 async function studioLoadList(){
   S.studio.listState="loading";
-  try{const r=await api("/api/v1/studio/designs");S.studio.list=r.designs||[];S.studio.listState="ok"}
+  try{await teamLoad();const tm=teamCur();const r=await api("/api/v1/studio/designs",tm?{team:tm.id}:{});S.studio.list=r.designs||[];S.studio.listTeam=tm?tm.id:null;S.studio.listState="ok";if(tm)await teamNames(tm.id)}
   catch(e){S.studio.listState="err";S.studio.listErr=e.message||""}
   const rt=NEON.route();if(rt.s==="studio")N.refresh();
 }
@@ -8591,6 +8615,7 @@ async function studioOpenServer(id,o){
   try{
     const r=await api("/api/v1/studio/designs/"+id);
     const d=Object.assign(studioNewDesign(),r.data||{});d.id=r.id;d.name=r.name;d.format=STUDIO_FMT[r.format]?r.format:"square";d.selectedId=null;
+    d.teamId=r.team_id||null;d.access=r.access||"author";d.serverAt=r.updated_at;if(d.teamId)teamNames(d.teamId);
     if(Array.isArray(d.pages)&&d.pages.length){d.page=0;d.bg=d.pages[0].bg;d.layers=d.pages[0].layers}
     studioResetEphemeral();S.studio.editor=d;S.studio.lastId=r.id;studioSave.state="saved";studioSave.at=r.updated_at*1000;
     studioQuiet=true;if(o.go!==false)N.go("studio-editor");else N.refresh();NEON.save();studioQuiet=false;
@@ -9868,13 +9893,15 @@ library(){
   studioBoot();
   const st=S.studio,q=(st.q||"").toLowerCase(),L=(st.list||[]).filter(x=>(!q||String(x.name).toLowerCase().includes(q))&&(!st.fmtF||x.format===st.fmtF));
   const tools=`<div class="stud-lib-tools"><nv-input type="search" label="Поиск" value="${esc(st.q||"")}" data-chg="studQ" placeholder="Название дизайна"></nv-input><nv-select label="Формат" value="${esc(st.fmtF||"")}" options=":Все форматы|${Object.entries(STUDIO_FMT).map(([k,v])=>k+":"+v.label).join("|")}" data-chg="studFmtF"></nv-select></div>`;
-  const card=x=>`<nv-card flush><div class="stud-thumb">${x.thumb?`<img src="${esc(x.thumb)}" alt="">`:ic("image",28)}</div><div style="padding:12px"><b style="font-size:13.5px">${esc(x.name)}</b><div class="muted" style="font-size:12px;margin-top:2px">${esc((STUDIO_FMT[x.format]||STUDIO_FMT.square).label)} · ${x.updated_at?NEON.ago(x.updated_at*1000):""}</div><div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap"><nv-button size="sm" data-act="studOpen" data-id="${x.id}">Открыть</nv-button><nv-button size="sm" variant="ghost" icon="copy" icon-only hint="Дублировать" data-act="studDup" data-id="${x.id}">Дублировать</nv-button><nv-button size="sm" variant="ghost" icon="pencil" icon-only hint="Переименовать" data-act="studRename" data-id="${x.id}">Переименовать</nv-button><nv-button size="sm" variant="ghost" icon="trash-2" icon-only hint="Удалить" data-act="studDel" data-id="${x.id}">Удалить</nv-button></div></div></nv-card>`;
+  const card=x=>`<nv-card flush><div class="stud-thumb">${x.thumb?`<img src="${esc(x.thumb)}" alt="">`:ic("image",28)}</div><div style="padding:12px"><b style="font-size:13.5px">${esc(x.name)}</b><div class="muted" style="font-size:12px;margin-top:2px">${esc((STUDIO_FMT[x.format]||STUDIO_FMT.square).label)} · ${x.updated_at?NEON.ago(x.updated_at*1000):""}${x.team_id&&studioWhoName(x.team_id,x.updated_by)?" · "+esc(studioWhoName(x.team_id,x.updated_by)):""}</div><div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap"><nv-button size="sm" data-act="studOpen" data-id="${x.id}">Открыть</nv-button><nv-button size="sm" variant="ghost" icon="copy" icon-only hint="Дублировать" data-act="studDup" data-id="${x.id}">Дублировать</nv-button><nv-button size="sm" variant="ghost" icon="pencil" icon-only hint="Переименовать" data-act="studRename" data-id="${x.id}">Переименовать</nv-button>${TEAM.list.length?`<nv-button size="sm" variant="ghost" icon="folder-input" icon-only hint="${x.team_id?"Перенести (в личные или другую команду)":"Перенести в команду"}" data-act="studMove" data-id="${x.id}">Перенести</nv-button>`:""}<nv-button size="sm" variant="ghost" icon="trash-2" icon-only hint="Удалить" data-act="studDel" data-id="${x.id}">Удалить</nv-button></div></div></nv-card>`;
   let body;
   if(st.listState==="loading"&&!st.list.length)body=`<nv-card><p class="muted">Загружаю дизайны…</p></nv-card>`;
   else if(st.listState==="err")body=`<nv-card><nv-empty icon="alert-triangle" heading="Не удалось загрузить дизайны" text="${esc(st.listErr||"")}"><nv-button data-act="studReload" icon="refresh-cw">Повторить</nv-button></nv-empty></nv-card>`;
   else if(!st.list.length)body=`<nv-card><nv-empty icon="palette" heading="Дизайнов пока нет" text="Создайте первый макет в редакторе или попросите ИИ собрать его по брифу."><nv-button data-act="studNew" icon="plus">Новый дизайн</nv-button></nv-empty></nv-card>`;
   else body=tools+(L.length?`<div class="grid g4 stud-designs-grid">${L.map(card).join("")}</div>`:`<nv-card><p class="muted">Ничего не найдено.</p></nv-card>`);
-  return{title:"Мои дизайны",sub:"Хранятся на сервере — доступны с любого компьютера. Откройте, чтобы продолжить, или дублируйте для A/B.",actions:`<nv-button icon="plus" data-act="studNew">Новый дизайн</nv-button>`,body};
+  const tmc=teamCur();if((st.listTeam||null)!==(tmc?tmc.id:null)&&st.listState!=="loading")studioLoadList();
+  body=(TEAM.list.length?teamWsHtml():"")+(tmc&&tmc.role==="viewer"?`<nv-callout tone="info" style="margin-bottom:10px">В команде «${esc(tmc.name)}» у вас роль «наблюдатель»: дизайны можно открыть и скачать, а для правок — «Дублировать» в личные.</nv-callout>`:"")+body;
+  return{title:tmc?"Дизайны команды «"+tmc.name+"»":"Мои дизайны",sub:tmc?"Общие для всех участников команды. Кто последний менял — в карточке.":"Хранятся на сервере — доступны с любого компьютера. Откройте, чтобы продолжить, или дублируйте для A/B.",actions:`<nv-button icon="plus" data-act="studNew">Новый дизайн</nv-button>`,body};
 }
 };
 /* ---------- Рисование (кисть, маркер, выделитель): штрих → упрощение (RDP) → сглаживание Catmull-Rom → слой-кривая ---------- */
@@ -11509,7 +11536,7 @@ Object.assign(N.acts,{
   studAddData(a,d){studioAddData(d.k)},
   studAddGfx(a,d){studioAddGfx(+d.i)},
   studMProps(){const on=!document.body.classList.contains("pp-open");if(on&&S.studio.tab){S.studio.tab="";N.refresh()}document.body.classList.toggle("pp-open",on)},
-  studAddEmoji(a,d){studioAddEmoji(d.e)},studAnimAuto(){studioAutoAnimate()},studTimeline(){S.studio.timeline=!S.studio.timeline;NEON.save();N.refresh()},studTlPlay(){studioAnimPreview(true)},studAnimPlay(){studioAnimPreview()},studVideo(){studioExportVideo()},studGif(){studioExportGif()},
+  studAddEmoji(a,d){studioAddEmoji(d.e)},studMove(a,d){studioMoveDlg(+d.id)},studAnimAuto(){studioAutoAnimate()},studTimeline(){S.studio.timeline=!S.studio.timeline;NEON.save();N.refresh()},studTlPlay(){studioAnimPreview(true)},studAnimPlay(){studioAnimPreview()},studVideo(){studioExportVideo()},studGif(){studioExportGif()},
   studAnimClear(){const d=studioDesign();studioBeforeChange();d.layers.forEach(l=>delete l.anim);N.refresh();NEON.save()},
   studRulers(){S.studio.rulers=S.studio.rulers===false;N.refresh();NEON.save()},
   studGrid(){const seq=[0,2,3,4,6,12],i=seq.indexOf(+S.studio.grid||0);S.studio.grid=seq[(i+1)%seq.length];N.refresh();NEON.save()},
