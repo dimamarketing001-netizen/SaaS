@@ -2680,7 +2680,22 @@ function openPop(anchor,html,o){o=o||{};closePop();const p=document.createElemen
   const down=e=>{if(!p.contains(e.target)&&!anchor.contains(e.target))close()};
   const scr=e=>{if(!(e.target instanceof Node&&p.contains(e.target)))close()};
   const rez=()=>close();
-  const close=back=>{p.remove();window.removeEventListener("keydown",key,true);document.removeEventListener("mousedown",down,true);window.removeEventListener("scroll",scr,true);window.removeEventListener("resize",rez);popClose=null;o.onClose&&o.onClose();if(back){const f=anchor.querySelector("button");f&&f.focus()}};
+  /* Экран перерисовался при открытом списке (фильтр применился → N.refresh) — компонент-якорь заменён
+     новым, а список остался привязан к старому: дальнейшие галочки уходили в отсоединённый элемент и не
+     применялись, пока список не закроешь. Переоткрываем список на новом таком же элементе. */
+  const sigOf=el=>[el.tagName,...[...el.attributes].filter(x=>x.name.startsWith("data-")||["name","label","tree-key"].includes(x.name)).map(x=>x.name+"="+x.value).sort()].join("\u0001");
+  const isComp=typeof anchor.pop==="function",sig=isComp?sigOf(anchor):"",sameSig=()=>[...document.querySelectorAll(anchor.tagName.toLowerCase())].filter(e=>sigOf(e)===sig),idx=isComp?sameSig().indexOf(anchor):-1;
+  let mo=null,reb=false;
+  const rebind=()=>{reb=false;if(popClose!==close||anchor.isConnected)return;
+    const n=sameSig()[idx]||null,inp=p.querySelector(".pop-s input"),q=inp?inp.value:"",l=p.querySelector(".pop-l"),y=l?l.scrollTop:0;
+    if(!n){close();return}
+    if(anchor._open&&!n._open)n._open=anchor._open;
+    n.pop();
+    const p2=document.querySelector("body > .pop");if(!p2)return;
+    const i2=p2.querySelector(".pop-s input");if(i2&&q){i2.value=q;i2.dispatchEvent(new Event("input"))}
+    const l2=p2.querySelector(".pop-l");if(l2)l2.scrollTop=y};
+  if(isComp&&idx>=0){mo=new MutationObserver(()=>{if(!reb&&!anchor.isConnected){reb=true;queueMicrotask(rebind)}});mo.observe(document.body,{childList:true,subtree:true})}
+  const close=back=>{mo&&mo.disconnect();p.remove();window.removeEventListener("keydown",key,true);document.removeEventListener("mousedown",down,true);window.removeEventListener("scroll",scr,true);window.removeEventListener("resize",rez);popClose=null;o.onClose&&o.onClose();if(back){const f=anchor.querySelector("button");f&&f.focus()}};
   window.addEventListener("keydown",key,true);document.addEventListener("mousedown",down,true);window.addEventListener("scroll",scr,true);window.addEventListener("resize",rez);popClose=close;
   o.mount&&o.mount(p,close,place);place();return{close,place,el:p}}
 window.nvOpenPop=openPop;window.nvClosePop=()=>{if(popClose)popClose()};
@@ -3869,16 +3884,9 @@ async function loadLibrary(extra){
   refreshLibSafe();
   if(!I._aiT||Date.now()-I._aiT>30000||(I._aiJob||"")!==String(I.f.job||""))loadAiIntents();
 }
-/* Перерисовка библиотеки не должна ломать открытый выпадающий фильтр: пока он открыт — обновляем только список, остальное после закрытия */
-function refreshLibSafe(){
-  if(document.querySelector("body > .pop")){
-    if(document.getElementById("lib-res"))libRes();
-    clearTimeout(S.intel._popW);
-    const w=()=>{if(document.querySelector("body > .pop"))S.intel._popW=setTimeout(w,250);else N.refreshIf("intel-library","intel-compare")};
-    S.intel._popW=setTimeout(w,250);return;
-  }
-  N.refreshIf("intel-library","intel-compare");
-}
+/* Раньше при открытом фильтре перерисовка откладывалась до его закрытия («применяется только после закрытия»).
+   Теперь openPop сам переоткрывает список на новом элементе — перерисовываем сразу. */
+function refreshLibSafe(){N.refreshIf("intel-library","intel-compare")}
 function plural(n,one,few,many){n=Math.abs(+n||0);const a=n%10,b=n%100;return a===1&&b!==11?one:(a>=2&&a<=4&&(b<10||b>=20)?few:many)}
 async function loadLeaders(theme){
   const L=S.intel.lead=S.intel.lead||{};
