@@ -7897,6 +7897,7 @@ function studioPropsHtml0(){
     return studioPropsHeadHtml(one?"folder-open":"layers",one?studioGroupName(d,one):"Несколько элементов",`Выбрано слоёв: ${studioMultiSel.length} · тяните любой — сдвинутся все`)
     +`<div class="pp-acts">${one?`<button type="button" class="nv-btn v-secondary s-sm" data-act="studGroup" data-on="">${ic("ungroup",14)}Разгруппировать</button><button type="button" class="nv-btn v-ghost s-sm" data-act-grename="${esc(one)}">${ic("pencil",14)}Переименовать</button>`:`<button type="button" class="nv-btn v-soft s-sm" data-act="studGroup" data-on="1">${ic("group",14)}Сгруппировать <kbd>Ctrl G</kbd></button>${[...gs].some(Boolean)?`<button type="button" class="nv-btn v-ghost s-sm" data-act="studGroup" data-on="">Разгруппировать</button>`:""}`}</div>`
     +studioGroupPropsHtml(d.layers.filter(x=>studioMultiSel.includes(x.id)))+studioMultiPosHtml()+ppSec("align","Выравнивание",`<div class="pp-seg pp-seg-ic six">${[["left","align-horizontal-justify-start","Слева"],["ch","align-horizontal-justify-center","По центру"],["right","align-horizontal-justify-end","Справа"],["top","align-vertical-justify-start","Сверху"],["cv","align-vertical-justify-center","По середине"],["bottom","align-vertical-justify-end","Снизу"]].map(([v,i,t])=>`<button type="button" data-act-align="${v}" data-tip="${t}" aria-label="${t}">${ic(i,15)}</button>`).join("")}</div>
+      <button type="button" class="pp-btn" data-act-tidy data-tip="Выстроить в ряд, столбец или сетку с равным шагом · Ctrl+Alt+T">${ic("layout-grid",14)}Привести в порядок</button>
       ${studioMultiSel.length>=3?`<div class="pp-row"><span class="pp-l">Распределить</span>${ppSeg([["По гориз.",'data-act-dist="h"'],["По верт.",'data-act-dist="v"']])}</div>`:'<p class="pp-hint">Выделите 3 и больше слоёв, чтобы распределить их равномерно.</p>'}`);
   }
   const l=studioSelected();
@@ -9082,7 +9083,7 @@ async function studioMockups(){
   try{await draw()}catch(e){toast("Не удалось нарисовать мокапы: "+(e.message||""),{tone:"danger"})}
 }
 function studioShortcuts(){
-  const K=[["Ctrl+Z / Ctrl+Shift+Z","Отменить / повторить"],["Ctrl+S","Сохранить"],["Ctrl+C / Ctrl+X / Ctrl+V","Копировать / вырезать / вставить (в т.ч. в другой дизайн, скриншоты, текст, SVG)"],["Ctrl+Alt+C / Ctrl+Alt+V","Копировать / вставить стиль"],["Ctrl+D","Дублировать"],["Alt + тянуть","Копия при перетаскивании"],["Ctrl + тянуть","Без прилипания"],["Alt (наведение)","Расстояния до соседей и краёв"],
+  const K=[["Ctrl+Z / Ctrl+Shift+Z","Отменить / повторить"],["Ctrl+S","Сохранить"],["Ctrl+Alt+T","Привести в порядок: ряд, столбец или сетка"],["Ctrl+C / Ctrl+X / Ctrl+V","Копировать / вырезать / вставить (в т.ч. в другой дизайн, скриншоты, текст, SVG)"],["Ctrl+Alt+C / Ctrl+Alt+V","Копировать / вставить стиль"],["Ctrl+D","Дублировать"],["Alt + тянуть","Копия при перетаскивании"],["Ctrl + тянуть","Без прилипания"],["Alt (наведение)","Расстояния до соседей и краёв"],
     ["Ctrl+G / Ctrl+Shift+G","Сгруппировать / разгруппировать"],["Ctrl+F / Ctrl+H","Найти и заменить текст (все страницы)"],["Ctrl+Alt+P","Презентация: ← → пробел, Esc — выход"],["Двойной клик","Внутрь группы · править текст · кадрировать фото"],["Ctrl + клик","Элемент внутри группы"],["Esc","На уровень выше / выйти из режима"],["Ctrl+A","Выделить всё"],["Delete","Удалить"],["Стрелки / Shift + стрелки","Сдвиг на 1 / 10 px"],
     ["Ctrl + / Ctrl − / Ctrl 0","Масштаб / вписать"],["Ctrl + колесо, щипок","Масштаб к курсору"],["Пробел + тянуть","Двигать холст"],["Shift + тянуть уголок","Пропорционально"],["Shift + поворот","Шаг 15°"],["Линейка → тянуть","Направляющая"],["Двойной клик по точке","Угол ↔ плавная (правка узлов)"],["Alt + ручка","Разорвать симметрию ручек"],["Клик по контуру","Добавить точку (правка узлов)"],["Правый клик","Меню действий"],["?","Эта справка"]];
   overlay("modal",{title:"Горячие клавиши",service:"studio",body:`<div class="s2-kbd">${K.map(([k,v])=>`<span>${k.split(" / ").map(x=>`<kbd>${esc(x)}</kbd>`).join(" / ")}</span><span>${esc(v)}</span>`).join("")}</div>`,actions:[{label:"Понятно"}]});
@@ -9546,6 +9547,7 @@ editor(){
         const alignBtn=e.target.closest("[data-act-align]"),distBtn=e.target.closest("[data-act-dist]");
         if(alignBtn){studioAlign(alignBtn.dataset.actAlign);NEON.save();return}
         if(distBtn){studioDistribute(distBtn.dataset.actDist);NEON.save();return}
+        if(e.target.closest("[data-act-tidy]")){studioTidy();return}
         const l=studioSelected();if(!l)return;
         const pttype=e.target.closest("[data-act-pttype]");
         if(pttype&&studioEditingPointIndex!=null&&l.points&&l.points[studioEditingPointIndex]){
@@ -10902,6 +10904,30 @@ function studioAlign(dir){
   });
   boxes.forEach(studioPatchLayerDom);
 }
+/* «Привести в порядок» (как Tidy up в Figma): единицы (слой или целая группа) раскладываются рядом, столбцом
+   или сеткой с равным шагом — шаг = медиана текущих зазоров; считаем в пикселях макета, левый верх выделения на месте. */
+function studioTidy(){
+  const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,sel=studioMultiSel.map(id=>d.layers.find(x=>x.id===id)).filter(l=>l&&!l.locked);
+  if(sel.length<2){toast("Выделите 2 и больше элементов",{tone:"warning"});return}
+  const byKey=k=>{const M=new Map();sel.forEach(l=>{const g=k(l);if(!M.has(g))M.set(g,[]);M.get(g).push(l)});return[...M.values()]};
+  let groups=byKey(l=>l.group||l.id);if(groups.length<2)groups=sel.map(l=>[l]);
+  const U=groups.map(L=>{const x=Math.min(...L.map(l=>l.x))*F.w/100,y=Math.min(...L.map(l=>l.y))*F.h/100,x2=Math.max(...L.map(l=>l.x+l.w))*F.w/100,y2=Math.max(...L.map(l=>l.y+l.h))*F.h/100;return{L,x,y,w:x2-x,h:y2-y,cx:(x+x2)/2,cy:(y+y2)/2}});
+  const med=a=>{a=a.filter(v=>v>=0).sort((p,q)=>p-q);return a.length?a[(a.length-1)>>1]:null};
+  const x0=Math.min(...U.map(u=>u.x)),y0=Math.min(...U.map(u=>u.y)),avgH=U.reduce((a,u)=>a+u.h,0)/U.length;
+  /* строки: по центру по вертикали */
+  const rows=[];U.slice().sort((a,b)=>a.cy-b.cy).forEach(u=>{const r=rows[rows.length-1];if(r&&Math.abs(u.cy-r.cy)<Math.max(avgH*0.5,r.h*0.5)){r.u.push(u);r.cy=r.u.reduce((a,v)=>a+v.cy,0)/r.u.length;r.h=Math.max(r.h,u.h)}else rows.push({u:[u],cy:u.cy,h:u.h})});
+  rows.forEach(r=>r.u.sort((a,b)=>a.x-b.x));
+  const gapsX=rows.flatMap(r=>r.u.slice(1).map((u,i)=>u.x-(r.u[i].x+r.u[i].w))),gapsY=rows.slice(1).map((r,i)=>Math.min(...r.u.map(u=>u.y))-Math.max(...rows[i].u.map(u=>u.y+u.h)));
+  const def=Math.round(Math.min(F.w,F.h)*0.03);
+  const move=(u,nx,ny)=>{const dx=(nx-u.x)/F.w*100,dy=(ny-u.y)/F.h*100;u.L.forEach(l=>{l.x=Math.round((l.x+dx)*100)/100;l.y=Math.round((l.y+dy)*100)/100})};
+  studioBeforeChange();let kind;
+  if(rows.length===1){kind="в ряд";const g=med(gapsX)??def,cy=rows[0].cy;let run=x0;rows[0].u.forEach(u=>{move(u,run,cy-u.h/2);run+=u.w+g})}
+  else if(rows.every(r=>r.u.length===1)){kind="столбцом";const col=rows.map(r=>r.u[0]),g=med(gapsY)??def,cx=col.reduce((a,u)=>a+u.cx,0)/col.length;
+    const left=col.every(u=>Math.abs(u.x-col[0].x)<Math.abs(u.cx-cx)+1);let run=y0;col.forEach(u=>{move(u,left?col[0].x:cx-u.w/2,run);run+=u.h+g})}
+  else{kind="сеткой";const cols=Math.max(...rows.map(r=>r.u.length)),flat=rows.flatMap(r=>r.u),cw=Math.max(...U.map(u=>u.w)),ch=Math.max(...U.map(u=>u.h));
+    const gx=med(gapsX)??def,gy=med(gapsY)??gx;flat.forEach((u,i)=>{const c=i%cols,r=Math.floor(i/cols);move(u,x0+c*(cw+gx)+(cw-u.w)/2,y0+r*(ch+gy)+(ch-u.h)/2)})}
+  sel.forEach(studioPatchLayerDom);studioPaintGroupBox();NEON.save();toast("Выстроено "+kind+" с равным шагом",{tone:"success"});
+}
 function studioDistribute(dir){
   const d=studioDesign();let boxes=studioMultiSel.map(id=>d.layers.find(x=>x.id===id)).filter(Boolean);
   if(boxes.length<3)return;
@@ -11244,6 +11270,7 @@ document.addEventListener("keydown",e=>{
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="g"){e.preventDefault();studioGroup(!e.shiftKey);return}
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="a"){e.preventDefault();studioMultiSel=d.layers.filter(x=>!x.hidden&&!x.locked).map(x=>x.id);d.selectedId=studioMultiSel[studioMultiSel.length-1]||null;N.refresh();return}
     /* Копировать/вставить стиль */
+    if((e.ctrlKey||e.metaKey)&&e.altKey&&e.code==="KeyT"&&studioMultiSel.length>1){e.preventDefault();studioTidy();return}
     if((e.ctrlKey||e.metaKey)&&e.altKey&&e.code==="KeyC"&&ids.length){e.preventDefault();studioCopyStyle();return}
     if((e.ctrlKey||e.metaKey)&&e.altKey&&e.code==="KeyV"&&ids.length){e.preventDefault();studioPasteStyle();return}
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="d"&&sel.length){
