@@ -1719,6 +1719,28 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s2-menu button.on{font-weight:500;background:var(--surface-2)}
 .s2-menu button .ck{width:14px;flex:none;display:flex;color:var(--svc-ink);margin-left:-8px}
 .s2-menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.stl{margin-top:8px;border:1px solid var(--line);border-radius:12px;background:var(--surface);max-width:100%;display:flex;flex-direction:column;min-height:0}
+.stl-head{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 12px;border-bottom:1px solid var(--line)}
+.stl-head b{display:inline-flex;align-items:center;gap:6px;font-weight:500;font-size:12.5px}
+.stl-head .pp-btn{height:26px;padding:0 9px;font-size:12px;flex:none;width:auto}
+.stl-time{font:11.5px var(--font-mono);color:var(--ink-2);white-space:nowrap}
+.stl-hint{flex:1;min-width:0;font-size:11.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stl-x{border:0;background:none;color:var(--ink-3);cursor:pointer;border-radius:6px;width:26px;height:26px;display:grid;place-items:center}.stl-x:hover{background:var(--surface-2);color:var(--ink)}
+.stl-body{max-height:168px;overflow:auto;padding:4px 10px 8px}
+.stl-row{display:grid;grid-template-columns:150px 1fr;gap:8px;align-items:center;height:26px}
+.stl-row.sel .stl-name{color:var(--svc-ink);font-weight:500}
+.stl-name{display:flex;align-items:center;gap:6px;border:0;background:none;padding:0;cursor:pointer;color:var(--ink-2);font-size:12px;min-width:0;text-align:left}
+.stl-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stl-track{position:relative;height:20px;border-radius:6px;background:var(--surface-2);cursor:copy}
+.stl-rule .stl-track{background:none;cursor:ew-resize;border-bottom:1px solid var(--line);border-radius:0;height:22px}
+.stl-rule .stl-track span{position:absolute;bottom:2px;transform:translateX(-50%);font:10.5px var(--font-mono);color:var(--ink-3);pointer-events:none}
+.stl-rule .stl-track span:first-child{transform:none}.stl-rule .stl-track span:last-of-type{transform:translateX(-100%)}
+.stl-ph{position:absolute;top:0;left:0;width:2px;height:calc(100% + 4px);background:var(--svc-ink);border-radius:2px;pointer-events:none}
+.stl-bar{position:absolute;top:2px;bottom:2px;border-radius:5px;background:var(--svc-soft);border:1px solid var(--svc-ink);cursor:grab;display:flex;align-items:center;overflow:hidden;min-width:8px}
+.stl-row.sel .stl-bar{background:var(--svc-ink)}.stl-row.sel .stl-bar span{color:#fff}
+.stl-bar span{font-size:10.5px;color:var(--svc-ink);padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.stl-h{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:ew-resize}
+.stl-out{position:absolute;top:2px;bottom:2px;border-radius:5px;background:repeating-linear-gradient(135deg,var(--line) 0 4px,transparent 4px 8px);pointer-events:none}
 .stud-vprev{position:absolute;inset:0;width:100%;height:100%;z-index:50;pointer-events:none}
 .vid-prog{position:fixed;right:18px;bottom:18px;z-index:9600;width:280px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-2);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
 .vid-prog b{font-weight:500;font-size:13px}.vid-prog i{display:block;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}.vid-prog i span{display:block;height:100%;width:0;background:var(--svc-ink);transition:width .2s}.vid-prog small{font:11px var(--font-mono);color:var(--ink-3)}
@@ -9095,7 +9117,7 @@ editor(){
     <aside class="s2-panel" id="s2-panel" ${tabNow?"":"hidden"}>${tabNow?`<button type="button" class="s2-panel-x" data-act="studTab" data-tab="${tabNow}" data-tip="Скрыть панель">${ic("chevrons-left",16)}</button>`+studioPanelHtml(tabNow):""}</aside>
     <section class="s2-main">
       <input type="file" id="stud-bg-file" accept="image/*" class="sr"><input type="file" id="stud-img-file" accept="image/*" class="sr"><input type="file" id="stud-img-replace" accept="image/*" class="sr">
-      ${start?studioStartHtml():`<div class="stud-stage-wrap"><div class="stud-rbox${S.studio.rulers!==false?" on":""}">${S.studio.rulers!==false?'<canvas class="stud-ruler h" aria-hidden="true"></canvas><canvas class="stud-ruler v" aria-hidden="true"></canvas><span class="stud-ruler-c" aria-hidden="true">px</span>':""}<div id="stud-stage-host">${studioStageHtml()}</div></div>${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Перо: клик — точка, клик+тяни — плавная, клик по первой — замкнуть, Enter — закончить, Esc — отмена.</p>':""}</div>${studioPagesHtml()}`}
+      ${start?studioStartHtml():`<div class="stud-stage-wrap"><div class="stud-rbox${S.studio.rulers!==false?" on":""}">${S.studio.rulers!==false?'<canvas class="stud-ruler h" aria-hidden="true"></canvas><canvas class="stud-ruler v" aria-hidden="true"></canvas><span class="stud-ruler-c" aria-hidden="true">px</span>':""}<div id="stud-stage-host">${studioStageHtml()}</div></div>${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Перо: клик — точка, клик+тяни — плавная, клик по первой — замкнуть, Enter — закончить, Esc — отмена.</p>':""}</div>${S.studio.timeline?studioTimelineHtml():""}${studioPagesHtml()}`}
     </section>
     <button type="button" class="m-props-btn" data-act="studMProps">${ic("sliders-horizontal",16)}<span>Настройки</span></button>
     <aside class="s2-props"><div id="stud-props">${studioPropsHtml()}</div></aside>
@@ -9900,9 +9922,18 @@ function studioUnitSpans(el,kind){
     n.replaceWith(f)});
   return{parts,marks};
 }
-function studioAnimPreview(){
+function studioPageLen(d){return d.vidPages&&studioPagesOf(d).length>1?(+d.pageDur||3):(d.animLen||5)}
+/* Кадр анимации в момент t прямо на DOM-холсте (предпросмотр, бегунок таймлайна); US — кэш спанов текста */
+function studioAnimApply(t,len,US){
+  const d=studioDesign(),st=document.querySelector(".stud-stage");if(!st)return;const sr=st.getBoundingClientRect();
+  d.layers.forEach(l=>{const el=st.querySelector(`.stud-layer[data-id="${l.id}"]`);if(!el)return;const A=studioAnimAt(l,t,len);
+    if(A&&A.units){let u=US.get(l.id);if(!u){u=studioUnitSpans(el,A.units.kind);US.set(l.id,u)}u.parts.forEach((sp,i)=>sp.style.opacity=A.units.f(i,u.parts.length));u.marks.forEach(m=>m.el.style.opacity=A.units.f(m.i,u.parts.length))}
+    el.style.opacity=(A?A.op:1)*studioOpacityOf(l)/100;el.style.transform=(A?`translate(${A.dx*sr.width}px,${A.dy*sr.height}px) scale(${A.s}) `:"")+studioLayerTransform(l)});
+  const ph=document.querySelector(".stl-ph");if(ph){ph.style.left=Math.min(100,t/len*100)+"%";const o=document.querySelector(".stl-time");if(o)o.textContent=studioTlFmt(t)+" / "+studioTlFmt(len)}
+}
+function studioAnimPreview(pageOnly){
   cancelAnimationFrame(studioAnimRaf);const d=studioDesign(),st=document.querySelector(".stud-stage");if(!st)return;
-  if(d.vidPages&&studioPagesOf(d).length>1){
+  if(!pageOnly&&d.vidPages&&studioPagesOf(d).length>1){
     /* весь ролик: кадры рисуются на canvas поверх холста (как в файле, с переходами) */
     const TL=studioTimeline(d),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,sr=st.getBoundingClientRect(),sc=Math.min(1,sr.width*(devicePixelRatio||1)/F.w);
     st.querySelector(".stud-vprev")?.remove();const cv=document.createElement("canvas");cv.className="stud-vprev";st.append(cv);const g=cv.getContext("2d");
@@ -9913,14 +9944,53 @@ function studioAnimPreview(){
       studioAnimRaf=requestAnimationFrame(step)};
     studioAnimRaf=requestAnimationFrame(step);return;
   }
-  const len=d.animLen||5,t0=performance.now(),sr=st.getBoundingClientRect(),US=new Map();
-  const step=()=>{const t=(performance.now()-t0)/1000;
-    d.layers.forEach(l=>{const el=st.querySelector(`.stud-layer[data-id="${l.id}"]`);if(!el)return;const A=studioAnimAt(l,t,len);
-      if(A&&A.units){let u=US.get(l.id);if(!u){u=studioUnitSpans(el,A.units.kind);US.set(l.id,u)}u.parts.forEach((sp,i)=>sp.style.opacity=A.units.f(i,u.parts.length));u.marks.forEach(m=>m.el.style.opacity=A.units.f(m.i,u.parts.length))}
-      el.style.opacity=(A?A.op:1)*studioOpacityOf(l)/100;el.style.transform=(A?`translate(${A.dx*sr.width}px,${A.dy*sr.height}px) scale(${A.s}) `:"")+studioLayerTransform(l)});
-    if(t<len)studioAnimRaf=requestAnimationFrame(step);else d.layers.forEach(studioPatchLayerDom)};
+  const len=studioPageLen(d),t0=performance.now(),US=new Map();
+  const step=()=>{const t=Math.min(len,(performance.now()-t0)/1000);studioAnimApply(t,len,US);
+    if(t<len)studioAnimRaf=requestAnimationFrame(step);else{d.layers.forEach(studioPatchLayerDom);const ph=document.querySelector(".stl-ph");if(ph)ph.style.left="0%"}};
   studioAnimRaf=requestAnimationFrame(step);
 }
+/* ---------- Таймлайн анимации (под холстом, S.studio.timeline) ----------
+   Полоса слоя = [задержка, задержка+длительность]; тянуть — задержка, правый край — длительность (шаг 0,1 с);
+   штриховка в конце — исчезновение. Клик по шкале/пустой дорожке — бегунок (кадр на холсте). */
+function studioTlFmt(t){return(Math.round(t*10)/10).toFixed(1).replace(".",",")+" с"}
+function studioTimelineHtml(){
+  const d=studioDesign(),len=studioPageLen(d),rows=d.layers.slice().reverse().filter(l=>!l.hidden);
+  const pct=v=>Math.max(0,Math.min(100,v/len*100));
+  const ticks=[];for(let i=0;i<=len;i+=len>12?2:1)ticks.push(`<span style="left:${pct(i)}%">${i}</span>`);
+  return`<div class="stl" id="stud-tl"><div class="stl-head"><b>${ic("gantt-chart",14)}Таймлайн</b><button type="button" class="pp-btn" data-act="studTlPlay">${ic("play",13)}Играть</button><span class="stl-time">0,0 с / ${studioTlFmt(len)}</span>
+    <span class="stl-hint">Тяните полосу — задержка, край — длительность. Клик по пустой дорожке — добавить появление.</span><button type="button" class="stl-x" data-act="studTimeline" aria-label="Закрыть таймлайн">${ic("x",14)}</button></div>
+    <div class="stl-body"><div class="stl-row stl-rule"><span class="stl-name"></span><div class="stl-track" data-tlscrub>${ticks.join("")}<i class="stl-ph"></i></div></div>
+    ${rows.map(l=>{const a=l.anim||{},on=a.type&&a.type!=="none",dl=+a.delay||0,du=+a.dur||0.6,nm=(STUDIO_ANIMS.concat(STUDIO_TEXT_ANIMS).find(x=>x[0]===a.type)||[])[1]||"";
+      return`<div class="stl-row${d.selectedId===l.id?" sel":""}" data-tlrow="${esc(l.id)}"><button type="button" class="stl-name" data-tlsel="${esc(l.id)}">${ic(studioLayerIcon(l),13)}<span>${esc(studioLayerLabel(l))}</span></button><div class="stl-track" data-tltrack="${esc(l.id)}">
+        ${on?`<div class="stl-bar" data-tlbar="${esc(l.id)}" style="left:${pct(dl)}%;width:${Math.max(1.5,pct(dl+du)-pct(dl))}%" title="${esc(nm)}"><span>${esc(nm)}</span><i class="stl-h" data-tlh></i></div>`:""}
+        ${a.out?`<div class="stl-out" style="left:${pct(len-0.65)}%;width:${pct(0.5)}%" title="Исчезновение"></div>`:""}</div></div>`}).join("")}
+    ${rows.length?"":'<p class="pp-hint">На странице нет элементов.</p>'}</div></div>`;
+}
+let studioTlDrag=null;
+document.addEventListener("pointerdown",e=>{
+  const tl=e.target.closest&&e.target.closest("#stud-tl");if(!tl||e.button!==0)return;
+  const d=studioDesign(),len=studioPageLen(d);
+  const sel=e.target.closest("[data-tlsel]");if(sel){d.selectedId=sel.dataset.tlsel;studioMultiSel=[];N.refresh();return}
+  const bar=e.target.closest("[data-tlbar]");
+  if(bar){const l=d.layers.find(x=>x.id===bar.dataset.tlbar);if(!l)return;e.preventDefault();studioBeforeChange();
+    const tr=bar.parentElement.getBoundingClientRect();studioTlDrag={l,bar,tr,len,mode:e.target.closest("[data-tlh]")?"dur":"move",x0:e.clientX,d0:+l.anim.delay||0,u0:+l.anim.dur||0.6};
+    if(d.selectedId!==l.id){d.selectedId=l.id;studioMultiSel=[];document.querySelectorAll(".stl-row.sel").forEach(r=>r.classList.remove("sel"));bar.closest(".stl-row").classList.add("sel");studioRenderSidebar(document)}
+    return}
+  const track=e.target.closest("[data-tltrack]");
+  if(track){const l=d.layers.find(x=>x.id===track.dataset.tltrack);if(!l)return;const r=track.getBoundingClientRect(),t=Math.round(Math.max(0,(e.clientX-r.left)/r.width*len)*10)/10;
+    studioBeforeChange();l.anim=Object.assign(l.anim||{},{type:l.type==="text"?"up":"fade",delay:Math.min(t,len-0.6),dur:0.6});d.selectedId=l.id;studioMultiSel=[];NEON.save();N.refresh();return}
+  const sc=e.target.closest("[data-tlscrub]");
+  if(sc){e.preventDefault();cancelAnimationFrame(studioAnimRaf);const r=sc.getBoundingClientRect(),US=new Map();studioTlDrag={scrub:1,r,len,US};studioAnimApply(Math.max(0,Math.min(len,(e.clientX-r.left)/r.width*len)),len,US)}
+},true);
+document.addEventListener("pointermove",e=>{const g=studioTlDrag;if(!g)return;
+  if(g.scrub){studioAnimApply(Math.max(0,Math.min(g.len,(e.clientX-g.r.left)/g.r.width*g.len)),g.len,g.US);return}
+  const dt=(e.clientX-g.x0)/g.tr.width*g.len,a=g.l.anim,r1=v=>Math.round(v*10)/10;
+  if(g.mode==="move")a.delay=r1(Math.max(0,Math.min(g.len-g.u0,g.d0+dt)));else a.dur=r1(Math.max(0.2,Math.min(g.len-g.d0,g.u0+dt)));
+  g.bar.style.left=(a.delay/g.len*100)+"%";g.bar.style.width=Math.max(1.5,a.dur/g.len*100)+"%";
+  const o=document.querySelector(".stl-time");if(o)o.textContent=g.mode==="move"?"Задержка "+studioTlFmt(a.delay):"Длительность "+studioTlFmt(a.dur)});
+document.addEventListener("pointerup",()=>{const g=studioTlDrag;if(!g)return;studioTlDrag=null;
+  if(g.scrub){studioDesign().layers.forEach(studioPatchLayerDom);const ph=document.querySelector(".stl-ph");if(ph)ph.style.left="0%";return}
+  NEON.save();N.refresh()});
 /* Ролик: одна страница (d.animLen) или все страницы подряд (d.vidPages) — по d.pageDur секунд,
    переход d.pageTrans (fade/slide/zoom/none) длиной 0,5 с в начале каждой следующей страницы. */
 const STUDIO_TRANS=[["fade","Затухание"],["slide","Сдвиг"],["zoom","Масштаб"],["none","Без перехода"]];
@@ -10046,6 +10116,7 @@ function studioDesignAnimHtml(){
       <div class="pp-row"><span class="pp-l">Переход</span><nv-select options="${STUDIO_TRANS.map(([k,t])=>k+":"+t).join("|")}" value="${esc(d.pageTrans||"fade")}" data-dpagetrans aria-label="Переход между страницами"></nv-select></div>
       <p class="pp-hint">Ролик ${Math.round(dur*np*10)/10} с. Анимация элементов на каждой странице начинается заново.</p>`
     :`<div class="pp-row"><span class="pp-l">Длина ролика</span><div class="rng"><input type="range" min="2" max="20" step="1" value="${d.animLen||5}" style="--rng-p:${rngPct(d.animLen||5,2,20)}" data-danimlen><output>${d.animLen||5} с</output></div></div>`}
+    <div class="pp-ibs wide"><button type="button" class="pp-btn${S.studio.timeline?" on":""}" data-act="studTimeline">${ic("gantt-chart",14)}${S.studio.timeline?"Скрыть таймлайн":"Таймлайн"}</button></div>
     <div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studAnimAuto">${ic("wand-2",14)}Анимировать всё</button>${can?`<button type="button" class="pp-btn" data-act="studAnimPlay">${ic("play",14)}Просмотр</button>`:""}</div>
     ${can?`<div class="pp-ibs wide"><button type="button" class="pp-btn pri" data-act="studVideo">${ic("film",14)}Видео MP4</button><button type="button" class="pp-btn" data-act="studGif">${ic("clapperboard",14)}GIF</button></div>${n?`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studAnimClear">${ic("x",14)}Убрать анимацию</button></div>`:""}`:""}`);
 }
@@ -11018,7 +11089,7 @@ Object.assign(N.acts,{
   studAddData(a,d){studioAddData(d.k)},
   studAddGfx(a,d){studioAddGfx(+d.i)},
   studMProps(){const on=!document.body.classList.contains("pp-open");if(on&&S.studio.tab){S.studio.tab="";N.refresh()}document.body.classList.toggle("pp-open",on)},
-  studAnimAuto(){studioAutoAnimate()},studAnimPlay(){studioAnimPreview()},studVideo(){studioExportVideo()},studGif(){studioExportGif()},
+  studAnimAuto(){studioAutoAnimate()},studTimeline(){S.studio.timeline=!S.studio.timeline;NEON.save();N.refresh()},studTlPlay(){studioAnimPreview(true)},studAnimPlay(){studioAnimPreview()},studVideo(){studioExportVideo()},studGif(){studioExportGif()},
   studAnimClear(){const d=studioDesign();studioBeforeChange();d.layers.forEach(l=>delete l.anim);N.refresh();NEON.save()},
   studRulers(){S.studio.rulers=S.studio.rulers===false;N.refresh();NEON.save()},
   studGrid(){const seq=[0,2,3,4,6,12],i=seq.indexOf(+S.studio.grid||0);S.studio.grid=seq[(i+1)%seq.length];N.refresh();NEON.save()},
