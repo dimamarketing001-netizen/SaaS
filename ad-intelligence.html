@@ -1427,7 +1427,7 @@ nv-sparkline-cell,nv-avatar-group{display:inline-flex;vertical-align:middle}
 .el-k{border-radius:8px;padding:6px 8px}
 
 /* Календарь */
-nv-calendar,nv-tree-select,nv-expand-list{display:block;min-width:0}
+nv-calendar,nv-tree-select,nv-topic-tree,nv-expand-list{display:block;min-width:0}
 .cal{display:flex;flex-direction:column;gap:6px;max-width:300px}
 .cal-h{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .cal-h b{font-weight:500;font-size:12.5px}
@@ -2630,7 +2630,7 @@ define("nv-filter-select",class extends NvEl{
 
 /* Дерево с галочками: раздел → подрубрика → интент. Данные — window.NV_TREES[tree-key]:
    [{main,count,subs:[{sub,count,intents:[{intent,count}]}]}]. Значение — пути через «~», уровни через «>». */
-define("nv-tree-select",class extends NvEl{
+define("nv-topic-tree",class extends NvEl{
   get value(){return this.a("value")}get name(){return this.getAttribute("name")}
   sel(){return this.a("value").split("~").filter(Boolean)}
   tree(){return (window.NV_TREES||{})[this.a("tree-key")]||[]}
@@ -4601,7 +4601,7 @@ library(){
   actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
   help:{title:"С чего начать",steps:["Запустите сканирование по своему запросу и городу.","Откройте креатив — там цена, ERID и ссылка.","Сохраняйте находки или собирайте их в подборки."]},
   body:`<div class="grid g4">${stat("Найдено объявлений",fmt(I.lib.server?(I.lib.total||0):r.length),'note="по текущим фильтрам"')}${libMatchTile()}${stat("С кодом ERID",erid,'note="на этой странице"')}${stat("В избранном",savedN,'note="всего сохранено"')}</div>
-  <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-select label="Запуск" value="${esc(f.job||"")}" options="${esc(jobFilterOptions())}" data-chg="libF" data-key="job"></nv-select><nv-tree-select label="Тема объявления" value="${esc(f.aiTree||"")}" tree-key="lib" placeholder="Все темы" min-width="400" data-chg="libF" data-key="aiTree"></nv-tree-select>${f.aiIntent?`<nv-filter-select label="Интент" value="${esc(f.aiIntent)}" options="${esc(aiIntentOptions()||"_:Пока не определены")}" placeholder="Все" min-width="320" data-chg="libF" data-key="aiIntent"></nv-filter-select>`:""}<nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-button variant="${moreN||I.fMore?"secondary":"ghost"}" icon="sliders-horizontal" data-act="libMore">Ещё фильтры${moreN?" · "+moreN:""}</nv-button></div>
+  <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-select label="Запуск" value="${esc(f.job||"")}" options="${esc(jobFilterOptions())}" data-chg="libF" data-key="job"></nv-select><nv-topic-tree label="Тема объявления" value="${esc(f.aiTree||"")}" tree-key="lib" placeholder="Все темы" min-width="400" data-chg="libF" data-key="aiTree"></nv-topic-tree>${f.aiIntent?`<nv-filter-select label="Интент" value="${esc(f.aiIntent)}" options="${esc(aiIntentOptions()||"_:Пока не определены")}" placeholder="Все" min-width="320" data-chg="libF" data-key="aiIntent"></nv-filter-select>`:""}<nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-button variant="${moreN||I.fMore?"secondary":"ghost"}" icon="sliders-horizontal" data-act="libMore">Ещё фильтры${moreN?" · "+moreN:""}</nv-button></div>
   ${I.fMore||moreN?`<div class="toolbar"><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-filter-select label="Пометки" value="${esc(f.feature||"")}" options="promo:Акция или промокод|old_price:Старая цена|warning:Предупреждение|age:Возрастная метка|social:Соцреклама|callouts:Уточнения|offers:Товары в плитке|gallery:Галерея картинок|app:Реклама приложения|ad_id:С номером объявления РСЯ" data-chg="libF" data-key="feature"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select>${intentControlHtml()}</div>`:""}
   ${jobBannerHtml()}
   <nv-saved-views id="lib-views" views="${esc(JSON.stringify(I.savedViews.map(v=>({id:v.id,name:v.name}))))}" value="${esc(activeViewId())}" can-save></nv-saved-views>
@@ -4641,7 +4641,7 @@ compare(){
   actions:I.cmp.length>=2?`<nv-button variant="secondary" icon="folder-plus" data-act="cmpCollect">Сохранить в подборку</nv-button>`:"",
   body:`<nv-card heading="${I.cmp.length>=2?"Сравнение":"Как сравнить"}" subtitle="Выбрано ${I.cmp.length} из 4">${cmpMatrixHtml()}</nv-card>
   <nv-card heading="${I.cmp.length>=4?"Объявления":"Добавить объявления"}" subtitle="${I.cmp.length>=4?"Выбрано максимум — уберите одно, чтобы добавить другое":"Отметьте флажком в углу карточки"}">
-    <div class="k-bar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="cmpF" data-key="q"></nv-input><nv-tree-select label="Тема объявления" value="${esc(f.aiTree||"")}" tree-key="lib" placeholder="Любая тема" min-width="400" data-chg="cmpF" data-key="aiTree" ${f.col?"disabled":""}></nv-tree-select>${K.length?`<nv-filter-select label="Из подборки" value="${esc(f.col)}" options="${K.map(k=>esc(k.id)+":"+esc(k.name)+" ("+(k.items_count||0)+")").join("|")}" placeholder="Вся библиотека" data-chg="cmpF" data-key="col"></nv-filter-select>`:""}<nv-select label="Порядок" value="${esc(f.sort||"recent")}" options="recent:Сначала новые|oldest:Сначала старые" data-chg="cmpF" data-key="sort" ${f.col?"disabled":""}></nv-select></div>
+    <div class="k-bar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="cmpF" data-key="q"></nv-input><nv-topic-tree label="Тема объявления" value="${esc(f.aiTree||"")}" tree-key="lib" placeholder="Любая тема" min-width="400" data-chg="cmpF" data-key="aiTree" ${f.col?"disabled":""}></nv-topic-tree>${K.length?`<nv-filter-select label="Из подборки" value="${esc(f.col)}" options="${K.map(k=>esc(k.id)+":"+esc(k.name)+" ("+(k.items_count||0)+")").join("|")}" placeholder="Вся библиотека" data-chg="cmpF" data-key="col"></nv-filter-select>`:""}<nv-select label="Порядок" value="${esc(f.sort||"recent")}" options="recent:Сначала новые|oldest:Сначала старые" data-chg="cmpF" data-key="sort" ${f.col?"disabled":""}></nv-select></div>
     <div id="cmp-cnt" class="muted" style="font-size:13px;margin:10px 0">${cmpCountHtml()}</div>
     <div id="cmp-candidates">${cmpCandidatesHtml()}</div>
   </nv-card>`,
