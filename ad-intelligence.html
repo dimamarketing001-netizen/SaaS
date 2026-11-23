@@ -1833,6 +1833,7 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .qs{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px}@media (max-width:720px){.qs{grid-template-columns:1fr}}.qs-l{display:flex;flex-direction:column;gap:8px}.qs-r{display:flex;flex-direction:column;gap:6px}
 .qs-logo{width:96px;height:96px;border:1px dashed var(--line);border-radius:12px;display:grid;place-items:center;color:var(--ink-3);overflow:hidden;background:var(--surface-2)}.qs-logo img{max-width:100%;max-height:100%;object-fit:contain}
 .mk-prev{border:1px dashed var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;color:var(--ink-2)}
+.cmp-list{display:flex;flex-direction:column;gap:4px}.cmp-row{display:flex;align-items:center;gap:4px}.cmp-ins{flex:1;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px;cursor:pointer;color:var(--ink);text-align:left}.cmp-ins span{flex:1;font-size:13px}.cmp-ins small{color:var(--ink-3);font-size:11.5px}.cmp-ins:hover{border-color:var(--svc-ink,#7c3aed)}
 .ab-list{display:flex;flex-direction:column;gap:12px;max-height:56vh;overflow:auto}.ab-row{display:flex;flex-direction:column;gap:6px}.ab-h{display:flex;align-items:center;gap:8px}.ab-h b{width:24px;height:24px;border-radius:7px;background:var(--svc-soft,#efe8fd);color:var(--svc-ink,#6d28d9);display:grid;place-items:center;font:600 12px var(--font-mono)}.ab-h span{flex:1;font-size:13.5px}.ab-h small{color:var(--ink-3);font-size:12px}
 .ab-add{cursor:pointer;border:1px dashed var(--line);background:none}.ab-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap}.ab-mode{width:auto}
 .pp-mus{border:1px solid var(--line);border-radius:10px;padding:8px;margin:6px 0}.pp-track{display:flex;align-items:center;gap:6px;margin-bottom:6px}.pp-track span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.pp-x{border:0;background:none;cursor:pointer;color:var(--ink-3);width:26px;height:26px;border-radius:6px;display:grid;place-items:center}
@@ -8079,7 +8080,7 @@ function studioPosHtml(l){
 function studioTplAdmin(){const d=studioDesign(),id=d.teamId||(teamCur()&&teamCur().id);if(!id)return true;const t=TEAM.list.find(x=>x.id===id);return!t||["owner","admin"].includes(t.role)}
 function studioCanUnlock(l){if(!l.lockTpl||!l.locked||studioTplAdmin())return true;toast("Элемент закреплён в шаблоне команды — открепить может админ",{tone:"warning"});return false}
 function studioLayerSecHtml(l){
-  return ppSec("look","Слой",`${ppRng("Прозрачность","opacity",studioOpacityOf(l),0,100,1)}
+  return(l.comp?studioCompSecHtml():"")+ppSec("look","Слой",`${ppRng("Прозрачность","opacity",studioOpacityOf(l),0,100,1)}
     ${studioTplAdmin()?ppOnOff("Закрепить в шаблоне",!!l.lockTpl,'data-act-locktpl=""','data-act-locktpl="1"'):l.lockTpl?'<p class="pp-hint">Закреплён в шаблоне команды</p>':""}
     <div class="pp-row"><span class="pp-l">Наложение</span><nv-select options="normal:Обычный|multiply:Умножение|screen:Экран|overlay:Перекрытие|darken:Затемнение|lighten:Осветление|difference:Разница|color-dodge:Выбеливание|color-burn:Затемнение цвета" value="${esc(l.blendMode||"normal")}" data-prop="blendMode"></nv-select></div>`)
   +ppSec("xform","Наклон",`${ppRng("По X","skewX",l.skewX||0,-60,60,1)}${ppRng("По Y","skewY",l.skewY||0,-60,60,1)}`,(l.skewX||l.skewY)?"вкл":"");
@@ -8239,7 +8240,7 @@ function studioPropsHtml0(){
     const one=studioSelGroup(),gs=new Set(d.layers.filter(x=>studioMultiSel.includes(x.id)).map(x=>x.group));
     return studioPropsHeadHtml(one?"folder-open":"layers",one?studioGroupName(d,one):"Несколько элементов",`Выбрано слоёв: ${studioMultiSel.length} · тяните любой — сдвинутся все`)
     +`<div class="pp-acts">${one?`<button type="button" class="nv-btn v-secondary s-sm" data-act="studGroup" data-on="">${ic("ungroup",14)}Разгруппировать</button><button type="button" class="nv-btn v-ghost s-sm" data-act-grename="${esc(one)}">${ic("pencil",14)}Переименовать</button>`:`<button type="button" class="nv-btn v-soft s-sm" data-act="studGroup" data-on="1">${ic("group",14)}Сгруппировать <kbd>Ctrl G</kbd></button>${[...gs].some(Boolean)?`<button type="button" class="nv-btn v-ghost s-sm" data-act="studGroup" data-on="">Разгруппировать</button>`:""}`}</div>`
-    +studioGroupPropsHtml(d.layers.filter(x=>studioMultiSel.includes(x.id)))+studioMultiPosHtml()+ppSec("align","Выравнивание",`<div class="pp-seg pp-seg-ic six">${[["left","align-horizontal-justify-start","Слева"],["ch","align-horizontal-justify-center","По центру"],["right","align-horizontal-justify-end","Справа"],["top","align-vertical-justify-start","Сверху"],["cv","align-vertical-justify-center","По середине"],["bottom","align-vertical-justify-end","Снизу"]].map(([v,i,t])=>`<button type="button" data-act-align="${v}" data-tip="${t}" aria-label="${t}">${ic(i,15)}</button>`).join("")}</div>
+    +studioCompSecHtml()+studioGroupPropsHtml(d.layers.filter(x=>studioMultiSel.includes(x.id)))+studioMultiPosHtml()+ppSec("align","Выравнивание",`<div class="pp-seg pp-seg-ic six">${[["left","align-horizontal-justify-start","Слева"],["ch","align-horizontal-justify-center","По центру"],["right","align-horizontal-justify-end","Справа"],["top","align-vertical-justify-start","Сверху"],["cv","align-vertical-justify-center","По середине"],["bottom","align-vertical-justify-end","Снизу"]].map(([v,i,t])=>`<button type="button" data-act-align="${v}" data-tip="${t}" aria-label="${t}">${ic(i,15)}</button>`).join("")}</div>
       <button type="button" class="pp-btn" data-act-tidy data-tip="Выстроить в ряд, столбец или сетку с равным шагом · Ctrl+Alt+T">${ic("layout-grid",14)}Привести в порядок</button>
       ${studioMultiSel.length>=3?`<div class="pp-row"><span class="pp-l">Распределить</span>${ppSeg([["По гориз.",'data-act-dist="h"'],["По верт.",'data-act-dist="v"']])}</div>`:'<p class="pp-hint">Выделите 3 и больше слоёв, чтобы распределить их равномерно.</p>'}`);
   }
@@ -9252,6 +9253,7 @@ function studioPanelHtml(tab){
     <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><button type="button" data-act="studTool" data-tool="draw">${ic("brush",20)}Рисовать</button><label class="s2-tiles-l" for="stud-vid-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("film",20)}Видео</label><button type="button" data-act="studTool" data-tool="note" data-tip="Булавка с комментарием для согласования — в файл не попадает">${ic("message-square-plus",20)}Заметка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
     <div class="sect-t">Графика</div><input type="search" class="num" data-s2gfx placeholder="Поиск: стрелка, бейдж, рамка…" value="${esc(studioGfxQ)}" style="width:100%;text-align:left;padding:0 10px">
     <div class="s2-gfx" data-s2gfxgrid>${studioGfxGridHtml()}</div>
+    ${studioCompPanelHtml()}
     <div class="sect-t">Эмодзи</div><input type="search" class="num" data-s2emo placeholder="Поиск: огонь, подарок, телефон…" value="${esc(studioEmojiQ)}" style="width:100%;text-align:left;padding:0 10px">
     <div class="s2-emo" data-s2emogrid>${studioEmojiGridHtml()}</div>
     <div class="sect-t">Данные</div><div class="s2-tiles">${[["table","table-2","Таблица"],["qr","qr-code","QR-код"],["bar","bar-chart-3","Столбцы"],["line","line-chart","Линия"],["pie","pie-chart","Круговая"],["donut","circle-dashed","Кольцо"]].map(([k,i,t])=>`<button type="button" data-act="studAddData" data-k="${k}">${ic(i,20)}${t}</button>`).join("")}</div>
@@ -9968,6 +9970,7 @@ editor(){
         if(studioGroupHandle(e,root))return;
         const l=studioSelected();if(!l)return;const k=e.target.dataset.prop;if(!k)return;
         studioSetPath(l,k,e.detail.value);
+        if(k==="text"&&l.comp)l.textOverride=true;
         if(k==="anim.type"&&/^(type|words|chars)$/.test(e.detail.value)&&(+l.anim.dur||0.6)<1)l.anim.dur=Math.round(Math.min(4,Math.max(1,String(l.text||"").length*(e.detail.value==="words"?0.03:0.045)))*10)/10;
         studioPatchLayerDom(l);
         if(e.target.tagName!=="NV-COLOR-PICKER")studioRenderSidebar(root);else{studioPaintContrast(root);studioSyncProps(e.target)}
@@ -11158,6 +11161,46 @@ async function studioBulkRun(d,tpl,slots,head,rows,map,mode){
     if(fails.length)toast(`Не загрузились фото (${fails.length}): ${[...new Set(fails)].slice(0,3).join(", ")}`,{tone:"warning",timeout:9000});
   }catch(e){prog.done("");toast("Массовое создание прервано: "+(e.message||""),{tone:"danger"})}
 }
+/* ---------- v8-18: компоненты (как в Figma) — d.components={cid:{name,pw,ph,layers:[{k,rx,ry,rw,rh,l}]}}, у копии l.comp={c,i,k} ----------
+   «Обновить все копии» — компонент берётся из выбранной копии и раскладывается во все копии (позиция/размер копии и её тексты сохраняются). */
+function studioCompBox(L){const x=Math.min(...L.map(l=>l.x)),y=Math.min(...L.map(l=>l.y)),x2=Math.max(...L.map(l=>l.x+l.w)),y2=Math.max(...L.map(l=>l.y+l.h));return{x,y,w:Math.max(0.1,x2-x),h:Math.max(0.1,y2-y)}}
+function studioCompFrom(L,F){const b=studioCompBox(L);return{pw:b.w/100*F.w,ph:b.h/100*F.h,layers:L.map((l,k)=>{const c=JSON.parse(JSON.stringify(l));delete c.comp;delete c.group;delete c.id;delete c.textOverride;
+  return{k,rx:(l.x-b.x)/b.w,ry:(l.y-b.y)/b.h,rw:l.w/b.w,rh:l.h/b.h,fpx:l.type==="text"?(+l.fontSize||6)/100*F.h:0,l:c}})}}
+/* копия в рамке box (% макета F); old — прежние слои копии: их тексты-переопределения сохраняются */
+function studioCompBuild(comp,cid,inst,box,old,group,F){const sc=(box.h/100*F.h)/comp.ph,prev={};(old||[]).forEach(l=>{if(l.comp)prev[l.comp.k]=l});
+  return comp.layers.map(it=>{const l=JSON.parse(JSON.stringify(it.l));l.id=studioUid();Object.assign(l,{x:box.x+it.rx*box.w,y:box.y+it.ry*box.h,w:it.rw*box.w,h:it.rh*box.h});
+    if(l.type==="text"){l.fontSize=Math.round(it.fpx*sc/F.h*100*100)/100;const pv=prev[it.k];if(pv&&pv.textOverride){l.text=pv.text;l.textOverride=true}}
+    l.comp={c:cid,i:inst,k:it.k};if(group)l.group=group;return l})}
+function studioCompInstances(d,cid){const out={};studioPagesOf(d).forEach((pg,pi)=>pg.layers.forEach(l=>{if(l.comp&&l.comp.c===cid){const k=pi+":"+l.comp.i;(out[k]=out[k]||{pg,ls:[]}).ls.push(l)}}));return Object.values(out)}
+function studioCompCreate(){const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;let L=studioMultiSel.length?d.layers.filter(l=>studioMultiSel.includes(l.id)):[studioSelected()].filter(Boolean);
+  if(!L.length){toast("Выделите элементы",{tone:"warning"});return}if(L.some(l=>l.comp)){toast("Это уже копия компонента",{tone:"warning"});return}
+  studioBeforeChange();const cid="C"+Date.now().toString(36),inst="i"+Math.random().toString(36).slice(2,7),comp=studioCompFrom(L,F);comp.name="Компонент "+(Object.keys(d.components||{}).length+1);
+  (d.components=d.components||{})[cid]=comp;const g=L[0].group||("g"+Date.now().toString(36));L.forEach((l,k)=>{l.comp={c:cid,i:inst,k};l.group=g});
+  NEON.save();N.refresh();toast("Компонент создан — копии добавляются из «Элементы → Компоненты дизайна»",{tone:"success"})}
+function studioCompInsert(cid){const d=studioDesign(),comp=(d.components||{})[cid];if(!comp)return;const F=STUDIO_FMT[d.format]||STUDIO_FMT.square;
+  let w=comp.pw/F.w*100,h=comp.ph/F.h*100;const k=Math.min(1,90/w,90/h);w*=k;h*=k;studioBeforeChange();
+  const L=studioCompBuild(comp,cid,"i"+Math.random().toString(36).slice(2,7),{x:50-w/2,y:50-h/2,w,h},null,"g"+Date.now().toString(36),F);
+  d.layers.push(...L);studioMultiSel=L.map(l=>l.id);d.selectedId=L[L.length-1].id;studioGroupEnter=null;N.refresh();NEON.save()}
+function studioCompPush(cid,inst){const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,src=d.layers.filter(l=>l.comp&&l.comp.c===cid&&l.comp.i===inst);if(!src.length)return;
+  studioBeforeChange();const comp=studioCompFrom(src,F);comp.name=d.components[cid].name;src.forEach((l,k)=>{l.comp.k=k;delete l.textOverride});d.components[cid]=comp;let n=0;
+  for(const {pg,ls} of studioCompInstances(d,cid)){if(ls[0].comp.i===inst)continue;const idx=pg.layers.indexOf(ls[0]),fresh=studioCompBuild(comp,cid,ls[0].comp.i,studioCompBox(ls),ls,ls[0].group,F);
+    const keep=pg.layers.filter(l=>!ls.includes(l));keep.splice(Math.min(idx,keep.length),0,...fresh);pg.layers.length=0;pg.layers.push(...keep);n++}
+  N.refresh();NEON.save();toast(`Компонент обновлён: копий изменено ${n}`,{tone:"success"})}
+function studioCompReset(cid,inst){const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,comp=(d.components||{})[cid],ls=d.layers.filter(l=>l.comp&&l.comp.c===cid&&l.comp.i===inst);if(!comp||!ls.length)return;
+  studioBeforeChange();const idx=d.layers.indexOf(ls[0]),fresh=studioCompBuild(comp,cid,inst,studioCompBox(ls),null,ls[0].group,F);
+  const keep=d.layers.filter(l=>!ls.includes(l));keep.splice(Math.min(idx,keep.length),0,...fresh);d.layers.length=0;d.layers.push(...keep);studioMultiSel=fresh.map(l=>l.id);d.selectedId=fresh[0].id;N.refresh();NEON.save()}
+function studioCompDetach(cid,inst){const d=studioDesign();studioBeforeChange();d.layers.forEach(l=>{if(l.comp&&l.comp.c===cid&&l.comp.i===inst){delete l.comp;delete l.textOverride}});N.refresh();NEON.save();toast("Копия отвязана от компонента")}
+function studioCompSecHtml(){const d=studioDesign(),sel=studioMultiSel.length?d.layers.filter(l=>studioMultiSel.includes(l.id)):[studioSelected()].filter(Boolean),c=sel.find(l=>l.comp);
+  if(!c){return sel.length?`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-comp="create">${ic("component",14)}Создать компонент</button></div>`:""}
+  const comp=(d.components||{})[c.comp.c];if(!comp)return"";const n=studioCompInstances(d,c.comp.c).length;
+  return ppSec("comp","Компонент",`<p class="pp-hint"><b>${esc(comp.name)}</b> · копий: ${n}. Измените эту копию и нажмите «Обновить все копии» — изменения разойдутся, свои тексты у копий останутся.</p>
+    <div class="pp-ibs wide"><button type="button" class="pp-btn pri" data-comp="push" data-c="${c.comp.c}" data-i="${c.comp.i}">${ic("refresh-cw",14)}Обновить все копии</button></div>
+    <div class="pp-ibs wide"><button type="button" class="pp-btn" data-comp="reset" data-c="${c.comp.c}" data-i="${c.comp.i}">${ic("undo-2",14)}Сбросить</button><button type="button" class="pp-btn" data-comp="detach" data-c="${c.comp.c}" data-i="${c.comp.i}">${ic("unlink",14)}Отвязать</button></div>`,n)}
+function studioCompPanelHtml(){const d=studioDesign(),C=Object.entries(d.components||{});
+  return`<div class="sect-t">Компоненты дизайна</div>${C.length?`<div class="cmp-list">${C.map(([id,c])=>`<div class="cmp-row"><button type="button" class="cmp-ins" data-comp="insert" data-c="${id}">${ic("component",16)}<span>${esc(c.name)}</span><small>${studioCompInstances(d,id).length} коп.</small></button><button type="button" class="pp-x" data-comp="rename" data-c="${id}" aria-label="Переименовать">${ic("pencil",13)}</button></div>`).join("")}</div>`:'<p class="pp-hint">Выделите элементы (кнопку, плашку, карточку) → «Создать компонент» в панели справа. Копии обновляются одним нажатием.</p>'}`}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-comp]");if(!b)return;const k=b.dataset.comp,c=b.dataset.c,i=b.dataset.i;
+  if(k==="create")studioCompCreate();else if(k==="insert")studioCompInsert(c);else if(k==="push")studioCompPush(c,i);else if(k==="reset")studioCompReset(c,i);else if(k==="detach")studioCompDetach(c,i);
+  else if(k==="rename"){const d=studioDesign(),comp=d.components[c];overlay("modal",{title:"Название компонента",service:"studio",body:`<nv-input label="Название" data-cmpn value="${esc(comp.name)}"></nv-input>`,actions:[{label:"Отмена"},{label:"Сохранить",variant:"primary",fn:r=>{const v=r.querySelector("[data-cmpn]");const nm=((v.value||v.getAttribute("value"))||"").trim();if(nm){comp.name=nm.slice(0,40);NEON.save();N.refresh()}}}]})}});
 /* ---------- v8-16: PDF для типографии — размер в мм, 300 dpi, вылеты 3 мм (продолжение краёв), метки реза ---------- */
 const STUDIO_PRINT_MM={bcard:[90,50],euro:[99,210],a5:[148,210],a4p:[210,297],a4:[210,297]};
 async function studioPrintPdf(o){o=o||{};const d=studioDesign();studioPagesSync(d);const F=STUDIO_FMT[d.format]||STUDIO_FMT.square;
@@ -11878,7 +11921,7 @@ function studioInlineEdit(layerEl,l){
   const r=document.createRange();r.selectNodeContents(t);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);
   const finish=keep=>{t.removeEventListener("blur",onBlur);t.removeEventListener("keydown",onKey);t.contentEditable="false";
     const v=t.innerText.replace(/\n$/,"");
-    if(keep&&v.trim()&&v!==before){studioBeforeChange();l.text=v;NEON.save()}
+    if(keep&&v.trim()&&v!==before){studioBeforeChange();l.text=v;if(l.comp)l.textOverride=true;NEON.save()}
     studioPatchLayerDom(l);studioRenderSidebar(document)};
   const onBlur=()=>finish(true);
   const onKey=e=>{e.stopPropagation();if(e.key==="Escape"){e.preventDefault();finish(false)}else if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();t.blur()}};
