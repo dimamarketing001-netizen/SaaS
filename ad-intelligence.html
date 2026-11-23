@@ -1827,6 +1827,8 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stn-pop textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:13px var(--font-body,inherit);resize:vertical;background:var(--surface);color:var(--ink)}
 .stn-acts{display:flex;align-items:center;gap:6px}.stn-acts small{flex:1;font-size:11px;color:var(--ink-3)}.stn-acts .pp-btn{width:auto;height:28px;padding:0 9px;font-size:12px}
 .shr{display:flex;flex-direction:column;gap:10px}.shr-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.shr-row input{flex:1;min-width:200px;text-align:left;padding:0 10px;height:36px}
+.pp-mus{border:1px solid var(--line);border-radius:10px;padding:8px;margin:6px 0}.pp-track{display:flex;align-items:center;gap:6px;margin-bottom:6px}.pp-track span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.pp-x{border:0;background:none;cursor:pointer;color:var(--ink-3);width:26px;height:26px;border-radius:6px;display:grid;place-items:center}
+.mus-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:50vh;overflow:auto}.mus-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:6px 8px}.mus-t{flex:1;min-width:0;display:flex;flex-direction:column}.mus-t b{font-weight:500;font-size:13.5px}.mus-t small{color:var(--ink-3);font-size:12px}
 .vid-badge{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;padding:2px 4px;display:flex;pointer-events:none}
 .stud-vprev{position:absolute;inset:0;width:100%;height:100%;z-index:50;pointer-events:none}
 .vid-prog{position:fixed;right:18px;bottom:18px;z-index:9600;width:280px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-2);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
@@ -9709,7 +9711,7 @@ editor(){
     <nav class="s2-rail">${STUDIO_TABS.map(([k,i,lb])=>`<button type="button" class="${tabNow===k?"on":""}" data-act="studTab" data-tab="${k}">${ic(i,20)}<span>${lb}</span></button>`).join("")}<button type="button" data-go="studio-library" style="margin-top:auto">${ic("images",18)}<span>Дизайны</span></button><button type="button" data-act="studShortcuts">${ic("keyboard",18)}<span>Клавиши</span></button></nav>
     <aside class="s2-panel" id="s2-panel" ${tabNow?"":"hidden"}>${tabNow?`<button type="button" class="s2-panel-x" data-act="studTab" data-tab="${tabNow}" data-tip="Скрыть панель">${ic("chevrons-left",16)}</button>`+studioPanelHtml(tabNow):""}</aside>
     <section class="s2-main">
-      <input type="file" id="stud-bg-file" accept="image/*" class="sr"><input type="file" id="stud-img-file" accept="image/*" class="sr"><input type="file" id="stud-img-replace" accept="image/*" class="sr"><input type="file" id="stud-vid-file" accept="video/mp4,video/webm,video/quicktime" class="sr">
+      <input type="file" id="stud-bg-file" accept="image/*" class="sr"><input type="file" id="stud-img-file" accept="image/*" class="sr"><input type="file" id="stud-img-replace" accept="image/*" class="sr"><input type="file" id="stud-vid-file" accept="video/mp4,video/webm,video/quicktime" class="sr"><input type="file" id="stud-aud-file" accept="audio/*" class="sr">
       ${start?studioStartHtml():`<div class="stud-stage-wrap"><div class="stud-rbox${S.studio.rulers!==false?" on":""}">${S.studio.rulers!==false?'<canvas class="stud-ruler h" aria-hidden="true"></canvas><canvas class="stud-ruler v" aria-hidden="true"></canvas><span class="stud-ruler-c" aria-hidden="true">px</span>':""}<div id="stud-stage-host">${studioStageHtml()}</div></div>${studioTool==="draw"?studioDrawBarHtml():""}${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Перо: клик — точка, клик+тяни — плавная, клик по первой — замкнуть, Enter — закончить, Esc — отмена.</p>':""}</div>${S.studio.timeline?studioTimelineHtml():""}${studioPagesHtml()}`}
     </section>
     <button type="button" class="m-props-btn" data-act="studMProps">${ic("sliders-horizontal",16)}<span>Настройки</span></button>
@@ -10670,6 +10672,26 @@ function studioTimeline(d){
     return o}};
 }
 window.studioTimeline=studioTimeline;
+/* ---------- Музыка и звук (v8-11): d.audio={url,name,credit,offset,vol,fadeIn,fadeOut} + звук видео-слоёв ----------
+   Смешиваем в OfflineAudioContext на длину ролика, кодируем AAC (или Opus) и кладём дорожкой в MP4. */
+const studioAudioBufs=new Map();
+async function studioAudioBuf(url){if(studioAudioBufs.has(url))return studioAudioBufs.get(url);
+  const ab=await(await fetch(url)).arrayBuffer(),ctx=new OfflineAudioContext(2,48000,48000),buf=await ctx.decodeAudioData(ab);studioAudioBufs.set(url,buf);return buf}
+function studioDesignVideos(d){return studioPagesOf(d).flatMap(pg=>(pg.layers||[]).filter(l=>l.type==="video"&&!l.hidden&&l.video&&!l.video.muted))}
+async function studioMixAudio(d,len){const A=d.audio,vids=studioDesignVideos(d);if(!(A&&A.url)&&!vids.length)return null;
+  const SR=48000,ctx=new OfflineAudioContext(2,Math.ceil(len*SR),SR);
+  if(A&&A.url){const buf=await studioAudioBuf(studioVideoSrc(A));const src=ctx.createBufferSource();src.buffer=buf;src.loop=buf.duration<len+(+A.offset||0);
+    const g=ctx.createGain(),v=A.vol==null?0.8:+A.vol;g.gain.setValueAtTime(A.fadeIn?0:v,0);if(A.fadeIn)g.gain.linearRampToValueAtTime(v,Math.min(1.5,len/3));
+    if(A.fadeOut){g.gain.setValueAtTime(v,Math.max(0,len-2));g.gain.linearRampToValueAtTime(0,len)}src.connect(g).connect(ctx.destination);src.start(0,Math.min(+A.offset||0,Math.max(0,buf.duration-0.1)))}
+  for(const l of vids){try{const buf=await studioAudioBuf(studioVideoSrc(l.video)),t0=+l.video.trim0||0,t1=+l.video.trim1||buf.duration,clip=Math.max(0.1,t1-t0);
+    for(let at=0;at<len;at+=clip){const src=ctx.createBufferSource();src.buffer=buf;const g=ctx.createGain();g.gain.value=1;src.connect(g).connect(ctx.destination);src.start(at,t0,Math.min(clip,len-at))}}catch(e){}}
+  return ctx.startRendering()}
+async function studioAudioCodec(){for(const [c,m] of [["mp4a.40.2","aac"],["opus","opus"]]){try{const r=await AudioEncoder.isConfigSupported({codec:c,sampleRate:48000,numberOfChannels:2,bitrate:128000});if(r.supported)return{codec:c,mux:m}}catch(e){}}return null}
+async function studioEncodeAudio(buf,codec,muxer){let err=null;const enc=new AudioEncoder({output:(ch,meta)=>muxer.addAudioChunk(ch,meta),error:e=>{err=e}});
+  enc.configure({codec:codec.codec,sampleRate:48000,numberOfChannels:2,bitrate:128000});const L=buf.getChannelData(0),R=buf.getChannelData(1),F=1024;
+  for(let i=0;i<L.length;i+=F){const n=Math.min(F,L.length-i),data=new Float32Array(n*2);data.set(L.subarray(i,i+n),0);data.set(R.subarray(i,i+n),n);
+    const ad=new AudioData({format:"f32-planar",sampleRate:48000,numberOfFrames:n,numberOfChannels:2,timestamp:Math.round(i/48000*1e6),data});enc.encode(ad);ad.close();if(enc.encodeQueueSize>50)await new Promise(r=>setTimeout(r,5))}
+  await enc.flush();enc.close();if(err)throw err}
 async function studioExportVideo(o){
   o=o||{};const d=o.design||studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;
   if(!window.VideoEncoder||!window.Mp4Muxer){toast("Браузер не умеет собирать видео — откройте в свежем Chrome, Edge или Яндекс Браузере",{tone:"warning"});return}
@@ -10678,7 +10700,8 @@ async function studioExportVideo(o){
   let codec=null;for(const c of ["avc1.640028","avc1.4d0028","avc1.42002a","avc1.640033"]){try{const r=await VideoEncoder.isConfigSupported({codec:c,width:W,height:H,bitrate:8e6,framerate:fps});if(r.supported){codec=c;break}}catch(e){}}
   if(!codec){toast("Кодек H.264 недоступен в этом браузере",{tone:"danger"});return}
   const bar=document.createElement("div");bar.className="vid-prog";bar.innerHTML=`<b>Собираю видео…</b><i><span></span></i><small>0 / ${N2}</small>`;document.body.append(bar);
-  const muxer=new Mp4Muxer.Muxer({target:new Mp4Muxer.ArrayBufferTarget(),video:{codec:"avc",width:W,height:H},fastStart:"in-memory"});
+  let audioBuf=null,acodec=null;try{if(window.AudioEncoder){audioBuf=await studioMixAudio(d,len);if(audioBuf)acodec=await studioAudioCodec()}}catch(e){toast("Звук не добавлен: "+(e.message||e),{tone:"warning"});audioBuf=null}
+  const muxer=new Mp4Muxer.Muxer({target:new Mp4Muxer.ArrayBufferTarget(),video:{codec:"avc",width:W,height:H},...(audioBuf&&acodec?{audio:{codec:acodec.mux,numberOfChannels:2,sampleRate:48000}}:{}),fastStart:"in-memory"});
   let failed=null;const enc=new VideoEncoder({output:(ch,meta)=>muxer.addVideoChunk(ch,meta),error:e=>{failed=e}});
   enc.configure({codec,width:W,height:H,bitrate:8e6,framerate:fps});
   const out=document.createElement("canvas");out.width=W;out.height=H;const octx=out.getContext("2d");
@@ -10690,7 +10713,7 @@ async function studioExportVideo(o){
       if(enc.encodeQueueSize>8)await new Promise(r=>setTimeout(r,10));
       if(i%5===0){bar.querySelector("span").style.width=(i/N2*100)+"%";bar.querySelector("small").textContent=i+" / "+N2}
     }
-    await enc.flush();if(failed)throw failed;muxer.finalize();
+    await enc.flush();if(failed)throw failed;if(audioBuf&&acodec)await studioEncodeAudio(audioBuf,acodec,muxer);muxer.finalize();
     const blob=new Blob([muxer.target.buffer],{type:"video/mp4"});
     if(o.blob)return blob;
     studioDownload(blob,(d.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+"_"+W+"x"+H+".mp4");toast("Видео готово: "+(blob.size/1048576).toFixed(1)+" МБ, "+len+" с",{tone:"success"});
@@ -10765,6 +10788,40 @@ function studioAnimSecHtml(l){
     <div class="pp-row"><span class="pp-l">В конце</span><nv-select options="${STUDIO_ANIM_OUT.map(([k,t])=>k+":"+t).join("|")}" value="${esc(a.out||"")}" data-prop="anim.out" aria-label="Исчезновение в конце"></nv-select></div>
     ${on||a.out?`<button type="button" class="pp-btn" data-act="studAnimPlay">${ic("play",14)}Просмотр</button>`:""}`,on||a.out?"вкл":"");
 }
+function studioMusicHtml(d){const A=d.audio;
+  return`<div class="pp-mus"><div class="pp-l" style="margin-bottom:4px">${ic("music",13)} Музыка в видео</div>${A&&A.url?`<div class="pp-track"><button type="button" class="pp-btn" data-mus="play" style="width:auto">${ic("play",13)}</button><span title="${esc(A.name||"")}">${esc(A.name||"Трек")}</span><button type="button" class="pp-x" data-mus="del" aria-label="Убрать музыку">${ic("x",13)}</button></div>
+    ${A.credit?`<p class="pp-hint">${esc(A.credit)}</p>`:""}
+    <div class="pp-row"><span class="pp-l">Громкость</span><div class="rng"><input type="range" min="0" max="1" step="0.05" value="${A.vol==null?0.8:A.vol}" style="--rng-p:${rngPct(A.vol==null?0.8:A.vol,0,1)}" data-mus-vol><output>${Math.round((A.vol==null?0.8:A.vol)*100)}%</output></div></div>
+    <div class="pp-row"><span class="pp-l">Начало трека</span><div class="rng"><input type="range" min="0" max="${Math.max(1,Math.floor(A.dur||60))}" step="1" value="${+A.offset||0}" style="--rng-p:${rngPct(+A.offset||0,0,Math.max(1,Math.floor(A.dur||60)))}" data-mus-off><output>${+A.offset||0} с</output></div></div>
+    <div class="pp-chips"><button type="button" class="${A.fadeIn?"on":""}" data-mus="fadeIn">Плавное начало</button><button type="button" class="${A.fadeOut?"on":""}" data-mus="fadeOut">Затухание в конце</button></div>`
+  :`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-mus="lib">${ic("library",14)}Библиотека</button><label class="pp-btn" for="stud-aud-file">${ic("upload",14)}Свой трек</label></div>`}</div>`}
+let studioMusAudio=null;
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest("[data-mus]");if(!b)return;const d=studioDesign(),k=b.dataset.mus;
+  if(k==="lib")return studioMusicLib();
+  if(k==="del"){studioBeforeChange();delete d.audio;if(studioMusAudio)studioMusAudio.pause();NEON.save();N.refresh();return}
+  if(k==="play"){if(studioMusAudio&&!studioMusAudio.paused){studioMusAudio.pause();return}studioMusAudio=new Audio(studioVideoSrc(d.audio));studioMusAudio.volume=d.audio.vol==null?0.8:+d.audio.vol;studioMusAudio.currentTime=+d.audio.offset||0;studioMusAudio.play().catch(()=>{});setTimeout(()=>studioMusAudio&&studioMusAudio.pause(),(d.animLen||5)*1000);return}
+  if(k==="fadeIn"||k==="fadeOut"){d.audio[k]=!d.audio[k];NEON.save();N.refresh()}});
+document.addEventListener("input",e=>{const t=e.target;if(!t.matches)return;const d=studioDesign();
+  if(t.matches("[data-mus-vol]")){d.audio.vol=+t.value;t.style.setProperty("--rng-p",rngPct(+t.value,0,1));t.nextElementSibling.textContent=Math.round(t.value*100)+"%";if(studioMusAudio)studioMusAudio.volume=+t.value;NEON.save()}
+  else if(t.matches("[data-mus-off]")){d.audio.offset=+t.value;t.style.setProperty("--rng-p",rngPct(+t.value,0,+t.max));t.nextElementSibling.textContent=t.value+" с";NEON.save()}});
+async function studioSetAudio(r,name,credit,dur){const d=studioDesign();studioBeforeChange();if(!dur){try{dur=(await studioAudioBuf(studioVideoSrc(r))).duration}catch(e){dur=60}}
+  d.audio={url:r.url,name:name||"Трек",credit:credit||"",offset:0,vol:0.8,fadeIn:true,fadeOut:true,dur:Math.round(dur)};NEON.save();N.refresh();toast("Музыка добавлена — будет в видео MP4",{tone:"success"})}
+document.addEventListener("change",async e=>{if(e.target.id!=="stud-aud-file")return;const f=e.target.files[0];e.target.value="";if(!f)return;if(f.size>30e6){toast("Трек больше 30 МБ",{tone:"warning"});return}
+  try{const data_url=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(f)});const r=await apiPost("/api/v1/studio/videos",{data_url,name:f.name});await studioSetAudio(r,f.name.replace(/\.[^.]+$/,""),"")}
+  catch(er){toast("Трек не загрузился: "+er.message,{tone:"danger"})}});
+function studioMusicLib(){let audio=null;const {root,close}=overlay("modal",{title:"Музыка для видео",subtitle:"Бесплатные треки и звуки (Jamendo, Freesound через Openverse) с лицензией для коммерческого использования. Если лицензия требует — укажите автора в посте.",service:"studio",size:"lg",
+  body:`<div class="row" style="gap:8px;margin-bottom:8px;flex-wrap:wrap">${["бодрая","спокойная","корпоративная","электроника","акустика","праздник"].map(q=>`<button type="button" class="pl-chk" data-mq="${q}">${q}</button>`).join("")}</div><nv-input type="search" data-mq-in placeholder="Поиск по-английски даёт больше: upbeat, corporate, chill…" label="Поиск"></nv-input><div class="mus-list"><p class="muted">Выберите настроение или введите запрос</p></div>`,
+  actions:[{label:"Закрыть",fn:()=>{audio&&audio.pause()}}]});
+  const EN={"бодрая":"upbeat","спокойная":"calm","корпоративная":"corporate","электроника":"electronic","акустика":"acoustic","праздник":"happy"};
+  const list=root.querySelector(".mus-list");let R=[];
+  const search=async q=>{list.innerHTML='<p class="muted">Ищу…</p>';try{R=(await api("/api/v1/studio/stock-audio",{q:EN[q]||q})).results||[]}catch(e){list.innerHTML=`<p class="muted">${esc(e.message)}</p>`;return}
+    list.innerHTML=R.length?R.map((x,i)=>`<div class="mus-row"><button type="button" class="pp-btn" data-mp="${i}" style="width:auto">${ic("play",13)}</button><div class="mus-t"><b>${esc(x.title||"Без названия")}</b><small>${esc(x.creator||"")} · ${esc(x.license)} · ${x.duration?Math.round(x.duration)+" с":""} · ${esc(x.source||"")}</small></div><nv-button size="sm" variant="primary" data-mpick="${i}">Выбрать</nv-button></div>`).join(""):'<p class="muted">Ничего не нашлось — попробуйте по-английски</p>'};
+  root.addEventListener("click",async e=>{const q=e.target.closest("[data-mq]"),pl=e.target.closest("[data-mp]"),pk=e.target.closest("[data-mpick]");
+    if(q)search(q.dataset.mq);
+    else if(pl){const x=R[+pl.dataset.mp];if(audio&&!audio.paused&&audio._i===pl.dataset.mp){audio.pause();return}audio&&audio.pause();audio=new Audio(x.url);audio._i=pl.dataset.mp;audio.play().catch(()=>toast("Превью не играет — трек всё равно можно выбрать"))}
+    else if(pk){const x=R[+pk.dataset.mpick];audio&&audio.pause();pk.setAttribute("loading","");try{const r=await apiPost("/api/v1/studio/stock-audio/fetch",{url:x.url});close();
+      await studioSetAudio(r,x.title,x.attribution_needed?`«${x.title}» — ${x.creator}, ${x.license}${x.landing?" · "+x.landing:""}`:"",x.duration)}catch(er){pk.removeAttribute("loading");toast(er.message,{tone:"danger"})}}});
+  root.querySelector("[data-mq-in]").addEventListener("keydown",e=>{if(e.key==="Enter"){const v=(e.target.value||"").trim();if(v)search(v)}})}
 function studioDesignAnimHtml(){
   const d=studioDesign(),n=d.layers.filter(l=>studioHasAnim([l])).length,np=studioPagesOf(d).length,all=d.vidPages&&np>1,dur=+d.pageDur||3;
   const can=all||n;
@@ -10774,6 +10831,7 @@ function studioDesignAnimHtml(){
       <div class="pp-row"><span class="pp-l">Переход</span><nv-select options="${STUDIO_TRANS.map(([k,t])=>k+":"+t).join("|")}" value="${esc(d.pageTrans||"fade")}" data-dpagetrans aria-label="Переход между страницами"></nv-select></div>
       <p class="pp-hint">Ролик ${Math.round(dur*np*10)/10} с. Анимация элементов на каждой странице начинается заново.</p>`
     :`<div class="pp-row"><span class="pp-l">Длина ролика</span><div class="rng"><input type="range" min="2" max="20" step="1" value="${d.animLen||5}" style="--rng-p:${rngPct(d.animLen||5,2,20)}" data-danimlen><output>${d.animLen||5} с</output></div></div>`}
+    ${studioMusicHtml(d)}
     <div class="pp-ibs wide"><button type="button" class="pp-btn${S.studio.timeline?" on":""}" data-act="studTimeline">${ic("gantt-chart",14)}${S.studio.timeline?"Скрыть таймлайн":"Таймлайн"}</button></div>
     <div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studAnimAuto">${ic("wand-2",14)}Анимировать всё</button>${can?`<button type="button" class="pp-btn" data-act="studAnimPlay">${ic("play",14)}Просмотр</button>`:""}</div>
     ${can?`<div class="pp-ibs wide"><button type="button" class="pp-btn pri" data-act="studVideo">${ic("film",14)}Видео MP4</button><button type="button" class="pp-btn" data-act="studGif">${ic("clapperboard",14)}GIF</button></div><div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studVideoSet">${ic("layout-grid",14)}Во всех форматах…</button></div>${n?`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studAnimClear">${ic("x",14)}Убрать анимацию</button></div>`:""}`:""}`);
