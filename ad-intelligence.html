@@ -1258,6 +1258,15 @@ nv-ring{display:inline-flex;flex:none;vertical-align:middle}
 .pop-l{overflow-y:auto;display:flex;flex-direction:column;gap:1px;min-height:0}
 .pop-o,.pop-i{display:flex;align-items:center;gap:8px;width:100%;padding:6px 8px;border:0;background:none;border-radius:8px;cursor:pointer;text-align:left;color:var(--ink)}
 .pop-o:hover,.pop-i:hover,.pop-i:focus-visible,.pop-o:focus-within{background:var(--surface-2)}
+.con-h{margin:0 0 10px;font-size:15px}.con-ok{display:flex;gap:12px;align-items:flex-start}.con-ok p{margin:2px 0 0;font-size:13px}
+.con-cap-h{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}.con-cap-h b{display:inline-flex;gap:6px;align-items:center}
+.con-shot{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:crosshair;background:#07101d;max-width:960px}
+.con-shot img{display:block;width:100%;max-height:68vh;object-fit:contain}
+.con-dot{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;border:2px solid #fff;background:rgba(255,80,80,.55);pointer-events:none}
+.con-shot-u{font-size:12px;margin:6px 0 10px;word-break:break-all}
+.con-q{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.con-q>div{display:flex;flex-direction:column;padding:10px;border:1px solid var(--line);border-radius:10px}.con-q b{font-size:20px}.con-q span{font-size:12.5px;color:var(--muted)}
+.con-err{max-width:320px;font-size:12px}.con-off td{opacity:.55}.con-act{white-space:nowrap;text-align:right}
+.con-pw{display:flex;gap:10px;align-items:center}.con-pw code{font-size:16px;padding:6px 10px;border-radius:8px;background:var(--surface-2)}
 .tr-l{max-height:min(60vh,460px)}
 .tr-l{align-items:stretch}.tr-r{display:flex;align-items:center;gap:2px;width:100%;align-self:stretch;justify-content:flex-start;text-align:left}.tr-r.tr-1{padding-left:18px}.tr-r.tr-2{padding-left:36px}
 .tr-t{width:22px;height:22px;flex:none;display:grid;place-items:center;border:0;background:none;border-radius:6px;color:var(--ink-2,var(--muted));cursor:pointer;padding:0}
@@ -1818,6 +1827,7 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stn-pop textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:13px var(--font-body,inherit);resize:vertical;background:var(--surface);color:var(--ink)}
 .stn-acts{display:flex;align-items:center;gap:6px}.stn-acts small{flex:1;font-size:11px;color:var(--ink-3)}.stn-acts .pp-btn{width:auto;height:28px;padding:0 9px;font-size:12px}
 .shr{display:flex;flex-direction:column;gap:10px}.shr-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.shr-row input{flex:1;min-width:200px;text-align:left;padding:0 10px;height:36px}
+.vid-badge{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;padding:2px 4px;display:flex;pointer-events:none}
 .stud-vprev{position:absolute;inset:0;width:100%;height:100%;z-index:50;pointer-events:none}
 .vid-prog{position:fixed;right:18px;bottom:18px;z-index:9600;width:280px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-2);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
 .vid-prog b{font-weight:500;font-size:13px}.vid-prog i{display:block;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}.vid-prog i span{display:block;height:100%;width:0;background:var(--svc-ink);transition:width .2s}.vid-prog small{font:11px var(--font-mono);color:var(--ink-3)}
@@ -5090,7 +5100,7 @@ N.register({id:"intel",name:"Разведка рекламы",short:"Разве�
     {id:"advertisers",label:"Рекламодатели",icon:"building-2"}
   ]},
   // Технические отчёты о качестве сбора — пользователю они ничего не говорят, оставлены администратору
-  ...(session&&session.role==="admin"?[{group:"Служебное",items:[
+  ...(session&&(session.role==="admin"||session.role==="superuser")?[{group:"Служебное",items:[
     {id:"platforms",label:"Качество данных",icon:"radar"},
     {id:"campaigns",label:"Кампании и слова",icon:"target"}
   ]}]:[])
@@ -7468,6 +7478,98 @@ N.register({id:"team",name:"Команда",short:"Команда",tag:"Team",ic
   nav:[{group:"Команда",items:[{id:"members",label:"Участники и роли",icon:"users"},{id:"brand",label:"Бренд-кит",icon:"palette"}]}],
   views:views_team});
 
+/* ---------- Консоль создателя (2026-11-23): вместо удалённой серверной консоли /login ----------
+   Только роль superuser. Обзор системы, ручное прохождение капчи в Chrome воркера, пользователи платформы.
+   API: /api/v1/console/* (parsya-control app/console.py). */
+const CON={ov:null,users:null,sel:null,shot:null,err:""};
+async function conReq(method,path,body){const res=await netFetch(API_BASE+path,{method,headers:{Authorization:"Bearer "+session.token,"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined});
+  if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
+  if(!res.ok){let d="Ошибка "+res.status;try{d=errDetail(await res.json(),d)}catch(e){}throw new Error(d)}return res.json()}
+const conTime=t=>t?new Date(t).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"—";
+const conAgo=t=>{if(!t)return"—";const m=Math.round((Date.now()-new Date(t))/60000);return m<1?"только что":m<60?m+" мин назад":m<1440?Math.round(m/60)+" ч назад":Math.round(m/1440)+" дн назад"};
+const CON_ST={running:["Идёт","info"],queued:["В очереди","neutral"],succeeded:["Готово","success"],failed:["Ошибка","danger"]};
+const conBadge=st=>{const x=CON_ST[st]||[st||"—","neutral"];return`<nv-badge tone="${x[1]}">${esc(x[0])}</nv-badge>`};
+function conCaptchaHtml(){const o=CON.ov;if(!o)return"";const list=o.captcha||[];
+  if(!list.length)return`<nv-card><div class="con-ok">${ic("shield-check",18)}<div><b>Капчи нет</b><p class="muted">Когда парсер упрётся в капчу, здесь появится живой снимок его браузера — кликайте прямо по картинке.</p></div></div></nv-card>`;
+  if(!CON.sel||!list.some(c=>c.job_id===CON.sel))CON.sel=list[0].job_id;
+  const c=list.find(x=>x.job_id===CON.sel);
+  return`<nv-card class="con-cap"><div class="con-cap-h"><b>${ic("shield-alert",16)} Капча — запуск #${c.job_id}</b><span class="muted">${esc(c.key_text||"")} · ${esc(c.city||"")}</span>
+    ${list.length>1?`<nv-select label="Запуск" value="${c.job_id}" options="${list.map(x=>x.job_id+":#"+x.job_id+" "+esc(String(x.key_text||"").replace(/[|:]/g," "))).join("|")}" data-chg="conSel"></nv-select>`:""}</div>
+    <div class="con-shot" id="con-shot" title="Клик по снимку = клик в браузере воркера">${CON.shot&&CON.shot.screenshot_b64?`<img id="con-img" alt="Снимок браузера воркера" src="data:image/png;base64,${CON.shot.screenshot_b64}">`:`<nv-skeleton count="3"></nv-skeleton>`}</div>
+    <div class="con-shot-u muted">${esc((CON.shot&&(CON.shot.title||CON.shot.url))||c.url||"")} · обновлено ${conAgo((CON.shot&&CON.shot.updated_at)||c.updated_at)}</div>
+    <div class="toolbar"><nv-input class="grow" id="con-text" label="Текст в поле" placeholder="Например, символы с картинки"></nv-input><nv-button icon="send" data-act="conText">Ввести</nv-button>
+      <nv-button variant="secondary" data-act="conKey" data-v="ENTER">Enter</nv-button><nv-button variant="secondary" data-act="conKey" data-v="TAB">Tab</nv-button><nv-button variant="secondary" data-act="conKey" data-v="ESCAPE">Esc</nv-button>
+      <nv-button variant="ghost" icon="refresh-cw" data-act="conRefreshPage">Перезагрузить страницу</nv-button></div></nv-card>`}
+function conOverviewHtml(){const o=CON.ov;if(!o)return`<nv-skeleton count="6"></nv-skeleton>`;const j=o.jobs,c=o.creatives;
+  const w=(o.workers||[]).map(x=>{const fresh=x.last_seen&&(Date.now()-new Date(x.last_seen))<120000;return`<tr><td>${esc(x.worker_id)}</td><td>${esc(x.hostname||"")}</td><td><nv-badge tone="${fresh?"success":"danger"}">${fresh?"на связи":"нет связи"}</nv-badge> ${esc(x.state||"")}</td><td>${conAgo(x.last_seen)}</td><td>${x.current_job_id?"#"+x.current_job_id:"—"}</td><td class="muted">${esc(x.last_error||"")}</td></tr>`}).join("")||`<tr><td colspan="6" class="muted">Воркер ещё не подключался</td></tr>`;
+  const act=(o.active||[]).map(x=>`<tr><td>#${x.id}</td><td>${esc(x.key_text||"")}</td><td>${esc(x.city||"")}</td><td>${conBadge(x.status)}${x.captcha_required?` <nv-badge tone="warning">капча</nv-badge>`:""}</td><td>${x.total_creatives||0}</td><td>${conAgo(x.started_at||x.created_at)}</td></tr>`).join("")||`<tr><td colspan="6" class="muted">Сейчас ничего не идёт</td></tr>`;
+  const rec=(o.recent||[]).map(x=>`<tr><td>#${x.id}</td><td>${esc(x.key_text||"")}</td><td>${esc(x.city||"")}</td><td>${conBadge(x.status)}</td><td>${x.total_creatives||0}</td><td>${conTime(x.finished_at||x.created_at)}</td><td class="muted con-err">${esc(x.error_text||"")}</td></tr>`).join("");
+  return`<div class="kpis">${stat("Идут запуски",j.running,`note="в очереди: ${j.queued}"`)}${stat("Запусков всего",j.total,`note="ошибок за сутки: ${j.failed_24h}"`)}${stat("Креативов",c.total,`note="обнаружений: ${c.occurrences}"`)}${stat("Пользователей",o.users.active,`note="всего: ${o.users.total}"`)}</div>
+  <div id="con-cap">${conCaptchaHtml()}</div>
+  <nv-card><h3 class="con-h">Воркеры</h3><div class="table-wrap"><table class="tbl"><thead><tr><th>Воркер</th><th>Узел</th><th>Состояние</th><th>Сигнал</th><th>Задание</th><th>Последняя ошибка</th></tr></thead><tbody>${w}</tbody></table></div></nv-card>
+  <nv-card><h3 class="con-h">Фоновые очереди</h3><div class="con-q">
+    <div><b class="num">${c.ai_intent_pending}</b><span>ждут интента Gemini${o.gemini_model?` (${esc(o.gemini_model)})`:""}</span></div>
+    <div><b class="num">${c.taxonomy_pending}</b><span>без раздела/подрубрики</span></div>
+    <div><b class="num">${c.embeddings_pending}</b><span>креативов без эмбеддинга</span></div>
+    <div><b class="num">${o.intent_embeddings_pending??"—"}</b><span>запросов без эмбеддинга</span></div>
+    <div><b class="num">${o.schedules_active}</b><span>активных расписаний</span></div></div></nv-card>
+  <nv-card><h3 class="con-h">Сейчас идут</h3><div class="table-wrap"><table class="tbl"><thead><tr><th>#</th><th>Запрос</th><th>Город</th><th>Статус</th><th>Креативов</th><th>Старт</th></tr></thead><tbody>${act}</tbody></table></div></nv-card>
+  <nv-card><h3 class="con-h">Последние запуски</h3><div class="table-wrap"><table class="tbl"><thead><tr><th>#</th><th>Запрос</th><th>Город</th><th>Статус</th><th>Креативов</th><th>Когда</th><th>Ошибка</th></tr></thead><tbody>${rec}</tbody></table></div></nv-card>`}
+async function conLoadOverview(){try{CON.ov=await conReq("GET","/api/v1/console/overview");CON.err=""}catch(e){CON.err=e.message}
+  if(CON.ov&&CON.ov.captcha&&CON.ov.captcha.length){if(!CON.sel||!CON.ov.captcha.some(c=>c.job_id===CON.sel))CON.sel=CON.ov.captcha[0].job_id;await conLoadShot()}else CON.shot=null}
+async function conLoadShot(){if(!CON.sel)return;try{CON.shot=await conReq("GET","/api/v1/console/jobs/"+CON.sel+"/browser")}catch(e){}}
+function conDrawOverview(){const el=document.getElementById("con-root");if(!el)return false;el.innerHTML=CON.err?`<nv-card><nv-empty icon="triangle-alert" heading="Не удалось загрузить" text="${esc(CON.err)}"></nv-empty></nv-card>`:conOverviewHtml();conBindShot();return true}
+function conDrawShot(){const box=document.getElementById("con-cap");if(!box)return false;
+  const img=document.getElementById("con-img");if(img&&CON.shot&&CON.shot.screenshot_b64){img.src="data:image/png;base64,"+CON.shot.screenshot_b64;return true}
+  const keep=document.getElementById("con-text"),val=keep&&keep.querySelector("input")?keep.querySelector("input").value:"";box.innerHTML=conCaptchaHtml();conBindShot();
+  const k2=document.getElementById("con-text");if(val&&k2&&k2.querySelector("input"))k2.querySelector("input").value=val;return true}
+function conBindShot(){const wrap=document.getElementById("con-shot");if(!wrap)return;wrap.onclick=e=>{const img=document.getElementById("con-img");if(!img)return;const r=img.getBoundingClientRect();
+  conCmd({action:"click",x_ratio:(e.clientX-r.left)/r.width,y_ratio:(e.clientY-r.top)/r.height});const dot=document.createElement("span");dot.className="con-dot";dot.style.left=(e.clientX-wrap.getBoundingClientRect().left)+"px";dot.style.top=(e.clientY-wrap.getBoundingClientRect().top)+"px";wrap.append(dot);setTimeout(()=>dot.remove(),700)}}
+async function conCmd(cmd){if(!CON.sel)return;try{await conReq("POST","/api/v1/console/jobs/"+CON.sel+"/browser",cmd)}catch(e){toast("Команда не дошла: "+e.message,{tone:"danger"})}}
+function conPoll(){clearTimeout(N._conT);let n=0;const tick=async()=>{if(!document.getElementById("con-root"))return;n++;
+  if(CON.sel&&CON.ov&&CON.ov.captcha&&CON.ov.captcha.length){await conLoadShot();conDrawShot()}
+  if(n%10===0){await conLoadOverview();if(!document.getElementById("con-root"))return;const y=(document.getElementById("scroll")||{}).scrollTop;if(!document.activeElement||!document.activeElement.closest("#con-cap"))conDrawOverview();const sc=document.getElementById("scroll");if(sc&&y!=null)sc.scrollTop=y}
+  N._conT=setTimeout(tick,CON.ov&&CON.ov.captcha&&CON.ov.captcha.length?1500:3000)};N._conT=setTimeout(tick,1500)}
+N.acts.conText=()=>{const el=document.getElementById("con-text"),inp=el&&el.querySelector("input"),v=inp?inp.value:"";if(!v)return;conCmd({action:"text",text:v});inp.value=""};
+N.acts.conKey=(a,d)=>conCmd({action:"key",key:d.v});
+N.acts.conRefreshPage=()=>conCmd({action:"refresh"});
+N.chg.conSel=v=>{CON.sel=+v;CON.shot=null;conLoadShot().then(()=>conDrawShot())};
+N.acts.conReload=async()=>{await conLoadOverview();conDrawOverview()};
+async function conLoadUsers(){try{CON.users=await conReq("GET","/api/v1/console/users")}catch(e){CON.users={items:[],roles:[],err:e.message}}}
+function conUsersHtml(){const U=CON.users;if(!U)return`<nv-skeleton count="5"></nv-skeleton>`;if(U.err)return`<nv-card><nv-empty icon="triangle-alert" heading="Не удалось загрузить" text="${esc(U.err)}"></nv-empty></nv-card>`;
+  const ro=(U.roles||[]).map(r=>r.role+":"+r.title).join("|"),me=session.email;
+  return`<nv-card><div class="table-wrap"><table class="tbl"><thead><tr><th>Email</th><th>Имя</th><th>Роль</th><th>Статус</th><th>Запусков</th><th>Последний вход</th><th></th></tr></thead><tbody>${U.items.map(u=>`<tr class="${u.is_active?"":"con-off"}">
+    <td>${esc(u.email)}${u.email===me?` <nv-badge tone="neutral">вы</nv-badge>`:""}</td><td>${esc(u.name||"")}</td>
+    <td><nv-select value="${esc(u.role)}" options="${ro}" data-chg="conRole" data-id="${u.id}"></nv-select></td>
+    <td>${u.is_active?`<nv-badge tone="success">активен</nv-badge>`:`<nv-badge tone="danger">отключён</nv-badge>`}</td><td>${u.runs}</td><td>${conTime(u.last_login_at)}</td>
+    <td class="con-act"><nv-button size="sm" variant="ghost" icon="key-round" data-act="conReset" data-id="${u.id}" data-email="${esc(u.email)}">Новый пароль</nv-button>${u.email===me?"":`<nv-button size="sm" variant="ghost" icon="${u.is_active?"user-x":"user-check"}" data-act="conActive" data-id="${u.id}" data-v="${u.is_active?0:1}">${u.is_active?"Отключить":"Включить"}</nv-button>`}</td></tr>`).join("")}</tbody></table></div>
+    <p class="muted" style="font-size:12.5px;margin:10px 0 0">Создатель — всё, включая эту Консоль. Администратор — вся база в библиотеке и аналитике. Маркетолог — свои запуски. Роли в командах (владелец, редактор…) настраиваются отдельно, в разделе «Команда».</p></nv-card>`}
+function conDrawUsers(){const el=document.getElementById("con-users");if(el)el.innerHTML=conUsersHtml()}
+function conShowPassword(email,pw){overlay("modal",{title:"Пароль для "+email,body:`<p style="margin:0 0 10px">Передайте пароль пользователю. Он показывается один раз.</p><div class="con-pw"><code>${esc(pw)}</code><nv-button size="sm" variant="secondary" icon="copy" data-con-copy="${esc(pw)}">Скопировать</nv-button></div>`,
+  mount:root=>{const b=root.querySelector("[data-con-copy]");if(b)b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(b.dataset.conCopy);toast("Пароль скопирован")}}})}
+N.acts.conNewUser=()=>{overlay("modal",{title:"Новый пользователь",body:`<div class="stack"><nv-input id="con-nu-email" name="email" label="Email" type="email" required></nv-input><nv-input id="con-nu-name" name="name" label="Имя" placeholder="Необязательно"></nv-input>
+  <nv-select id="con-nu-role" label="Роль" value="marketer" options="marketer:Маркетолог|admin:Администратор|superuser:Создатель"></nv-select></div>`,
+  actions:[{label:"Отмена",variant:"ghost"},{label:"Создать",variant:"primary",icon:"user-plus",fn:(root,close)=>{const v=id=>{const x=root.querySelector("#"+id);return x?String(x.value||""):""};
+    conReq("POST","/api/v1/console/users",{email:v("con-nu-email").trim(),name:v("con-nu-name").trim(),role:v("con-nu-role")||"marketer"})
+      .then(async r=>{close();await conLoadUsers();conDrawUsers();conShowPassword(r.email,r.password)}).catch(e=>toast(e.message,{tone:"danger"}));return false}}]})};
+N.acts.conReset=async(a,d)=>{try{const r=await conReq("POST","/api/v1/console/users/"+d.id+"/reset-password");conShowPassword(d.email,r.password)}catch(e){toast(e.message,{tone:"danger"})}};
+N.acts.conActive=async(a,d)=>{try{await conReq("PATCH","/api/v1/console/users/"+d.id,{is_active:d.v==="1"});await conLoadUsers();conDrawUsers()}catch(e){toast(e.message,{tone:"danger"})}};
+N.chg.conRole=async(v,d)=>{try{await conReq("PATCH","/api/v1/console/users/"+d.id,{role:v});toast("Роль изменена")}catch(e){toast(e.message,{tone:"danger"})}await conLoadUsers();conDrawUsers()};
+const views_console={
+  overview(){return{title:"Консоль",sub:"Состояние парсера, капча в браузере воркера, очереди и последние запуски. Видно только создателю.",
+    actions:`<nv-button variant="secondary" icon="refresh-cw" data-act="conReload">Обновить</nv-button>`,
+    body:`<div id="con-root" class="stack">${CON.ov?conOverviewHtml():`<nv-skeleton count="6"></nv-skeleton>`}</div>`,
+    async after(){await conLoadOverview();conDrawOverview();conPoll()}}},
+  users(){return{title:"Пользователи",sub:"Учётки ЛК: роль, отключение, новый пароль. Пароль показывается один раз — передайте его человеку.",
+    actions:`<nv-button icon="user-plus" data-act="conNewUser">Новый пользователь</nv-button>`,
+    body:`<div id="con-users">${conUsersHtml()}</div>`,
+    async after(){await conLoadUsers();conDrawUsers()}}}
+};
+if(session&&session.role==="superuser")N.register({id:"console",name:"Консоль",short:"Консоль",tag:"Только для создателя",icon:"terminal-square",rail:"bottom",status:"ready",
+  desc:"Служебное: капча, воркеры, очереди, пользователи",
+  nav:[{group:"Консоль",items:[{id:"overview",label:"Обзор и капча",icon:"activity",count:()=>(CON.ov&&CON.ov.captcha&&CON.ov.captcha.length)||""},{id:"users",label:"Пользователи",icon:"user-cog"}]}],
+  views:views_console});
+
 /* ---------- Студия креативов: canvas-редактор, только в браузере (2026-11-06) ---------- */
 const STUDIO_FMT={square:{w:1080,h:1080,label:"Квадрат 1:1"},wide:{w:1080,h:607,label:"Директ 16:9"},landscape:{w:1200,h:628,label:"Лента 1.91:1"},r45:{w:1080,h:1350,label:"Лента 4:5"},r43:{w:1080,h:810,label:"4:3"},r34:{w:810,h:1080,label:"3:4"},story:{w:1080,h:1920,label:"Сторис 9:16"}};
 /* Форматы площадок (как в Canva): ключи выше + свои размеры. */
@@ -7568,8 +7670,8 @@ function studioGradLine(x,y,w,h,angle){
   const rad=(angle-90)*Math.PI/180,dx=Math.cos(rad),dy=Math.sin(rad),cx=x+w/2,cy=y+h/2,half=Math.sqrt(w*w+h*h)/2;
   return{x0:cx-half*dx,y0:cy-half*dy,x1:cx+half*dx,y1:cy+half*dy};
 }
-function studioLayerIcon(l){if(l.type==="table")return"table-2";if(l.type==="qr")return"qr-code";if(l.type==="chart")return{line:"line-chart",pie:"pie-chart",donut:"pie-chart"}[l.chartKind]||"bar-chart-3";if(l.type==="text")return"type";if(l.type==="image")return"image";if(l.type==="icon")return l.icon||"star";if(l.type==="path")return"spline";return l.shape==="ellipse"?"circle":l.shape==="triangle"?"triangle":l.shape==="line"?"minus":"square"}
-function studioLayerLabel(l){if(l.type==="table")return"Таблица";if(l.type==="qr")return"QR-код";if(l.type==="chart")return"График";if(l.type==="text")return(l.text||"Текст").slice(0,22);if(l.type==="image")return"Изображение";if(l.type==="icon")return"Иконка";if(l.type==="path")return"Кривая";return{rect:"Прямоугольник",ellipse:"Эллипс",triangle:"Треугольник",line:"Линия"}[l.shape]||"Фигура"}
+function studioLayerIcon(l){if(l.type==="video")return"film";if(l.type==="table")return"table-2";if(l.type==="qr")return"qr-code";if(l.type==="chart")return{line:"line-chart",pie:"pie-chart",donut:"pie-chart"}[l.chartKind]||"bar-chart-3";if(l.type==="text")return"type";if(l.type==="image")return"image";if(l.type==="icon")return l.icon||"star";if(l.type==="path")return"spline";return l.shape==="ellipse"?"circle":l.shape==="triangle"?"triangle":l.shape==="line"?"minus":"square"}
+function studioLayerLabel(l){if(l.type==="video")return"Видео";if(l.type==="table")return"Таблица";if(l.type==="qr")return"QR-код";if(l.type==="chart")return"График";if(l.type==="text")return(l.text||"Текст").slice(0,22);if(l.type==="image")return"Изображение";if(l.type==="icon")return"Иконка";if(l.type==="path")return"Кривая";return{rect:"Прямоугольник",ellipse:"Эллипс",triangle:"Треугольник",line:"Линия"}[l.shape]||"Фигура"}
 function studioFillCss(f){if(f.type==="none")return"transparent";if(f.type==="gradient")return`linear-gradient(${f.angle||90}deg,${esc(f.color)},${esc(f.color2)})`;if(f.type==="radial")return`radial-gradient(circle,${esc(f.color)},${esc(f.color2)})`;return esc(f.color)}
 function studioPolyPoints(sides,innerRadius){
   const n=Math.max(3,sides||6),inner=(innerRadius==null?100:innerRadius)/100,star=innerRadius!=null,pts=[];
@@ -7593,6 +7695,7 @@ function studioPathD(l){return[studioContourD(l.points,l.closed),...(l.subs||[])
 function studioLayerInner(l){
   if(l.type==="text"&&+l.curve){studioEnsureFont(studioFontOf(l));return`<canvas class="stud-curve" style="position:absolute;left:-50%;top:-100%;width:200%;height:300%;display:block;pointer-events:none"></canvas>`}
   if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}${studioTfxCss(l)}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent${studioListOf(l)?";display:block;width:100%":""}">${studioListHtml(l)||esc(l.text)}</span>`:studioListHtml(l)||esc(l.text)}</div>`}
+  if(l.type==="video"){const v=l.video||{};return`<div class="stud-layer-image" style="${studioMaskCss(l)}"><video src="${esc(studioVideoSrc(v))}" muted loop autoplay playsinline preload="auto" data-t0="${+v.trim0||0}" data-t1="${+v.trim1||0}" style="width:100%;height:100%;object-fit:cover;object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1})"></video><span class="vid-badge">${ic("film",12)}</span></div>`}
   if(l.type==="image"){const bd=l.border&&l.border.enabled?`box-shadow:inset 0 0 0 ${l.border.width||4}px ${esc(l.border.color||"#fff")};`:"";
     return l.src?`<div style="width:100%;height:100%;filter:${studioDropCss(l,true)}"><div class="stud-layer-image" style="${studioMaskCss(l)};position:relative">${studioPhotoDefs(l)}<img src="${esc(l.src)}" alt="" draggable="false" style="object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1});filter:${studioPhotoFilter(l)}">${studioPhotoOverlays(l)}${bd?`<span style="position:absolute;inset:0;${bd};border-radius:inherit"></span>`:""}</div></div>`:`<div class="stud-layer-image stud-layer-empty" style="${studioMaskCss(l)}">${ic("image",22)}</div>`}
   if(l.type==="qr"||l.type==="chart"||l.type==="table")return`<div class="stud-layer-data">${studioDataSvg(l)}</div>`;
@@ -8198,6 +8301,15 @@ function studioPropsHtml0(){
   if(l.type==="icon")return studioPropsHeadHtml(l.icon||"star","Иконка",grp&&"в группе «"+grp+"»")
     +ppSec("icon","Иконка",`${ppColor("Цвет","color",l.color)}<button type="button" class="pp-btn" data-act-icon2path>${ic("spline",14)}Разобрать на кривые</button><div class="stud-icon-pick">${STUDIO_ICONS.map(n=>`<button type="button" class="${l.icon===n?"on":""}" data-prop-set="icon" data-val="${n}" aria-label="${n}">${ic(n,16)}</button>`).join("")}</div>`)
     +studioShadowSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
+  if(l.type==="video"){const v=l.video||{},dur=+v.dur||0,t0=+v.trim0||0,t1=+v.trim1||dur;
+    return studioPropsHeadHtml("film","Видео",[dur?`${(t1-t0).toFixed(1).replace(".",",")} с из ${dur.toFixed(1).replace(".",",")} с`:"",grp&&"в группе «"+grp+"»"].filter(Boolean).join(" · "))
+    +ppSec("vid","Видео",`${dur?ppRng("Начало","video.trim0",t0,0,Math.max(0,dur-0.3),0.1)+ppRng("Конец","video.trim1",t1,0.3,dur,0.1):""}
+      ${ppOnOff("Звук в MP4",!v.muted,'data-prop-set="video.muted" data-val="1"','data-prop-set="video.muted" data-val=""')}
+      <p class="pp-hint">На холсте ролик крутится без звука. В видео MP4 он играет с начала ролика по кругу${v.muted?"":" со звуком"}.</p>
+      <div class="pp-ibs wide"><button type="button" class="pp-btn" data-act-vidbg>${ic("maximize",14)}На весь фон</button><label class="pp-btn" for="stud-vid-file" data-vid-replace="${esc(l.id)}">${ic("upload",14)}Заменить</label></div>
+      ${ppRng("Масштаб","zoom",l.zoom||1,1,3,0.05)}${ppRng("Кадр по X","fx",l.fx==null?50:l.fx,0,100,1)}${ppRng("Кадр по Y","fy",l.fy==null?50:l.fy,0,100,1)}${ppRng("Скругление","radius",l.radius||0,0,200,2)}`)
+    +studioPosHtml(l)+studioLayerSecHtml(l)+studioAnimSecHtml(l);
+  }
   if(l.type==="image"){
     const st=l.sticker&&l.sticker.enabled,bd=l.border&&l.border.enabled,mask=l.mask||"none",fl=l.filter||{};
     return studioPropsHeadHtml("image",l.src?"Фото":"Место под фото",grp&&"в группе «"+grp+"»")
@@ -8398,6 +8510,26 @@ document.addEventListener("nv-change",e=>{const k=e.target.dataset&&e.target.dat
   studioBgLive();NEON.save();const tb=document.querySelector("[data-act-bg-color]");if(tb&&(k==="color"||k==="m0"))tb.setAttribute("value",e.detail.value)});
 document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.bgr;if(!k)return;const v=+e.target.value;studioDesign().bg[k]=v;
   e.target.style.setProperty("--rng-p",rngPct(v,e.target.min,e.target.max));e.target.closest(".rng").querySelector("output").textContent=v+(e.target.dataset.u||"");studioBgLive();NEON.save()});
+/* ---------- Видео-слой (v8-9): файл на сервере (/studio/videos, ссылка с ключом), l.video={url,dur,w,h,trim0,trim1,muted} ----------
+   В экспорте кадр берётся из скрытого <video> с перемоткой; studioRenderT — время ролика (null — первый кадр обрезки). */
+let studioRenderT=null;const studioVidEls=new Map();
+function studioVideoSrc(v){const u=v&&v.url||"";return/^https?:|^blob:|^data:/.test(u)?u:API_BASE+u}
+async function studioVideoEl(src){let v=studioVidEls.get(src);if(v)return v;v=document.createElement("video");v.muted=true;v.playsInline=true;v.preload="auto";v.crossOrigin="anonymous";v.src=src;
+  await new Promise((ok,no)=>{v.onloadeddata=ok;v.onerror=()=>no(new Error("видео не загрузилось"));setTimeout(ok,8000)});studioVidEls.set(src,v);return v}
+async function studioVideoFrame(l,t){const v=l.video||{},el=await studioVideoEl(studioVideoSrc(v));const t0=+v.trim0||0,t1=+v.trim1||el.duration||t0+1,len=Math.max(0.1,t1-t0);
+  const want=t==null?t0:t0+(t%len);if(Math.abs(el.currentTime-want)>0.02){el.currentTime=Math.min(want,(el.duration||want)-0.01);await new Promise(r=>{const d=()=>{el.removeEventListener("seeked",d);r()};el.addEventListener("seeked",d);setTimeout(d,1500)})}return el}
+async function studioAddVideo(file,replaceId){if(!file)return;if(file.size>80e6){toast("Видео больше 80 МБ — сократите ролик",{tone:"warning"});return}
+  const tst=toast("Загружаю видео…");try{const data_url=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)});
+    const r=await apiPost("/api/v1/studio/videos",{data_url,name:file.name});const el=await studioVideoEl(studioVideoSrc({url:r.url}));
+    const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,vw=el.videoWidth||1280,vh=el.videoHeight||720,dur=Math.round((el.duration||5)*10)/10;
+    studioBeforeChange();let l=replaceId&&d.layers.find(x=>x.id===replaceId);
+    if(l){l.video={...l.video,url:r.url,dur,w:vw,h:vh,trim0:0,trim1:dur}}
+    else{l=studioLayerDefaults("image");l.type="video";delete l.src;const ar=vw/vh,fa=F.w/F.h;let w=70,h=70*fa/ar;if(h>70){h=70;w=70*ar/fa}
+      Object.assign(l,{x:50-w/2,y:50-h/2,w,h,video:{url:r.url,dur,w:vw,h:vh,trim0:0,trim1:dur,muted:true}});d.layers.push(l)}
+    d.selectedId=l.id;studioMultiSel=[];if((d.animLen||5)<Math.min(20,Math.ceil(dur)))d.animLen=Math.min(20,Math.ceil(dur));N.refresh();NEON.save();toast("Видео добавлено · "+dur.toString().replace(".",",")+" с",{tone:"success"})}
+  catch(e){toast("Видео не загрузилось: "+(e.message||e),{tone:"danger"})}}
+document.addEventListener("change",e=>{if(e.target.id!=="stud-vid-file")return;const f=e.target.files[0];e.target.value="";studioAddVideo(f,studioVidReplace);studioVidReplace=null});
+let studioVidReplace=null;document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-vid-replace]");studioVidReplace=b?b.dataset.vidReplace:null},true);
 async function studioRenderCanvas(design,scale,anim){
   const fmt=STUDIO_FMT[design.format],W=Math.round(fmt.w*(scale||1)),H=Math.round(fmt.h*(scale||1));
   const c=document.createElement("canvas");c.width=W;c.height=H;const ctx=c.getContext("2d");
@@ -8444,6 +8576,10 @@ async function studioRenderCanvas(design,scale,anim){
         if(l.type==="qr"){const sz=Math.min(w,h);ctx.imageSmoothingEnabled=false;ctx.drawImage(img,x+(w-sz)/2,y+(h-sz)/2,sz,sz);ctx.imageSmoothingEnabled=true}else ctx.drawImage(img,x,y,w,h)}catch(e){}
     }else if(l.type==="icon"){
       try{const img=await studioLoadImg(studioIconDataUrl(l.icon||"star",l.color));ctx.drawImage(img,x,y,w,h)}catch(e){}
+    }else if(l.type==="video"&&l.video){
+      try{const vel=await studioVideoFrame(l,studioRenderT);if(vel){const rad=(l.radius||0)*W/560;studioMaskPath(l.mask,x,y,w,h,rad,ctx);ctx.clip();
+        const ir=vel.videoWidth/vel.videoHeight,br=w/h;let bw=w,bh=h;if(ir>br){bh=h;bw=h*ir}else{bw=w;bh=w/ir}
+        const z=l.zoom||1,dw=bw*z,dh=bh*z,fx=(l.fx==null?50:l.fx)/100,fy=(l.fy==null?50:l.fy)/100;ctx.drawImage(vel,x-(dw-w)*fx,y-(dh-h)*fy,dw,dh)}}catch(e){}
     }else if(l.type==="image"&&l.src){
       try{const img=await studioLoadImg(l.src);
         const rad=(l.radius||0)*W/560;
@@ -9078,7 +9214,7 @@ function studioPanelHtml(tab){
       return Object.entries(grp).map(([id,L])=>blk("Шаблоны команды «"+esc((TEAM.list.find(t=>t.id===+id)||{}).name||"команда")+"»",L)).join("")+blk("Мои шаблоны",pers)})()}
     ${built.length?`${mine.length?'<div class="sect-t">Готовые</div>':""}<div class="s2-grid2">${built.map(([t,i])=>`<div class="th" data-act="studUseTplHere" data-i="${i}" title="${esc(t.name)}"><img data-s2tpl="${i}" alt=""></div>`).join("")}</div>`:""}`}
   if(tab==="elements")return`<h3>Элементы</h3><div class="sect-t">Фигуры</div><div class="s2-tiles">${STUDIO_SHAPES.map(([sh,icn,lb])=>`<button type="button" data-act="studAdd" data-type="shape" data-shape="${sh}">${ic(icn,20)}${lb}</button>`).join("")}</div>
-    <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><button type="button" data-act="studTool" data-tool="draw">${ic("brush",20)}Рисовать</button><button type="button" data-act="studTool" data-tool="note" data-tip="Булавка с комментарием для согласования — в файл не попадает">${ic("message-square-plus",20)}Заметка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
+    <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><button type="button" data-act="studTool" data-tool="draw">${ic("brush",20)}Рисовать</button><label class="s2-tiles-l" for="stud-vid-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("film",20)}Видео</label><button type="button" data-act="studTool" data-tool="note" data-tip="Булавка с комментарием для согласования — в файл не попадает">${ic("message-square-plus",20)}Заметка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
     <div class="sect-t">Графика</div><input type="search" class="num" data-s2gfx placeholder="Поиск: стрелка, бейдж, рамка…" value="${esc(studioGfxQ)}" style="width:100%;text-align:left;padding:0 10px">
     <div class="s2-gfx" data-s2gfxgrid>${studioGfxGridHtml()}</div>
     <div class="sect-t">Эмодзи</div><input type="search" class="num" data-s2emo placeholder="Поиск: огонь, подарок, телефон…" value="${esc(studioEmojiQ)}" style="width:100%;text-align:left;padding:0 10px">
@@ -9573,7 +9709,7 @@ editor(){
     <nav class="s2-rail">${STUDIO_TABS.map(([k,i,lb])=>`<button type="button" class="${tabNow===k?"on":""}" data-act="studTab" data-tab="${k}">${ic(i,20)}<span>${lb}</span></button>`).join("")}<button type="button" data-go="studio-library" style="margin-top:auto">${ic("images",18)}<span>Дизайны</span></button><button type="button" data-act="studShortcuts">${ic("keyboard",18)}<span>Клавиши</span></button></nav>
     <aside class="s2-panel" id="s2-panel" ${tabNow?"":"hidden"}>${tabNow?`<button type="button" class="s2-panel-x" data-act="studTab" data-tab="${tabNow}" data-tip="Скрыть панель">${ic("chevrons-left",16)}</button>`+studioPanelHtml(tabNow):""}</aside>
     <section class="s2-main">
-      <input type="file" id="stud-bg-file" accept="image/*" class="sr"><input type="file" id="stud-img-file" accept="image/*" class="sr"><input type="file" id="stud-img-replace" accept="image/*" class="sr">
+      <input type="file" id="stud-bg-file" accept="image/*" class="sr"><input type="file" id="stud-img-file" accept="image/*" class="sr"><input type="file" id="stud-img-replace" accept="image/*" class="sr"><input type="file" id="stud-vid-file" accept="video/mp4,video/webm,video/quicktime" class="sr">
       ${start?studioStartHtml():`<div class="stud-stage-wrap"><div class="stud-rbox${S.studio.rulers!==false?" on":""}">${S.studio.rulers!==false?'<canvas class="stud-ruler h" aria-hidden="true"></canvas><canvas class="stud-ruler v" aria-hidden="true"></canvas><span class="stud-ruler-c" aria-hidden="true">px</span>':""}<div id="stud-stage-host">${studioStageHtml()}</div></div>${studioTool==="draw"?studioDrawBarHtml():""}${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Перо: клик — точка, клик+тяни — плавная, клик по первой — замкнуть, Enter — закончить, Esc — отмена.</p>':""}</div>${S.studio.timeline?studioTimelineHtml():""}${studioPagesHtml()}`}
     </section>
     <button type="button" class="m-props-btn" data-act="studMProps">${ic("sliders-horizontal",16)}<span>Настройки</span></button>
@@ -9844,6 +9980,7 @@ editor(){
         if(fxS){studioBeforeChange();l.effect={...(l.effect||{})};if(fxS.dataset.actFxshadow)l.effect.shadow={...STUDIO_SHADOW_DEF.other};else delete l.effect.shadow;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const bdB=e.target.closest("[data-act-border]");
         if(bdB){studioBeforeChange();l.border={color:"#ffffff",width:4,...(l.border||{}),enabled:!!bdB.dataset.actBorder};studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
+        if(e.target.closest("[data-act-vidbg]")){studioBeforeChange();Object.assign(l,{x:0,y:0,w:100,h:100,rotation:0});const i=studioDesign().layers.indexOf(l);studioDesign().layers.splice(i,1);studioDesign().layers.unshift(l);N.refresh();NEON.save();toast("Видео стало фоном");return}
         const ltB=e.target.closest("[data-act-locktpl]");
         if(ltB){studioBeforeChange();const on=!!ltB.dataset.actLocktpl;l.lockTpl=on;l.locked=on;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();toast(on?"Элемент закреплён: у редакторов команды не сдвигается":"Элемент откреплён");return}
         const tfB=e.target.closest("[data-act-tfx]");
@@ -9860,7 +9997,7 @@ editor(){
         if(tbg){studioBeforeChange();if(tbg.dataset.actTextbg){l.bgColor=l.bgColor||"#16c784";l.bgRadius=l.bgRadius==null?24:l.bgRadius}else delete l.bgColor;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const set=e.target.closest("[data-prop-set]");
         if(set){
-          const k=set.dataset.propSet,boolKeys=["closed","stroke.enabled","vertical","upper","shadow","neon","lockRatio","showValues","qrMargin","photo.duo"];if(k==="tblHead"||k==="tblZebra"){l[k==="tblHead"?"head":"zebra"]=set.dataset.val==="1";studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
+          const k=set.dataset.propSet,boolKeys=["video.muted","closed","stroke.enabled","vertical","upper","shadow","neon","lockRatio","showValues","qrMargin","photo.duo"];if(k==="tblHead"||k==="tblZebra"){l[k==="tblHead"?"head":"zebra"]=set.dataset.val==="1";studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
           studioSetPath(l,k,boolKeys.includes(k)?set.dataset.val==="1":set.dataset.val);
           studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return;
         }
@@ -10500,13 +10637,13 @@ document.addEventListener("pointerup",()=>{const g=studioTlDrag;if(!g)return;stu
 /* Ролик: одна страница (d.animLen) или все страницы подряд (d.vidPages) — по d.pageDur секунд,
    переход d.pageTrans (fade/slide/zoom/none) длиной 0,5 с в начале каждой следующей страницы. */
 const STUDIO_TRANS=[["fade","Затухание"],["slide","Сдвиг"],["zoom","Масштаб"],["none","Без перехода"]];
-function studioHasAnim(layers){return layers.some(l=>l.anim&&(l.anim.type&&l.anim.type!=="none"||l.anim.out))}
+function studioHasAnim(layers){return layers.some(l=>l.type==="video"&&!l.hidden||l.anim&&(l.anim.type&&l.anim.type!=="none"||l.anim.out))}
 function studioTimeline(d){
   const pages=studioPagesOf(d),multi=d.vidPages&&pages.length>1;
-  if(!multi){if(!studioHasAnim(d.layers))return null;const len=d.animLen||5;return{len,multi:false,frame:(t,sc)=>studioRenderCanvas(d,sc,l=>studioAnimAt(l,t,len))}}
+  if(!multi){if(!studioHasAnim(d.layers))return null;const len=d.animLen||5;return{len,multi:false,frame:async(t,sc)=>{studioRenderT=t;try{return await studioRenderCanvas(d,sc,l=>studioAnimAt(l,t,len))}finally{studioRenderT=null}}}}
   const dur=+d.pageDur||3,tr=d.pageTrans||"fade",T=tr==="none"?0:Math.min(0.5,dur/3),last=new Map();
   const pd=pages.map(p=>studioPageDesign(d,p));
-  const draw=(i,t,sc)=>studioRenderCanvas(pd[i],sc,l=>studioAnimAt(l,t,i<pages.length-1?dur:0));
+  const draw=async(i,t,sc)=>{studioRenderT=t;try{return await studioRenderCanvas(pd[i],sc,l=>studioAnimAt(l,t,i<pages.length-1?dur:0))}finally{studioRenderT=null}};
   return{len:dur*pages.length,multi:true,pages:pages.length,frame:async(t,sc)=>{
     const i=Math.min(pages.length-1,Math.floor(t/dur)),lt=t-i*dur,cur=await draw(i,lt,sc);
     if(!i||lt>=T)return cur;
