@@ -1757,6 +1757,7 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stn-pop.r{transform:translate(-100%,8px)}.stn-pop.up{transform:translate(8px,calc(-100% - 34px))}.stn-pop.r.up{transform:translate(-100%,calc(-100% - 34px))}
 .stn-pop textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:13px var(--font-body,inherit);resize:vertical;background:var(--surface);color:var(--ink)}
 .stn-acts{display:flex;align-items:center;gap:6px}.stn-acts small{flex:1;font-size:11px;color:var(--ink-3)}.stn-acts .pp-btn{width:auto;height:28px;padding:0 9px;font-size:12px}
+.shr{display:flex;flex-direction:column;gap:10px}.shr-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.shr-row input{flex:1;min-width:200px;text-align:left;padding:0 10px;height:36px}
 .stud-vprev{position:absolute;inset:0;width:100%;height:100%;z-index:50;pointer-events:none}
 .vid-prog{position:fixed;right:18px;bottom:18px;z-index:9600;width:280px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-2);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
 .vid-prog b{font-weight:500;font-size:13px}.vid-prog i{display:block;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}.vid-prog i span{display:block;height:100%;width:0;background:var(--svc-ink);transition:width .2s}.vid-prog small{font:11px var(--font-mono);color:var(--ink-3)}
@@ -8905,7 +8906,7 @@ function studioDownloadMenu(btn){
 }
 function studioMoreMenu(btn){
   const r=btn.getBoundingClientRect();
-  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Мокапы…","телефон, ноутбук, печать",studioMockups],["Найти и заменить…","Ctrl+F",studioFindReplace],"-",["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
+  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Мокапы…","телефон, ноутбук, печать",studioMockups],["Найти и заменить…","Ctrl+F",studioFindReplace],"-",["Ссылка на просмотр…","клиенту без входа",studioShareDlg],["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
 }
 async function studioSaveAsTemplate(){
   const d=studioDesign();if(!d.layers.length){toast("Пустой дизайн",{tone:"warning"});return}
@@ -8916,6 +8917,31 @@ async function studioSaveAsTemplate(){
     body:`<div class="stack" style="gap:10px"><nv-input label="Название шаблона" data-tn value="${esc(d.name)}"></nv-input><nv-select label="Категория" data-tc options="${cats.map(c=>c+":"+c).join("|")}" value="Мои"></nv-select></div>`,
     actions:[{label:"Отмена"},{label:"Сохранить",variant:"primary",fn:r=>{const nm=(r.querySelector("[data-tn]")||{}).value||d.name,ct=(r.querySelector("[data-tc]")||{}).value||"Мои";
       apiPost("/api/v1/studio/designs/"+d.id+"/as-template",{name:nm,category:ct}).then(t=>{(studioUserTpls=studioUserTpls||[]).unshift(t);studioRefreshPanel();toast("Шаблон сохранён",{tone:"success"})}).catch(e=>toast(e.message,{tone:"danger"}))}}]});
+}
+/* ---------- Ссылка на просмотр для клиента: картинки страниц → сервер → /app/share.html?t=… (без входа) ---------- */
+function studioShareUrl(tok){return location.origin+location.pathname.replace(/[^/]*$/,"")+"share.html?t="+encodeURIComponent(tok)}
+async function studioShareRender(d){const pages=studioPagesOf(d),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,sc=Math.min(1,1600/Math.max(F.w,F.h)),out=[];
+  studioImgCache=new Map();try{for(const pg of pages){const c=await studioRenderCanvas(studioPageDesign(d,pg),sc);out.push(c.toDataURL("image/jpeg",0.88))}}finally{studioImgCache=null}return out}
+async function studioShareDlg(){
+  const d=studioDesign();if(!d.layers.length&&!(d.pages||[]).length){toast("Добавьте хотя бы один элемент",{tone:"warning"});return}
+  if(typeof d.id!=="number"||studioSave.state!=="saved"){const m=await studioPersist({silent:true});if(!m){toast("Сначала сохраните дизайн",{tone:"warning"});return}}
+  const {root,close}=overlay("modal",{title:"Ссылка на просмотр",subtitle:"Клиент или коллега откроет дизайн по ссылке без входа в ЛК — только картинки страниц, без редактирования.",service:"studio",body:'<div class="shr"><p class="muted">Проверяю…</p></div>',actions:[{label:"Закрыть"}]});
+  const box=()=>root.querySelector(".shr");let meta=null;
+  const paint=()=>{const b=box();if(!b)return;
+    if(!meta||!meta.token){b.innerHTML=`<p class="pp-hint">Ссылки пока нет. При создании страницы дизайна (${studioPagesOf(d).length}) сохранятся картинками — потом дизайн можно менять, ссылка покажет новую версию после «Обновить».</p><nv-button variant="primary" data-shr="make">${ic("link",15)} Создать ссылку</nv-button>`;return}
+    const u=studioShareUrl(meta.token);
+    b.innerHTML=`<div class="shr-row"><input class="num" readonly value="${esc(u)}" data-shrurl><nv-button variant="primary" data-shr="copy">${ic("copy",14)} Копировать</nv-button></div>
+      <p class="pp-hint">Страниц: ${meta.pages} · просмотров: ${meta.views} · обновлено ${new Date(meta.updated_at*1000).toLocaleString("ru",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</p>
+      <div class="shr-row"><nv-button data-shr="update">${ic("refresh-cw",14)} Обновить картинки</nv-button><nv-button data-shr="open">${ic("external-link",14)} Открыть</nv-button><span style="flex:1"></span><nv-button variant="ghost" data-shr="off">${ic("link-2-off",14)} Отключить ссылку</nv-button></div>`};
+  const busy=t=>{const b=box();if(b)b.innerHTML=`<p class="muted">${t}</p>`};
+  const upload=async()=>{busy("Собираю страницы…");const pages=await studioShareRender(d);busy("Отправляю…");meta=await apiPost("/api/v1/studio/designs/"+d.id+"/share",{pages});paint()};
+  root.addEventListener("click",async e=>{const b=e.target.closest("[data-shr]");if(!b)return;const k=b.dataset.shr;
+    try{if(k==="make"||k==="update"){await upload();toast(k==="make"?"Ссылка создана":"Картинки обновлены",{tone:"success"})}
+      else if(k==="copy"){const u=studioShareUrl(meta.token);try{await navigator.clipboard.writeText(u);toast("Ссылка скопирована",{tone:"success"})}catch(er){const i=root.querySelector("[data-shrurl]");i.select();document.execCommand("copy");toast("Ссылка скопирована",{tone:"success"})}}
+      else if(k==="open")window.open(studioShareUrl(meta.token),"_blank","noopener");
+      else if(k==="off"){await apiDelete("/api/v1/studio/designs/"+d.id+"/share");meta={token:null};paint();toast("Ссылка отключена — по ней больше ничего не открыть")}}
+    catch(er){toast("Не получилось: "+(er.message||er),{tone:"danger"});paint()}});
+  try{meta=await api("/api/v1/studio/designs/"+d.id+"/share")}catch(e){meta={token:null}}paint();
 }
 async function studioVersionsDlg(){
   const d=studioDesign();if(typeof d.id!=="number"){toast("История появится после первого сохранения",{tone:"warning"});return}
