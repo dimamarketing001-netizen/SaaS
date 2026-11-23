@@ -1829,6 +1829,8 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .shr{display:flex;flex-direction:column;gap:10px}.shr-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.shr-row input{flex:1;min-width:200px;text-align:left;padding:0 10px;height:36px}
 .ad-use{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px}.ad-use-h{display:flex;justify-content:space-between;gap:6px;align-items:baseline}.ad-use-h b{font-weight:500;font-size:13px}.ad-use-h small{color:var(--ink-3);font-size:11.5px}
 .ad-use-g{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.ad-use-g span{display:flex;flex-direction:column;background:var(--surface-2);border-radius:7px;padding:4px 6px}.ad-use-g small{font-size:10.5px;color:var(--ink-3)}.ad-use-g b{font:500 12.5px var(--font-mono)}
+.ab-list{display:flex;flex-direction:column;gap:12px;max-height:56vh;overflow:auto}.ab-row{display:flex;flex-direction:column;gap:6px}.ab-h{display:flex;align-items:center;gap:8px}.ab-h b{width:24px;height:24px;border-radius:7px;background:var(--svc-soft,#efe8fd);color:var(--svc-ink,#6d28d9);display:grid;place-items:center;font:600 12px var(--font-mono)}.ab-h span{flex:1;font-size:13.5px}.ab-h small{color:var(--ink-3);font-size:12px}
+.ab-add{cursor:pointer;border:1px dashed var(--line);background:none}.ab-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap}.ab-mode{width:auto}
 .pp-mus{border:1px solid var(--line);border-radius:10px;padding:8px;margin:6px 0}.pp-track{display:flex;align-items:center;gap:6px;margin-bottom:6px}.pp-track span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.pp-x{border:0;background:none;cursor:pointer;color:var(--ink-3);width:26px;height:26px;border-radius:6px;display:grid;place-items:center}
 .mus-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:50vh;overflow:auto}.mus-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:6px 8px}.mus-t{flex:1;min-width:0;display:flex;flex-direction:column}.mus-t b{font-weight:500;font-size:13.5px}.mus-t small{color:var(--ink-3);font-size:12px}
 .vid-badge{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;padding:2px 4px;display:flex;pointer-events:none}
@@ -9333,7 +9335,7 @@ function studioDownloadMenu(btn){
 }
 function studioMoreMenu(btn){
   const r=btn.getBoundingClientRect();
-  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Мокапы…","телефон, ноутбук, печать",studioMockups],["Найти и заменить…","Ctrl+F",studioFindReplace],"-",["В планировщик…","пост в Telegram и др.",studioToPlanner],["Ссылка на просмотр…","клиенту без входа",studioShareDlg],["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
+  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Матрица A/B…","все сочетания вариантов",studioAbMatrix],["Мокапы…","телефон, ноутбук, печать",studioMockups],["Найти и заменить…","Ctrl+F",studioFindReplace],"-",["В планировщик…","пост в Telegram и др.",studioToPlanner],["Ссылка на просмотр…","клиенту без входа",studioShareDlg],["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
 }
 async function studioSaveAsTemplate(){
   const d=studioDesign();if(!d.layers.length){toast("Пустой дизайн",{tone:"warning"});return}
@@ -11141,6 +11143,33 @@ async function studioBulkRun(d,tpl,slots,head,rows,map,mode){
       prog.done(`Готово: ${pages.length} страниц в новом дизайне`);if(studioSave.state!=="saved")await studioPersist({silent:true});await studioOpenServer(meta.id)}
     if(fails.length)toast(`Не загрузились фото (${fails.length}): ${[...new Set(fails)].slice(0,3).join(", ")}`,{tone:"warning",timeout:9000});
   }catch(e){prog.done("");toast("Массовое создание прервано: "+(e.message||""),{tone:"danger"})}
+}
+/* ---------- v8-13: матрица A/B без ИИ — варианты для каждого текста и фото → все комбинации (ядро «Массового создания») ---------- */
+function studioAbMatrix(){
+  const d=studioDesign();studioPagesSync(d);const tpl={bg:d.bg,layers:d.layers};
+  const slots=d.layers.filter(l=>!l.hidden&&(l.type==="text"&&String(l.text||"").trim()||l.type==="image")).slice(0,6);
+  if(!slots.length){toast("На странице нет текстов и фото для вариантов",{tone:"warning"});return}
+  const V={};slots.forEach(l=>{V[l.id]=l.type==="text"?[String(l.text)]:(l.src?[l.src]:[])});
+  const letters="ABCDEF",count=()=>slots.reduce((a,l)=>a*Math.max(1,V[l.id].length),1);
+  const rowHtml=(l,i)=>`<div class="ab-row"><div class="ab-h"><b>${letters[i]}</b><span>${esc(studioLayerLabel(l))}</span><small>${V[l.id].length} вар.</small></div>
+    ${l.type==="text"?`<textarea class="pl-ta" rows="3" data-ab="${l.id}" placeholder="По одному варианту на строку">${esc(V[l.id].map(t=>t.replace(/\n/g," / ")).join("\n"))}</textarea><small class="muted">Перенос строки внутри варианта — « / »</small>`
+      :`<div class="pl-media">${V[l.id].map((u,k)=>`<div class="pl-mi"><img src="${esc(u)}" alt=""><button type="button" data-abrm="${l.id}:${k}" aria-label="Убрать">${ic("x",12)}</button></div>`).join("")}<label class="pl-mi ab-add">${ic("plus",18)}<input type="file" accept="image/*" multiple hidden data-abimg="${l.id}"></label></div>`}</div>`;
+  const {root,close}=overlay("modal",{title:"Матрица A/B",subtitle:"Впишите варианты для каждого элемента — соберём все сочетания. Имена файлов: A1-B2-C1 (номер варианта каждого элемента).",service:"studio",size:"lg",
+    body:`<div class="ab-list">${slots.map(rowHtml).join("")}</div><div class="ab-foot"><b class="ab-n"></b><div class="pp-seg ab-mode">${[["pages","Страницами"],["designs","Дизайнами"],["zip","ZIP с PNG"]].map(([k,t],i)=>`<button type="button" data-abmode="${k}" class="${i?"":"on"}">${t}</button>`).join("")}</div></div>`,
+    actions:[{label:"Отмена"},{label:"Собрать",variant:"primary",icon:"grid-3x3",fn:r=>{run();return false}}]});
+  let mode="pages";const q=x=>root.querySelector(x);
+  const paint=()=>{const n=count();q(".ab-n").textContent=`Комбинаций: ${n}`+(n>100?" — слишком много, максимум 100":"");root.querySelectorAll(".ab-h small").forEach((e,i)=>e.textContent=V[slots[i].id].length+" вар.")};
+  const redrawImg=id=>{const i=slots.findIndex(l=>l.id===id);const box=root.querySelectorAll(".ab-row")[i];box.outerHTML=rowHtml(slots[i],i);paint()};
+  root.addEventListener("input",e=>{const t=e.target.closest("[data-ab]");if(!t)return;V[t.dataset.ab]=t.value.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>x.replace(/\s\/\s/g,"\n"));paint()});
+  root.addEventListener("change",async e=>{const t=e.target.closest("[data-abimg]");if(!t)return;for(const f of [...t.files].slice(0,10)){try{const{dataUrl}=await fileToDataUrl(f,1600);V[t.dataset.abimg].push(dataUrl)}catch(er){}}redrawImg(t.dataset.abimg)});
+  root.addEventListener("click",e=>{const rm=e.target.closest("[data-abrm]"),md=e.target.closest("[data-abmode]");
+    if(rm){const [id,k]=rm.dataset.abrm.split(":");V[id].splice(+k,1);redrawImg(id)}
+    if(md){mode=md.dataset.abmode;root.querySelectorAll("[data-abmode]").forEach(b=>b.classList.toggle("on",b===md))}});
+  paint();
+  const run=()=>{const n=count();if(n<2){toast("Добавьте хотя бы один дополнительный вариант",{tone:"warning"});return}if(n>100){toast("Больше 100 сочетаний — сократите варианты",{tone:"warning"});return}
+    const use=slots.map((l,i)=>({l,i})).filter(x=>V[x.l.id].length),head=["Вариант",...use.map(x=>letters[x.i])],map={};use.forEach((x,j)=>map[x.l.id]=String(j+1));
+    let rows=[[]];use.forEach(({l,i})=>{const vs=V[l.id];rows=rows.flatMap(r=>vs.map((v,k)=>[...r,{v,code:vs.length>1?letters[i]+(k+1):""}]))});
+    const R=rows.map(r=>[r.map(x=>x.code).filter(Boolean).join("-"),...r.map(x=>x.v)]);close();studioBulkRun(d,tpl,null,head,R,map,mode)};
 }
 function toastProgress(text){toast(text,{timeout:600000});const t=[...document.querySelectorAll("#nv-toasts .toast")].pop(),m=t&&t.querySelector(".m");
   return{set:s=>{if(m)m.textContent=s},done:s=>{if(t)t.remove();if(s)toast(s,{tone:"success"})}}}
