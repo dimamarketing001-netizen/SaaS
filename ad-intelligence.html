@@ -1081,6 +1081,10 @@ nv-ring{display:inline-flex;flex:none;vertical-align:middle}
 .tb th button{text-transform:inherit;letter-spacing:inherit}
 .tb td{padding:6px 12px;border-bottom:0}
 .tb.compact td{padding:4px 12px}
+/* Шапка таблицы закреплена при прокрутке (2026-11-23) */
+.tw{overflow:auto;max-height:max(320px,calc(100vh - 170px))}
+.tb thead th{position:sticky;top:0;z-index:2;background:var(--th-bg,var(--surface));box-shadow:inset 0 -1px 0 var(--line)}
+.tab-b{--th-bg:var(--l2)}
 .cell-t{font-weight:500}.cell-s{font-size:11px}
 .tb .dt{font-family:var(--font-mono);font-size:11px;color:var(--ink-2);white-space:nowrap}
 .tb .dt.fresh{color:var(--ink);font-weight:500}
@@ -5122,10 +5126,10 @@ function saveRep(){const r=S.ads.rep;try{localStorage.setItem(REP_KEY,JSON.strin
 // статусы — следом по проектам (каждый — до ~20 с из-за лимитов Click.ru).
 // Таймаут 60 с: индикатор «Обновляю…» больше не висит бесконечно.
 /* Оценка жизни кампании (2026-11-23, анализ 85 аккаунтов 12–22.11): пик показов обычно на 2-й день,
-   дальше нормальное «плато» 25–45% от пика. «Угасла» — 2 полных дня подряд в среднем < 10% от пика
-   и < 150 показов/день, аккаунту ≥ 4 дней с первого показа. Лиды не учитываются — только показы.
+   дальше нормальное «плато» 25–45% от пика. «Угасла» — 2 полных дня подряд в среднем < 20% от пика
+   и < 200 показов/день, аккаунту ≥ 4 дней с первого показа. Лиды не учитываются — только показы.
    То же правило — в автозамене addAvto (lifecycle.is_faded): остановка, возврат денег, новый аккаунт. */
-const FADE={minAge:4,ratio:0.10,maxImp:150,slowRatio:0.30};
+const FADE={minAge:4,ratio:0.20,maxImp:200,slowRatio:0.30};
 function fadeEval(imp,todayPartial){
   const full=todayPartial?imp.slice(0,-1):imp.slice();
   const first=full.findIndex(v=>v>0);
