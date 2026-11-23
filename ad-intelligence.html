@@ -1829,6 +1829,7 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .shr{display:flex;flex-direction:column;gap:10px}.shr-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.shr-row input{flex:1;min-width:200px;text-align:left;padding:0 10px;height:36px}
 .ad-use{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px}.ad-use-h{display:flex;justify-content:space-between;gap:6px;align-items:baseline}.ad-use-h b{font-weight:500;font-size:13px}.ad-use-h small{color:var(--ink-3);font-size:11.5px}
 .ad-use-g{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.ad-use-g span{display:flex;flex-direction:column;background:var(--surface-2);border-radius:7px;padding:4px 6px}.ad-use-g small{font-size:10.5px;color:var(--ink-3)}.ad-use-g b{font:500 12.5px var(--font-mono)}
+.mk-prev{border:1px dashed var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;color:var(--ink-2)}
 .ab-list{display:flex;flex-direction:column;gap:12px;max-height:56vh;overflow:auto}.ab-row{display:flex;flex-direction:column;gap:6px}.ab-h{display:flex;align-items:center;gap:8px}.ab-h b{width:24px;height:24px;border-radius:7px;background:var(--svc-soft,#efe8fd);color:var(--svc-ink,#6d28d9);display:grid;place-items:center;font:600 12px var(--font-mono)}.ab-h span{flex:1;font-size:13.5px}.ab-h small{color:var(--ink-3);font-size:12px}
 .ab-add{cursor:pointer;border:1px dashed var(--line);background:none}.ab-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap}.ab-mode{width:auto}
 .pp-mus{border:1px solid var(--line);border-radius:10px;padding:8px;margin:6px 0}.pp-track{display:flex;align-items:center;gap:6px;margin-bottom:6px}.pp-track span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.pp-x{border:0;background:none;cursor:pointer;color:var(--ink-3);width:26px;height:26px;border-radius:6px;display:grid;place-items:center}
@@ -9335,7 +9336,7 @@ function studioDownloadMenu(btn){
 }
 function studioMoreMenu(btn){
   const r=btn.getBoundingClientRect();
-  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Матрица A/B…","все сочетания вариантов",studioAbMatrix],["Мокапы…","телефон, ноутбук, печать",studioMockups],["Найти и заменить…","Ctrl+F",studioFindReplace],"-",["В планировщик…","пост в Telegram и др.",studioToPlanner],["Ссылка на просмотр…","клиенту без входа",studioShareDlg],["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
+  studioMenu(r.left,r.bottom+4,[["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Матрица A/B…","все сочетания вариантов",studioAbMatrix],["Маркировка рекламы…","«Реклама», рекламодатель, erid",studioAdMark],["Мокапы…","телефон, ноутбук, печать",studioMockups],["Найти и заменить…","Ctrl+F",studioFindReplace],"-",["В планировщик…","пост в Telegram и др.",studioToPlanner],["Ссылка на просмотр…","клиенту без входа",studioShareDlg],["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
 }
 async function studioSaveAsTemplate(){
   const d=studioDesign();if(!d.layers.length){toast("Пустой дизайн",{tone:"warning"});return}
@@ -10883,6 +10884,9 @@ async function studioCheckDesign(){
     if(!l.src){R.push(["err","Пустое место под фото","Загрузите фото или удалите рамку.",l.id]);continue}
     try{const im=await studioLoadImg(l.src),need=l.w/100*F.w*(l.zoom||1);if(im.naturalWidth<need*0.66)R.push(["warn","Фото низкого разрешения","Растянуто в "+(need/im.naturalWidth).toFixed(1)+" раза — будет размыто. Возьмите фото крупнее.",l.id])}catch(e){}}
   if(d.bg.type==="image"&&d.bg.image){try{const im=await studioLoadImg(d.bg.image);if(im.naturalWidth<F.w*0.66)R.push(["warn","Фон низкого разрешения","Фоновое фото меньше макета — будет размыто."])}catch(e){}}
+  {const mk=texts.find(l=>l.adMark||/^\s*реклама\b/i.test(String(l.text||"")));
+    if(!mk)R.push(["warn","Нет маркировки рекламы","38-ФЗ: на интернет-рекламе нужны «Реклама», рекламодатель и erid. «⋯ → Маркировка рекламы» поставит плашку."]);
+    else if(!/erid/i.test(String(mk.text||"")))R.push(["warn","В маркировке нет erid","Впишите токен erid из ОРД — без него креатив нельзя показывать.",mk.id])}
   const hidden=d.layers.filter(l=>l.hidden).length;if(hidden)R.push(["info","Скрытых слоёв: "+hidden,"В файл они не попадут."]);
   const ph=texts.filter(l=>/^(текст|заголовок|подзаголовок)$/i.test(String(l.text||"").trim()));ph.forEach(l=>R.push(["warn","Не заменён текст-заглушка: "+nm(l),"Впишите свой текст.",l.id]));
   /* вес файлов */
@@ -11143,6 +11147,34 @@ async function studioBulkRun(d,tpl,slots,head,rows,map,mode){
       prog.done(`Готово: ${pages.length} страниц в новом дизайне`);if(studioSave.state!=="saved")await studioPersist({silent:true});await studioOpenServer(meta.id)}
     if(fails.length)toast(`Не загрузились фото (${fails.length}): ${[...new Set(fails)].slice(0,3).join(", ")}`,{tone:"warning",timeout:9000});
   }catch(e){prog.done("");toast("Массовое создание прервано: "+(e.message||""),{tone:"danger"})}
+}
+/* ---------- v8-14: маркировка рекламы (38-ФЗ): «Реклама. Рекламодатель, ИНН · erid: …» отдельным слоем ---------- */
+function studioAdMarkText(o){const parts=["Реклама"];if(o.name)parts[0]+=". "+o.name.trim()+(o.inn?", ИНН "+o.inn.trim():"");return parts[0]+(o.erid?" · erid: "+o.erid.trim():"")}
+function studioAdMarkLayer(d){return d.layers.find(l=>l.adMark)}
+async function studioAdMark(){
+  const d=studioDesign(),cur=studioAdMarkLayer(d),M={...(S.studio.adMark||{}),...(cur&&cur.adMarkData||{})};let payers=[];
+  try{payers=((await api("/api/v1/ads/payers",{})).items||[]).filter(p=>payerName(p))}catch(e){}
+  const {root,close}=overlay("modal",{title:"Маркировка рекламы",subtitle:"По закону (38-ФЗ) на интернет-рекламе нужны пометка «Реклама», рекламодатель и токен erid из ОРД. Плашка встанет отдельным слоем.",service:"studio",
+    body:`<div class="stack" style="gap:10px">${payers.length?`<label class="pl-lbl">Рекламодатель из юрлиц ЛК<select class="tm-role" data-mk="payer"><option value="">— ввести вручную —</option>${payers.map(p=>`<option value="${p.id}">${esc(payerName(p))}${p.inn?" · ИНН "+esc(p.inn):""}</option>`).join("")}</select></label>`:""}
+      <nv-input label="Рекламодатель" data-mk="name" value="${esc(M.name||"")}" placeholder="ООО «Ромашка» или ИП Иванов И. И."></nv-input>
+      <nv-input label="ИНН" data-mk="inn" value="${esc(M.inn||"")}" placeholder="10 или 12 цифр"></nv-input>
+      <nv-input label="Токен erid" data-mk="erid" value="${esc(M.erid||"")}" placeholder="Например: 2VtzqvxyzAB — выдаёт ОРД при регистрации креатива" hint="Если токена ещё нет — поставьте плашку без него и впишите позже"></nv-input>
+      <div class="row" style="gap:10px;flex-wrap:wrap"><label class="pl-lbl">Угол<select class="tm-role" data-mk="pos">${[["bl","Снизу слева"],["br","Снизу справа"],["tl","Сверху слева"],["tr","Сверху справа"]].map(([k,t])=>`<option value="${k}" ${(M.pos||"bl")===k?"selected":""}>${t}</option>`).join("")}</select></label>
+        <label class="pl-lbl">Цвет<select class="tm-role" data-mk="tone">${[["light","Светлый текст"],["dark","Тёмный текст"]].map(([k,t])=>`<option value="${k}" ${(M.tone||"light")===k?"selected":""}>${t}</option>`).join("")}</select></label></div>
+      <div class="mk-prev"></div></div>`,
+    actions:[{label:"Отмена"},...(cur?[{label:"Убрать плашку",fn:()=>{studioBeforeChange();d.layers=d.layers.filter(l=>l!==cur);N.refresh();NEON.save()}}]:[]),{label:cur?"Обновить":"Поставить",variant:"primary",icon:"badge-info",fn:r=>apply(r)}]});
+  const val=k=>{const i=root.querySelector(`[data-mk="${k}"]`);return i?((i.value!=null?i.value:i.getAttribute("value"))||"").trim():""};
+  const prev=()=>{root.querySelector(".mk-prev").textContent=studioAdMarkText({name:val("name"),inn:val("inn"),erid:val("erid")})};
+  root.addEventListener("input",prev);root.addEventListener("nv-change",prev);
+  const ps=root.querySelector('[data-mk="payer"]');if(ps)ps.addEventListener("change",()=>{const p=payers.find(x=>x.id===+ps.value);if(!p)return;const n=root.querySelector('[data-mk="name"]'),i=root.querySelector('[data-mk="inn"]');n.value=payerName(p);n.setAttribute("value",payerName(p));i.value=p.inn||"";i.setAttribute("value",p.inn||"");prev()});
+  prev();
+  const apply=()=>{const o={name:val("name"),inn:val("inn"),erid:val("erid"),pos:val("pos")||"bl",tone:val("tone")||"light"};
+    if(o.inn&&!/^\d{10}(\d{2})?$/.test(o.inn)){toast("ИНН — 10 или 12 цифр",{tone:"warning"});return false}
+    S.studio.adMark={name:o.name,inn:o.inn};NEON.save();studioBeforeChange();
+    const F=STUDIO_FMT[d.format]||STUDIO_FMT.square,small=Math.max(1.4,Math.min(2.2,26/F.h*100)),w=86,h=small*2.6,x=o.pos[1]==="r"?100-w-3:3,y=o.pos[0]==="b"?100-h-2.5:2.5;
+    let l=cur;if(!l){l=studioLayerDefaults("text");d.layers.push(l)}
+    Object.assign(l,{text:studioAdMarkText(o),x,y,w,h,fontSize:small,weight:"400",color:o.tone==="dark"?"#1f2937":"#ffffff",align:o.pos[1]==="r"?"right":"left",lineHeight:1.2,role:"disclaimer",adMark:true,adMarkData:o,name:"Маркировка",lockTpl:true,locked:true,shadow:o.tone!=="dark"});
+    studioFitText(l,d);d.selectedId=l.id;studioMultiSel=[];N.refresh();NEON.save();toast(o.erid?"Маркировка поставлена":"Плашка без erid — впишите токен, когда получите его в ОРД",{tone:o.erid?"success":"warning"})};
 }
 /* ---------- v8-13: матрица A/B без ИИ — варианты для каждого текста и фото → все комбинации (ядро «Массового создания») ---------- */
 function studioAbMatrix(){
