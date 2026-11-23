@@ -6182,15 +6182,13 @@ function openProjectPanel(p){
         if(lfHost)(async()=>{
           try{
             const st=await api("/api/v1/ads/projects/"+p.id+"/autoreplace",{});
-            lfHost.innerHTML=`<nv-switch name="ar_on" label="Автозамена умерших аккаунтов" description="0 показов за сутки → остановить, завести новый с теми же настройками, через 2 суток — возврат денег на Click.ru" ${st.enabled?"checked":""}></nv-switch>
-              <nv-input name="ar_max" type="number" label="Замен в день, не больше" value="${esc(String(st.max_per_day||5))}" style="max-width:170px"></nv-input>
+            lfHost.innerHTML=`<nv-switch name="ar_on" label="Автозамена умерших аккаунтов" description="0 показов за сутки или угасание (2 дня меньше ${Math.round(FADE.ratio*100)}% от пика и меньше ${FADE.maxImp} показов в день) → остановить, завести новый с теми же настройками, через 2 суток — возврат денег на Click.ru. Без лимита в день" ${st.enabled?"checked":""}></nv-switch>
               <nv-button size="sm" variant="ghost" icon="play" data-ar-run hint="План за вчера по этому проекту, выполнение — по кнопке">Проверить сейчас</nv-button>`;
-            const save=async()=>{const on=lfHost.querySelector('[name="ar_on"]').checked,mx=+lfHost.querySelector('[name="ar_max"]').value||5;
-              try{const r=await apiPut("/api/v1/ads/projects/"+p.id+"/autoreplace",{enabled:on,max_per_day:mx});
-                toast(r.enabled?`Автозамена включена: до ${r.max_per_day} в день`:"Автозамена выключена",{tone:r.enabled?"success":"info"});S.ads.lifeLoaded=false}
+            const save=async()=>{const on=lfHost.querySelector('[name="ar_on"]').checked;
+              try{const r=await apiPut("/api/v1/ads/projects/"+p.id+"/autoreplace",{enabled:on});
+                toast(r.enabled?"Автозамена включена":"Автозамена выключена",{tone:r.enabled?"success":"info"});S.ads.lifeLoaded=false}
               catch(err){toast("Не удалось сохранить: "+(err.message||""),{tone:"danger"})}};
             lfHost.querySelector('[name="ar_on"]').addEventListener("nv-change",save);
-            lfHost.querySelector('[name="ar_max"]').addEventListener("nv-change",save);
             lfHost.querySelector("[data-ar-run]").onclick=()=>lifeRunDlg([p.id]);
           }catch(e){lfHost.innerHTML=""}
         })();
