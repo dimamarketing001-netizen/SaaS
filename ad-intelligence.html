@@ -1642,6 +1642,11 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .stud-layer-shape{box-sizing:border-box}
 .stud-layer.sel2{outline:2px dashed var(--ink-3);outline-offset:1px}
 .stud-stage.pen-on,.stud-stage.eyedrop-on{cursor:crosshair}
+.stud-stage.draw-on,.stud-stage.draw-on *{cursor:crosshair!important}
+.stud-drawbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;padding:6px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:12px;color:var(--ink-2)}
+.stud-drawbar .pp-seg{width:auto}.stud-drawbar .sw{width:22px;height:22px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}.stud-drawbar .sw.on{box-shadow:0 0 0 2px var(--svc-ink)}
+.stud-drawbar input[type=range]{width:110px}.stud-drawbar output{font:11.5px var(--font-mono);min-width:34px}
+.stud-draw-live{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:40}
 .stud-pen-overlay,.stud-edit-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .stud-anchor,.stud-handle{position:absolute;transform:translate(-50%,-50%);border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.35);cursor:pointer;padding:0;pointer-events:auto}
 .stud-anchor{width:11px;height:11px;background:var(--svc-ink);border-radius:2px}
@@ -5039,6 +5044,24 @@ function saveRep(){const r=S.ads.rep;try{localStorage.setItem(REP_KEY,JSON.strin
 // Отчёт (2026-11-13): цифры — сразу и без статусов (Click.ru /stat < 1 с),
 // статусы — следом по проектам (каждый — до ~20 с из-за лимитов Click.ru).
 // Таймаут 60 с: индикатор «Обновляю…» больше не висит бесконечно.
+/* Оценка жизни кампании (2026-11-23, анализ 85 аккаунтов 12–22.11): пик показов обычно на 2-й день,
+   дальше нормальное «плато» 25–45% от пика. «Угасла» — 2 полных дня подряд в среднем < 10% от пика
+   и < 150 показов/день, аккаунту ≥ 4 дней с первого показа, и нет лидов Б24 за 3 дня.
+   Пока только подсказка в отчёте — автозамена работает по старому правилу (0 показов за вчера). */
+const FADE={minAge:4,ratio:0.10,maxImp:150,slowRatio:0.30};
+function fadeEval(imp,leads3,todayPartial){
+  const full=todayPartial?imp.slice(0,-1):imp.slice();
+  const first=full.findIndex(v=>v>0);
+  if(first<0)return{code:"none",label:"Нет показов",tone:"neutral",peak:0,last2:0,ratio:null,age:0};
+  const life=full.slice(first),peak=Math.max(...life),age=life.length;
+  const l2=life.slice(-2),last2=l2.reduce((a,b)=>a+b,0)/l2.length,ratio=peak?last2/peak:0;
+  const o={peak,last2:Math.round(last2),ratio,age};
+  if(age<FADE.minAge)return{...o,code:"young",label:"Раскачка",tone:"info"};
+  if(l2.every(v=>v===0))return{...o,code:"zero",label:"0 показов — замена",tone:"danger"};
+  if(ratio<FADE.ratio&&last2<FADE.maxImp)return leads3>0?{...o,code:"fade_leads",label:"Угасла, но есть лиды",tone:"warning"}:{...o,code:"fade",label:"Угасла — кандидат на замену",tone:"danger"};
+  if(ratio<FADE.slowRatio)return{...o,code:"slow",label:"Снижается",tone:"warning"};
+  return{...o,code:"ok",label:"Работает",tone:"success"};
+}
 function withTimeout(p,ms,what){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error(what+": нет ответа за "+Math.round(ms/1000)+" с")),ms))])}
 async function loadReport(refresh){
   const A=S.ads,r=A.rep,seq=(r.seq||0)+1;r.seq=seq;r.loading=true;N.refreshIf("ads-report");
@@ -6622,8 +6645,15 @@ report(){
     if(!r.loaded&&!r.loading){loadReport();return}
     const el=root.querySelector("#ads-rep-res");if(!d||!el)return;
     const sm=d.summary||{},t=d.totals||{},th=sm.threshold,rub=v=>v==null?"—":fmt(Math.round(v))+" ₽",rub2=v=>v==null?"—":Number(v).toLocaleString("ru-RU",{maximumFractionDigits:2})+" ₽";
+    const todayPartial=!String(r.period||"30").includes("..");
+    const leads3=a=>{const c=crmOf(a);if(!c||!c.daily)return 0;const L=d.daily.labels||[],k=todayPartial?L.length-1:L.length;return L.slice(Math.max(0,k-3),k).reduce((t,x)=>t+(c.daily[x]||0),0)};
+    const fadeLbl={ok:"Работает",slow:"Снижается",young:"Раскачка",fade_leads:"Угасла, но есть лиды",fade:"Угасла — кандидат на замену",zero:"0 показов — замена",none:"Нет показов"};
+    const fadeTone={ok:"success",slow:"warning",young:"info",fade_leads:"warning",fade:"danger",zero:"danger",none:"neutral"};
+    const crmOf=a=>((d.crm&&d.crm.items)||{})[a.account_id]||null;
     const items=(d.items||[]).filter(a=>(!r.status||r.status.split(",").includes((a.status||{}).code||"unknown"))&&(!r.q||(a.pool_login+" "+a.account_id+" "+(a.campaign_id||"")+" "+(a.project_name||"")).toLowerCase().includes(r.q.toLowerCase())));
     const by=sm.by_status||{};
+    items.forEach(a=>{a._fade=fadeEval((a.series&&a.series.impressions)||[],leads3(a),todayPartial)});
+    const fadeCnt={};["fade","zero","fade_leads","slow","young","ok","none"].forEach(k=>{const n=items.filter(a=>a._fade.code===k).length;if(n)fadeCnt[k]=n});
     const chart=(keys,names,type)=>esc(JSON.stringify({labels:(d.daily.labels||[]).map(x=>x.slice(8,10)+"."+x.slice(5,7)),series:keys.map((k,i)=>({name:names[i],values:d.daily[k]||[]}))}));
     const dd=x=>x?x.slice(8,10)+"."+x.slice(5,7)+"."+x.slice(0,4):"";
     // Лиды по дням (2026-11-17): из Б24 по дате создания лида; цель Метрики — отдельной линией, только если не пустая
@@ -6636,7 +6666,6 @@ report(){
     const leadsBar=b24Leads?esc(JSON.stringify({labels:dLab.map(x=>x.slice(8,10)+"."+x.slice(5,7)),series:[{name:"Лиды Б24",values:b24Leads}]})):"";
     const crm=d.crm,ci=(crm&&crm.items)||{},ct=(crm&&crm.totals)||{},cps=((crm&&crm.projects)||[]);
     const crmOn=cps.filter(x=>x.source),crmOff=cps.filter(x=>!x.source);
-    const crmOf=a=>ci[a.account_id]||null;
     const crmBlock=!crm?(r.crmLoading?'<div class="muted" style="font-size:12.5px;margin-top:12px">Подтягиваю лиды, клиентов и договоры из Б24…</div>':""):
       !crmOn.length?`<nv-callout tone="info" heading="Лиды из Б24 не подключены" style="margin-top:12px">Откройте проект и выберите «Источник лидов Б24» (вебхук из раздела «Конверсии») — в отчёте появятся лиды, клиенты и договоры по каждой кампании.</nv-callout>`:
       `<div class="dash-g4" style="margin-top:12px">
@@ -6671,10 +6700,13 @@ report(){
         <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Логин, ID аккаунта, проект" value="${esc(r.q)}" data-chg="adsRepQ"></nv-input>
           <nv-filter-select label="Статус" value="${esc(r.status)}" options="${esc(stOpts)}" placeholder="Все статусы" data-chg="adsRepStatus"></nv-filter-select></div>
         ${items.length?`<nv-table id="ads-rep-t" page-size="25" clickable></nv-table>`:`<nv-empty icon="bar-chart-3" heading="Нет аккаунтов" text="Измените проекты, период или фильтры."></nv-empty>`}
-      </nv-card>`;
+      </nv-card>
+      ${items.length?`<nv-card heading="Показы и клики по кампаниям по дням" subtitle="В ячейке: показы и клики за день, цвет — доля от пика кампании. Оценка — по правилу угасания: 2 полных дня в среднем меньше ${Math.round(FADE.ratio*100)}% от пика и меньше ${FADE.maxImp} показов в день, аккаунту от ${FADE.minAge} дней, нет лидов Б24 за 3 дня. Сегодняшний день неполный и в оценке не участвует." style="margin-top:12px">
+        <div class="st-chips" style="margin-bottom:8px">${Object.entries(fadeCnt).map(([k,v])=>`<nv-badge tone="${fadeTone[k]}">${esc(fadeLbl[k])}: ${v}</nv-badge>`).join("")}</div>
+        <div style="overflow-x:auto"><nv-table id="ads-rep-days" page-size="50" clickable></nv-table></div></nv-card>`:""}`;
     const cnum=(a,k)=>{const c=crmOf(a);return c?(c[k]||0):-1};
     const ccell=(a,k)=>{const c=crmOf(a);return c?fmt(c[k]||0):'<span class="muted">—</span>'};
-    if(items.length)wireTable(root,"ads-rep-t",items.map(a=>({id:a.account_id,...a,st:(a.status||{}).code||"unknown",crm_leads:cnum(a,"leads"),crm_clients:cnum(a,"clients"),crm_deals:cnum(a,"deals"),crm_cpl:(crmOf(a)&&crmOf(a).leads)?a.spend/crmOf(a).leads:null,crm_cr:(crmOf(a)&&a.clicks)?(crmOf(a).leads||0)/a.clicks*100:null})),
+    if(items.length)wireTable(root,"ads-rep-t",items.map(a=>({id:a.account_id,...a,st:(a.status||{}).code||"unknown",crm_leads:cnum(a,"leads"),crm_clients:cnum(a,"clients"),crm_deals:cnum(a,"deals"),crm_cpl:(crmOf(a)&&crmOf(a).leads)?a.spend/crmOf(a).leads:null,crm_cr:(crmOf(a)&&a.clicks)?(crmOf(a).leads||0)/a.clicks*100:null,fade_r:a._fade.ratio==null?-1:a._fade.ratio})),
       [{key:"pool_login",label:"Аккаунт",sort:true,render:a=>`<b>${esc(a.pool_login||"—")}</b><br><span class="muted" style="font-size:12px">#${a.account_id} · ${esc(a.project_name||"")}</span>${a.campaign_id?`<br><span class="muted" style="font-size:12px">Кампания Директа: <b class="num" style="user-select:all">${esc(String(a.campaign_id))}</b></span>`:""}`},
        {key:"st",label:"Статус",sort:true,render:a=>accStatusHtml(a.status||{code:"unknown"})},
        {key:"impressions",label:"Показы",align:"right",sort:true,render:a=>fmt(a.impressions)},
@@ -6688,8 +6720,24 @@ report(){
        {key:"crm_cpl",label:"Цена лида",align:"right",sort:true,render:a=>a.crm_cpl==null?"—":rub2(a.crm_cpl)},
        {key:"crm_clients",label:"Клиенты",align:"right",sort:true,render:a=>ccell(a,"clients")},
        {key:"crm_deals",label:"Договоры",align:"right",sort:true,render:a=>{const c=crmOf(a);return c?(c.deals?`<b>${fmt(c.won||0)}</b> <span class="muted">из ${fmt(c.deals)}</span>`:"0"):'<span class="muted">—</span>'}},
+       {key:"fade_r",label:"Оценка",sort:true,render:a=>`<nv-badge tone="${a._fade.tone}">${esc(a._fade.label)}</nv-badge>${a._fade.ratio!=null?`<br><span class="muted" style="font-size:12px">${Math.round(a._fade.ratio*100)}% от пика</span>`:""}`},
+       {key:"trend_i",label:"Показы по дням",render:a=>`<nv-sparkline-cell values="${esc(JSON.stringify(a.series.impressions))}"></nv-sparkline-cell>`},
        {key:"trend",label:"Клики по дням",render:a=>`<nv-sparkline-cell values="${esc(JSON.stringify(a.series.clicks))}"></nv-sparkline-cell>`}],
       row=>{const pr=(A.projects||[]).find(x=>x.id===row.project_id)||{id:row.project_id,name:row.project_name};openProjectPanel(pr)});
+    if(items.length){
+      const L=d.daily.labels||[];let lo=L.findIndex((x,i)=>items.some(a=>(a.series.impressions[i]||0)+(a.series.clicks[i]||0)>0));if(lo<0)lo=Math.max(0,L.length-14);lo=Math.max(lo,L.length-21);
+      const idx=L.map((x,i)=>i).filter(i=>i>=lo);
+      const heat=(v,pk)=>{const q=pk?v/pk:0;return q>=0.5?"var(--ok-bg)":q>=0.3?"color-mix(in srgb,var(--ok-bg) 50%,transparent)":q>=0.1?"var(--warn-bg)":v>0?"var(--bad-bg)":"transparent"};
+      const order={fade:0,zero:1,fade_leads:2,slow:3,young:4,ok:5,none:6};
+      wireTable(root,"ads-rep-days",items.map(a=>{const row={id:a.account_id,...a,fade_o:order[a._fade.code],peak:a._fade.peak,last2:a._fade.last2};idx.forEach(i=>{row["d"+i]=a.series.impressions[i]||0});return row}).sort((x,y)=>x.fade_o-y.fade_o||(x._fade.ratio||0)-(y._fade.ratio||0)),
+        [{key:"pool_login",label:"Кампания",sort:true,render:a=>`<b>${esc(a.pool_login||"—")}</b><br><span class="muted" style="font-size:12px">${esc(a.project_name||"")}${a.campaign_id?" · "+esc(String(a.campaign_id)):""}</span>`},
+         {key:"fade_o",label:"Оценка",sort:true,render:a=>`<nv-badge tone="${a._fade.tone}">${esc(a._fade.label)}</nv-badge><br><span class="muted" style="font-size:12px">${a._fade.ratio==null?"":Math.round(a._fade.ratio*100)+"% от пика · "}${a._fade.age} дн.</span>`},
+         {key:"peak",label:"Пик/день",align:"right",sort:true,render:a=>fmt(a.peak)},
+         {key:"last2",label:"Ср. 2 дня",align:"right",sort:true,render:a=>fmt(a.last2)},
+         ...idx.map(i=>({key:"d"+i,label:L[i].slice(8,10)+"."+L[i].slice(5,7)+(todayPartial&&i===L.length-1?" (сегодня)":""),align:"right",sort:true,
+           render:a=>{const v=a.series.impressions[i]||0,c=a.series.clicks[i]||0;return `<span style="display:block;padding:2px 6px;border-radius:6px;white-space:nowrap;background:${heat(v,a._fade.peak)}">${fmt(v)}<br><span class="muted" style="font-size:11.5px">${fmt(c)} кл.</span></span>`}}))],
+        row=>{const pr=(A.projects||[]).find(x=>x.id===row.project_id)||{id:row.project_id,name:row.project_name};openProjectPanel(pr)});
+    }
   }}
 }};
 N.acts.adsNewProject=()=>projectWizard(null);
@@ -7303,7 +7351,7 @@ function studioPolyPoints(sides,innerRadius){
 }
 function studioPolyClipPath(l){return"polygon("+studioPolyPoints(l.sides,l.shape==="star"?l.innerRadius:null).map(p=>`${p.x}% ${p.y}%`).join(",")+")"}
 function studioLayerTransform(l){return`rotate(${l.rotation||0}deg) scaleX(${l.flipH?-1:1}) scaleY(${l.flipV?-1:1}) skewX(${l.skewX||0}deg) skewY(${l.skewY||0}deg)`}
-function studioStrokeCssBorder(s){return s.enabled?`${s.width}px ${s.dash==="dashed"?"dashed":s.dash==="dotted"?"dotted":"solid"} ${esc(s.color)}`:"none"}
+function studioStrokeCssBorder(s){return s.enabled?`calc(var(--kf,1)*${+s.width||0}px) ${s.dash==="dashed"?"dashed":s.dash==="dotted"?"dotted":"solid"} ${esc(s.color)}`:"none"}
 /* Контур → d. Слой кривой: основной контур l.points/l.closed + доп. контуры l.subs=[{points,closed}] (дырки, буквы). */
 function studioContourD(pts,closed){
   if(!pts||pts.length<2)return"";let d=`M ${pts[0].x} ${pts[0].y}`;
@@ -7321,13 +7369,13 @@ function studioLayerInner(l){
   if(l.type==="path"){
     const f=studioFillOf(l),s=studioStrokeOf(l),gid="pg-"+l.id;
     const grad=f.type==="gradient"?`<linearGradient id="${gid}" gradientTransform="rotate(${f.angle||90} .5 .5)"><stop offset="0" stop-color="${esc(f.color)}"/><stop offset="1" stop-color="${esc(f.color2)}"/></linearGradient>`:f.type==="radial"?`<radialGradient id="${gid}"><stop offset="0" stop-color="${esc(f.color)}"/><stop offset="1" stop-color="${esc(f.color2)}"/></radialGradient>`:"";
-    return`<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:100%;overflow:visible">${grad?`<defs>${grad}</defs>`:""}<path d="${studioPathD(l)}" fill-rule="${l.fillRule||"nonzero"}" fill="${f.type==="none"?"none":grad?`url(#${gid})`:esc(f.color)}" stroke="${s.enabled?esc(s.color):"none"}" stroke-width="${s.width}" stroke-dasharray="${studioDashArr(s.dash)}" stroke-linecap="${s.cap||"butt"}" stroke-linejoin="${s.join||"miter"}" vector-effect="non-scaling-stroke"/></svg>`;
+    return`<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:100%;overflow:visible">${grad?`<defs>${grad}</defs>`:""}<path d="${studioPathD(l)}" fill-rule="${l.fillRule||"nonzero"}" fill="${f.type==="none"?"none":grad?`url(#${gid})`:esc(f.color)}" stroke="${s.enabled?esc(s.color):"none"}" style="stroke-width:calc(var(--kf,1)*${+s.width||0}px)" stroke-dasharray="${studioDashArr(s.dash)}" stroke-linecap="${s.cap||"butt"}" stroke-linejoin="${s.join||"miter"}" vector-effect="non-scaling-stroke"/></svg>`;
   }
   if(l.type==="shape"){
     const f=studioFillOf(l),s=studioStrokeOf(l);
     if(l.shape==="triangle")return`<div class="stud-layer-shape" style="background:${studioFillCss(f)};clip-path:polygon(50% 0%,0% 100%,100% 100%)"></div>`;
     if(l.shape==="polygon"||l.shape==="star")return`<div class="stud-layer-shape" style="background:${studioFillCss(f)};clip-path:${studioPolyClipPath(l)}"></div>`;
-    return`<div class="stud-layer-shape" style="background:${studioFillCss(f)};border:${studioStrokeCssBorder(s)};border-radius:${l.shape==="ellipse"?"50%":(l.radius||0)+"px"}"></div>`;
+    return`<div class="stud-layer-shape" style="background:${studioFillCss(f)};border:${studioStrokeCssBorder(s)};border-radius:${l.shape==="ellipse"?"50%":`calc(var(--kf,1)*${+l.radius||0}px)`}"></div>`;
   }
   return"";
 }
@@ -7442,7 +7490,7 @@ function studioEditOverlayHtml(){
 }
 function studioStageHtml(){
   const d=studioDesign(),fmt=STUDIO_FMT[d.format],bgStyle=d.bg.type==="image"&&d.bg.image?`background-image:url('${esc(d.bg.image)}')`:`background:${esc(studioBgCss(d.bg))}`;
-  const z=studioZoom;return`<div class="stud-stage${d.bg.type==="pattern"?" bg-pat":""}${studioTool==="pen"?" pen-on":studioTool==="eyedrop"?" eyedrop-on":""}" style="aspect-ratio:${fmt.w}/${fmt.h};width:${studioStageW(fmt,z)};max-width:none;${bgStyle}">${d.layers.map(l=>studioLayerHtml(l,l.id===d.selectedId,studioMultiSel.includes(l.id))).join("")}${studioPenPreviewHtml()}${studioEditOverlayHtml()}${studioZonesHtml(d)}${studioGuidesHtml(d)}</div>`;
+  const z=studioZoom;return`<div class="stud-stage${d.bg.type==="pattern"?" bg-pat":""}${studioTool==="pen"?" pen-on":studioTool==="eyedrop"?" eyedrop-on":studioTool==="draw"?" draw-on":""}" style="aspect-ratio:${fmt.w}/${fmt.h};width:${studioStageW(fmt,z)};max-width:none;${bgStyle}">${d.layers.map(l=>studioLayerHtml(l,l.id===d.selectedId,studioMultiSel.includes(l.id))).join("")}${studioPenPreviewHtml()}${studioEditOverlayHtml()}${studioZonesHtml(d)}${studioGuidesHtml(d)}</div>`;
 }
 /* Безопасные зоны: поля 5% (текст ближе к краю режут превью площадок) и, для
    вертикальных форматов, полосы под интерфейс сторис (шапка ~14%, низ ~20%). */
@@ -7911,6 +7959,7 @@ function studioPropsHtml0(){
 function studioLayoutStage(root,ids){
   const stage=(root||document).querySelector(".stud-stage");if(!stage)return;
   const sr=stage.getBoundingClientRect(),h=sr.height;stage.style.setProperty("--k",(sr.width/560).toFixed(4));
+  stage.style.setProperty("--kf",(sr.width/((STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square).w)).toFixed(4));
   const d=studioDesign(),by=new Map(d.layers.map(x=>[x.id,x]));
   const els=ids?ids.map(id=>stage.querySelector(`.stud-layer[data-id="${id}"][data-type="text"]`)).filter(Boolean):stage.querySelectorAll('.stud-layer[data-type="text"]');
   els.forEach(el=>{
@@ -8723,7 +8772,7 @@ function studioPanelHtml(tab){
     ${mine.length?`<div class="sect-t">Мои шаблоны</div><div class="s2-grid2">${mine.map(t=>`<div class="th" data-act="studUseUserTpl" data-id="${t.id}" title="${esc(t.name)} · ${esc(t.category||"")}"><img src="${esc(t.thumb||"")}" alt=""><button type="button" class="x" data-act="studDelUserTpl" data-id="${t.id}" aria-label="Удалить шаблон">×</button></div>`).join("")}</div>`:""}
     ${built.length?`${mine.length?'<div class="sect-t">Готовые</div>':""}<div class="s2-grid2">${built.map(([t,i])=>`<div class="th" data-act="studUseTplHere" data-i="${i}" title="${esc(t.name)}"><img data-s2tpl="${i}" alt=""></div>`).join("")}</div>`:""}`}
   if(tab==="elements")return`<h3>Элементы</h3><div class="sect-t">Фигуры</div><div class="s2-tiles">${STUDIO_SHAPES.map(([sh,icn,lb])=>`<button type="button" data-act="studAdd" data-type="shape" data-shape="${sh}">${ic(icn,20)}${lb}</button>`).join("")}</div>
-    <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
+    <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><button type="button" data-act="studTool" data-tool="draw">${ic("brush",20)}Рисовать</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
     <div class="sect-t">Графика</div><input type="search" class="num" data-s2gfx placeholder="Поиск: стрелка, бейдж, рамка…" value="${esc(studioGfxQ)}" style="width:100%;text-align:left;padding:0 10px">
     <div class="s2-gfx" data-s2gfxgrid>${studioGfxGridHtml()}</div>
     <div class="sect-t">Данные</div><div class="s2-tiles">${[["table","table-2","Таблица"],["qr","qr-code","QR-код"],["bar","bar-chart-3","Столбцы"],["line","line-chart","Линия"],["pie","pie-chart","Круговая"],["donut","circle-dashed","Кольцо"]].map(([k,i,t])=>`<button type="button" data-act="studAddData" data-k="${k}">${ic(i,20)}${t}</button>`).join("")}</div>
@@ -9140,7 +9189,7 @@ editor(){
     <aside class="s2-panel" id="s2-panel" ${tabNow?"":"hidden"}>${tabNow?`<button type="button" class="s2-panel-x" data-act="studTab" data-tab="${tabNow}" data-tip="Скрыть панель">${ic("chevrons-left",16)}</button>`+studioPanelHtml(tabNow):""}</aside>
     <section class="s2-main">
       <input type="file" id="stud-bg-file" accept="image/*" class="sr"><input type="file" id="stud-img-file" accept="image/*" class="sr"><input type="file" id="stud-img-replace" accept="image/*" class="sr">
-      ${start?studioStartHtml():`<div class="stud-stage-wrap"><div class="stud-rbox${S.studio.rulers!==false?" on":""}">${S.studio.rulers!==false?'<canvas class="stud-ruler h" aria-hidden="true"></canvas><canvas class="stud-ruler v" aria-hidden="true"></canvas><span class="stud-ruler-c" aria-hidden="true">px</span>':""}<div id="stud-stage-host">${studioStageHtml()}</div></div>${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Перо: клик — точка, клик+тяни — плавная, клик по первой — замкнуть, Enter — закончить, Esc — отмена.</p>':""}</div>${S.studio.timeline?studioTimelineHtml():""}${studioPagesHtml()}`}
+      ${start?studioStartHtml():`<div class="stud-stage-wrap"><div class="stud-rbox${S.studio.rulers!==false?" on":""}">${S.studio.rulers!==false?'<canvas class="stud-ruler h" aria-hidden="true"></canvas><canvas class="stud-ruler v" aria-hidden="true"></canvas><span class="stud-ruler-c" aria-hidden="true">px</span>':""}<div id="stud-stage-host">${studioStageHtml()}</div></div>${studioTool==="draw"?studioDrawBarHtml():""}${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Перо: клик — точка, клик+тяни — плавная, клик по первой — замкнуть, Enter — закончить, Esc — отмена.</p>':""}</div>${S.studio.timeline?studioTimelineHtml():""}${studioPagesHtml()}`}
     </section>
     <button type="button" class="m-props-btn" data-act="studMProps">${ic("sliders-horizontal",16)}<span>Настройки</span></button>
     <aside class="s2-props"><div id="stud-props">${studioPropsHtml()}</div></aside>
@@ -9559,6 +9608,48 @@ library(){
   return{title:"Мои дизайны",sub:"Хранятся на сервере — доступны с любого компьютера. Откройте, чтобы продолжить, или дублируйте для A/B.",actions:`<nv-button icon="plus" data-act="studNew">Новый дизайн</nv-button>`,body};
 }
 };
+/* ---------- Рисование (кисть, маркер, выделитель): штрих → упрощение (RDP) → сглаживание Catmull-Rom → слой-кривая ---------- */
+const STUDIO_BRUSHES={pen:{t:"Кисть",i:"brush",k:1,op:100,cap:"round"},marker:{t:"Маркер",i:"pen-line",k:2.2,op:90,cap:"round"},hl:{t:"Выделитель",i:"highlighter",k:5,op:40,cap:"butt",blend:"multiply"}};
+const STUDIO_DRAW_COLORS=["#111827","#ffffff","#7c3aed","#e11d48","#f59e0b","#16a34a","#0ea5e9","#facc15"];
+function studioDrawCfg(){const c=S.studio.draw||(S.studio.draw={kind:"pen",color:"#111827",size:8});return c}
+function studioDrawBarHtml(){const c=studioDrawCfg();
+  return`<div class="stud-drawbar">${ppSeg(Object.entries(STUDIO_BRUSHES).map(([k,b])=>[ic(b.i,14)+b.t,`data-drawkind="${k}"`,c.kind===k]))}
+    <span>${STUDIO_DRAW_COLORS.concat(STUDIO_DRAW_COLORS.includes(c.color)?[]:[c.color]).map(x=>`<button type="button" class="sw${x===c.color?" on":""}" style="background:${x}" data-drawcolor="${x}" aria-label="Цвет ${x}"></button>`).join(" ")}</span>
+    <label style="display:inline-flex;align-items:center;gap:6px">Толщина <input type="range" min="2" max="40" step="1" value="${c.size}" data-drawsize><output>${c.size}px</output></label>
+    <span class="muted">Рисуйте мышью по холсту · Esc — закончить</span></div>`}
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-drawkind],[data-drawcolor]");if(!t)return;const c=studioDrawCfg();
+  if(t.dataset.drawkind){c.kind=t.dataset.drawkind;if(c.kind==="hl"&&STUDIO_DRAW_COLORS.slice(0,2).includes(c.color))c.color="#facc15"}else c.color=t.dataset.drawcolor;NEON.save();N.refresh()});
+document.addEventListener("input",e=>{if(!e.target.matches||!e.target.matches("[data-drawsize]"))return;const v=+e.target.value;studioDrawCfg().size=v;e.target.nextElementSibling.textContent=v+"px";NEON.save()});
+function studioDrawRdp(pts,eps){if(pts.length<3)return pts;const a=pts[0],b=pts[pts.length-1];let mi=0,md=0;const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy)||1;
+  for(let i=1;i<pts.length-1;i++){const d=Math.abs(dy*pts[i].x-dx*pts[i].y+b.x*a.y-b.y*a.x)/L;if(d>md){md=d;mi=i}}
+  if(md<=eps)return[a,b];return studioDrawRdp(pts.slice(0,mi+1),eps).slice(0,-1).concat(studioDrawRdp(pts.slice(mi),eps))}
+document.addEventListener("pointerdown",e=>{
+  if(studioTool!=="draw"||e.button!==0)return;const stage=e.target.closest&&e.target.closest(".stud-stage");if(!stage)return;
+  e.preventDefault();e.stopPropagation();
+  const r=stage.getBoundingClientRect(),F=STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square,c=studioDrawCfg(),B=STUDIO_BRUSHES[c.kind]||STUDIO_BRUSHES.pen,wF=c.size*B.k,kf=r.width/F.w;
+  const P=[],toP=ev=>({x:(ev.clientX-r.left)/r.width*100,y:(ev.clientY-r.top)/r.height*100,sx:ev.clientX,sy:ev.clientY});P.push(toP(e));
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("class","stud-draw-live");svg.setAttribute("viewBox","0 0 100 100");svg.setAttribute("preserveAspectRatio","none");
+  const pl=document.createElementNS("http://www.w3.org/2000/svg","polyline");pl.setAttribute("fill","none");pl.setAttribute("stroke",c.color);pl.setAttribute("stroke-linecap",B.cap);pl.setAttribute("stroke-linejoin","round");pl.setAttribute("vector-effect","non-scaling-stroke");
+  pl.style.strokeWidth=wF*kf+"px";pl.style.opacity=B.op/100;if(B.blend)pl.style.mixBlendMode=B.blend;svg.append(pl);stage.append(svg);
+  const paint=()=>pl.setAttribute("points",P.map(p=>p.x.toFixed(3)+","+p.y.toFixed(3)).join(" "));paint();
+  const mv=ev=>{const evs=ev.getCoalescedEvents?ev.getCoalescedEvents():[ev];for(const x of evs.length?evs:[ev]){const q=toP(x),l=P[P.length-1];if(Math.hypot(q.sx-l.sx,q.sy-l.sy)>=1.5)P.push(q)}paint()};
+  const up=()=>{document.removeEventListener("pointermove",mv,true);document.removeEventListener("pointerup",up,true);svg.remove();studioDrawCommit(P,r,c,B,wF)};
+  document.addEventListener("pointermove",mv,true);document.addEventListener("pointerup",up,true);
+},true);
+function studioDrawCommit(P,r,c,B,wF){
+  if(P.length<2){const p=P[0];P=[p,{...p,x:p.x+0.05,sx:p.sx+0.5}]}
+  /* упрощаем в экранных пикселях — гладкость не зависит от формата */
+  const S2=studioDrawRdp(P.map(p=>({x:p.sx,y:p.sy,p})),1.2).map(q=>q.p);
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;S2.forEach(p=>{x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});
+  const bw=Math.max(0.5,x1-x0),bh=Math.max(0.5,y1-y0),loc=S2.map(p=>({x:(p.x-x0)/bw*100,y:(p.y-y0)/bh*100}));
+  const pts=loc.map((p,i)=>{const a=loc[i-1]||p,b=loc[i+1]||p,tx=(b.x-a.x)/6,ty=(b.y-a.y)/6,first=i===0,last=i===loc.length-1;
+    return{x:p.x,y:p.y,type:"smooth",in:first?null:{dx:-tx,dy:-ty},out:last?null:{dx:tx,dy:ty}}});
+  const d=studioDesign();studioBeforeChange();
+  const l=studioLayerDefaults("path");Object.assign(l,{x:x0,y:y0,w:bw,h:bh,points:pts,closed:false,fill:{...studioDefFill(c.color),type:"none"},stroke:{enabled:true,color:c.color,width:Math.round(wF*10)/10,dash:"solid",cap:B.cap,join:"round"},name:B.t});
+  if(B.op<100)l.opacity=B.op;if(B.blend)l.blendMode=B.blend;
+  d.layers.push(l);d.selectedId=null;studioMultiSel=[];
+  NEON.save();N.refresh();
+}
 let studioDrag=null;
 function studioSetPath(obj,path,val){const parts=path.split(".");let o=obj;for(let i=0;i<parts.length-1;i++){if(o[parts[i]]==null||typeof o[parts[i]]!=="object")o[parts[i]]={};o=o[parts[i]]}o[parts[parts.length-1]]=val}
 function studioPenRepaint(){
