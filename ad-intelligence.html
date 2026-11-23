@@ -1258,6 +1258,7 @@ nv-ring{display:inline-flex;flex:none;vertical-align:middle}
 .pop-l{overflow-y:auto;display:flex;flex-direction:column;gap:1px;min-height:0}
 .pop-o,.pop-i{display:flex;align-items:center;gap:8px;width:100%;padding:6px 8px;border:0;background:none;border-radius:8px;cursor:pointer;text-align:left;color:var(--ink)}
 .pop-o:hover,.pop-i:hover,.pop-i:focus-visible,.pop-o:focus-within{background:var(--surface-2)}
+.k-subh{display:flex;gap:6px;align-items:center;margin:4px 0 0;font-size:14px;color:var(--muted);font-weight:600}
 .con-h{margin:0 0 10px;font-size:15px}.con-ok{display:flex;gap:12px;align-items:flex-start}.con-ok p{margin:2px 0 0;font-size:13px}
 .con-cap-h{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}.con-cap-h b{display:inline-flex;gap:6px;align-items:center}
 .con-shot{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:crosshair;background:#07101d;max-width:960px}
@@ -1272,7 +1273,9 @@ nv-ring{display:inline-flex;flex:none;vertical-align:middle}
 .tr-t{width:22px;height:22px;flex:none;display:grid;place-items:center;border:0;background:none;border-radius:6px;color:var(--ink-2,var(--muted));cursor:pointer;padding:0}
 button.tr-t:hover{background:var(--surface-2)}
 .tr-r .pop-o{flex:1 1 auto;min-width:0;width:auto;justify-content:flex-start}.tr-r .pop-o .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tr-r.tr-0 .pop-o .t{font-weight:600}.tr-n{color:var(--muted);font-size:12px;flex:none}
+.tr-r.tr-0 .pop-o .t{font-weight:600}
+.tr-f{width:26px;height:26px;flex:none;display:grid;place-items:center;border:0;background:none;border-radius:6px;color:var(--muted);cursor:pointer;padding:0;opacity:.55}
+.tr-r:hover .tr-f,.tr-f:focus-visible{opacity:1}.tr-f:hover{background:var(--surface-2);color:var(--ink)}.tr-n{color:var(--muted);font-size:12px;flex:none}
 .pop-o.part .box{background:var(--surface-2);border-color:var(--ink);color:var(--ink)}
 .pop-o input:disabled+.box{opacity:.55}
 .pop-i.on{font-weight:500;background:var(--surface-2)}
@@ -2712,7 +2715,7 @@ define("nv-topic-tree",class extends NvEl{
   mounted(){this.firstChild.onclick=()=>this._on?closePop():this.pop()}
   rows(q){const T=this.tree(),s=new Set(this.sel()),open=this._open||(this._open=new Set()),out=[],hit=t=>String(t).toLowerCase().includes(q);
     const row=(path,label,count,lvl,kids,implied,forceOpen)=>{const on=implied||s.has(path),part=!on&&[...s].some(x=>x.startsWith(path+">")),isOpen=forceOpen||open.has(path);
-      return `<div class="tr-r tr-${lvl}">${kids?`<button type="button" class="tr-t" data-tg="${esc(path)}" aria-expanded="${isOpen}" aria-label="${isOpen?"Свернуть":"Раскрыть"}">${ic(isOpen?"chevron-down":"chevron-right",14)}</button>`:`<span class="tr-t"></span>`}<label class="pop-o${part?" part":""}"><input type="checkbox" value="${esc(path)}" ${on?"checked":""} ${implied?"disabled":""}><span class="box">${ic(part?"minus":"check",12)}</span><span class="t">${esc(label)}</span><span class="tr-n num">${count}</span></label></div>`};
+      return `<div class="tr-r tr-${lvl}">${kids?`<button type="button" class="tr-t" data-tg="${esc(path)}" aria-expanded="${isOpen}" aria-label="${isOpen?"Свернуть":"Раскрыть"}">${ic(isOpen?"chevron-down":"chevron-right",14)}</button>`:`<span class="tr-t"></span>`}<label class="pop-o${part?" part":""}"><input type="checkbox" value="${esc(path)}" ${on?"checked":""} ${implied?"disabled":""}><span class="box">${ic(part?"minus":"check",12)}</span><span class="t">${esc(label)}</span><span class="tr-n num">${count}</span></label>${this.b("folders")&&lvl<2?`<button type="button" class="tr-f" data-fd="${esc(path)}" title="${lvl?"Папка подрубрики с текущими объявлениями":"Папка раздела с папками подрубрик внутри"}" aria-label="Создать папку «${esc(label)}»">${ic("folder-plus",14)}</button>`:""}</div>`};
     for(const M of T){const mp=M.main,mHit=!q||hit(mp),sub=[];
       for(const S_ of (M.subs||[])){const sp=mp+">"+S_.sub,ints=S_.intents||[],iHit=q?ints.filter(i=>hit(i.intent)):[];
         if(q&&!mHit&&!hit(S_.sub)&&!iHit.length)continue;
@@ -2727,7 +2730,8 @@ define("nv-topic-tree",class extends NvEl{
     openPop(this,`<div class="pop-s">${ic("search",14)}<input type="search" placeholder="Найти раздел, подрубрику или интент" aria-label="Найти"></div><div class="pop-l tr-l" role="tree" aria-multiselectable="true">${this.rows("")}</div><div class="pop-f"><button type="button" class="pop-x">Сбросить</button><span class="muted">Выбрано: <b class="pop-n num">${this.sel().length}</b></span></div>`,{width:Math.max(+this.a("min-width")||380,this.offsetWidth),onClose:()=>{this._on=false;const b=this.firstChild;b&&b.setAttribute("aria-expanded","false")},mount:(p,close,place)=>{
       const list=p.querySelector(".pop-l"),inp=p.querySelector(".pop-s input"),q=()=>inp.value.trim().toLowerCase(),redraw=()=>{const y=list.scrollTop;list.innerHTML=this.rows(q());list.scrollTop=y;place()};
       const set=v=>{this.setAttribute("value",v.join("~"));this.firstChild.setAttribute("aria-expanded","true");p.querySelector(".pop-n").textContent=v.length;this.emit("nv-change",{value:v.join("~"),name:this.name});redraw()};
-      list.onclick=e=>{const t=e.target.closest("[data-tg]");if(!t)return;e.preventDefault();const k=t.dataset.tg,o=this._open;o.has(k)?o.delete(k):o.add(k);redraw()};
+      list.onclick=e=>{const fd=e.target.closest("[data-fd]");if(fd){e.preventDefault();closePop();this.emit("nv-folder",{path:fd.dataset.fd});return}
+        const t=e.target.closest("[data-tg]");if(!t)return;e.preventDefault();const k=t.dataset.tg,o=this._open;o.has(k)?o.delete(k):o.add(k);redraw()};
       list.onchange=e=>{const c=e.target,v=c.value;let s=this.sel().filter(x=>x!==v);if(c.checked)s=s.filter(x=>!x.startsWith(v+">")).concat(v);set(s)};
       p.querySelector(".pop-x").onclick=()=>set([]);
       inp.oninput=()=>redraw();inp.focus()}})}
@@ -3169,7 +3173,7 @@ async function creativeImgSrc(ref){
 function crClean(t){return String(t||"").replace(/[   ]/g," ").replace(/\s+/g," ").trim()}
 function crFit(t,n){t=crClean(t);if(t.length<=n)return t;let c=t.slice(0,n+1);const sp=c.lastIndexOf(" ");c=(sp>n*0.5?c.slice(0,sp):t.slice(0,n));c=c.replace(/[\s,;:\-–—(«"]+$/,"").trim();let prev;do{prev=c;c=c.replace(/\s+(и|в|во|с|со|на|по|к|о|об|у|а|из|за|от|до|для|или|но)$/i,"").replace(/[\s,;:\-–—]+$/,"")}while(c!==prev);return c}
 async function collectionCreatives(colId){
-  const d=await api("/api/v1/collections/"+colId+"/items",{});
+  const d=await api("/api/v1/collections/"+colId+"/items",{deep:1});  // папка темы — вместе с подпапками
   return (d.items||[]).map(it=>({headline:crFit(it.title,56),ad_text:crFit(it.description,81),
     image:(it.creative_type==="video"?(it.video_poster||""):(it.image_url||"")).trim()})).filter(x=>x.headline||x.ad_text||x.image);
 }
@@ -3685,7 +3689,7 @@ async function loadCmpCandidates(more){
   const seq=C._seq=(C._seq||0)+1;C.loading=true;
   try{
     if(f.col){
-      const d=await api("/api/v1/collections/"+f.col+"/items",{});if(seq!==C._seq)return;
+      const d=await api("/api/v1/collections/"+f.col+"/items",{deep:1});if(seq!==C._seq)return;
       const q=(f.q||"").toLowerCase();
       let all=(d.items||[]).filter(it=>!q||((it.title||"")+" "+(it.domain||"")+" "+(it.description||"")).toLowerCase().includes(q)).map(kGroup);
       C.total=all.length;C.items=all.slice(0,C.limit);
@@ -3820,12 +3824,9 @@ function intentControlHtml(){
 }
 
 /* ---------- Библиотека ---------- */
-async function loadLibrary(extra){
-  const I=S.intel;I.lib.loading=true;
-  const seq=I._libSeq=(I._libSeq||0)+1;  // ответы приходят в любом порядке — учитываем только последний запрос
-  if(document.getElementById("lib-res"))libRes();else N.refreshIf("intel-library","intel-compare");
-  const f=I.f,ps=+f.pageSize||25,pg=Math.max(1,+f.page||1);
-  const params={group:1,limit:ps,offset:(pg-1)*ps,sort:{name:"domain",oldest:"oldest",discount:"discount"}[f.sort]||"recent",source:f.src||""};
+/* Фильтры библиотеки без постраничности — их же берёт «папка из темы», чтобы в неё попало ровно то, что на экране */
+function libParams(){
+  const I=S.intel,f=I.f,params={source:f.src||""};
   if(f.q)params.q=f.q;
   if(f.platform)params.platform_label=f.platform;
   if(f.format)params.format=f.format;
@@ -3840,6 +3841,14 @@ async function loadLibrary(extra){
   // даты — по местному времени (как записаны в базе); у своего диапазона учитываем и конец
   if(rg){const loc=t=>{const d=new Date(t),z=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())};
     params.date_from=loc(rg[0]);if(String(I.f.period).includes(".."))params.date_to=loc(rg[1])}
+  return params;
+}
+async function loadLibrary(extra){
+  const I=S.intel;I.lib.loading=true;
+  const seq=I._libSeq=(I._libSeq||0)+1;  // ответы приходят в любом порядке — учитываем только последний запрос
+  if(document.getElementById("lib-res"))libRes();else N.refreshIf("intel-library","intel-compare");
+  const f=I.f,ps=+f.pageSize||25,pg=Math.max(1,+f.page||1);
+  const params={group:1,limit:ps,offset:(pg-1)*ps,sort:{name:"domain",oldest:"oldest",discount:"discount"}[f.sort]||"recent",...libParams()};
   Object.assign(params,extra||{});
   try{
     const data=await api("/api/v1/creatives",params);
@@ -4157,10 +4166,33 @@ async function openCreative(id){
 }
 
 /* ---------- Подборки ---------- */
+
+/* Подборки-папки (23.11.2026): папка темы («Юристы») содержит папки подрубрик. */
+const colLabel=k=>k?(k.label||k.name):"";
+const colChildren=id=>S.intel.collections.filter(k=>k.parent_id===id);
+function folderCardHtml(k,selectable){return `<nv-folder-card fid="${esc(k.id)}" name="${esc(k.name)}" icon="${k.children_count?"folder-tree":"folder"}" desc="${esc(k.children_count?k.children_count+" "+plural(k.children_count,"подпапка","подпапки","подпапок")+(k.description?" · "+k.description:""):(k.description||""))}" count="${k.items_count||0}" thumbs="${esc(JSON.stringify(k.thumbs||[]))}" updated="${k.items_count?"Пополнена "+esc(N.rel(k.updated_at)):"Пока пусто"}" ${selectable?"selectable":""} openable ${selectable&&S.intel.kcSel.includes(k.id)?"selected":""}><nv-button size="sm" variant="secondary" icon-end="arrow-right" data-act="kOpen" data-id="${k.id}">Открыть</nv-button><nv-menu data-col="${esc(k.id)}" items="ren:Изменить:pencil|dup:Дублировать:copy|del:Удалить:trash-2:danger"></nv-menu></nv-folder-card>`}
+function bindFolderMenus(root){root.querySelectorAll("nv-menu[data-col]").forEach(m=>m.addEventListener("nv-select",e=>{
+  const id=m.dataset.col;if(e.detail.id==="dup")duplicateCollection(id);else if(e.detail.id==="ren")renameCollectionDlg(id);else if(e.detail.id==="del")N.acts.kDel(null,{id})}))}
+async function topicFolder(path){
+  const [main,sub]=String(path).split(">");
+  const filters=libParams(),intent=activeIntentParam();if(intent&&filters.intent===undefined&&!filters.job_id)filters.intent=intent;
+  toast(`Собираю папку «${sub||main}» из текущих объявлений…`);
+  try{
+    const r=await apiPost("/api/v1/collections/from-topic",{path,filters});
+    await loadCollections();
+    const what=sub?`Папка «${sub}» в «${main}»`:`Папка «${main}»: ${r.folders.length} ${plural(r.folders.length,"подпапка","подпапки","подпапок")}`;
+    toast(`${what} — добавлено ${r.added} из ${r.found}${r.added<r.found?" (остальные уже были)":""}${r.truncated?". Взяты первые 5000":""}`,{tone:"success",timeout:9000,
+      action:{label:"Открыть",fn:()=>{S.intel.openK=String(r.focus_id);S.intel.kSel=[];N.go("intel-collections");openCollection(String(r.focus_id))}}});
+  }catch(err){toast("Папку создать не удалось: "+(err.message||""),{tone:"danger"})}
+}
 async function loadCollections(){
   try{
     const data=await api("/api/v1/collections",{});
-    S.intel.collections=(data.items||[]).map(c=>({id:String(c.id),name:c.name,description:c.description,items_count:c.items_count,thumbs:c.thumbs||[],updated_at:c.updated_at||c.created_at}));
+    const L=(data.items||[]).map(c=>({id:String(c.id),name:c.name,description:c.description,items_count:c.items_count,thumbs:c.thumbs||[],updated_at:c.updated_at||c.created_at,
+      parent_id:c.parent_id?String(c.parent_id):null,topic_main:c.topic_main||"",topic_sub:c.topic_sub||"",children_count:c.children_count||0}));
+    const byId=new Map(L.map(k=>[k.id,k]));L.forEach(k=>{const pa=k.parent_id&&byId.get(k.parent_id);k.label=pa?pa.name+" › "+k.name:k.name});
+    // в списках выбора: папка, сразу за ней её подпапки
+    S.intel.collections=L.filter(k=>!k.parent_id||!byId.has(k.parent_id)).flatMap(k=>[k,...L.filter(c=>c.parent_id===k.id).sort((a,b)=>(+b.items_count||0)-(+a.items_count||0))]);
     S.intel.collectionsLoaded=true;
     N.refreshIf("intel-collections");
   }catch(err){S.intel.collectionsLoaded=true;toast("Не удалось загрузить подборки: "+(err.message||""),{tone:"danger"});N.refreshIf("intel-collections")}
@@ -4212,7 +4244,7 @@ function moveDlg(mode){
   if(!sel.length)return;
   const verb=mode==="move"?"Перенести":"Скопировать";
   overlay("modal",{title:verb+" в другую подборку",subtitle:"Объявлений: "+sel.length,
-    body:`<nv-select name="k" label="Куда" options="${K.map(k=>k.id+":"+esc(k.name)).join("|")}${K.length?"|":""}new:Создать новую подборку" value="${K[0]?K[0].id:"new"}"></nv-select><nv-input name="n" label="Название новой подборки" placeholder="Например, Лучшие офферы" hint="Нужно, только если выбрана новая подборка"></nv-input>`,
+    body:`<nv-select name="k" label="Куда" options="${K.map(k=>k.id+":"+esc(colLabel(k).replace(/[|:]/g," "))).join("|")}${K.length?"|":""}new:Создать новую подборку" value="${K[0]?K[0].id:"new"}"></nv-select><nv-input name="n" label="Название новой подборки" placeholder="Например, Лучшие офферы" hint="Нужно, только если выбрана новая подборка"></nv-input>`,
     actions:[{label:"Отмена"},{label:verb,variant:"primary",fn(r,close){
       const v=formVals(r);
       (async()=>{
@@ -4248,7 +4280,7 @@ function createCollectionDlg(){
 function collectDlg(items){
   const K=S.intel.collections;
   overlay("modal",{title:"Добавить в подборку",subtitle:"Выбрано креативов: "+items.length,
-    body:`<nv-select name="k" label="Подборка" options="${K.map(k=>k.id+":"+esc(k.name)).join("|")}${K.length?"|":""}new:Создать новую подборку" value="${K[0]?K[0].id:"new"}"></nv-select><nv-input name="n" label="Название новой подборки" placeholder="Например, Лучшие офферы" hint="Нужно, только если выбрана новая подборка"></nv-input>`,
+    body:`<nv-select name="k" label="Подборка" options="${K.map(k=>k.id+":"+esc(colLabel(k).replace(/[|:]/g," "))).join("|")}${K.length?"|":""}new:Создать новую подборку" value="${K[0]?K[0].id:"new"}"></nv-select><nv-input name="n" label="Название новой подборки" placeholder="Например, Лучшие офферы" hint="Нужно, только если выбрана новая подборка"></nv-input>`,
     actions:[{label:"Отмена"},{label:"Добавить",variant:"primary",fn(r,close){
       const v=formVals(r);
       (async()=>{
@@ -4680,13 +4712,14 @@ library(){
   actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
   help:{title:"С чего начать",steps:["Запустите сканирование по своему запросу и городу.","Откройте креатив — там цена, ERID и ссылка.","Сохраняйте находки или собирайте их в подборки."]},
   body:`<div class="grid g4">${stat("Найдено объявлений",fmt(I.lib.server?(I.lib.total||0):r.length),'note="по текущим фильтрам"')}${libMatchTile()}${stat("С кодом ERID",erid,'note="на этой странице"')}${stat("В избранном",savedN,'note="всего сохранено"')}</div>
-  <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-select label="Запуск" value="${esc(f.job||"")}" options="${esc(jobFilterOptions())}" data-chg="libF" data-key="job"></nv-select><nv-topic-tree label="Тема объявления" value="${esc(f.aiTree||"")}" tree-key="lib" placeholder="Все темы" min-width="400" data-chg="libF" data-key="aiTree"></nv-topic-tree>${f.aiIntent?`<nv-filter-select label="Интент" value="${esc(f.aiIntent)}" options="${esc(aiIntentOptions()||"_:Пока не определены")}" placeholder="Все" min-width="320" data-chg="libF" data-key="aiIntent"></nv-filter-select>`:""}<nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-button variant="${moreN||I.fMore?"secondary":"ghost"}" icon="sliders-horizontal" data-act="libMore">Ещё фильтры${moreN?" · "+moreN:""}</nv-button></div>
+  <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-select label="Запуск" value="${esc(f.job||"")}" options="${esc(jobFilterOptions())}" data-chg="libF" data-key="job"></nv-select><nv-topic-tree label="Тема объявления" value="${esc(f.aiTree||"")}" tree-key="lib" placeholder="Все темы" min-width="430" folders data-chg="libF" data-key="aiTree"></nv-topic-tree>${f.aiIntent?`<nv-filter-select label="Интент" value="${esc(f.aiIntent)}" options="${esc(aiIntentOptions()||"_:Пока не определены")}" placeholder="Все" min-width="320" data-chg="libF" data-key="aiIntent"></nv-filter-select>`:""}<nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-button variant="${moreN||I.fMore?"secondary":"ghost"}" icon="sliders-horizontal" data-act="libMore">Ещё фильтры${moreN?" · "+moreN:""}</nv-button></div>
   ${I.fMore||moreN?`<div class="toolbar"><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-filter-select label="Пометки" value="${esc(f.feature||"")}" options="promo:Акция или промокод|old_price:Старая цена|warning:Предупреждение|age:Возрастная метка|social:Соцреклама|callouts:Уточнения|offers:Товары в плитке|gallery:Галерея картинок|app:Реклама приложения|ad_id:С номером объявления РСЯ" data-chg="libF" data-key="feature"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select>${intentControlHtml()}</div>`:""}
   ${jobBannerHtml()}
   <nv-saved-views id="lib-views" views="${esc(JSON.stringify(I.savedViews.map(v=>({id:v.id,name:v.name}))))}" value="${esc(activeViewId())}" can-save></nv-saved-views>
   <div class="row between" style="gap:10px;align-items:center;flex-wrap:wrap"><div id="lib-count" class="muted" style="font-size:13px"></div><div class="row" style="gap:8px;flex-wrap:wrap"><nv-select label="Сортировка" value="${f.sort}" options="recent:Сначала новые|oldest:Сначала старые|name:Домен А-Я" data-chg="libF" data-key="sort"></nv-select><nv-select label="На странице" value="${+f.pageSize||25}" options="25:25|50:50|100:100|200:200" data-chg="libF" data-key="pageSize"></nv-select></div></div></div><div id="lib-res">${I.lib.loading&&!I.lib.loaded?'<nv-skeleton count="6"></nv-skeleton>':""}</div><div id="lib-page" class="row" style="justify-content:center;margin-top:16px"></div><div class="bulk" id="lib-bulk" hidden></div>`,
   after(root){
     if(!I.lib.loaded&&!I.lib.loading)loadLibrary();
+    if(!root._nvFolderOn){root._nvFolderOn=1;root.addEventListener("nv-folder",e=>topicFolder(e.detail.path))}
     libRes();
     const sv=root.querySelector("#lib-views");
     if(!sv)return;
@@ -4735,30 +4768,27 @@ compare(){
 collections(){
   const I=S.intel,K=I.collections,open=K.find(k=>k.id===I.openK);
   if(open){
-    const items=I.collectionItemsCache[open.id],f=I.kF,n=items?items.length:0;
-    return{title:open.name,sub:(open.description?open.description+" · ":"")+(items?n+" "+plural(n,"объявление","объявления","объявлений"):"Загружаем…"),
-    back:"kBack",backLabel:"Все подборки",
+    const items=I.collectionItemsCache[open.id],f=I.kF,n=items?items.length:0,kids=colChildren(open.id),par=K.find(k=>k.id===open.parent_id);
+    const subHtml=kids.length?`<h3 class="k-subh">${ic("folder-tree",16)} Папки · ${kids.length}</h3><div class="grid g3" id="k-subs">${kids.map(k=>folderCardHtml(k,false)).join("")}</div>${n?`<h3 class="k-subh">Объявления в самой папке · ${n}</h3>`:""}`:"";
+    return{title:open.name,sub:(par?"В папке «"+par.name+"» · ":"")+(open.description?open.description+" · ":"")+(kids.length?open.items_count+" "+plural(+open.items_count||0,"объявление","объявления","объявлений")+" в подпапках":(items?n+" "+plural(n,"объявление","объявления","объявлений"):"Загружаем…")),
+    back:"kBack",backLabel:par?"Назад в «"+par.name+"»":"Все подборки",
     actions:`<nv-button variant="secondary" icon="pencil" data-act="kRename" data-id="${open.id}">Изменить</nv-button><nv-button variant="secondary" icon="copy" data-act="kDuplicate" data-id="${open.id}">Дублировать</nv-button><nv-button variant="danger" icon="trash-2" data-act="kDel" data-id="${open.id}">Удалить</nv-button>`,
     body:`${items&&n?`<div class="k-bar"><nv-input class="grow" icon="search" type="search" label="Поиск в подборке" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="kF" data-key="q"></nv-input><nv-select label="Порядок" value="${esc(f.sort)}" options="added:Недавно добавленные|days:Дольше в открутке|shows:Чаще встречаются|domain:Домен А-Я" data-chg="kF" data-key="sort"></nv-select><nv-button variant="secondary" icon="check-check" data-act="kSelAll"><span id="k-all">Выбрать все</span></nv-button></div>`:""}
-    <div id="k-res">${!items?'<nv-skeleton count="4"></nv-skeleton>':(n?gridOfCollectionItems(items,open.id):'<nv-card><nv-empty icon="folder-open" heading="В подборке пусто" text="Откройте библиотеку, отметьте объявления флажком и нажмите «В подборку»."><nv-button data-go="intel-library" icon="layout-grid">Открыть библиотеку</nv-button></nv-empty></nv-card>')}</div>
+    ${subHtml}<div id="k-res">${!items?'<nv-skeleton count="4"></nv-skeleton>':(n?gridOfCollectionItems(items,open.id):kids.length?"":'<nv-card><nv-empty icon="folder-open" heading="В подборке пусто" text="Откройте библиотеку, отметьте объявления флажком и нажмите «В подборку»."><nv-button data-go="intel-library" icon="layout-grid">Открыть библиотеку</nv-button></nv-empty></nv-card>')}</div>
     <div id="k-bulk" class="bulk" hidden></div>`,
-    after(root){bindCards(root.querySelector("#k-res"),"kSel");kBulk();if(!items)openCollection(open.id)}};
+    after(root){bindCards(root.querySelector("#k-res"),"kSel");kBulk();if(!items)openCollection(open.id);
+      if(!root._nvOpenFolderOn){root._nvOpenFolderOn=1;root.addEventListener("nv-open-folder",e=>N.acts.kOpen(null,{id:String(e.detail.id)}))}bindFolderMenus(root)}};
   }
   const total=K.reduce((a,k)=>a+(+k.items_count||0),0);
   return{title:"Подборки",sub:K.length?`${K.length} ${plural(K.length,"подборка","подборки","подборок")} · ${total} ${plural(total,"объявление","объявления","объявлений")}. Папки с находками: конкуренты, идеи, примеры для клиента.`:"Папки с находками: конкуренты, идеи, примеры для клиента.",actions:`<nv-button icon="plus" data-act="kNew">Новая подборка</nv-button>`,
-  body:!I.collectionsLoaded?'<nv-skeleton count="3"></nv-skeleton>':`<div class="grid g3" id="kc-res">${K.map(k=>`<nv-folder-card fid="${esc(k.id)}" name="${esc(k.name)}" desc="${esc(k.description||"")}" count="${k.items_count||0}" thumbs="${esc(JSON.stringify(k.thumbs||[]))}" updated="${k.items_count?"Пополнена "+esc(N.rel(k.updated_at)):"Пока пусто"}" selectable openable ${I.kcSel.includes(k.id)?"selected":""}><nv-button size="sm" variant="secondary" icon-end="arrow-right" data-act="kOpen" data-id="${k.id}">Открыть</nv-button><nv-menu data-col="${esc(k.id)}" items="ren:Изменить:pencil|dup:Дублировать:copy|del:Удалить:trash-2:danger"></nv-menu></nv-folder-card>`).join("")}${!K.length?'<nv-card><nv-empty icon="folder-heart" heading="Подборок пока нет" text="Создайте подборку и складывайте в неё объявления из библиотеки: отметьте их флажком и нажмите «В подборку»."><nv-button icon="plus" data-act="kNew">Новая подборка</nv-button></nv-empty></nv-card>':""}</div>
+  body:!I.collectionsLoaded?'<nv-skeleton count="3"></nv-skeleton>':`<div class="grid g3" id="kc-res">${K.filter(k=>!k.parent_id).map(k=>folderCardHtml(k,true)).join("")}${!K.length?'<nv-card><nv-empty icon="folder-heart" heading="Подборок пока нет" text="Создайте подборку и складывайте в неё объявления из библиотеки: отметьте их флажком и нажмите «В подборку»."><nv-button icon="plus" data-act="kNew">Новая подборка</nv-button></nv-empty></nv-card>':""}</div>
   <div id="kc-bulk" class="bulk" hidden></div>`,
   after(root){
     if(!I.collectionsLoaded)loadCollections();
     I.kcSel=I.kcSel.filter(id=>K.some(k=>k.id===id));kcBulk();
     root.addEventListener("nv-check",e=>{const id=String(e.detail.id);I.kcSel=I.kcSel.filter(x=>x!==id);if(e.detail.selected)I.kcSel.push(id);kcBulk()});
-    root.addEventListener("nv-open-folder",e=>N.acts.kOpen(null,{id:String(e.detail.id)}));
-    root.querySelectorAll("nv-menu[data-col]").forEach(m=>m.addEventListener("nv-select",e=>{
-      const id=m.dataset.col;
-      if(e.detail.id==="dup")duplicateCollection(id);
-      else if(e.detail.id==="ren")renameCollectionDlg(id);
-      else if(e.detail.id==="del")N.acts.kDel(null,{id});
-    }));
+    if(!root._nvOpenFolderOn){root._nvOpenFolderOn=1;root.addEventListener("nv-open-folder",e=>N.acts.kOpen(null,{id:String(e.detail.id)}))}
+    bindFolderMenus(root);
   }}},
 scans(){
   const L=S.intel.scans,sf=S.intel.scanF;
@@ -5032,7 +5062,7 @@ Object.assign(N.acts,{
   newScan:scanDlg,
   cmpAdd(a,d){const c=S.intel.cmp,id=d.id,i=c.findIndex(g=>String(g.representative.id)===String(id));if(i>=0)c.splice(i,1);else{const g=findGroup(id);if(!g){toast("Карточка не найдена");return}if(c.length<4)c.push(g);else{toast("Сравнить можно до 4 креативов. Сначала уберите один",{tone:"warning"});return}}N.refresh()},
   kOpen(a,d){S.intel.openK=d.id;N.refresh();openCollection(d.id)},
-  kBack(){S.intel.openK=null;S.intel.kSel=[];S.intel.kF.q="";N.refresh()},
+  kBack(){const I=S.intel,cur=I.collections.find(k=>k.id===I.openK);I.openK=cur&&cur.parent_id&&I.collections.some(k=>k.id===cur.parent_id)?cur.parent_id:null;I.kSel=[];I.kF.q="";N.refresh();if(I.openK)openCollection(I.openK)},
   kRename(a,d){renameCollectionDlg(d.id)},
   kSelAll(){const I=S.intel,items=kItemsFiltered(I.collectionItemsCache[I.openK]||[]);I.kSel=I.kSel.length>=items.length?[]:items.map(kGroup);N.refresh()},
   kSelClear(){S.intel.kSel=[];N.refresh()},
@@ -5050,7 +5080,7 @@ Object.assign(N.acts,{
   kcMerge(){const I=S.intel,ids=I.kcSel.slice();if(ids.length<2)return;
     const K=I.collections.filter(k=>ids.includes(k.id));
     overlay("modal",{title:"Объединить подборки",subtitle:"Объявления соберутся в одной подборке, остальные выбранные удалятся",
-      body:`<nv-select name="k" label="Оставить подборку" options="${K.map(k=>k.id+":"+esc(k.name)+" ("+(k.items_count||0)+")").join("|")}" value="${K[0].id}"></nv-select>`,
+      body:`<nv-select name="k" label="Оставить подборку" options="${K.map(k=>k.id+":"+esc(colLabel(k).replace(/[|:]/g," "))+" ("+(k.items_count||0)+")").join("|")}" value="${K[0].id}"></nv-select>`,
       actions:[{label:"Отмена"},{label:"Объединить",variant:"primary",fn(r,close){const v=formVals(r);(async()=>{
         try{await apiPost("/api/v1/collections/"+v.k+"/merge",{ids:ids.filter(x=>x!==v.k).map(Number)});I.kcSel=[];I.collectionItemsCache={};await loadCollections();N.refresh();toast("Подборки объединены",{tone:"success"});close()}
         catch(err){toast("Не удалось объединить: "+(err.message||""),{tone:"danger"})}})();return false}}]})},
@@ -5751,14 +5781,19 @@ function projectWizard(existingProject){
     if(colBtn)colBtn.onclick=async()=>{
       let K;try{K=(await api("/api/v1/collections",{})).items||[]}catch(err){toast("Не удалось загрузить подборки: "+(err.message||""),{tone:"danger"});return}
       if(!K.length){toast("Подборок пока нет — создайте её в разделе «Подборки» парсера",{tone:"warning"});return}
+      // папки верхнего уровня; если у выбранной есть подпапки — второй список «Подпапка»
+      const ids=new Set(K.map(k=>String(k.id))),Kroot=K.filter(k=>!k.parent_id||!ids.has(String(k.parent_id))),Kkids=id=>K.filter(k=>String(k.parent_id||"")===String(id));
       overlay("modal",{title:"Креативы из подборки",subtitle:manual?"По одному креативу на аккаунт, по порядку":"Добавятся к заголовкам, текстам и картинкам проекта",
-        body:`<nv-select name="k" label="Подборка" options="${esc(K.map(k=>k.id+":"+k.name.replace(/[|:]/g," ")+" ("+(k.items_count||0)+")").join("|"))}" value="${esc(String(K[0].id))}"></nv-select>
+        body:`<div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end"><nv-select name="k" label="Папка" options="${esc(Kroot.map(k=>k.id+":"+k.name.replace(/[|:]/g," ")+" ("+(k.items_count||0)+")"+(Kkids(k.id).length?" · подпапок "+Kkids(k.id).length:"")).join("|"))}" value="${esc(String(Kroot[0].id))}"></nv-select><span data-col-sub></span></div>
           <div class="stack" style="gap:6px;margin-top:10px"><label class="row" style="gap:8px"><input type="checkbox" name="h" checked><span>Заголовки (обрежем до 56 символов по слову)</span></label>
           <label class="row" style="gap:8px"><input type="checkbox" name="t" checked><span>Описания → тексты (до 81 символа; пустые пропустим)</span></label>
           <label class="row" style="gap:8px"><input type="checkbox" name="i" checked><span>Изображения (оригинал, обрежем под 4:3 для Директа; ${manual?"по одному на аккаунт":"в проекте до 20"})</span></label></div>
           <div class="muted" data-col-msg style="font-size:12.5px;margin-top:8px"></div>`,
+        mount:r=>{const sel=r.querySelector('[name="k"]'),host=r.querySelector("[data-col-sub]");
+          const draw=()=>{const kids=Kkids(sel.value);host.innerHTML=kids.length?`<nv-select name="ks" label="Подпапка" value="all" options="${esc(["all:Все подпапки ("+((K.find(k=>String(k.id)===String(sel.value))||{}).items_count||0)+")"].concat(kids.map(k=>k.id+":"+k.name.replace(/[|:]/g," ")+" ("+(k.items_count||0)+")")).join("|"))}"></nv-select>`:""};
+          draw();sel.addEventListener("nv-change",draw)},
         actions:[{label:"Отмена"},{label:"Добавить",variant:"primary",fn(r,close){
-          const sel=r.querySelector('[name="k"]'),kid=sel&&sel.value,useH=r.querySelector('[name="h"]').checked,useT=r.querySelector('[name="t"]').checked,useI=r.querySelector('[name="i"]').checked,m=r.querySelector("[data-col-msg]");
+          const sel=r.querySelector('[name="k"]'),subSel=r.querySelector('[name="ks"]'),kid=subSel&&subSel.value&&subSel.value!=="all"?subSel.value:(sel&&sel.value),useH=r.querySelector('[name="h"]').checked,useT=r.querySelector('[name="t"]').checked,useI=r.querySelector('[name="i"]').checked,m=r.querySelector("[data-col-msg]");
           (async()=>{
             try{
               m.style.color="";m.textContent="Загружаю подборку…";
