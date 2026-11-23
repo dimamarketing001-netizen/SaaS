@@ -1846,10 +1846,12 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .vid-prog{position:fixed;right:18px;bottom:18px;z-index:9600;width:280px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-2);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
 .vid-prog b{font-weight:500;font-size:13px}.vid-prog i{display:block;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}.vid-prog i span{display:block;height:100%;width:0;background:var(--svc-ink);transition:width .2s}.vid-prog small{font:11px var(--font-mono);color:var(--ink-3)}
 .ck-list{display:flex;flex-direction:column;gap:6px}
-.ck{display:flex;align-items:flex-start;gap:10px;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-align:left;color:var(--ink);cursor:pointer}
-.ck:disabled{cursor:default}.ck:not(:disabled):hover{border-color:var(--svc-ink)}
-.ck b{display:block;font-weight:500;font-size:13px}.ck small{display:block;font-size:12px;color:var(--ink-2);margin-top:2px}
-.ck.err nv-icon{color:var(--bad)}.ck.warn nv-icon{color:#d97706}.ck.info nv-icon{color:var(--ink-3)}.ck.ok{background:color-mix(in srgb,#16a34a 8%,var(--surface));border-color:color-mix(in srgb,#16a34a 30%,transparent);cursor:default}.ck.ok nv-icon{color:#16a34a}
+#lib-res.is-loading{opacity:.5;pointer-events:none;transition:opacity .15s .1s}
+/* Проверка макета Студии: только внутри .ck-list — голый .ck ломал все галочки ЛК (nv-checkbox, карточки креативов, папки) */
+.ck-list .ck{display:flex;align-items:flex-start;gap:10px;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-align:left;color:var(--ink);cursor:pointer}
+.ck-list .ck:disabled{cursor:default}.ck-list .ck:not(:disabled):hover{border-color:var(--svc-ink)}
+.ck-list .ck b{display:block;font-weight:500;font-size:13px}.ck-list .ck small{display:block;font-size:12px;color:var(--ink-2);margin-top:2px}
+.ck-list .ck.err nv-icon{color:var(--bad)}.ck-list .ck.warn nv-icon{color:#d97706}.ck-list .ck.info nv-icon{color:var(--ink-3)}.ck-list .ck.ok{background:color-mix(in srgb,#16a34a 8%,var(--surface));border-color:color-mix(in srgb,#16a34a 30%,transparent);cursor:default}.ck-list .ck.ok nv-icon{color:#16a34a}
 .s2-gfx{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
 .s2-gfx button{aspect-ratio:1;border:1px solid var(--line);border-radius:9px;background:var(--surface);display:grid;place-items:center;cursor:pointer;padding:4px}
 .s2-gfx button:hover{border-color:var(--svc-ink);background:var(--svc-soft)}
@@ -2686,14 +2688,13 @@ function openPop(anchor,html,o){o=o||{};closePop();const p=document.createElemen
   const sigOf=el=>[el.tagName,...[...el.attributes].filter(x=>x.name.startsWith("data-")||["name","label","tree-key"].includes(x.name)).map(x=>x.name+"="+x.value).sort()].join("\u0001");
   const isComp=typeof anchor.pop==="function",sig=isComp?sigOf(anchor):"",sameSig=()=>[...document.querySelectorAll(anchor.tagName.toLowerCase())].filter(e=>sigOf(e)===sig),idx=isComp?sameSig().indexOf(anchor):-1;
   let mo=null,reb=false;
+  /* Не пересоздаём список (мигал и прыгал): ставим живой элемент на место его новой копии, забрав у копии
+     свежие атрибуты (подписи/варианты/счётчики). Микрозадача — до отрисовки, глазом не видно. */
   const rebind=()=>{reb=false;if(popClose!==close||anchor.isConnected)return;
-    const n=sameSig()[idx]||null,inp=p.querySelector(".pop-s input"),q=inp?inp.value:"",l=p.querySelector(".pop-l"),y=l?l.scrollTop:0;
-    if(!n){close();return}
-    if(anchor._open&&!n._open)n._open=anchor._open;
-    n.pop();
-    const p2=document.querySelector("body > .pop");if(!p2)return;
-    const i2=p2.querySelector(".pop-s input");if(i2&&q){i2.value=q;i2.dispatchEvent(new Event("input"))}
-    const l2=p2.querySelector(".pop-l");if(l2)l2.scrollTop=y};
+    const n=sameSig()[idx]||null;if(!n){close();return}
+    [...n.attributes].forEach(x=>{if(anchor.getAttribute(x.name)!==x.value)anchor.setAttribute(x.name,x.value)});
+    [...anchor.attributes].forEach(x=>{if(!n.hasAttribute(x.name))anchor.removeAttribute(x.name)});
+    n.replaceWith(anchor);const b=anchor.querySelector("button");b&&b.setAttribute("aria-expanded","true");place()};
   if(isComp&&idx>=0){mo=new MutationObserver(()=>{if(!reb&&!anchor.isConnected){reb=true;queueMicrotask(rebind)}});mo.observe(document.body,{childList:true,subtree:true})}
   const close=back=>{mo&&mo.disconnect();p.remove();window.removeEventListener("keydown",key,true);document.removeEventListener("mousedown",down,true);window.removeEventListener("scroll",scr,true);window.removeEventListener("resize",rez);popClose=null;o.onClose&&o.onClose();if(back){const f=anchor.querySelector("button");f&&f.focus()}};
   window.addEventListener("keydown",key,true);document.addEventListener("mousedown",down,true);window.addEventListener("scroll",scr,true);window.addEventListener("resize",rez);popClose=close;
@@ -3457,8 +3458,9 @@ function sideNav(){
   return (svc.nav||[]).map(g=>{const k=s+"/"+g.group,closed=g.group&&shut[k];return `<div class="side-group">${g.group?`<button type="button" class="side-label" data-act="sideTog" data-k="${esc(k)}" aria-expanded="${!closed}"><span>${esc(g.group)}</span>${ic(closed?"chevron-down":"chevron-up",14)}</button>`:""}${closed?"":`<div class="${g.group?"tree":""}">${g.items.map(itemHtml).join("")}</div>`}</div>`}).join("");
 }
 function renderView(keepScroll){
-  const{s,v,svc}=route(),old=document.getElementById("view"),sc=document.getElementById("scroll");if(!old)return;const root=old.cloneNode(false);old.replaceWith(root);
-  const y=sc.scrollTop,d=svc.views[v]();
+  /* scrollTop читаем ДО замены #view: после неё страница на миг пустая, прокрутка обнуляется — экран прыгал наверх при каждом фильтре */
+  const{s,v,svc}=route(),old=document.getElementById("view"),sc=document.getElementById("scroll");if(!old)return;const y=sc.scrollTop,root=old.cloneNode(false);old.replaceWith(root);
+  const d=svc.views[v]();
   NEON.curHelp=d.help||null;
   const imm=!!d.immersive,sh=document.getElementById("shell"),ted=document.getElementById("top-ed");
   sh&&sh.classList.toggle("immersive",imm);
@@ -4019,6 +4021,8 @@ function libRes(){
   const start=(page-1)*pageSize,rr=srv?full:full.slice(start,start+pageSize);
   const h=document.getElementById("lib-count");
   if(h)h.innerHTML=(totalN&&rr.length?`Показано <b>${fmt(start+1)}–${fmt(start+rr.length)}</b> из ${fmt(totalN)}`:`Показано <b>0</b>`)+(anyF()?' · <nv-button variant="link" size="sm" data-act="libReset">Сбросить фильтры</nv-button>':"");
+  /* повторная загрузка (сменили фильтр): старые карточки остаются, только приглушаются — без мигания скелетоном и прыжков высоты */
+  const reload=S.intel.lib.loading&&S.intel.lib.loaded&&el.querySelector(".grid,nv-empty");el.classList.toggle("is-loading",!!reload);if(reload)return;
   el.innerHTML=S.intel.lib.loading?'<nv-skeleton count="6"></nv-skeleton>':(rr.length?`<div class="grid g3">${rr.map(g=>cardHtml(g,sel.includes(String(g.representative.id)))).join("")}</div>`:`<nv-card><nv-empty icon="search-x" heading="По этим фильтрам рекламы нет" text="Уберите часть фильтров или запустите сканирование по новому запросу."><nv-button variant="secondary" data-act="libReset">Сбросить фильтры</nv-button><nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button></nv-empty></nv-card>`);
   bindCards(el);
   libBulk();
@@ -7559,17 +7563,17 @@ function conOverviewHtml(){const o=CON.ov;if(!o)return`<nv-skeleton count="6"></
   const w=(o.workers||[]).map(x=>{const fresh=x.last_seen&&(Date.now()-new Date(x.last_seen))<120000;return`<tr><td>${esc(x.worker_id)}</td><td>${esc(x.hostname||"")}</td><td><nv-badge tone="${fresh?"success":"danger"}">${fresh?"на связи":"нет связи"}</nv-badge> ${esc(x.state||"")}</td><td>${conAgo(x.last_seen)}</td><td>${x.current_job_id?"#"+x.current_job_id:"—"}</td><td class="muted">${esc(x.last_error||"")}</td></tr>`}).join("")||`<tr><td colspan="6" class="muted">Воркер ещё не подключался</td></tr>`;
   const act=(o.active||[]).map(x=>`<tr><td>#${x.id}</td><td>${esc(x.key_text||"")}</td><td>${esc(x.city||"")}</td><td>${conBadge(x.status)}${x.captcha_required?` <nv-badge tone="warning">капча</nv-badge>`:""}</td><td>${x.total_creatives||0}</td><td>${conAgo(x.started_at||x.created_at)}</td></tr>`).join("")||`<tr><td colspan="6" class="muted">Сейчас ничего не идёт</td></tr>`;
   const rec=(o.recent||[]).map(x=>`<tr><td>#${x.id}</td><td>${esc(x.key_text||"")}</td><td>${esc(x.city||"")}</td><td>${conBadge(x.status)}</td><td>${x.total_creatives||0}</td><td>${conTime(x.finished_at||x.created_at)}</td><td class="muted con-err">${esc(x.error_text||"")}</td></tr>`).join("");
-  return`<div class="kpis">${stat("Идут запуски",j.running,`note="в очереди: ${j.queued}"`)}${stat("Запусков всего",j.total,`note="ошибок за сутки: ${j.failed_24h}"`)}${stat("Креативов",c.total,`note="обнаружений: ${c.occurrences}"`)}${stat("Пользователей",o.users.active,`note="всего: ${o.users.total}"`)}</div>
+  return`<div class="grid g4">${stat("Идут запуски",j.running,`note="в очереди: ${j.queued}"`)}${stat("Запусков всего",j.total,`note="ошибок за сутки: ${j.failed_24h}"`)}${stat("Креативов",c.total,`note="обнаружений: ${c.occurrences}"`)}${stat("Пользователей",o.users.active,`note="всего: ${o.users.total}"`)}</div>
   <div id="con-cap">${conCaptchaHtml()}</div>
-  <nv-card><h3 class="con-h">Воркеры</h3><div class="table-wrap"><table class="tbl"><thead><tr><th>Воркер</th><th>Узел</th><th>Состояние</th><th>Сигнал</th><th>Задание</th><th>Последняя ошибка</th></tr></thead><tbody>${w}</tbody></table></div></nv-card>
+  <nv-card><h3 class="con-h">Воркеры</h3><div class="tw"><table class="tb"><thead><tr><th>Воркер</th><th>Узел</th><th>Состояние</th><th>Сигнал</th><th>Задание</th><th>Последняя ошибка</th></tr></thead><tbody>${w}</tbody></table></div></nv-card>
   <nv-card><h3 class="con-h">Фоновые очереди</h3><div class="con-q">
     <div><b class="num">${c.ai_intent_pending}</b><span>ждут интента Gemini${o.gemini_model?` (${esc(o.gemini_model)})`:""}</span></div>
     <div><b class="num">${c.taxonomy_pending}</b><span>без раздела/подрубрики</span></div>
     <div><b class="num">${c.embeddings_pending}</b><span>креативов без эмбеддинга</span></div>
     <div><b class="num">${o.intent_embeddings_pending??"—"}</b><span>запросов без эмбеддинга</span></div>
     <div><b class="num">${o.schedules_active}</b><span>активных расписаний</span></div></div></nv-card>
-  <nv-card><h3 class="con-h">Сейчас идут</h3><div class="table-wrap"><table class="tbl"><thead><tr><th>#</th><th>Запрос</th><th>Город</th><th>Статус</th><th>Креативов</th><th>Старт</th></tr></thead><tbody>${act}</tbody></table></div></nv-card>
-  <nv-card><h3 class="con-h">Последние запуски</h3><div class="table-wrap"><table class="tbl"><thead><tr><th>#</th><th>Запрос</th><th>Город</th><th>Статус</th><th>Креативов</th><th>Когда</th><th>Ошибка</th></tr></thead><tbody>${rec}</tbody></table></div></nv-card>`}
+  <nv-card><h3 class="con-h">Сейчас идут</h3><div class="tw"><table class="tb"><thead><tr><th>#</th><th>Запрос</th><th>Город</th><th>Статус</th><th>Креативов</th><th>Старт</th></tr></thead><tbody>${act}</tbody></table></div></nv-card>
+  <nv-card><h3 class="con-h">Последние запуски</h3><div class="tw"><table class="tb"><thead><tr><th>#</th><th>Запрос</th><th>Город</th><th>Статус</th><th>Креативов</th><th>Когда</th><th>Ошибка</th></tr></thead><tbody>${rec}</tbody></table></div></nv-card>`}
 async function conLoadOverview(){try{CON.ov=await conReq("GET","/api/v1/console/overview");CON.err=""}catch(e){CON.err=e.message}
   if(CON.ov&&CON.ov.captcha&&CON.ov.captcha.length){if(!CON.sel||!CON.ov.captcha.some(c=>c.job_id===CON.sel))CON.sel=CON.ov.captcha[0].job_id;await conLoadShot()}else CON.shot=null}
 async function conLoadShot(){if(!CON.sel)return;try{CON.shot=await conReq("GET","/api/v1/console/jobs/"+CON.sel+"/browser")}catch(e){}}
@@ -7593,7 +7597,7 @@ N.acts.conReload=async()=>{await conLoadOverview();conDrawOverview()};
 async function conLoadUsers(){try{CON.users=await conReq("GET","/api/v1/console/users")}catch(e){CON.users={items:[],roles:[],err:e.message}}}
 function conUsersHtml(){const U=CON.users;if(!U)return`<nv-skeleton count="5"></nv-skeleton>`;if(U.err)return`<nv-card><nv-empty icon="triangle-alert" heading="Не удалось загрузить" text="${esc(U.err)}"></nv-empty></nv-card>`;
   const ro=(U.roles||[]).map(r=>r.role+":"+r.title).join("|"),me=session.email;
-  return`<nv-card><div class="table-wrap"><table class="tbl"><thead><tr><th>Email</th><th>Имя</th><th>Роль</th><th>Статус</th><th>Запусков</th><th>Последний вход</th><th></th></tr></thead><tbody>${U.items.map(u=>`<tr class="${u.is_active?"":"con-off"}">
+  return`<nv-card><div class="tw"><table class="tb"><thead><tr><th>Email</th><th>Имя</th><th>Роль</th><th>Статус</th><th>Запусков</th><th>Последний вход</th><th></th></tr></thead><tbody>${U.items.map(u=>`<tr class="${u.is_active?"":"con-off"}">
     <td>${esc(u.email)}${u.email===me?` <nv-badge tone="neutral">вы</nv-badge>`:""}</td><td>${esc(u.name||"")}</td>
     <td><nv-select value="${esc(u.role)}" options="${ro}" data-chg="conRole" data-id="${u.id}"></nv-select></td>
     <td>${u.is_active?`<nv-badge tone="success">активен</nv-badge>`:`<nv-badge tone="danger">отключён</nv-badge>`}</td><td>${u.runs}</td><td>${conTime(u.last_login_at)}</td>
