@@ -8908,7 +8908,7 @@ function studio3dMat(T,kind,color,side){
   else if(kind==="glass")m=new T.MeshPhysicalMaterial({color:c,roughness:0.05,metalness:0,transparent:true,opacity:0.5,clearcoat:1,clearcoatRoughness:0.03,ior:1.5,specularIntensity:1});
   else if(kind==="neon")m=new T.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:side?0.55:1.25,roughness:0.45});
   else m=new T.MeshPhysicalMaterial({color:c,roughness:0.24,metalness:0,clearcoat:1,clearcoatRoughness:0.08});
-  m.envMapIntensity=kind==="matte"?0.5:kind==="neon"?0.3:1;return m;
+  m.envMapIntensity=kind==="matte"?0.5:kind==="neon"?0.3:kind==="gold"||kind==="chrome"?1.7:kind==="metal"?1.4:1;return m;
 }
 function studio3dRoleMat(T,s,role,tex){const mk=s.mat||"gloss";
   if(role==="main"&&tex&&s.kind==="extrude"){const m=studio3dMat(T,mk==="gold"||mk==="chrome"?"gloss":mk,"#ffffff");m.map=tex;if(mk==="neon"){m.emissiveMap=tex;m.emissive.set(0xffffff)}return m}
