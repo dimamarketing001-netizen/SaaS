@@ -1842,6 +1842,37 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .ab-add{cursor:pointer;border:1px dashed var(--line);background:none}.ab-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap}.ab-mode{width:auto}
 .pp-mus{border:1px solid var(--line);border-radius:10px;padding:8px;margin:6px 0}.pp-track{display:flex;align-items:center;gap:6px;margin-bottom:6px}.pp-track span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.pp-x{border:0;background:none;cursor:pointer;color:var(--ink-3);width:26px;height:26px;border-radius:6px;display:grid;place-items:center}
 .mus-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:50vh;overflow:auto}.mus-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:6px 8px}.mus-t{flex:1;min-width:0;display:flex;flex-direction:column}.mus-t b{font-weight:500;font-size:13.5px}.mus-t small{color:var(--ink-3);font-size:12px}
+.s3-wrap{width:100%;height:100%;position:relative}
+.s3-wrap img{width:100%;height:100%;display:block;pointer-events:none;user-select:none}
+.s3-load{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-3);border:1px dashed var(--line);border-radius:8px;animation:s3pulse 1.2s ease-in-out infinite}
+.s3-load.err{color:#e11d48;border-color:#e11d48;animation:none}
+@keyframes s3pulse{50%{opacity:.35}}
+.s3-pad{position:relative;border-radius:12px;background:repeating-conic-gradient(var(--surface-2) 0 25%,var(--surface) 0 50%) 0 0/14px 14px;border:1px solid var(--line);cursor:grab;touch-action:none;overflow:hidden}
+.s3-pad.drag{cursor:grabbing;border-color:var(--svc)}
+.s3-pad canvas{width:100%;height:auto;display:block}
+.s3-pad-h{position:absolute;left:8px;bottom:6px;display:flex;gap:4px;align-items:center;font-size:11px;color:var(--ink-3);pointer-events:none;background:color-mix(in srgb,var(--surface) 80%,transparent);border-radius:6px;padding:1px 5px}
+.s3-views{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+.s3-views button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 9px;font-size:11.5px;cursor:pointer;color:var(--ink-2)}
+.s3-views button.on,.s3-views button:hover{background:var(--svc-soft);border-color:var(--svc);color:var(--ink)}
+.s3-mats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.s3-mats button{display:flex;flex-direction:column;align-items:center;gap:4px;border:1px solid var(--line);border-radius:10px;padding:6px 2px;background:var(--surface);font-size:10.5px;color:var(--ink-2);cursor:pointer}
+.s3-mats button.on{border-color:var(--svc);box-shadow:0 0 0 1px var(--svc) inset;color:var(--ink)}
+.s3sw{width:26px;height:26px;border-radius:50%;display:block}
+.s3sw-matte{background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--c) 75%,#fff),var(--c) 60%,color-mix(in srgb,var(--c) 70%,#000))}
+.s3sw-gloss{background:radial-gradient(circle at 32% 28%,#fff 0 9%,color-mix(in srgb,var(--c) 60%,#fff) 15%,var(--c) 48%,color-mix(in srgb,var(--c) 55%,#000))}
+.s3sw-metal{background:conic-gradient(from 200deg,color-mix(in srgb,var(--c) 40%,#fff),var(--c),color-mix(in srgb,var(--c) 50%,#000),color-mix(in srgb,var(--c) 40%,#fff),var(--c),color-mix(in srgb,var(--c) 40%,#fff))}
+.s3sw-gold{background:conic-gradient(from 200deg,#fff3c4,#f5c451,#a8741a,#ffe28a,#d39b33,#fff3c4)}
+.s3sw-chrome{background:conic-gradient(from 200deg,#fff,#c9d0d8,#5b6470,#f4f6f8,#9aa3ad,#fff)}
+.s3sw-glass{background:radial-gradient(circle at 32% 28%,#fff 0 10%,transparent 18%),color-mix(in srgb,var(--c) 35%,transparent);border:1px solid color-mix(in srgb,var(--c) 60%,#fff)}
+.s3sw-neon{background:var(--c);box-shadow:0 0 9px var(--c),0 0 2px #fff inset}
+.s3-shapes{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px}
+.s3-shapes button{aspect-ratio:1;border:1px solid var(--line);border-radius:8px;background:var(--surface);display:grid;place-items:center;color:var(--ink-2);cursor:pointer;padding:0}
+.s3-shapes button.on{border-color:var(--svc);background:var(--svc-soft);color:var(--ink)}
+.s3-dots{display:flex;gap:5px;flex-wrap:wrap}
+.s3-dot{width:20px;height:20px;border-radius:50%;border:1px solid var(--line);cursor:pointer;padding:0}
+.pp-btn.sm{padding:3px 8px;font-size:11px;width:auto}
+.s3-tiles{grid-template-columns:repeat(4,1fr)}
+.s3-tiles button{padding:8px 2px;font-size:10.5px}
 .vid-badge{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;padding:2px 4px;display:flex;pointer-events:none}
 .stud-vprev{position:absolute;inset:0;width:100%;height:100%;z-index:50;pointer-events:none}
 .vid-prog{position:fixed;right:18px;bottom:18px;z-index:9600;width:280px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-2);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
@@ -7759,8 +7790,8 @@ function studioGradLine(x,y,w,h,angle){
   const rad=(angle-90)*Math.PI/180,dx=Math.cos(rad),dy=Math.sin(rad),cx=x+w/2,cy=y+h/2,half=Math.sqrt(w*w+h*h)/2;
   return{x0:cx-half*dx,y0:cy-half*dy,x1:cx+half*dx,y1:cy+half*dy};
 }
-function studioLayerIcon(l){if(l.type==="video")return"film";if(l.type==="table")return"table-2";if(l.type==="qr")return"qr-code";if(l.type==="chart")return{line:"line-chart",pie:"pie-chart",donut:"pie-chart"}[l.chartKind]||"bar-chart-3";if(l.type==="text")return"type";if(l.type==="image")return"image";if(l.type==="icon")return l.icon||"star";if(l.type==="path")return"spline";return l.shape==="ellipse"?"circle":l.shape==="triangle"?"triangle":l.shape==="line"?"minus":"square"}
-function studioLayerLabel(l){if(l.type==="video")return"Видео";if(l.type==="table")return"Таблица";if(l.type==="qr")return"QR-код";if(l.type==="chart")return"График";if(l.type==="text")return(l.text||"Текст").slice(0,22);if(l.type==="image")return"Изображение";if(l.type==="icon")return"Иконка";if(l.type==="path")return"Кривая";return{rect:"Прямоугольник",ellipse:"Эллипс",triangle:"Треугольник",line:"Линия"}[l.shape]||"Фигура"}
+function studioLayerIcon(l){if(l.type==="3d")return"box";if(l.type==="video")return"film";if(l.type==="table")return"table-2";if(l.type==="qr")return"qr-code";if(l.type==="chart")return{line:"line-chart",pie:"pie-chart",donut:"pie-chart"}[l.chartKind]||"bar-chart-3";if(l.type==="text")return"type";if(l.type==="image")return"image";if(l.type==="icon")return l.icon||"star";if(l.type==="path")return"spline";return l.shape==="ellipse"?"circle":l.shape==="triangle"?"triangle":l.shape==="line"?"minus":"square"}
+function studioLayerLabel(l){if(l.type==="3d"){const s=l.s3||{};return s.kind==="text"?"3D · "+String(s.text||"").slice(0,16):s.kind==="mockup"?"3D-мокап":s.kind==="extrude"?"3D-контур":"3D · "+((S3_SHAPES.find(x=>x[0]===s.shape)||[])[1]||"фигура")}if(l.type==="video")return"Видео";if(l.type==="table")return"Таблица";if(l.type==="qr")return"QR-код";if(l.type==="chart")return"График";if(l.type==="text")return(l.text||"Текст").slice(0,22);if(l.type==="image")return"Изображение";if(l.type==="icon")return"Иконка";if(l.type==="path")return"Кривая";return{rect:"Прямоугольник",ellipse:"Эллипс",triangle:"Треугольник",line:"Линия"}[l.shape]||"Фигура"}
 function studioFillCss(f){if(f.type==="none")return"transparent";if(f.type==="gradient")return`linear-gradient(${f.angle||90}deg,${esc(f.color)},${esc(f.color2)})`;if(f.type==="radial")return`radial-gradient(circle,${esc(f.color)},${esc(f.color2)})`;return esc(f.color)}
 function studioPolyPoints(sides,innerRadius){
   const n=Math.max(3,sides||6),inner=(innerRadius==null?100:innerRadius)/100,star=innerRadius!=null,pts=[];
@@ -7782,6 +7813,7 @@ function studioContourD(pts,closed){
 }
 function studioPathD(l){return[studioContourD(l.points,l.closed),...(l.subs||[]).map(c=>studioContourD(c.points,c.closed))].filter(Boolean).join(" ")}
 function studioLayerInner(l){
+  if(l.type==="3d")return studio3dInner(l);
   if(l.type==="text"&&+l.curve){studioEnsureFont(studioFontOf(l));return`<canvas class="stud-curve" style="position:absolute;left:-50%;top:-100%;width:200%;height:300%;display:block;pointer-events:none"></canvas>`}
   if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}${studioTfxCss(l)}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent${studioListOf(l)?";display:block;width:100%":""}">${studioListHtml(l)||esc(l.text)}</span>`:studioListHtml(l)||esc(l.text)}</div>`}
   if(l.type==="video"){const v=l.video||{};return`<div class="stud-layer-image" style="${studioMaskCss(l)}"><video src="${esc(studioVideoSrc(v))}" muted loop autoplay playsinline preload="auto" data-t0="${+v.trim0||0}" data-t1="${+v.trim1||0}" style="width:100%;height:100%;object-fit:cover;object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1})"></video><span class="vid-badge">${ic("film",12)}</span></div>`}
@@ -8306,6 +8338,7 @@ function studioPropsHeadHtml(icon,title,sub){
 function studioPropsHtml(){
   let h=studioPropsHtml0();const l=studioSelected();
   if(studioMultiSel.length<2&&l&&!(l.x<=1&&l.y<=1&&l.x+l.w>=99&&l.y+l.h>=99))h+=studioAnimSecHtml(l);
+  if(studioMultiSel.length<2&&l&&typeof studio3dToHtml==="function")h+=studio3dToHtml(l);
   if(studioMultiSel.length<2&&!l)h+=studioBgSecHtml()+studioDesignAnimHtml()+studioAdUsesHtml(studioDesign());
   if(studioMultiSel.length>1||!l||!studioGroupEnter||!studioInGroup(studioDesign(),l,studioGroupEnter))return h;
   const bar=`<div class="pp-acts pp-ing">${ic("folder-open",14)}<span>Внутри «${esc(studioGroupName(studioDesign(),studioGroupEnter))}»</span><button type="button" class="nv-btn v-ghost s-sm" data-gexit>Вся группа <kbd>Esc</kbd></button></div>`;
@@ -8395,6 +8428,7 @@ function studioPropsHtml0(){
   if(l.type==="icon")return studioPropsHeadHtml(l.icon||"star","Иконка",grp&&"в группе «"+grp+"»")
     +ppSec("icon","Иконка",`${ppColor("Цвет","color",l.color)}<button type="button" class="pp-btn" data-act-icon2path>${ic("spline",14)}Разобрать на кривые</button><div class="stud-icon-pick">${STUDIO_ICONS.map(n=>`<button type="button" class="${l.icon===n?"on":""}" data-prop-set="icon" data-val="${n}" aria-label="${n}">${ic(n,16)}</button>`).join("")}</div>`)
     +studioShadowSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
+  if(l.type==="3d")return studio3dPropsHtml(l,grp);
   if(l.type==="video"){const v=l.video||{},dur=+v.dur||0,t0=+v.trim0||0,t1=+v.trim1||dur;
     return studioPropsHeadHtml("film","Видео",[dur?`${(t1-t0).toFixed(1).replace(".",",")} с из ${dur.toFixed(1).replace(".",",")} с`:"",grp&&"в группе «"+grp+"»"].filter(Boolean).join(" · "))
     +ppSec("vid","Видео",`${dur?ppRng("Начало","video.trim0",t0,0,Math.max(0,dur-0.3),0.1)+ppRng("Конец","video.trim1",t1,0.3,dur,0.1):""}
@@ -8690,6 +8724,7 @@ async function studioRenderCanvas(design,scale,anim){
       try{const vel=await studioVideoFrame(l,studioRenderT);if(vel){const rad=(l.radius||0)*W/560;studioMaskPath(l.mask,x,y,w,h,rad,ctx);ctx.clip();
         const ir=vel.videoWidth/vel.videoHeight,br=w/h;let bw=w,bh=h;if(ir>br){bh=h;bw=h*ir}else{bw=w;bh=w/ir}
         const z=l.zoom||1,dw=bw*z,dh=bh*z,fx=(l.fx==null?50:l.fx)/100,fy=(l.fy==null?50:l.fy)/100;ctx.drawImage(vel,x-(dw-w)*fx,y-(dh-h)*fy,dw,dh)}}catch(e){}
+    }else if(l.type==="3d"&&l.s3){try{await studio3dPaint(ctx,l,x,y,w,h,W)}catch(e){console.warn("3D",e)}
     }else if(l.type==="image"&&l.src){
       try{const img=await studioLoadImg(l.src);
         const rad=(l.radius||0)*W/560;
@@ -8757,6 +8792,287 @@ async function studioRenderCanvas(design,scale,anim){
   }
   return c;
 }
+/* ---------- v9: 3D-слой (Three.js 0.160 из vendor; модуль грузится при первом 3D) ----------
+   l.type="3d", сцена в l.s3: kind text|shape|extrude|mockup, материал, свет, камера (rx/ry/rz/fov), движение.
+   На холсте — <img> рендера (кэш по ключу сцены и размеру, очередь рендера), в экспорте — studio3dCanvas()
+   с прозрачным фоном в точный размер рамки; объект всегда вписан в рамку слоя (точная подгонка по вершинам). */
+let studio3dLibP=null,studio3dR=null;
+function studio3dLib(){return studio3dLibP=studio3dLibP||import(new URL("vendor/three-0.160.0.module.min.js",location.href).href)
+  .catch(()=>import("https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js")).catch(e=>{studio3dLibP=null;throw e})}
+const S3_MATS=[["matte","Матовый"],["gloss","Глянец"],["metal","Металл"],["gold","Золото"],["chrome","Хром"],["glass","Стекло"],["neon","Неон"]];
+const S3_LIGHTS=[["studio","Студия"],["soft","Мягкий"],["rim","Контровой"],["sunset","Закат"],["top","Сверху"]];
+const S3_SHAPES=[["sphere","Шар","circle"],["cube","Куб","box"],["torus","Тор","circle-dot"],["capsule","Капсула","pill"],["cylinder","Цилиндр","cylinder"],["cone","Конус","cone"],["star","Звезда","star"],["heart","Сердце","heart"],["arrow","Стрелка","arrow-big-right"],["coin","Монета","coins"],["gift","Подарок","gift"],["gem","Кристалл","gem"],["blob","Капля","droplet"],["knot","Узел","infinity"]];
+const S3_VIEWS=[["front","Прямо",0,0,0],["hero","Герой",12,-24,-4],["left","Слева",8,38,0],["right","Справа",8,-38,0],["top","Сверху",42,0,0],["iso","Изометрия",35.26,-45,0]];
+function studio3dDefaults(kind,sub){
+  const br=(S.studio.brand&&S.studio.brand.colors)||[],c=br[0]||"#7c3aed",c2=br[1]||"#facc15";
+  const base={kind,color:c,side:"",color2:c2,mat:"gloss",depth:30,bevel:40,rx:12,ry:-24,rz:-4,fov:30,light:"studio",la:-40,li:100,shadow:false};
+  if(kind==="text")return{...base,text:"SALE",font:"Onest",weight:"800",ls:0,depth:35,bevel:35};
+  if(kind==="shape"){const s={...base,shape:sub||"sphere",rx:14,ry:-28,rz:0,depth:45,bevel:45};
+    if(s.shape==="coin")Object.assign(s,{mat:"gold",rx:8,ry:-30});if(s.shape==="gift")Object.assign(s,{rx:22,ry:-35});if(s.shape==="gem")Object.assign(s,{mat:"glass",rx:14});
+    if(s.shape==="torus"||s.shape==="knot")Object.assign(s,{rx:35,ry:-15});return s}
+  return base;
+}
+function studio3dGlow(s){return s.glow!=null?+s.glow||0:s.mat==="neon"?55:0}
+function studio3dHash(str){let h=5381;for(let i=0;i<str.length;i++)h=(h*33^str.charCodeAt(i))>>>0;return h.toString(36)}
+function studio3dKey(s){const{motion,...r}=s||{};return studio3dHash(JSON.stringify(r))}
+function studio3dGeoKey(s){return JSON.stringify([s.kind,s.text,s.font,s.weight,s.ls,s.shape,s.model,s.depth,s.bevel,s.polys?studio3dHash(JSON.stringify(s.polys)):0])}
+/* Контуры: [[x,y],...] → THREE.Shape с дырками по вложенности (чётная глубина — тело, нечётная — дырка). */
+function studio3dClean(p){const o=[];for(const q of p){const z=o[o.length-1];if(!z||Math.abs(z[0]-q[0])>1e-6||Math.abs(z[1]-q[1])>1e-6)o.push(q)}
+  while(o.length>2&&Math.abs(o[0][0]-o[o.length-1][0])<1e-6&&Math.abs(o[0][1]-o[o.length-1][1])<1e-6)o.pop();return o}
+function studio3dShapes(T,polys){
+  const area=p=>{let a=0;for(let i=0,j=p.length-1;i<p.length;j=i++)a+=(p[j][0]-p[i][0])*(p[j][1]+p[i][1]);return a/2};
+  const inside=(pt,p)=>{let c=false;for(let i=0,j=p.length-1;i<p.length;j=i++){const xi=p[i][0],yi=p[i][1],xj=p[j][0],yj=p[j][1];if((yi>pt[1])!==(yj>pt[1])&&pt[0]<(xj-xi)*(pt[1]-yi)/(yj-yi)+xi)c=!c}return c};
+  const P=polys.map(studio3dClean).filter(p=>p.length>=3).map(p=>{let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const[x,y]of p){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}return{p,A:Math.abs(area(p)),b:[x0,y0,x1,y1]}}).filter(o=>o.A>1e-7);
+  P.forEach(o=>{const q=[(o.p[0][0]+o.p[1][0])/2,(o.p[0][1]+o.p[1][1])/2];o.par=null;o.depth=0;
+    for(const z of P){if(z===o||z.A<=o.A||q[0]<z.b[0]||q[0]>z.b[2]||q[1]<z.b[1]||q[1]>z.b[3])continue;if(inside(q,z.p)){o.depth++;if(!o.par||z.A<o.par.A)o.par=z}}});
+  const v2=p=>p.map(([x,y])=>new T.Vector2(x,y));
+  P.filter(o=>o.depth%2===0).forEach(o=>o.shape=new T.Shape(v2(o.p)));
+  P.filter(o=>o.depth%2===1&&o.par&&o.par.shape).forEach(o=>o.par.shape.holes.push(new T.Path(v2(o.p))));
+  return P.filter(o=>o.shape).map(o=>o.shape);
+}
+function studio3dFlatten(cmds){const out=[];let cur=null,px=0,py=0;const end=()=>{if(cur&&cur.length>2)out.push(cur);cur=null};
+  for(const c of cmds){
+    if(c.type==="M"){end();cur=[[c.x,c.y]];px=c.x;py=c.y;continue}
+    if(!cur)cur=[[px,py]];
+    if(c.type==="L"){cur.push([c.x,c.y]);px=c.x;py=c.y}
+    else if(c.type==="Q"){for(let i=1;i<=7;i++){const t=i/7,a=(1-t)*(1-t),b=2*(1-t)*t,d=t*t;cur.push([a*px+b*c.x1+d*c.x,a*py+b*c.y1+d*c.y])}px=c.x;py=c.y}
+    else if(c.type==="C"){for(let i=1;i<=9;i++){const t=i/9,m=1-t,a=m*m*m,b=3*m*m*t,e=3*m*t*t,d=t*t*t;cur.push([a*px+b*c.x1+e*c.x2+d*c.x,a*py+b*c.y1+e*c.y2+d*c.y])}px=c.x;py=c.y}
+    else if(c.type==="Z")end()}
+  end();return out}
+async function studio3dTextPolys(s){
+  await studioLoadScript("vendor/opentype-1.3.4.min.js","https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js");
+  const fam=studioFontList().includes(s.font)?s.font:"Onest",wt=String(s.weight||"800");
+  const fonts=(await Promise.all(["cyrillic","latin"].map(sb=>studioOtFont(fam,wt,sb)))).filter(Boolean);
+  if(!fonts.length)throw new Error("шрифт «"+fam+"» не загрузился");
+  const fontFor=ch=>fonts.find(f=>f.charToGlyphIndex(ch)>0)||fonts[0],ls=(+s.ls||0)/100,polys=[];
+  const lines=String(s.text||"3D").split("\n").map(x=>x.trim()).filter((x,i,a)=>x||a.length===1);
+  lines.forEach((ln,li)=>{let x=0;const y=li*1.12,start=polys.length;
+    for(const ch of ln){const f=fontFor(ch);if(/\S/.test(ch))polys.push(...studio3dFlatten(f.getPath(ch,x,y,1).commands));x+=f.getAdvanceWidth(ch,1)+ls}
+    const w=x-ls;for(let i=start;i<polys.length;i++)polys[i]=polys[i].map(([a,b])=>[a-w/2,-b])});
+  return polys}
+/* Детали модели: [{g:geometry, m:роль|[лицо,бока], p,r,s}] — кэш по геометрическим параметрам (материалы — каждый рендер). */
+const studio3dGeo=new Map();
+function studio3dParts(T,s){const key=studio3dGeoKey(s);let P=studio3dGeo.get(key);if(P)return P;
+  P=studio3dMakeParts(T,s).catch(e=>{studio3dGeo.delete(key);throw e});studio3dGeo.set(key,P);
+  if(studio3dGeo.size>30){const[k0,p0]=studio3dGeo.entries().next().value;studio3dGeo.delete(k0);p0.then(L=>L.forEach(x=>x.g.dispose())).catch(()=>{})}
+  return P}
+async function studio3dMakeParts(T,s){
+  const dep=v=>Math.max(0.002,v),bev=+s.bevel||0;
+  const ext=(shapes,depth,bs,bt,segs)=>{const g=new T.ExtrudeGeometry(shapes,{depth:dep(depth),bevelEnabled:bs>0,bevelThickness:bt,bevelSize:bs,bevelSegments:bs>0?(segs||5):0,curveSegments:16,steps:1});g.center();return g};
+  const roundRect=(w,h)=>{const sh=new T.Shape(),e=0.0006;sh.absarc(w-e,-h+e,e,-Math.PI/2,0);sh.absarc(w-e,h-e,e,0,Math.PI/2);sh.absarc(-w+e,h-e,e,Math.PI/2,Math.PI);sh.absarc(-w+e,-h+e,e,Math.PI,Math.PI*1.5);return sh};
+  const rbox=(sx,sy,sz,r)=>{r=Math.max(0.004,Math.min(r,sx/2-0.01,sy/2-0.01,sz/2-0.01));return ext(roundRect(sx/2-r,sy/2-r),sz-2*r,r,r,6)};
+  const circ=r=>{const sh=new T.Shape();sh.absarc(0,0,r,0,Math.PI*2);return sh};
+  if(s.kind==="text"){const shapes=studio3dShapes(T,await studio3dTextPolys(s));if(!shapes.length)throw new Error("нет букв");
+    return[{g:ext(shapes,(+s.depth||0)/100*0.9,bev/100*0.035,bev/100*0.06,4),m:["main","side"]}]}
+  if(s.kind==="extrude"){const shapes=studio3dShapes(T,s.polys||[]);if(!shapes.length)throw new Error("пустой контур");
+    return[{g:ext(shapes,(+s.depth||0)/100*1.2,bev/100*0.05,bev/100*0.07,4),m:["main","side"]}]}
+  if(s.kind==="mockup")return studio3dMockParts(T,s);
+  const sh=s.shape||"sphere",D=(+s.depth||45)/100;
+  if(sh==="sphere")return[{g:new T.SphereGeometry(1,96,64),m:"main"}];
+  if(sh==="cube")return[{g:rbox(1.6,1.6,1.6,0.02+bev/100*0.5),m:"main"}];
+  if(sh==="torus")return[{g:new T.TorusGeometry(0.72,0.3,64,160),m:"main"}];
+  if(sh==="capsule")return[{g:new T.CapsuleGeometry(0.5,0.95,24,64),m:"main"}];
+  if(sh==="cylinder"){const r=0.02+bev/100*0.3,g=ext(circ(0.75-r),1.5-2*r,r,r,6);g.rotateX(-Math.PI/2);return[{g,m:"main"}]}
+  if(sh==="cone")return[{g:new T.ConeGeometry(0.85,1.6,96,1),m:"main"}];
+  if(sh==="star"){const pts=studioPolyPoints(5,45).map(p=>[(p.x-50)/50,-(p.y-50)/50]);return[{g:ext(studio3dShapes(T,[pts]),0.15+D*0.7,bev/100*0.12,bev/100*0.16,6),m:["main","side"]}]}
+  if(sh==="heart"){const h=new T.Shape();h.moveTo(0,-0.95);h.bezierCurveTo(-0.2,-0.75,-1.05,-0.25,-1.0,0.3);h.bezierCurveTo(-0.95,0.9,-0.25,1.02,0,0.55);h.bezierCurveTo(0.25,1.02,0.95,0.9,1.0,0.3);h.bezierCurveTo(1.05,-0.25,0.2,-0.75,0,-0.95);
+    return[{g:ext(h,0.15+D*0.6,0.04+bev/100*0.16,0.06+bev/100*0.2,8),m:["main","side"]}]}
+  if(sh==="arrow"){const pts=[[-1,-0.28],[0.15,-0.28],[0.15,-0.62],[1,0],[0.15,0.62],[0.15,0.28],[-1,0.28]];return[{g:ext(studio3dShapes(T,[pts]),0.1+D*0.5,bev/100*0.08,bev/100*0.1,5),m:["main","side"]}]}
+  if(sh==="coin"){const th=0.1,g=ext(circ(0.9),th,0.06,0.05,6);const P=[{g,m:["main","side"]}];
+    [1,-1].forEach(z=>P.push({g:new T.TorusGeometry(0.74,0.035,16,128),m:"main",p:[0,0,z*(th/2+0.05)]}));return P}
+  if(sh==="gift"){const P=[{g:rbox(1.5,1.15,1.5,0.05),m:"main",p:[0,-0.2,0]},{g:rbox(1.64,0.34,1.64,0.05),m:"main",p:[0,0.52,0]},
+      {g:new T.BoxGeometry(0.26,1.17,1.53),m:"accent",p:[0,-0.2,0]},{g:new T.BoxGeometry(1.53,1.17,0.26),m:"accent",p:[0,-0.2,0]},
+      {g:new T.BoxGeometry(0.28,0.36,1.67),m:"accent",p:[0,0.52,0]},{g:new T.BoxGeometry(1.67,0.36,0.28),m:"accent",p:[0,0.52,0]}];
+    const bow=new T.TorusGeometry(0.22,0.075,16,48);P.push({g:bow,m:"accent",p:[-0.2,0.86,0],r:[0,Math.PI/2,0.5],s:[1,1,1]},{g:bow,m:"accent",p:[0.2,0.86,0],r:[0,Math.PI/2,-0.5]});return P}
+  if(sh==="gem"){const top=new T.CylinderGeometry(0.55,1,0.42,8,1).toNonIndexed();top.translate(0,0.21,0);top.computeVertexNormals();const bot=new T.ConeGeometry(1,1.05,8,1).toNonIndexed();bot.rotateX(Math.PI);bot.translate(0,-0.525,0);bot.computeVertexNormals();
+    return[{g:top,m:"main"},{g:bot,m:"main"}]}
+  if(sh==="blob"){const g=new T.SphereGeometry(1,160,120),p=g.attributes.position,v=new T.Vector3();
+    for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const f=1+0.13*Math.sin(2.6*v.x+1.3)*Math.sin(2.2*v.y+0.4)*Math.sin(2.9*v.z+2.1)+0.06*Math.sin(5.1*v.y+v.x*2);v.multiplyScalar(f);p.setXYZ(i,v.x,v.y,v.z)}
+    g.computeVertexNormals();return[{g,m:"main"}]}
+  if(sh==="knot")return[{g:new T.TorusKnotGeometry(0.55,0.2,256,40),m:"main"}];
+  return[{g:new T.SphereGeometry(1,64,48),m:"main"}];
+}
+async function studio3dMockParts(T,s){return[{g:new T.BoxGeometry(1.6,1,0.05),m:"main"}]}
+function studio3dMat(T,kind,color,side){
+  const c=new T.Color(color||"#7c3aed");let m;
+  if(kind==="matte")m=new T.MeshStandardMaterial({color:c,roughness:0.82,metalness:0});
+  else if(kind==="metal")m=new T.MeshStandardMaterial({color:c,roughness:0.28,metalness:1});
+  else if(kind==="gold")m=new T.MeshStandardMaterial({color:new T.Color(side?"#d39b33":"#f5c451"),roughness:side?0.32:0.2,metalness:1});
+  else if(kind==="chrome")m=new T.MeshStandardMaterial({color:new T.Color(side?"#b8c0c8":"#eef1f4"),roughness:0.06,metalness:1});
+  else if(kind==="glass")m=new T.MeshPhysicalMaterial({color:c,roughness:0.05,metalness:0,transparent:true,opacity:0.5,clearcoat:1,clearcoatRoughness:0.03,ior:1.5,specularIntensity:1});
+  else if(kind==="neon")m=new T.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:side?0.55:1.25,roughness:0.45});
+  else m=new T.MeshPhysicalMaterial({color:c,roughness:0.24,metalness:0,clearcoat:1,clearcoatRoughness:0.08});
+  m.envMapIntensity=kind==="matte"?0.5:kind==="neon"?0.3:1;return m;
+}
+function studio3dRoleMat(T,s,role,tex){const mk=s.mat||"gloss";
+  if(role==="side")return studio3dMat(T,mk,s.side||studioMix(s.color||"#7c3aed","#000000",0.32),true);
+  if(role==="accent")return studio3dMat(T,mk==="glass"||mk==="neon"?"gloss":mk,s.color2||"#facc15");
+  if(role==="tex"){const m=new T.MeshStandardMaterial({color:0xffffff,roughness:0.42,metalness:0});if(tex)m.map=tex;return m}
+  if(role==="dark")return new T.MeshPhysicalMaterial({color:new T.Color(s.body||"#1f2329"),roughness:0.32,metalness:0.2,clearcoat:0.6});
+  if(role==="white")return new T.MeshStandardMaterial({color:0xf4f4f2,roughness:0.7});
+  if(role==="screen")return new T.MeshPhysicalMaterial({color:0x050608,roughness:0.08,clearcoat:1});
+  return studio3dMat(T,mk,s.color);
+}
+function studio3dRenderer(T){if(studio3dR)return studio3dR;
+  const R=new T.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true,premultipliedAlpha:true});
+  R.setPixelRatio(1);R.toneMapping=T.ACESFilmicToneMapping;R.toneMappingExposure=1.1;R.outputColorSpace=T.SRGBColorSpace;R.setClearColor(0x000000,0);
+  R.shadowMap.enabled=true;R.shadowMap.type=T.VSMShadowMap;
+  R.domElement.addEventListener("webglcontextlost",()=>{studio3dR=null;studio3dGeo.clear()},false);
+  /* Окружение для отражений: «фотостудия» из светящихся панелей → PMREM */
+  const sc=new T.Scene(),room=new T.Mesh(new T.BoxGeometry(12,12,12),new T.MeshBasicMaterial({color:new T.Color(0.32,0.33,0.36),side:T.BackSide}));sc.add(room);
+  const floor=new T.Mesh(new T.PlaneGeometry(12,12),new T.MeshBasicMaterial({color:new T.Color(0.12,0.12,0.13)}));floor.rotation.x=-Math.PI/2;floor.position.y=-5.9;sc.add(floor);
+  const panel=(w,h,x,y,z,k)=>{const m=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({color:new T.Color(k,k,k),side:T.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);sc.add(m)};
+  panel(6,2.2,0,5.8,0.5,9);panel(2.4,6,-5.8,0.8,1.5,6);panel(2.2,5,5.8,0.4,-1.2,4);panel(5,1.6,0,1.2,5.8,3);panel(3,1.2,2.5,-2,-5.8,2);
+  const pm=new T.PMREMGenerator(R);R._env=pm.fromScene(sc,0.03).texture;pm.dispose();
+  return studio3dR=R}
+function studio3dLights(T,sc,s){
+  const a=(+s.la||0)*Math.PI/180,I=(s.li==null?100:+s.li)/100,L=s.light||"studio",kx=Math.sin(a)*6,ky=Math.cos(a)*6;
+  const dir=(col,k,x,y,z)=>{const d=new T.DirectionalLight(new T.Color(col),k*I);d.position.set(x,y,z);sc.add(d);return d};
+  const hemi=(a1,b1,k)=>sc.add(new T.HemisphereLight(new T.Color(a1),new T.Color(b1),k*I));
+  let key;
+  if(L==="soft"){hemi("#ffffff","#8a8f99",1.25);key=dir("#ffffff",1.1,kx,Math.abs(ky)+2,5)}
+  else if(L==="rim"){hemi("#ffffff","#222630",0.3);key=dir("#ffffff",0.7,kx*0.4,4,6);dir("#ffffff",3.2,-6,2.5,-5);dir("#ffffff",3.2,6,2.5,-5)}
+  else if(L==="sunset"){hemi("#ffd7ad","#2b2346",0.45);key=dir("#ffb066",2.8,kx,ky*0.6+1.5,4.5);dir("#6e8cff",1.3,-kx,-1,3);dir("#ff7a59",1.4,0,3,-6)}
+  else if(L==="top"){hemi("#ffffff","#30343c",0.35);key=dir("#ffffff",2.7,kx*0.25,7,1.6);dir("#ffffff",0.5,0,-2,5)}
+  else{hemi("#ffffff","#3a3f4a",0.45);key=dir("#ffffff",2.5,kx,ky,5);dir("#dfe8ff",0.75,-kx*0.8,-ky*0.3,4);dir("#ffffff",1.4,0,3,-6)}
+  return key}
+/* Движение (п.7): поправки к повороту/положению/масштабу в момент t (секунды ролика). */
+function studio3dMotion(s,t){const M=s.motion||{},ty=typeof M==="string"?M:M.type;if(!ty||ty==="none"||t==null)return null;
+  const sp=(+M.speed||1),T0=t*sp,R={rx:0,ry:0,rz:0,oy:0,dy:0,sc:1};
+  if(ty==="spin")R.ry=T0*90;else if(ty==="orbit")R.oy=T0*60;else if(ty==="sway"){R.ry=Math.sin(T0*2)*22;R.rx=Math.sin(T0*1.3)*5}
+  else if(ty==="float"){R.dy=Math.sin(T0*2.2)*0.06;R.rz=Math.sin(T0*1.6)*4;R.ry=Math.sin(T0*1.1)*8}
+  else if(ty==="pop"){const d=+M.delay||0,p=Math.max(0,Math.min(1,(t-d)/0.7)),c1=1.70158,c3=c1+1;R.sc=p<=0?0.001:1+c3*Math.pow(p-1,3)+c1*Math.pow(p-1,2);R.ry=(1-p)*-90}
+  return R}
+async function studio3dCanvas(l,pw,ph,t,opt){
+  opt=opt||{};const s=l.s3||{},T=await studio3dLib();
+  pw=Math.max(8,Math.round(pw));ph=Math.max(8,Math.round(ph));const lim=Math.min(1,4096/Math.max(pw,ph));pw=Math.round(pw*lim);ph=Math.round(ph*lim);
+  const parts=await studio3dParts(T,s),tex=s.kind==="mockup"?await studio3dMockTex(T,s):null;
+  const R=studio3dRenderer(T),D=Math.PI/180,sc=new T.Scene();sc.environment=R._env;
+  const orbit=new T.Group(),root=new T.Group(),obj=new T.Group();orbit.add(root);root.add(obj);sc.add(orbit);
+  const mats={},mat=r=>mats[r]=mats[r]||studio3dRoleMat(T,s,r,tex);
+  for(const p of parts){const m=new T.Mesh(p.g,Array.isArray(p.m)?p.m.map(mat):mat(p.m));if(p.p)m.position.fromArray(p.p);if(p.r)m.rotation.fromArray(p.r);if(p.s)m.scale.fromArray(p.s);m.castShadow=true;obj.add(m)}
+  root.rotation.set((+s.rx||0)*D,(+s.ry||0)*D,(+s.rz||0)*D);
+  orbit.updateMatrixWorld(true);
+  const box=new T.Box3().setFromObject(orbit,true),ctr=box.getCenter(new T.Vector3());root.position.sub(ctr);orbit.updateMatrixWorld(true);box.translate(ctr.clone().negate());
+  const cam=new T.PerspectiveCamera(Math.max(3,Math.min(80,+s.fov||30)),pw/ph,0.01,1000),tv=Math.tan(cam.fov*D/2),th=tv*cam.aspect;let dist=0;
+  for(const x of[box.min.x,box.max.x])for(const y of[box.min.y,box.max.y])for(const z of[box.min.z,box.max.z])dist=Math.max(dist,z+Math.abs(x)/th,z+Math.abs(y)/tv);
+  dist=Math.max(dist*1.02,box.max.z+0.05);cam.position.set(0,0,dist);cam.near=Math.max(0.001,dist/200);cam.far=dist*20;cam.lookAt(0,0,0);cam.updateProjectionMatrix();cam.updateMatrixWorld(true);
+  /* Точная подгонка: проекция вершин (до ~6000 точек) → рамка в NDC → сдвиг и масштаб матрицы проекции. */
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;const v=new T.Vector3();let tot=0;obj.traverse(o=>{if(o.isMesh)tot+=o.geometry.attributes.position.count});const step=Math.max(1,Math.floor(tot/6000));
+  obj.traverse(o=>{if(!o.isMesh)return;const pa=o.geometry.attributes.position;for(let i=0;i<pa.count;i+=step){v.fromBufferAttribute(pa,i).applyMatrix4(o.matrixWorld).project(cam);x0=Math.min(x0,v.x);x1=Math.max(x1,v.x);y0=Math.min(y0,v.y);y1=Math.max(y1,v.y)}});
+  const size=box.getSize(new T.Vector3()).length(),mo=studio3dMotion(s,t),moving=s.motion&&(s.motion.type||s.motion)!=="none"&&(s.motion.type||s.motion)!=="pop";
+  const fitK=(opt.margin||0.94)*(moving?0.86:1)/Math.max((x1-x0)/2,(y1-y0)/2,1e-3),fcx=(x0+x1)/2,fcy=(y0+y1)/2;
+  cam.updateProjectionMatrix();cam.projectionMatrix.premultiply(new T.Matrix4().set(fitK,0,0,-fitK*fcx,0,fitK,0,-fitK*fcy,0,0,1,0,0,0,0,1));cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
+  if(mo){obj.rotation.set(mo.rx*D,mo.ry*D,mo.rz*D);obj.position.y+=mo.dy*size;obj.scale.setScalar(mo.sc);orbit.rotation.y=mo.oy*D}
+  const key=studio3dLights(T,sc,s);
+  if(s.shadow&&key){key.castShadow=true;key.position.set(key.position.x*0.3,8,key.position.z*0.4);const sz=size*1.2;Object.assign(key.shadow.camera,{left:-sz,right:sz,top:sz,bottom:-sz,near:0.1,far:40});key.shadow.camera.updateProjectionMatrix();key.shadow.mapSize.set(2048,2048);key.shadow.radius=14;key.shadow.blurSamples=20;key.shadow.bias=-0.0005;
+    const fl=new T.Mesh(new T.PlaneGeometry(size*8,size*8),new T.ShadowMaterial({opacity:0.32}));fl.rotation.x=-Math.PI/2;fl.position.y=box.min.y-0.002;fl.receiveShadow=true;sc.add(fl);
+    sc.updateMatrixWorld(true);key.target.position.set(0,box.min.y,0);sc.add(key.target)}
+  R.setSize(pw,ph,false);R.render(sc,cam);
+  const out=document.createElement("canvas");out.width=pw;out.height=ph;out.getContext("2d").drawImage(R.domElement,0,0);
+  Object.values(mats).forEach(m=>m.dispose());sc.traverse(o=>{if(o.isMesh&&!parts.some(p=>p.g===o.geometry))o.geometry.dispose()});
+  return out}
+/* ---- холст: картинка рендера, очередь ---- */
+const studio3dImgs=new Map(),studio3dLast=new Map(),studio3dQ=new Map();let studio3dBusy=false;
+function studio3dStageSize(l){const st=document.querySelector(".stud-stage"),F=STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square,sw=st?st.getBoundingClientRect().width:560,dpr=Math.min(2,window.devicePixelRatio||1);
+  const pw=Math.max(64,Math.min(1600,Math.ceil(l.w/100*sw*dpr/48)*48)),ph=Math.max(16,Math.round(pw*(l.h/100*F.h)/Math.max(0.01,l.w/100*F.w)));return[pw,ph]}
+function studio3dStageSrc(l){const[pw,ph]=studio3dStageSize(l),key=studio3dKey(l.s3)+(l.s3&&l.s3.kind==="mockup"?studio3dTexVer(l.s3):"")+"|"+pw+"x"+ph,u=studio3dImgs.get(key);
+  if(u){studio3dLast.set(l.id,u);return u}
+  studio3dQ.set(l.id,{s3:JSON.parse(JSON.stringify(l.s3||{})),key,pw,ph});setTimeout(studio3dPump,0);return studio3dLast.get(l.id)||""}
+async function studio3dPump(){if(studio3dBusy)return;studio3dBusy=true;
+  try{while(studio3dQ.size){const[id,j]=studio3dQ.entries().next().value;studio3dQ.delete(id);
+    if(!studio3dImgs.has(j.key)){try{const c=await studio3dCanvas({s3:j.s3},j.pw,j.ph,null);const b=await new Promise(r=>c.toBlob(r,"image/png"));studio3dImgs.set(j.key,URL.createObjectURL(b));
+        if(studio3dImgs.size>120){const[k0,u0]=studio3dImgs.entries().next().value;studio3dImgs.delete(k0);setTimeout(()=>URL.revokeObjectURL(u0),8000)}}
+      catch(e){console.warn("3D:",e);document.querySelectorAll(`.stud-layer[data-id="${CSS.escape(id)}"] .s3-load`).forEach(x=>{x.classList.add("err");x.dataset.tip="3D не нарисовался: "+(e.message||e)});continue}}
+    const u=studio3dImgs.get(j.key);studio3dLast.set(id,u);
+    document.querySelectorAll(`img.s3img[data-s3="${CSS.escape(id)}"]`).forEach(im=>{im.src=u;im.style.opacity=1});
+    document.querySelectorAll(`.stud-layer[data-id="${CSS.escape(id)}"] .s3-load`).forEach(x=>x.remove())}}
+  finally{studio3dBusy=false}}
+function studio3dInner(l){const s=l.s3||{},src=studio3dStageSrc(l),gl=studio3dGlow(s),F=STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square;
+  const gpx=gl/100*Math.min(l.w/100*F.w,l.h/100*F.h)*0.22,gc=esc(s.glowColor||s.color||"#7c3aed");
+  return`<div class="s3-wrap" style="${gl?`filter:drop-shadow(0 0 calc(var(--kf,1)*${gpx.toFixed(1)}px) ${gc}) drop-shadow(0 0 calc(var(--kf,1)*${(gpx/3).toFixed(1)}px) ${gc})`:""}"><img class="s3img" data-s3="${esc(l.id)}" ${src?`src="${esc(src)}"`:'style="opacity:0"'} alt="" draggable="false">${src?"":`<span class="s3-load">${ic("box",16)}</span>`}</div>`}
+async function studio3dPaint(ctx,l,x,y,w,h,W){const s=l.s3||{},c=await studio3dCanvas(l,w,h,studioRenderT),gl=studio3dGlow(s);
+  if(gl){const sb=ctx.shadowBlur,sc=ctx.shadowColor,ox=ctx.shadowOffsetX,oy=ctx.shadowOffsetY;ctx.shadowColor=s.glowColor||s.color||"#7c3aed";ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+    ctx.shadowBlur=gl/100*Math.min(w,h)*0.22;ctx.drawImage(c,x,y,w,h);ctx.shadowBlur=gl/100*Math.min(w,h)*0.07;ctx.drawImage(c,x,y,w,h);ctx.shadowBlur=sb;ctx.shadowColor=sc;ctx.shadowOffsetX=ox;ctx.shadowOffsetY=oy}
+  ctx.drawImage(c,x,y,w,h)}
+/* ---- добавление ---- */
+function studio3dAdd(kind,sub,extra){const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square;studioBeforeChange();
+  const l=studioLayerDefaults("3d");l.s3={...studio3dDefaults(kind,sub),...(extra||{})};
+  const side=Math.min(F.w,F.h)*(kind==="text"?0.8:0.45),pxW=kind==="text"?side:side,pxH=kind==="text"?side*0.42:side;
+  l.w=pxW/F.w*100;l.h=pxH/F.h*100;l.x=50-l.w/2;l.y=50-l.h/2;d.layers.push(l);d.selectedId=l.id;studioMultiSel=[];
+  N.refresh();NEON.save();if(kind==="text"||kind==="extrude")studio3dFitFrame(l,true);return l}
+/* Подогнать рамку слоя под объект (обрезать пустые поля рендера). */
+async function studio3dFitFrame(l,quiet){const F=STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square;let pw=l.w/100*F.w,ph=l.h/100*F.h;const k=Math.min(1,700/Math.max(pw,ph));pw*=k;ph*=k;
+  try{for(let it=0;it<2;it++){const c=await studio3dCanvas(l,pw,ph,null),W=c.width,H=c.height,px=c.getContext("2d").getImageData(0,0,W,H).data;let x0=W,y0=H,x1=-1,y1=-1;
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(px[(y*W+x)*4+3]>10){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
+    if(x1<0)return;const fx0=x0/W,fy0=y0/H,fx1=(x1+1)/W,fy1=(y1+1)/H;if(fx0<0.01&&fy0<0.01&&fx1>0.99&&fy1>0.99)break;
+    if(!quiet&&it===0)studioBeforeChange();const nx=l.x+l.w*fx0,ny=l.y+l.h*fy0,nw=l.w*(fx1-fx0),nh=l.h*(fy1-fy0),cx=nx+nw/2,cy=ny+nh/2;
+    l.w=nw;l.h=nh;l.x=cx-nw/2;l.y=cy-nh/2;pw=nw/100*F.w*k;ph=nh/100*F.h*k}
+    studioPatchLayerDom(l);NEON.save()}catch(e){if(!quiet)toast("Не получилось: "+(e.message||e),{tone:"danger"})}}
+/* ---- панель свойств ---- */
+function studio3dPropsHtml(l,grp){const s=l.s3||{},kind=s.kind||"shape",br=((S.studio.brand&&S.studio.brand.colors)||[]).slice(0,8);
+  const title={text:"3D-текст",shape:"3D-фигура",extrude:"Объёмный контур",mockup:"3D-мокап"}[kind]||"3D";
+  setTimeout(studio3dPadDraw,0);
+  const sw=(c,k)=>`<button type="button" class="s3-dot" style="background:${esc(c)}" data-prop-set="${k}" data-val="${esc(c)}" data-tip="${esc(c)}" aria-label="${esc(c)}"></button>`;
+  let obj="";
+  if(kind==="text")obj=ppSec("s3obj","Текст",`<nv-textarea rows="2" value="${esc(s.text||"")}" data-prop="s3.text" aria-label="Текст"></nv-textarea>
+      <div class="pp-row"><span class="pp-l">Шрифт</span><nv-select options="${studioFontList().map(f=>f+":"+f).join("|")}" value="${esc(studioFontList().includes(s.font)?s.font:"Onest")}" data-prop="s3.font" aria-label="Шрифт"></nv-select></div>
+      <div class="pp-row"><span class="pp-l">Жирность</span>${ppSeg([["400","400"],["600","600"],["700","700"],["800","800"],["900","900"]].map(([lb,v])=>[lb,`data-prop-set="s3.weight" data-val="${v}"`,String(s.weight||"800")===v,"Жирность "+v]))}</div>
+      ${ppRng("Глубина","s3.depth",s.depth==null?35:s.depth,0,100,1)}${ppRng("Скос граней","s3.bevel",s.bevel==null?35:s.bevel,0,100,1)}${ppRng("Между букв","s3.ls",s.ls||0,-10,40,1)}`);
+  else if(kind==="shape"){const sh=s.shape||"sphere",ext=["star","heart","arrow"].includes(sh),rnd=["cube","cylinder","star","heart","arrow"].includes(sh);
+    obj=ppSec("s3obj","Фигура",`<div class="s3-shapes">${S3_SHAPES.map(([k,lb,i])=>`<button type="button" class="${sh===k?"on":""}" data-prop-set="s3.shape" data-val="${k}" data-tip="${lb}" aria-label="${lb}">${ic(i,18)}</button>`).join("")}</div>
+      ${ext?ppRng("Толщина","s3.depth",s.depth==null?45:s.depth,0,100,1):""}${rnd?ppRng("Скругление","s3.bevel",s.bevel==null?45:s.bevel,0,100,1):""}
+      ${sh==="gift"?ppColor("Лента","s3.color2",s.color2||"#facc15"):""}`)}
+  else if(kind==="extrude")obj=ppSec("s3obj","Объём",`${ppRng("Глубина","s3.depth",s.depth==null?30:s.depth,0,100,1)}${ppRng("Скос граней","s3.bevel",s.bevel==null?30:s.bevel,0,100,1)}`);
+  else if(kind==="mockup")obj=studio3dMockPropsHtml(l);
+  const fixed=s.mat==="gold"||s.mat==="chrome";
+  return studioPropsHeadHtml("box",title,["Three.js · вписан в рамку",grp&&"в группе «"+grp+"»"].filter(Boolean).join(" · "))
+  +ppSec("s3view","Ракурс",`<div class="s3-pad" data-s3pad data-tip="Тяните — повернуть · колесо — перспектива"><canvas width="520" height="300"></canvas><span class="s3-pad-h">${ic("rotate-3d",13)}Тяните, чтобы повернуть</span></div>
+      <div class="s3-views">${S3_VIEWS.map(([k,lb])=>`<button type="button" data-s3act="view:${k}">${lb}</button>`).join("")}</div>
+      ${ppRng("Наклон","s3.rx",Math.round(s.rx||0),-90,90,1)}${ppRng("Поворот","s3.ry",Math.round(s.ry||0),-180,180,1)}${ppRng("Крен","s3.rz",Math.round(s.rz||0),-180,180,1)}${ppRng("Перспектива","s3.fov",s.fov||30,3,75,1)}
+      <button type="button" class="pp-btn" data-s3act="fit">${ic("scan",14)}Подогнать рамку по объекту</button>`)
+  +obj
+  +(kind==="mockup"?"":ppSec("s3mat","Материал",`<div class="s3-mats">${S3_MATS.map(([k,lb])=>`<button type="button" class="${(s.mat||"gloss")===k?"on":""}" data-prop-set="s3.mat" data-val="${k}"><i class="s3sw s3sw-${k}" style="--c:${esc(s.color||"#7c3aed")}"></i>${lb}</button>`).join("")}</div>
+      ${fixed?'<p class="pp-hint">У золота и хрома свой цвет. Для цветного металла — «Металл».</p>':ppColor("Цвет","s3.color",s.color||"#7c3aed")}
+      ${br.length&&!fixed?`<div class="pp-row"><span class="pp-l">Бренд</span><div class="s3-dots">${br.map(c=>sw(c,"s3.color")).join("")}</div></div>`:""}
+      ${!fixed&&(kind==="text"||kind==="extrude"||["star","heart","arrow","coin"].includes(s.shape))?`${ppColor("Бока","s3.side",s.side||studioMix(s.color||"#7c3aed","#000000",0.32))}<div class="pp-row"><span class="pp-l"></span><div class="s3-dots"><button type="button" class="pp-btn sm" data-s3act="side:auto">Темнее лица</button><button type="button" class="pp-btn sm" data-s3act="side:same">Как лицо</button></div></div>`:""}`))
+  +ppSec("s3light","Свет",`<div class="s3-views">${S3_LIGHTS.map(([k,lb])=>`<button type="button" class="${(s.light||"studio")===k?"on":""}" data-prop-set="s3.light" data-val="${k}">${lb}</button>`).join("")}</div>
+      ${ppRng("Откуда","s3.la",s.la==null?-40:s.la,-180,180,1)}${ppRng("Яркость","s3.li",s.li==null?100:s.li,20,220,1)}
+      ${ppOnOff("Тень на полу",!!s.shadow,'data-s3act="shadow:0"','data-s3act="shadow:1"')}${ppRng("Свечение","s3.glow",studio3dGlow(s),0,100,1)}`)
+  +studioShadowSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
+}
+function studio3dMockPropsHtml(l){return""}
+function studio3dMockTex(){return null}
+function studio3dTexVer(){return""}
+/* «шар» ракурса в панели: живая картинка, тянуть — вращать, колесо — перспектива */
+let studio3dPadN=0,studio3dPadRaf=0;
+async function studio3dPadDraw(){const cv=document.querySelector("[data-s3pad] canvas"),l=studioSelected();if(!cv||!l||l.type!=="3d")return;const my=++studio3dPadN;
+  try{const c=await studio3dCanvas(l,cv.width,cv.height,null,{margin:0.82});if(my!==studio3dPadN)return;const g=cv.getContext("2d");g.clearRect(0,0,cv.width,cv.height);g.drawImage(c,0,0)}catch(e){}}
+function studio3dSyncRng(k,v){const inp=document.querySelector(`input[data-prop="${k}"]`);if(!inp)return;inp.value=v;inp.style.setProperty("--rng-p",rngPct(v,inp.min,inp.max));const o=inp.closest(".rng");if(o)o.querySelector("output").textContent=studioOutFmt(k,v)}
+let studio3dStageT=0;
+function studio3dLive(l){if(!studio3dPadRaf)studio3dPadRaf=requestAnimationFrame(()=>{studio3dPadRaf=0;studio3dPadDraw()});clearTimeout(studio3dStageT);studio3dStageT=setTimeout(()=>studioPatchLayerDom(l),70)}
+document.addEventListener("pointerdown",e=>{const pad=e.target.closest&&e.target.closest("[data-s3pad]");if(!pad)return;const l=studioSelected();if(!l||l.type!=="3d")return;e.preventDefault();
+  studioBeforeChange();const s=l.s3,x0=e.clientX,y0=e.clientY,rx0=+s.rx||0,ry0=+s.ry||0;pad.setPointerCapture(e.pointerId);pad.classList.add("drag");
+  const mv=ev=>{let ry=ry0+(ev.clientX-x0)*0.6;ry=((ry+180)%360+360)%360-180;s.ry=Math.round(ry);s.rx=Math.round(Math.max(-90,Math.min(90,rx0+(ev.clientY-y0)*0.45)));studio3dSyncRng("s3.rx",s.rx);studio3dSyncRng("s3.ry",s.ry);studio3dLive(l)};
+  const up=()=>{pad.removeEventListener("pointermove",mv);pad.removeEventListener("pointerup",up);pad.removeEventListener("pointercancel",up);pad.classList.remove("drag");studioPatchLayerDom(l);NEON.save()};
+  pad.addEventListener("pointermove",mv);pad.addEventListener("pointerup",up);pad.addEventListener("pointercancel",up)});
+document.addEventListener("wheel",e=>{const pad=e.target.closest&&e.target.closest("[data-s3pad]");if(!pad)return;const l=studioSelected();if(!l||l.type!=="3d")return;e.preventDefault();
+  l.s3.fov=Math.max(3,Math.min(75,Math.round((+l.s3.fov||30)+(e.deltaY>0?2:-2))));studio3dSyncRng("s3.fov",l.s3.fov);studio3dLive(l);NEON.save()},{passive:false});
+/* ползунки 3D: пока тянут — лёгкая перерисовка шара (слой обновляет общий обработчик) */
+document.addEventListener("input",e=>{const k=e.target&&e.target.dataset&&e.target.dataset.prop;if(k&&k.startsWith("s3."))studio3dLive(studioSelected())},true);
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-s3act]");if(!b)return;e.preventDefault();e.stopPropagation();studio3dAct(b.dataset.s3act,b)},true);
+function studio3dAct(a,b){const[k,arg]=a.split(":");const l=studioSelected();
+  if(k==="fromText"&&l&&l.type==="text"){studioBeforeChange();const d=studioDesign(),i=d.layers.indexOf(l),n={...studioLayerDefaults("3d"),id:l.id,x:l.x,y:l.y,w:l.w,h:l.h,rotation:l.rotation||0,group:l.group};
+    if(!n.group)delete n.group;n.s3={...studio3dDefaults("text"),text:l.upper?String(l.text||"").toUpperCase():String(l.text||"3D"),font:studioFontOf(l),weight:String(+l.weight>=600?Math.max(700,+l.weight):l.weight||"700"),rx:8,ry:-16,rz:0};
+    if(l.color&&studioLum(...studioHexRgb(studioHex6(l.color)))<0.9)n.s3.color=l.color;d.layers.splice(i,1,n);d.selectedId=n.id;N.refresh();NEON.save();studio3dFitFrame(n,true);toast("Текст стал объёмным — крутите в «Ракурсе»");return}
+  if(!l||l.type!=="3d")return;const s=l.s3;
+  if(k==="view"){const v=S3_VIEWS.find(x=>x[0]===arg);if(!v)return;studioBeforeChange();[s.rx,s.ry,s.rz]=[v[2],v[3],v[4]];studioPatchLayerDom(l);studioRenderSidebar(document);NEON.save();return}
+  if(k==="fit"){studio3dFitFrame(l);return}
+  if(k==="shadow"){studioBeforeChange();s.shadow=arg==="1";studioPatchLayerDom(l);studioRenderSidebar(document);NEON.save();return}
+  if(k==="side"){studioBeforeChange();s.side=arg==="same"?s.color:"";studioPatchLayerDom(l);studioRenderSidebar(document);NEON.save();return}
+  if(typeof studio3dAct2==="function")studio3dAct2(k,arg,l,b);
+}
+function studio3dToHtml(l){if(l.type==="text"&&!+l.curve)return ppSec("to3d","3D",`<button type="button" class="pp-btn" data-s3act="fromText">${ic("box",14)}Сделать объёмным (3D-текст)</button>`);return""}
 async function studioExportPng(){
   const d=studioDesign();
   if(!d.layers.length){toast("Добавьте хотя бы один слой перед экспортом",{tone:"warning"});return}
@@ -9327,6 +9643,7 @@ function studioPanelHtml(tab){
       return Object.entries(grp).map(([id,L])=>blk("Шаблоны команды «"+esc((TEAM.list.find(t=>t.id===+id)||{}).name||"команда")+"»",L)).join("")+blk("Мои шаблоны",pers)})()}
     ${built.length?`${mine.length?'<div class="sect-t">Готовые</div>':""}<div class="s2-grid2">${built.map(([t,i])=>`<div class="th" data-act="studUseTplHere" data-i="${i}" title="${esc(t.name)}"><img data-s2tpl="${i}" alt=""></div>`).join("")}</div>`:""}`}
   if(tab==="elements")return`<h3>Элементы</h3><div class="sect-t">Фигуры</div><div class="s2-tiles">${STUDIO_SHAPES.map(([sh,icn,lb])=>`<button type="button" data-act="studAdd" data-type="shape" data-shape="${sh}">${ic(icn,20)}${lb}</button>`).join("")}</div>
+    <div class="sect-t">3D</div><div class="s2-tiles s3-tiles"><button type="button" data-act="stud3dAdd" data-k="text">${ic("type",20)}3D-текст</button>${S3_SHAPES.map(([k,lb,i])=>`<button type="button" data-act="stud3dAdd" data-k="shape:${k}">${ic(i,20)}${lb}</button>`).join("")}</div>
     <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><button type="button" data-act="studTool" data-tool="draw">${ic("brush",20)}Рисовать</button><label class="s2-tiles-l" for="stud-vid-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("film",20)}Видео</label><label class="s2-tiles-l" for="stud-imp-file" data-tip="PDF — страницами, PSD — слоями" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-input",20)}PDF / PSD</label><button type="button" data-act="studTool" data-tool="note" data-tip="Булавка с комментарием для согласования — в файл не попадает">${ic("message-square-plus",20)}Заметка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
     <div class="sect-t">Графика</div><input type="search" class="num" data-s2gfx placeholder="Поиск: стрелка, бейдж, рамка…" value="${esc(studioGfxQ)}" style="width:100%;text-align:left;padding:0 10px">
     <div class="s2-gfx" data-s2gfxgrid>${studioGfxGridHtml()}</div>
@@ -12179,6 +12496,7 @@ Object.assign(N.chg,{
   studFmtF(v){S.studio.fmtF=v;N.refresh();NEON.save()}
 });
 Object.assign(N.acts,{
+  stud3dAdd(a,d){studioStartDismissed=true;const[k,sub]=String(d.k||"text").split(":");studio3dAdd(k,sub)},
   studAdd(a,d){studioStartDismissed=true;studioBeforeChange();const l=studioLayerDefaults(d.type,d.shape);studioDesign().layers.push(l);studioDesign().selectedId=l.id;studioMultiSel=[];N.refresh();NEON.save()},
   studSave:studioSaveDesign,
   studExport:studioExportPng,
