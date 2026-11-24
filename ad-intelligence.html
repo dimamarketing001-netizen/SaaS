@@ -1843,7 +1843,8 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .pp-mus{border:1px solid var(--line);border-radius:10px;padding:8px;margin:6px 0}.pp-track{display:flex;align-items:center;gap:6px;margin-bottom:6px}.pp-track span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.pp-x{border:0;background:none;cursor:pointer;color:var(--ink-3);width:26px;height:26px;border-radius:6px;display:grid;place-items:center}
 .mus-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:50vh;overflow:auto}.mus-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:6px 8px}.mus-t{flex:1;min-width:0;display:flex;flex-direction:column}.mus-t b{font-weight:500;font-size:13.5px}.mus-t small{color:var(--ink-3);font-size:12px}
 .s3-wrap{width:100%;height:100%;position:relative}
-.s3-wrap img{width:100%;height:100%;display:block;pointer-events:none;user-select:none}
+.s3-wrap img,.s3-wrap canvas.s3-live{width:100%;height:100%;display:block;pointer-events:none;user-select:none}
+.s3-wrap canvas.s3-live{position:absolute;inset:0}
 .s3-load{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-3);border:1px dashed var(--line);border-radius:8px;animation:s3pulse 1.2s ease-in-out infinite}
 .s3-load.err{color:#e11d48;border-color:#e11d48;animation:none}
 @keyframes s3pulse{50%{opacity:.35}}
@@ -8944,6 +8945,14 @@ function studio3dLights(T,sc,s){
   else if(L==="top"){hemi("#ffffff","#30343c",0.35);key=dir("#ffffff",2.7,kx*0.25,7,1.6);dir("#ffffff",0.5,0,-2,5)}
   else{hemi("#ffffff","#3a3f4a",0.45);key=dir("#ffffff",2.5,kx,ky,5);dir("#dfe8ff",0.75,-kx*0.8,-ky*0.3,4);dir("#ffffff",1.4,0,3,-6)}
   return key}
+const S3_MOTIONS=[["none","Нет"],["spin","Вращение"],["sway","Покачивание"],["float","Парение"],["orbit","Облёт камеры"],["pop","Выпрыгивание"]];
+function studio3dMoves(s){const M=s&&s.motion,ty=M&&(typeof M==="string"?M:M.type);return ty&&ty!=="none"?ty:""}
+/* предпросмотр на холсте: кадры 3D поверх картинки слоя (по одному рендеру на слой за раз) */
+const studio3dTickBusy=new Set();
+function studio3dAnimTick(d,t){for(const l of d.layers){if(l.type!=="3d"||l.hidden||!studio3dMoves(l.s3)||studio3dTickBusy.has(l.id))continue;
+  const wrap=document.querySelector(`.stud-layer[data-id="${CSS.escape(l.id)}"] .s3-wrap`);if(!wrap)continue;const[pw,ph]=studio3dStageSize(l);studio3dTickBusy.add(l.id);
+  studio3dCanvas(l,Math.round(pw*0.75),Math.round(ph*0.75),t).then(c=>{let cv=wrap.querySelector("canvas.s3-live");if(!cv){cv=document.createElement("canvas");cv.className="s3-live";wrap.append(cv);const im=wrap.querySelector("img");if(im)im.style.visibility="hidden"}
+    if(cv.width!==c.width){cv.width=c.width;cv.height=c.height}const g=cv.getContext("2d");g.clearRect(0,0,cv.width,cv.height);g.drawImage(c,0,0)}).catch(()=>{}).finally(()=>studio3dTickBusy.delete(l.id))}}
 /* Движение (п.7): поправки к повороту/положению/масштабу в момент t (секунды ролика). */
 function studio3dMotion(s,t){const M=s.motion||{},ty=typeof M==="string"?M:M.type;if(!ty||ty==="none"||t==null)return null;
   const sp=(+M.speed||1),T0=t*sp,R={rx:0,ry:0,rz:0,oy:0,dy:0,sc:1};
@@ -9076,6 +9085,8 @@ function studio3dPropsHtml(l,grp){const s=l.s3||{},kind=s.kind||"shape",br=((S.s
       ${fixed?'<p class="pp-hint">У золота и хрома свой цвет. Для цветного металла — «Металл».</p>':ppColor("Цвет","s3.color",s.color||"#7c3aed")}
       ${br.length&&!fixed?`<div class="pp-row"><span class="pp-l">Бренд</span><div class="s3-dots">${br.map(c=>sw(c,"s3.color")).join("")}</div></div>`:""}
       ${!fixed&&(kind==="text"||kind==="extrude"||["star","heart","arrow","coin"].includes(s.shape))?`${ppColor("Бока","s3.side",s.side||studioMix(s.color||"#7c3aed","#000000",0.32))}<div class="pp-row"><span class="pp-l"></span><div class="s3-dots"><button type="button" class="pp-btn sm" data-s3act="side:auto">Темнее лица</button><button type="button" class="pp-btn sm" data-s3act="side:same">Как лицо</button></div></div>`:""}`))
+  +ppSec("s3mo","Движение в ролике",`<div class="pp-row"><span class="pp-l">Движение</span><nv-select options="${S3_MOTIONS.map(([k,t])=>k+":"+t).join("|")}" value="${esc(studio3dMoves(s)||"none")}" data-prop="s3.motion.type" aria-label="Движение 3D"></nv-select></div>
+      ${studio3dMoves(s)?ppRng("Скорость","s3.motion.speed",+(s.motion.speed||1),0.2,3,0.1)+(studio3dMoves(s)==="pop"?ppRng("Задержка","s3.motion.delay",+(s.motion.delay||0),0,8,0.1):"")+`<button type="button" class="pp-btn" data-act="studAnimPlay">${ic("play",14)}Просмотр</button><p class="pp-hint">В MP4 и GIF объект двигается; в PNG — стоит в выбранном ракурсе.</p>`:""}`,studio3dMoves(s)?"вкл":"")
   +ppSec("s3light","Свет",`<div class="s3-views">${S3_LIGHTS.map(([k,lb])=>`<button type="button" class="${(s.light||"studio")===k?"on":""}" data-prop-set="s3.light" data-val="${k}">${lb}</button>`).join("")}</div>
       ${ppRng("Откуда","s3.la",s.la==null?-40:s.la,-180,180,1)}${ppRng("Яркость","s3.li",s.li==null?100:s.li,20,220,1)}
       ${ppOnOff("Тень на полу",!!s.shadow,'data-s3act="shadow:0"','data-s3act="shadow:1"')}${ppRng("Свечение","s3.glow",studio3dGlow(s),0,100,1)}`)
@@ -11180,7 +11191,7 @@ function studioAnimPreview(pageOnly){
     studioAnimRaf=requestAnimationFrame(step);return;
   }
   const len=studioPageLen(d),t0=performance.now(),US=new Map();
-  const step=()=>{const t=Math.min(len,(performance.now()-t0)/1000);studioAnimApply(t,len,US);
+  const step=()=>{const t=Math.min(len,(performance.now()-t0)/1000);studioAnimApply(t,len,US);studio3dAnimTick(d,t);
     if(t<len)studioAnimRaf=requestAnimationFrame(step);else{d.layers.forEach(studioPatchLayerDom);const ph=document.querySelector(".stl-ph");if(ph)ph.style.left="0%"}};
   studioAnimRaf=requestAnimationFrame(step);
 }
@@ -11243,7 +11254,7 @@ function studioVideoSet(){const d=studioDesign();if(!studioTimeline(d)){toast("�
 /* Ролик: одна страница (d.animLen) или все страницы подряд (d.vidPages) — по d.pageDur секунд,
    переход d.pageTrans (fade/slide/zoom/none) длиной 0,5 с в начале каждой следующей страницы. */
 const STUDIO_TRANS=[["fade","Затухание"],["slide","Сдвиг"],["zoom","Масштаб"],["none","Без перехода"]];
-function studioHasAnim(layers){return layers.some(l=>l.type==="video"&&!l.hidden||l.anim&&(l.anim.type&&l.anim.type!=="none"||l.anim.out))}
+function studioHasAnim(layers){return layers.some(l=>l.type==="video"&&!l.hidden||l.type==="3d"&&!l.hidden&&studio3dMoves(l.s3)||l.anim&&(l.anim.type&&l.anim.type!=="none"||l.anim.out))}
 function studioTimeline(d){
   const pages=studioPagesOf(d),multi=d.vidPages&&pages.length>1;
   if(!multi){if(!studioHasAnim(d.layers))return null;const len=d.animLen||5;return{len,multi:false,frame:async(t,sc)=>{studioRenderT=t;try{return await studioRenderCanvas(d,sc,l=>studioAnimAt(l,t,len))}finally{studioRenderT=null}}}}
