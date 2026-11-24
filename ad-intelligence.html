@@ -8978,22 +8978,38 @@ async function studio3dCanvas(l,pw,ph,t,opt){
   root.rotation.set((+s.rx||0)*D,(+s.ry||0)*D,(+s.rz||0)*D);
   orbit.updateMatrixWorld(true);
   const box=new T.Box3().setFromObject(orbit,true),ctr=box.getCenter(new T.Vector3());root.position.sub(ctr);orbit.updateMatrixWorld(true);box.translate(ctr.clone().negate());
+  const size=box.getSize(new T.Vector3()).length(),hgt=box.max.y-box.min.y;let floorY=box.min.y,podMesh=null;
+  /* v9-9: подиум (круглый/квадратный) и отражение на полу (отдельный проход + затухание маской) */
+  const pod=s.podium&&s.podium!=="none"?s.podium:"";
+  if(pod){const wx=box.max.x-box.min.x,wz=box.max.z-box.min.z,r=Math.max(wx,wz)*0.62+size*0.04,h2=Math.max(0.05,size*0.05),g=pod==="square"?new T.BoxGeometry(r*2,h2,r*2):new T.CylinderGeometry(r,r*1.02,h2,96);
+    const pm=studio3dMat(T,"gloss",s.podiumColor||"#e5e7eb");pm.roughness=0.45;pm.clearcoat=0.3;mats._pod=pm;podMesh=new T.Mesh(g,pm);podMesh.position.set((box.min.x+box.max.x)/2,floorY-h2/2-0.001,(box.min.z+box.max.z)/2);podMesh.receiveShadow=true;orbit.add(podMesh);floorY-=h2;
+    orbit.updateMatrixWorld(true);box.union(new T.Box3().setFromObject(podMesh))}
+  const refl=Math.max(0,Math.min(100,+s.reflect||0))/100;let mir=null,mirIn=null;
+  if(refl){mir=new T.Group();mir.scale.y=-1;mir.position.y=2*floorY;const rc=root.clone();rc.traverse(o=>{o.castShadow=false});mir.add(rc);mirIn=rc.children[0];orbit.add(mir);orbit.updateMatrixWorld(true);box.min.y=Math.min(box.min.y,floorY-0.42*hgt)}
   const cam=new T.PerspectiveCamera(Math.max(3,Math.min(80,+s.fov||30)),pw/ph,0.01,1000),tv=Math.tan(cam.fov*D/2),th=tv*cam.aspect;let dist=0;
   for(const x of[box.min.x,box.max.x])for(const y of[box.min.y,box.max.y])for(const z of[box.min.z,box.max.z])dist=Math.max(dist,z+Math.abs(x)/th,z+Math.abs(y)/tv);
   dist=Math.max(dist*1.02,box.max.z+0.05);cam.position.set(0,0,dist);cam.near=Math.max(0.001,dist/200);cam.far=dist*20;cam.lookAt(0,0,0);cam.updateProjectionMatrix();cam.updateMatrixWorld(true);
   /* Точная подгонка: проекция вершин (до ~6000 точек) → рамка в NDC → сдвиг и масштаб матрицы проекции. */
-  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;const v=new T.Vector3();let tot=0;obj.traverse(o=>{if(o.isMesh)tot+=o.geometry.attributes.position.count});const step=Math.max(1,Math.floor(tot/6000));
-  obj.traverse(o=>{if(!o.isMesh)return;const pa=o.geometry.attributes.position;for(let i=0;i<pa.count;i+=step){v.fromBufferAttribute(pa,i).applyMatrix4(o.matrixWorld).project(cam);x0=Math.min(x0,v.x);x1=Math.max(x1,v.x);y0=Math.min(y0,v.y);y1=Math.max(y1,v.y)}});
-  const size=box.getSize(new T.Vector3()).length(),mo=studio3dMotion(s,t),moving=s.motion&&(s.motion.type||s.motion)!=="none"&&(s.motion.type||s.motion)!=="pop";
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;const v=new T.Vector3(),meshes=[];root.traverse(o=>{if(o.isMesh)meshes.push(o)});if(podMesh)meshes.push(podMesh);
+  let tot=0;meshes.forEach(o=>tot+=o.geometry.attributes.position.count);const step=Math.max(1,Math.floor(tot/6000)),limY=floorY-0.42*hgt;
+  const addP=()=>{v.project(cam);x0=Math.min(x0,v.x);x1=Math.max(x1,v.x);y0=Math.min(y0,v.y);y1=Math.max(y1,v.y)};
+  for(const o of meshes){const pa=o.geometry.attributes.position;for(let i=0;i<pa.count;i+=step){v.fromBufferAttribute(pa,i).applyMatrix4(o.matrixWorld);const wy=v.y;addP();if(refl&&o!==podMesh){v.fromBufferAttribute(pa,i).applyMatrix4(o.matrixWorld);v.y=Math.max(2*floorY-wy,limY);addP()}}}
+  const mo=studio3dMotion(s,t),moving=s.motion&&(s.motion.type||s.motion)!=="none"&&(s.motion.type||s.motion)!=="pop";
   const fitK=(opt.margin||0.94)*(moving?0.86:1)/Math.max((x1-x0)/2,(y1-y0)/2,1e-3),fcx=(x0+x1)/2,fcy=(y0+y1)/2;
   cam.updateProjectionMatrix();cam.projectionMatrix.premultiply(new T.Matrix4().set(fitK,0,0,-fitK*fcx,0,fitK,0,-fitK*fcy,0,0,1,0,0,0,0,1));cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
-  if(mo){obj.rotation.set(mo.rx*D,mo.ry*D,mo.rz*D);obj.position.y+=mo.dy*size;obj.scale.setScalar(mo.sc);orbit.rotation.y=mo.oy*D}
-  const key=studio3dLights(T,sc,s);
+  if(mo){for(const o of[obj,mirIn].filter(Boolean)){o.rotation.set(mo.rx*D,mo.ry*D,mo.rz*D);o.position.y+=mo.dy*size;o.scale.setScalar(mo.sc)}orbit.rotation.y=mo.oy*D}
+  const key=studio3dLights(T,sc,s);let fl=null;
   if(s.shadow&&key){key.castShadow=true;key.position.set(key.position.x*0.3,8,key.position.z*0.4);const sz=size*1.2;Object.assign(key.shadow.camera,{left:-sz,right:sz,top:sz,bottom:-sz,near:0.1,far:40});key.shadow.camera.updateProjectionMatrix();key.shadow.mapSize.set(2048,2048);key.shadow.radius=14;key.shadow.blurSamples=20;key.shadow.bias=-0.0005;
-    const fl=new T.Mesh(new T.PlaneGeometry(size*8,size*8),new T.ShadowMaterial({opacity:0.32}));fl.rotation.x=-Math.PI/2;fl.position.y=box.min.y-0.002;fl.receiveShadow=true;sc.add(fl);
-    sc.updateMatrixWorld(true);key.target.position.set(0,box.min.y,0);sc.add(key.target)}
-  R.setSize(pw,ph,false);R.render(sc,cam);
-  const out=document.createElement("canvas");out.width=pw;out.height=ph;out.getContext("2d").drawImage(R.domElement,0,0);
+    fl=new T.Mesh(new T.PlaneGeometry(size*8,size*8),new T.ShadowMaterial({opacity:0.32}));fl.rotation.x=-Math.PI/2;fl.position.y=floorY-0.002;fl.receiveShadow=true;sc.add(fl);
+    sc.updateMatrixWorld(true);key.target.position.set(0,floorY,0);sc.add(key.target)}
+  R.setSize(pw,ph,false);const out=document.createElement("canvas");out.width=pw;out.height=ph;const og=out.getContext("2d");
+  if(mir){root.visible=false;if(podMesh)podMesh.visible=false;if(fl)fl.visible=false;R.render(sc,cam);
+    const rc=document.createElement("canvas");rc.width=pw;rc.height=ph;const rg=rc.getContext("2d");rg.drawImage(R.domElement,0,0);
+    let fy=1e9,ty=-1e9;for(const x of[box.min.x,box.max.x])for(const z of[box.min.z,box.max.z]){v.set(x,floorY,z).project(cam);fy=Math.min(fy,(1-v.y)/2*ph)}
+    v.set(0,floorY+hgt,0).project(cam);ty=(1-v.y)/2*ph;const len=Math.max(8,Math.abs(fy-ty)*0.45);
+    const gr=rg.createLinearGradient(0,fy,0,fy+len);gr.addColorStop(0,`rgba(0,0,0,${(refl*0.7).toFixed(3)})`);gr.addColorStop(1,"rgba(0,0,0,0)");rg.globalCompositeOperation="destination-in";rg.fillStyle=gr;rg.fillRect(0,0,pw,ph);
+    og.drawImage(rc,0,0);root.visible=true;mir.visible=false;if(podMesh)podMesh.visible=true;if(fl)fl.visible=true}
+  R.render(sc,cam);og.drawImage(R.domElement,0,0);
   Object.values(mats).forEach(m=>m.dispose());sc.traverse(o=>{if(o.isMesh&&!parts.some(p=>p.g===o.geometry))o.geometry.dispose()});
   return out}
 /* ---- холст: картинка рендера, очередь ---- */
@@ -9094,7 +9110,9 @@ function studio3dPropsHtml(l,grp){const s=l.s3||{},kind=s.kind||"shape",br=((S.s
       ${studio3dMoves(s)?ppRng("Скорость","s3.motion.speed",+(s.motion.speed||1),0.2,3,0.1)+(studio3dMoves(s)==="pop"?ppRng("Задержка","s3.motion.delay",+(s.motion.delay||0),0,8,0.1):"")+`<button type="button" class="pp-btn" data-act="studAnimPlay">${ic("play",14)}Просмотр</button><p class="pp-hint">В MP4 и GIF объект двигается; в PNG — стоит в выбранном ракурсе.</p>`:""}`,studio3dMoves(s)?"вкл":"")
   +ppSec("s3light","Свет",`<div class="s3-views">${S3_LIGHTS.map(([k,lb])=>`<button type="button" class="${(s.light||"studio")===k?"on":""}" data-prop-set="s3.light" data-val="${k}">${lb}</button>`).join("")}</div>
       ${ppRng("Откуда","s3.la",s.la==null?-40:s.la,-180,180,1)}${ppRng("Яркость","s3.li",s.li==null?100:s.li,20,220,1)}
-      ${ppOnOff("Тень на полу",!!s.shadow,'data-s3act="shadow:0"','data-s3act="shadow:1"')}${ppRng("Свечение","s3.glow",studio3dGlow(s),0,100,1)}`)
+      ${ppOnOff("Тень на полу",!!s.shadow,'data-s3act="shadow:0"','data-s3act="shadow:1"')}${ppRng("Отражение","s3.reflect",+s.reflect||0,0,100,1)}
+      <div class="pp-row"><span class="pp-l">Подиум</span>${ppSeg([["Нет","none"],["Круг","disc"],["Куб","square"]].map(([lb,v])=>[lb,`data-prop-set="s3.podium" data-val="${v}"`,(s.podium||"none")===v,"Подиум: "+lb]))}</div>
+      ${s.podium&&s.podium!=="none"?ppColor("Цвет подиума","s3.podiumColor",s.podiumColor||"#e5e7eb"):""}${ppRng("Свечение","s3.glow",studio3dGlow(s),0,100,1)}`)
   +studioShadowSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
 }
 /* «шар» ракурса в панели: живая картинка, тянуть — вращать, колесо — перспектива */
