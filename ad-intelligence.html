@@ -7803,7 +7803,7 @@ function studioPolyPoints(sides,innerRadius){
   return pts;
 }
 function studioPolyClipPath(l){return"polygon("+studioPolyPoints(l.sides,l.shape==="star"?l.innerRadius:null).map(p=>`${p.x}% ${p.y}%`).join(",")+")"}
-function studioLayerTransform(l){return`rotate(${l.rotation||0}deg) scaleX(${l.flipH?-1:1}) scaleY(${l.flipV?-1:1}) skewX(${l.skewX||0}deg) skewY(${l.skewY||0}deg)`}
+function studioLayerTransform(l){return`rotate(${l.rotation||0}deg) scaleX(${l.flipH?-1:1}) scaleY(${l.flipV?-1:1}) skewX(${l.skewX||0}deg) skewY(${l.skewY||0}deg)`+studioPerspCss(l)}
 function studioStrokeCssBorder(s){return s.enabled?`calc(var(--kf,1)*${+s.width||0}px) ${s.dash==="dashed"?"dashed":s.dash==="dotted"?"dotted":"solid"} ${esc(s.color)}`:"none"}
 /* Контур → d. Слой кривой: основной контур l.points/l.closed + доп. контуры l.subs=[{points,closed}] (дырки, буквы). */
 function studioContourD(pts,closed){
@@ -8338,7 +8338,7 @@ function studioPropsHeadHtml(icon,title,sub){
 function studioPropsHtml(){
   let h=studioPropsHtml0();const l=studioSelected();
   if(studioMultiSel.length<2&&l&&!(l.x<=1&&l.y<=1&&l.x+l.w>=99&&l.y+l.h>=99))h+=studioAnimSecHtml(l);
-  if(studioMultiSel.length<2&&l&&typeof studio3dToHtml==="function")h+=studio3dToHtml(l);
+  if(studioMultiSel.length<2&&l&&typeof studio3dToHtml==="function")h+=studio3dToHtml(l)+studioPerspSecHtml(l);
   if(studioMultiSel.length<2&&!l)h+=studioBgSecHtml()+studioDesignAnimHtml()+studioAdUsesHtml(studioDesign());
   if(studioMultiSel.length>1||!l||!studioGroupEnter||!studioInGroup(studioDesign(),l,studioGroupEnter))return h;
   const bar=`<div class="pp-acts pp-ing">${ic("folder-open",14)}<span>Внутри «${esc(studioGroupName(studioDesign(),studioGroupEnter))}»</span><button type="button" class="nv-btn v-ghost s-sm" data-gexit>Вся группа <kbd>Esc</kbd></button></div>`;
@@ -8681,6 +8681,7 @@ async function studioRenderCanvas(design,scale,anim){
   await studioFontsReady(design);
   for(const l of design.layers){
     if(l.hidden)continue;
+    if(studioPerspOn(l)){ctx.save();try{await studioPerspPaint(ctx,design,l,scale,anim,W,H)}catch(e){console.warn("perspective",e)}ctx.restore();continue}
     const x=l.x/100*W,y=l.y/100*H,w=l.w/100*W,h=l.h/100*H;
     ctx.save();
     ctx.globalCompositeOperation=l.blendMode&&l.blendMode!=="normal"?l.blendMode:"source-over";
@@ -8982,6 +8983,35 @@ async function studio3dCanvas(l,pw,ph,t,opt){
   Object.values(mats).forEach(m=>m.dispose());sc.traverse(o=>{if(o.isMesh&&!parts.some(p=>p.g===o.geometry))o.geometry.dispose()});
   return out}
 /* ---- холст: картинка рендера, очередь ---- */
+/* v9-6: перспектива любого слоя. l.persp={k,rx,ry,rz,s}: на холсте — CSS perspective()+rotateX/Y/Z (после 2D-поворота слоя),
+   в файле — слой рисуется отдельно и натягивается на ту же проекцию сеткой треугольников (аффинно в каждом). s — сила (0 — изометрия без перспективы). */
+const STUDIO_PERSP=[["none","Нет",0,0,0,50],["left","Влево",0,28,0,50],["right","Вправо",0,-28,0,50],["back","Назад",36,0,0,50],["table","На столе",58,0,0,45],["iso","Изометрия",54.7,0,-45,0],["wallL","Стена слева",0,58,0,55],["wallR","Стена справа",0,-58,0,55]];
+function studioPerspOn(l){const p=l.persp;return!!(p&&(+p.rx||+p.ry||+p.rz))}
+function studioPerspD(l,F){F=F||STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square;const p=l.persp||{},st=p.s==null?50:+p.s;if(st<=0)return 0;return Math.max(l.w/100*F.w,l.h/100*F.h)*(0.6+(100-st)/100*4)}
+function studioPerspCss(l){if(!studioPerspOn(l))return"";const p=l.persp,D=studioPerspD(l);return`${D?` perspective(calc(var(--kf,1)*${D.toFixed(1)}px))`:""} rotateX(${+p.rx||0}deg) rotateY(${+p.ry||0}deg) rotateZ(${+p.rz||0}deg)`}
+async function studioPerspPaint(ctx,design,l,scale,anim,W,H){
+  const fmt=STUDIO_FMT[design.format]||STUDIO_FMT.square,k=W/fmt.w,R=Math.PI/180,p=l.persp;
+  const t={...l,persp:null,rotation:0,flipH:false,flipV:false,skewX:0,skewY:0,blendMode:"normal"};
+  const tmp=await studioRenderCanvas({...design,bg:{type:"none"},layers:[t],pages:undefined},scale,anim);
+  const x=l.x/100*W,y=l.y/100*H,w=l.w/100*W,h=l.h/100*H,cx=x+w/2,cy=y+h/2,D=studioPerspD(l,fmt)*k;
+  const cz=Math.cos((+p.rz||0)*R),sz=Math.sin((+p.rz||0)*R),cyy=Math.cos((+p.ry||0)*R),syy=Math.sin((+p.ry||0)*R),cxx=Math.cos((+p.rx||0)*R),sxx=Math.sin((+p.rx||0)*R);
+  const proj=(u,v)=>{let X=u-cx,Y=v-cy,Z=0;[X,Y]=[X*cz-Y*sz,X*sz+Y*cz];[X,Z]=[X*cyy+Z*syy,-X*syy+Z*cyy];[Y,Z]=[Y*cxx-Z*sxx,Y*sxx+Z*cxx];
+    if(D){if(D-Z<=D*0.05)return null;const f=D/(D-Z);X*=f;Y*=f}return[X,Y]};
+  const m=Math.max(w,h)*0.3,x0=Math.max(0,x-m),y0=Math.max(0,y-m),x1=Math.min(W,x+w+m),y1=Math.min(H,y+h+m),N=22;
+  ctx.globalCompositeOperation=l.blendMode&&l.blendMode!=="normal"?l.blendMode:"source-over";
+  ctx.translate(cx,cy);ctx.rotate((l.rotation||0)*R);ctx.scale(l.flipH?-1:1,l.flipV?-1:1);ctx.transform(1,Math.tan((l.skewY||0)*R),Math.tan((l.skewX||0)*R),1,0,0);
+  const G=[];for(let j=0;j<=N;j++){G[j]=[];for(let i=0;i<=N;i++){const u=x0+(x1-x0)*i/N,v=y0+(y1-y0)*j/N;G[j][i]={s:[u,v],d:proj(u,v)}}}
+  const tri=(A,B,C)=>{if(!A.d||!B.d||!C.d)return;const[X0,Y0]=A.s,[X1,Y1]=B.s,[X2,Y2]=C.s,[u0,v0]=A.d,[u1,v1]=B.d,[u2,v2]=C.d;
+    const den=(X1-X0)*(Y2-Y0)-(X2-X0)*(Y1-Y0);if(Math.abs(den)<1e-9)return;
+    const a=((u1-u0)*(Y2-Y0)-(u2-u0)*(Y1-Y0))/den,c=((u2-u0)*(X1-X0)-(u1-u0)*(X2-X0))/den,b=((v1-v0)*(Y2-Y0)-(v2-v0)*(Y1-Y0))/den,d=((v2-v0)*(X1-X0)-(v1-v0)*(X2-X0))/den,e=u0-a*X0-c*Y0,f=v0-b*X0-d*Y0;
+    const mx=(u0+u1+u2)/3,my=(v0+v1+v2)/3,ex=(px,py)=>{const dx=px-mx,dy=py-my,L=Math.hypot(dx,dy)||1;return[px+dx/L*1.6,py+dy/L*1.6]};
+    ctx.save();ctx.beginPath();const q0=ex(u0,v0),q1=ex(u1,v1),q2=ex(u2,v2);ctx.moveTo(q0[0],q0[1]);ctx.lineTo(q1[0],q1[1]);ctx.lineTo(q2[0],q2[1]);ctx.closePath();ctx.clip();
+    ctx.transform(a,b,c,d,e,f);ctx.drawImage(tmp,0,0);ctx.restore()};
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const A=G[j][i],B=G[j][i+1],C=G[j+1][i+1],E=G[j+1][i];tri(A,B,C);tri(A,C,E)}
+}
+function studioPerspSecHtml(l){const p=l.persp||{},on=studioPerspOn(l);
+  return ppSec("persp","Перспектива",`<div class="s3-views">${STUDIO_PERSP.map(([k,lb])=>`<button type="button" class="${(on?p.k:"none")===k?"on":""}" data-s3act="persp:${k}">${lb}</button>`).join("")}</div>
+    ${on?ppRng("Наклон X","persp.rx",+p.rx||0,-80,80,1)+ppRng("Наклон Y","persp.ry",+p.ry||0,-80,80,1)+ppRng("Поворот","persp.rz",+p.rz||0,-180,180,1)+ppRng("Глубина","persp.s",p.s==null?50:+p.s,0,100,1):'<p class="pp-hint">Наклон слоя в пространстве — «лежит на столе», «стена», изометрия. В PNG, PDF и видео — так же, как на холсте.</p>'}`,on?"вкл":"")}
 const studio3dImgs=new Map(),studio3dLast=new Map(),studio3dQ=new Map();let studio3dBusy=false;
 window.NEON_3D={canvas:(...a)=>studio3dCanvas(...a),parts:studio3dParts,lib:studio3dLib};
 function studio3dStageSize(l){const st=document.querySelector(".stud-stage"),F=STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square,sw=st?st.getBoundingClientRect().width:560,dpr=Math.min(2,window.devicePixelRatio||1);
@@ -9073,6 +9103,7 @@ function studio3dAct(a,b){const[k,arg]=a.split(":");const l=studioSelected();
     if(!n.group)delete n.group;n.s3={...studio3dDefaults("text"),text:l.upper?String(l.text||"").toUpperCase():String(l.text||"3D"),font:studioFontOf(l),weight:String(+l.weight>=600?Math.max(700,+l.weight):l.weight||"700"),rx:8,ry:-16,rz:0};
     if(l.color&&studioLum(...studioHexRgb(studioHex6(l.color)))<0.9)n.s3.color=l.color;d.layers.splice(i,1,n);d.selectedId=n.id;N.refresh();NEON.save();studio3dFitFrame(n,true);toast("Текст стал объёмным — крутите в «Ракурсе»");return}
   if(k==="fromLayer"&&l){studio3dFromLayer(l);return}
+  if(k==="persp"&&l){const v=STUDIO_PERSP.find(x=>x[0]===arg);if(!v)return;studioBeforeChange();if(arg==="none")delete l.persp;else l.persp={k:arg,rx:v[2],ry:v[3],rz:v[4],s:v[5]};studioPatchLayerDom(l);studioRenderSidebar(document);NEON.save();return}
   if(!l||l.type!=="3d")return;const s=l.s3;
   if(k==="view"){const v=S3_VIEWS.find(x=>x[0]===arg);if(!v)return;studioBeforeChange();[s.rx,s.ry,s.rz]=[v[2],v[3],v[4]];studioPatchLayerDom(l);studioRenderSidebar(document);NEON.save();return}
   if(k==="fit"){studio3dFitFrame(l);return}
@@ -10826,6 +10857,7 @@ async function studioToSvg(d,ids){
   if(!ids){if(d.bg.type==="image"&&d.bg.image)body+=`<image href="${studioSvgEsc(d.bg.image)}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/>`;else if(["gradient","pattern","mesh"].includes(d.bg.type)){const c=document.createElement("canvas");c.width=W;c.height=H;await studioPaintBg(c.getContext("2d"),d.bg,W,H);body+=`<image href="${c.toDataURL("image/png")}" x="0" y="0" width="${W}" height="${H}"/>`}else if(d.bg.type!=="none")body+=`<rect width="${W}" height="${H}" fill="${d.bg.color||"#fff"}"/>`}
   const mc=document.createElement("canvas").getContext("2d");
   for(const l of ls){
+    if(studioPerspOn(l)||l.type==="3d"){try{const c=await studioRenderCanvas({...d,bg:{type:"none"},layers:[l],pages:undefined},1);body+=`<image href="${c.toDataURL("image/png")}" x="0" y="0" width="${W}" height="${H}"/>`}catch(e){}continue}
     const x=l.x/100*W,y=l.y/100*H,w=l.w/100*W,h=l.h/100*H,cx=x+w/2,cy=y+h/2;
     const tf=`translate(${cx} ${cy}) rotate(${l.rotation||0}) scale(${l.flipH?-1:1} ${l.flipV?-1:1}) skewX(${l.skewX||0}) skewY(${l.skewY||0}) translate(${-cx} ${-cy})`;
     let el="";
@@ -11719,7 +11751,7 @@ async function studioVectorPdf(){
         const vecShape=l.type==="shape"&&!eff&&["solid","none"].includes(fx.type)&&(!sk.enabled||sk.dash==="solid"||!sk.dash);
         const vecPath=l.type==="path"&&!eff&&["solid","none"].includes(fx.type)&&(!sk.enabled||!sk.dash||sk.dash==="solid");
         const vecText=l.type==="text"&&!eff&&!l.shadow&&!l.neon&&!(l.outline&&l.outline.enabled)&&!l.tfx&&!(l.grad&&l.grad.enabled)&&!+l.curve&&!l.vertical&&!studioListOf(l);
-        if(!vecShape&&!vecPath&&!vecText){const r=studioRotBox?studioRotBox(l):null,mg=Math.max(24,0.15*Math.max(W,H)),bx=r?{x:r.x1/100*F.w-mg,y:r.y1/100*F.h-mg,w:(r.x2-r.x1)/100*F.w+2*mg,h:(r.y2-r.y1)/100*F.h+2*mg}:{x:X-W*0.3,y:Y-H*0.3,w:W*1.6,h:H*1.6};
+        if(studioPerspOn(l)||!vecShape&&!vecPath&&!vecText){const r=studioRotBox?studioRotBox(l):null,mg=Math.max(24,0.15*Math.max(W,H)),bx=r?{x:r.x1/100*F.w-mg,y:r.y1/100*F.h-mg,w:(r.x2-r.x1)/100*F.w+2*mg,h:(r.y2-r.y1)/100*F.h+2*mg}:{x:X-W*0.3,y:Y-H*0.3,w:W*1.6,h:H*1.6};
           await placeRaster({...pd,bg:{type:"color",color:"transparent"},layers:[l]},bx);rasterized.push(studioLayerLabel(l));continue}
         let pre="q ";if(op<1){const g="G"+Object.keys(gs).length;gs[g]=op;pre+=`/${g} gs `}
         const cx=X+W/2,cy=Y+H/2,rot=(l.rotation||0)*Math.PI/180;if(rot||l.flipH||l.flipV){const c=Math.cos(rot),s=Math.sin(rot),sx=l.flipH?-1:1,sy=l.flipV?-1:1;
