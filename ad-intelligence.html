@@ -2769,7 +2769,7 @@ define("nv-topic-tree",class extends NvEl{
   mounted(){this.firstChild.onclick=()=>this._on?closePop():this.pop()}
   rows(q){const T=this.tree(),s=new Set(this.sel()),open=this._open||(this._open=new Set()),out=[],hit=t=>String(t).toLowerCase().includes(q);
     const row=(path,label,count,lvl,kids,implied,forceOpen)=>{const on=implied||s.has(path),part=!on&&[...s].some(x=>x.startsWith(path+">")),isOpen=forceOpen||open.has(path);
-      return `<div class="tr-r tr-${lvl}">${kids?`<button type="button" class="tr-t" data-tg="${esc(path)}" aria-expanded="${isOpen}" aria-label="${isOpen?"Свернуть":"Раскрыть"}">${ic(isOpen?"chevron-down":"chevron-right",14)}</button>`:`<span class="tr-t"></span>`}<label class="pop-o${part?" part":""}"><input type="checkbox" value="${esc(path)}" ${on?"checked":""} ${implied?"disabled":""}><span class="box">${ic(part?"minus":"check",12)}</span><span class="t">${esc(label)}</span><span class="tr-n num">${count}</span></label>${this.b("folders")&&lvl<2?`<button type="button" class="tr-f" data-fd="${esc(path)}" title="${lvl?"Папка подрубрики с текущими объявлениями":"Папка раздела с папками подрубрик внутри"}" aria-label="Создать папку «${esc(label)}»">${ic("folder-plus",14)}</button>`:""}</div>`};
+      return `<div class="tr-r tr-${lvl}">${kids?`<button type="button" class="tr-t" data-tg="${esc(path)}" aria-expanded="${isOpen}" aria-label="${isOpen?"Свернуть":"Раскрыть"}">${ic(isOpen?"chevron-down":"chevron-right",14)}</button>`:`<span class="tr-t"></span>`}<label class="pop-o${part?" part":""}"><input type="checkbox" value="${esc(path)}" ${on?"checked":""} ${implied?"disabled":""}><span class="box">${ic(part?"minus":"check",12)}</span><span class="t">${esc(label)}</span><span class="tr-n num">${count}</span></label>${this.b("folders")&&lvl<2?`<button type="button" class="tr-f" data-fd="${esc(path)}" title="${lvl?"Подборка из подрубрики с текущими объявлениями":"Коллекция из раздела: внутри подборки по подрубрикам (отмеченным или всем)"}" aria-label="Создать ${lvl?"подборку":"коллекцию"} «${esc(label)}»">${ic("folder-plus",14)}</button>`:""}</div>`};
     for(const M of T){const mp=M.main,mHit=!q||hit(mp),sub=[];
       for(const S_ of (M.subs||[])){const sp=mp+">"+S_.sub,ints=S_.intents||[],iHit=q?ints.filter(i=>hit(i.intent)):[];
         if(q&&!mHit&&!hit(S_.sub)&&!iHit.length)continue;
@@ -2781,7 +2781,7 @@ define("nv-topic-tree",class extends NvEl{
       out.push(row(mp,mp,M.count,0,(M.subs||[]).length,false,showS));if(showS)out.push(...sub)}
     return out.join("")||'<p class="pop-e">Ничего не нашлось</p>'}
   pop(){this._on=true;this.firstChild.setAttribute("aria-expanded","true");
-    openPop(this,`<div class="pop-s">${ic("search",14)}<input type="search" placeholder="Найти раздел, подрубрику или интент" aria-label="Найти"></div>${this.b("folders")?`<p class="tr-hint">${ic("folder-plus",13)} у темы — создать из неё подборку-папку с текущими объявлениями</p>`:""}<div class="pop-l tr-l" role="tree" aria-multiselectable="true">${this.rows("")}</div><div class="pop-f"><button type="button" class="pop-x">Сбросить</button><span class="muted">Выбрано: <b class="pop-n num">${this.sel().length}</b></span></div>`,{width:Math.max(+this.a("min-width")||380,this.offsetWidth),onClose:()=>{this._on=false;const b=this.firstChild;b&&b.setAttribute("aria-expanded","false")},mount:(p,close,place)=>{
+    openPop(this,`<div class="pop-s">${ic("search",14)}<input type="search" placeholder="Найти раздел, подрубрику или интент" aria-label="Найти"></div>${this.b("folders")?`<p class="tr-hint">${ic("folder-plus",13)} у темы — собрать коллекцию (раздел) или подборку (подрубрика) из текущих объявлений</p>`:""}<div class="pop-l tr-l" role="tree" aria-multiselectable="true">${this.rows("")}</div><div class="pop-f"><button type="button" class="pop-x">Сбросить</button><span class="muted">Выбрано: <b class="pop-n num">${this.sel().length}</b></span></div>`,{width:Math.max(+this.a("min-width")||380,this.offsetWidth),onClose:()=>{this._on=false;const b=this.firstChild;b&&b.setAttribute("aria-expanded","false")},mount:(p,close,place)=>{
       const list=p.querySelector(".pop-l"),inp=p.querySelector(".pop-s input"),q=()=>inp.value.trim().toLowerCase(),redraw=()=>{const y=list.scrollTop;list.innerHTML=this.rows(q());list.scrollTop=y;place()};
       const set=v=>{this.setAttribute("value",v.join("~"));this.firstChild.setAttribute("aria-expanded","true");p.querySelector(".pop-n").textContent=v.length;this.emit("nv-change",{value:v.join("~"),name:this.name});redraw()};
       list.onclick=e=>{const fd=e.target.closest("[data-fd]");if(fd){e.preventDefault();closePop();this.emit("nv-folder",{path:fd.dataset.fd});return}
@@ -4220,7 +4220,7 @@ async function openCreative(id){
 /* Подборки-папки (23.11.2026): папка темы («Юристы») содержит папки подрубрик. */
 const colLabel=k=>k?(k.label||k.name):"";
 const colChildren=id=>S.intel.collections.filter(k=>k.parent_id===id);
-function folderCardHtml(k,selectable){return `<nv-folder-card fid="${esc(k.id)}" name="${esc(k.name)}" icon="${k.children_count?"folder-tree":"folder"}" desc="${esc(k.children_count?k.children_count+" "+plural(k.children_count,"подпапка","подпапки","подпапок")+(k.description?" · "+k.description:""):(k.description||""))}" count="${k.items_count||0}" thumbs="${esc(JSON.stringify(k.thumbs||[]))}" updated="${k.items_count?"Пополнена "+esc(N.rel(k.updated_at)):"Пока пусто"}" ${selectable?"selectable":""} openable ${selectable&&S.intel.kcSel.includes(k.id)?"selected":""}><nv-button size="sm" variant="secondary" icon-end="arrow-right" data-act="kOpen" data-id="${k.id}">Открыть</nv-button><nv-menu data-col="${esc(k.id)}" items="ren:Изменить:pencil|mv:${k.parent_id?"Переместить / вынести из папки":"Переместить в папку"}:folder-input|dup:Дублировать:copy|del:Удалить:trash-2:danger"></nv-menu></nv-folder-card>`}
+function folderCardHtml(k,selectable){return `<nv-folder-card fid="${esc(k.id)}" name="${esc(k.name)}" icon="${k.children_count?"folder-tree":"folder"}" desc="${esc(k.children_count?"Коллекция · "+k.children_count+" "+plural(k.children_count,"подборка","подборки","подборок")+(k.description?" · "+k.description:""):(k.description||""))}" count="${k.items_count||0}" thumbs="${esc(JSON.stringify(k.thumbs||[]))}" updated="${k.items_count?"Пополнена "+esc(N.rel(k.updated_at)):"Пока пусто"}" ${selectable?"selectable":""} openable ${selectable&&S.intel.kcSel.includes(k.id)?"selected":""}><nv-button size="sm" variant="secondary" icon-end="arrow-right" data-act="kOpen" data-id="${k.id}">Открыть</nv-button><nv-menu data-col="${esc(k.id)}" items="ren:Изменить:pencil|mv:${k.parent_id?"Переместить / вынести из коллекции":"Переместить в коллекцию"}:folder-input|dup:Дублировать:copy|del:Удалить:trash-2:danger"></nv-menu></nv-folder-card>`}
 function bindFolderMenus(root){root.querySelectorAll("nv-menu[data-col]").forEach(m=>m.addEventListener("nv-select",e=>{
   const id=m.dataset.col;if(e.detail.id==="mv")moveFolderDlg(id);else if(e.detail.id==="dup")duplicateCollection(id);else if(e.detail.id==="ren")renameCollectionDlg(id);else if(e.detail.id==="del")N.acts.kDel(null,{id})}))}
 async function topicFolder(path,allSubs){
@@ -4229,14 +4229,14 @@ async function topicFolder(path,allSubs){
 
   try{
     // раздел, в котором отмечены отдельные подрубрики (или интенты), — подпапки только для отмеченных
-    toast(`Собираю папку «${sub||main}» из текущих объявлений…`);
+    toast(`Собираю ${sub?"подборку":"коллекцию"} «${sub||main}» из текущих объявлений…`);
     const picked=sub||allSubs?[]:[...new Set(String(S.intel.f.aiTree||"").split("~").filter(x=>x.startsWith(main+">")).map(x=>x.split(">")[1]))];
     const r=await apiPost("/api/v1/collections/from-topic",{path,filters,subs:picked});
     await loadCollections();
-    const what=sub?`Папка «${sub}» в «${main}»`:`Папка «${main}»: ${r.folders.length} ${plural(r.folders.length,"подпапка","подпапки","подпапок")}`;
+    const what=sub?`Подборка «${sub}» в коллекции «${main}»`:`Коллекция «${main}»: ${r.folders.length} ${plural(r.folders.length,"подборка","подборки","подборок")}`;
     toast(`${what} — добавлено ${r.added} из ${r.found}${r.added<r.found?" (остальные уже были)":""}${r.truncated?". Взяты первые 5000":""}`,{tone:"success",timeout:9000,
       action:{label:"Открыть",fn:()=>{S.intel.openK=String(r.focus_id);S.intel.kSel=[];N.go("intel-collections");openCollection(String(r.focus_id))}}});
-  }catch(err){toast("Папку создать не удалось: "+(err.message||""),{tone:"danger"})}
+  }catch(err){toast("Не удалось собрать из темы: "+(err.message||""),{tone:"danger"})}
 }
 async function loadCollections(){
   try{
@@ -4319,15 +4319,15 @@ function moveDlg(mode){
     }}]});
 }
 /* Где создать / куда положить: верхний уровень или папка верхнего уровня (два уровня: папка → подпапки) */
-const rootFolderOpts=skip=>"root:Верхний уровень (отдельная подборка)"+S.intel.collections.filter(k=>!k.parent_id&&k.id!==skip).map(k=>"|"+k.id+":В папку «"+String(k.name).replace(/[|:]/g," ")+"»").join("");
+const rootFolderOpts=skip=>"root:Отдельно, на верхнем уровне"+S.intel.collections.filter(k=>!k.parent_id&&k.id!==skip).map(k=>"|"+k.id+":В коллекцию «"+String(k.name).replace(/[|:]/g," ")+"»").join("");
 function createCollectionDlg(a,d){
   const parent=(d&&d.parent)||"";
-  overlay("modal",{title:parent?"Новая подпапка":"Новая подборка",body:`<nv-input name="n" label="Название" placeholder="Например, Лучшие офферы" required></nv-input><nv-select name="p" label="Где создать" value="${esc(parent||"root")}" options="${esc(rootFolderOpts())}"></nv-select><nv-textarea name="d" label="Описание (необязательно)"></nv-textarea>`,
+  overlay("modal",{title:parent?"Новая подборка в коллекции":"Новая подборка",body:`<nv-input name="n" label="Название" placeholder="Например, Лучшие офферы" required></nv-input><nv-select name="p" label="Где создать" value="${esc(parent||"root")}" options="${esc(rootFolderOpts())}"></nv-select><nv-textarea name="d" label="Описание (необязательно)"></nv-textarea>`,
     actions:[{label:"Отмена"},{label:"Создать",variant:"primary",fn(r,close){
       const v=formVals(r),n=(v.n||"").trim(),pid=v.p&&v.p!=="root"?+v.p:null;
       if(!n){r.querySelector('[name="n"]').setAttribute("error","Введите название");return false}
       (async()=>{
-        try{await apiPost("/api/v1/collections",{name:n,description:(v.d||"").trim(),parent_id:pid});await loadCollections();N.refresh();toast(pid?"Подпапка создана":"Подборка создана",{tone:"success"});close()}
+        try{await apiPost("/api/v1/collections",{name:n,description:(v.d||"").trim(),parent_id:pid});await loadCollections();N.refresh();toast(pid?"Подборка создана в коллекции":"Подборка создана",{tone:"success"});close()}
         catch(err){toast("Не удалось создать: "+(err.message||""),{tone:"danger"})}
       })();
       return false;
@@ -4335,11 +4335,11 @@ function createCollectionDlg(a,d){
 }
 function moveFolderDlg(id){
   const k=S.intel.collections.find(x=>x.id===String(id));if(!k)return;
-  if(k.children_count){toast("В «"+k.name+"» есть подпапки — её можно держать только на верхнем уровне",{tone:"warning"});return}
+  if(k.children_count){toast("«"+k.name+"» — коллекция с подборками, её нельзя вложить в другую коллекцию",{tone:"warning"});return}
   overlay("modal",{title:"Переместить «"+k.name+"»",body:`<nv-select name="p" label="Куда" value="${esc(k.parent_id||"root")}" options="${esc(rootFolderOpts(k.id))}"></nv-select>`,
     actions:[{label:"Отмена"},{label:"Переместить",variant:"primary",fn(r,close){
       const v=formVals(r),pid=v.p&&v.p!=="root"?+v.p:null;
-      (async()=>{try{await apiPost("/api/v1/collections/"+k.id+"/move",{parent_id:pid});await loadCollections();N.refresh();toast(pid?"Перемещено в папку":"Вынесено на верхний уровень",{tone:"success"});close()}
+      (async()=>{try{await apiPost("/api/v1/collections/"+k.id+"/move",{parent_id:pid});await loadCollections();N.refresh();toast(pid?"Подборка перемещена в коллекцию":"Подборка вынесена на верхний уровень",{tone:"success"});close()}
         catch(err){toast("Не удалось переместить: "+(err.message||""),{tone:"danger"})}})();
       return false;
     }}]});
@@ -4350,10 +4350,10 @@ async function topicFolderDlg(){
   const T=(window.NV_TREES||{}).lib||[];
   if(!T.length){toast("Темы объявлений ещё не определены — запустите сканирование",{tone:"warning"});return}
   const clean=x=>String(x).replace(/[|:]/g," ");
-  const opts=T.flatMap(M=>[M.main+":"+clean(M.main)+" — папка с подпапками ("+M.count+")",...(M.subs||[]).map(S_=>M.main+">"+S_.sub+":   "+clean(M.main)+" › "+clean(S_.sub)+" ("+S_.count+")")]);
-  overlay("modal",{title:"Папка из темы",subtitle:"Объявления берутся с текущими фильтрами библиотеки (запуск, период, площадка). Повтор той же темы дополняет папку без дублей.",
+  const opts=T.flatMap(M=>[M.main+":"+clean(M.main)+" — коллекция с подборками ("+M.count+")",...(M.subs||[]).map(S_=>M.main+">"+S_.sub+":   "+clean(M.main)+" › "+clean(S_.sub)+" ("+S_.count+")")]);
+  overlay("modal",{title:"Коллекция из темы",subtitle:"Объявления берутся с текущими фильтрами библиотеки (запуск, период, площадка). Повтор той же темы дополняет папку без дублей.",
     body:`<nv-select name="t" label="Тема" value="${esc(opts[0].split(":")[0])}" options="${esc(opts.map(o=>{const i=o.indexOf(":");return o.slice(0,i).replace(/[|:]/g," ")+o.slice(i)}).join("|"))}"></nv-select>`,
-    actions:[{label:"Отмена"},{label:"Создать папку",variant:"primary",fn(r,close){const v=formVals(r);if(v.t){close();topicFolder(v.t,true)}return false}}]});
+    actions:[{label:"Отмена"},{label:"Собрать",variant:"primary",fn(r,close){const v=formVals(r);if(v.t){close();topicFolder(v.t,true)}return false}}]});
 }
 function collectDlg(items){
   const K=S.intel.collections;
@@ -4847,10 +4847,10 @@ collections(){
   const I=S.intel,K=I.collections,open=K.find(k=>k.id===I.openK);
   if(open){
     const items=I.collectionItemsCache[open.id],f=I.kF,n=items?items.length:0,kids=colChildren(open.id),par=K.find(k=>k.id===open.parent_id);
-    const subHtml=kids.length?`<h3 class="k-subh">${ic("folder-tree",16)} Папки · ${kids.length}</h3><div class="grid g3" id="k-subs">${kids.map(k=>folderCardHtml(k,false)).join("")}</div>${n?`<h3 class="k-subh">Объявления в самой папке · ${n}</h3>`:""}`:"";
-    return{title:open.name,sub:(par?"В папке «"+par.name+"» · ":"")+(open.description?open.description+" · ":"")+(kids.length?open.items_count+" "+plural(+open.items_count||0,"объявление","объявления","объявлений")+" в подпапках":(items?n+" "+plural(n,"объявление","объявления","объявлений"):"Загружаем…")),
+    const subHtml=kids.length?`<h3 class="k-subh">${ic("folder-tree",16)} Подборки коллекции · ${kids.length}</h3><div class="grid g3" id="k-subs">${kids.map(k=>folderCardHtml(k,false)).join("")}</div>${n?`<h3 class="k-subh">Объявления в самой папке · ${n}</h3>`:""}`:"";
+    return{title:open.name,sub:(par?"В коллекции «"+par.name+"» · ":"")+(open.description?open.description+" · ":"")+(kids.length?open.items_count+" "+plural(+open.items_count||0,"объявление","объявления","объявлений")+" в подборках коллекции":(items?n+" "+plural(n,"объявление","объявления","объявлений"):"Загружаем…")),
     back:"kBack",backLabel:par?"Назад в «"+par.name+"»":"Все подборки",
-    actions:`${open.parent_id?"":`<nv-button variant="secondary" icon="folder-plus" data-act="kNew" data-parent="${open.id}">Новая подпапка</nv-button>`}<nv-button variant="secondary" icon="pencil" data-act="kRename" data-id="${open.id}">Изменить</nv-button><nv-button variant="secondary" icon="copy" data-act="kDuplicate" data-id="${open.id}">Дублировать</nv-button><nv-button variant="danger" icon="trash-2" data-act="kDel" data-id="${open.id}">Удалить</nv-button>`,
+    actions:`${open.parent_id?"":`<nv-button variant="secondary" icon="folder-plus" data-act="kNew" data-parent="${open.id}">Подборка в коллекцию</nv-button>`}<nv-button variant="secondary" icon="pencil" data-act="kRename" data-id="${open.id}">Изменить</nv-button><nv-button variant="secondary" icon="copy" data-act="kDuplicate" data-id="${open.id}">Дублировать</nv-button><nv-button variant="danger" icon="trash-2" data-act="kDel" data-id="${open.id}">Удалить</nv-button>`,
     body:`${items&&n?`<div class="k-bar"><nv-input class="grow" icon="search" type="search" label="Поиск в подборке" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="kF" data-key="q"></nv-input><nv-select label="Порядок" value="${esc(f.sort)}" options="added:Недавно добавленные|days:Дольше в открутке|shows:Чаще встречаются|domain:Домен А-Я" data-chg="kF" data-key="sort"></nv-select><nv-button variant="secondary" icon="check-check" data-act="kSelAll"><span id="k-all">Выбрать все</span></nv-button></div>`:""}
     ${subHtml}<div id="k-res">${!items?'<nv-skeleton count="4"></nv-skeleton>':(n?gridOfCollectionItems(items,open.id):kids.length?"":'<nv-card><nv-empty icon="folder-open" heading="В подборке пусто" text="Откройте библиотеку, отметьте объявления флажком и нажмите «В подборку»."><nv-button data-go="intel-library" icon="layout-grid">Открыть библиотеку</nv-button></nv-empty></nv-card>')}</div>
     <div id="k-bulk" class="bulk" hidden></div>`,
@@ -4858,7 +4858,7 @@ collections(){
       if(!root._nvOpenFolderOn){root._nvOpenFolderOn=1;root.addEventListener("nv-open-folder",e=>N.acts.kOpen(null,{id:String(e.detail.id)}))}bindFolderMenus(root)}};
   }
   const total=K.reduce((a,k)=>a+(+k.items_count||0),0);
-  return{title:"Подборки",sub:K.length?`${K.length} ${plural(K.length,"подборка","подборки","подборок")} · ${total} ${plural(total,"объявление","объявления","объявлений")}. Папки с находками: конкуренты, идеи, примеры для клиента.`:"Папки с находками: конкуренты, идеи, примеры для клиента.",actions:`<nv-button variant="secondary" icon="folder-tree" data-act="kTopic">Папка из темы</nv-button><nv-button icon="plus" data-act="kNew">Новая подборка</nv-button>`,
+  return{title:"Подборки",sub:K.length?`${K.length} ${plural(K.length,"подборка","подборки","подборок")} · ${total} ${plural(total,"объявление","объявления","объявлений")}. Папки с находками: конкуренты, идеи, примеры для клиента.`:"Папки с находками: конкуренты, идеи, примеры для клиента.",actions:`<nv-button variant="secondary" icon="folder-tree" data-act="kTopic">Коллекция из темы</nv-button><nv-button icon="plus" data-act="kNew">Новая подборка</nv-button>`,
   body:!I.collectionsLoaded?'<nv-skeleton count="3"></nv-skeleton>':`<div class="grid g3" id="kc-res">${K.filter(k=>!k.parent_id).map(k=>folderCardHtml(k,true)).join("")}${!K.length?'<nv-card><nv-empty icon="folder-heart" heading="Подборок пока нет" text="Создайте подборку и складывайте в неё объявления из библиотеки: отметьте их флажком и нажмите «В подборку»."><nv-button icon="plus" data-act="kNew">Новая подборка</nv-button></nv-empty></nv-card>':""}</div>
   <div id="kc-bulk" class="bulk" hidden></div>`,
   after(root){
@@ -5863,13 +5863,13 @@ function projectWizard(existingProject){
       // папки верхнего уровня; если у выбранной есть подпапки — второй список «Подпапка»
       const ids=new Set(K.map(k=>String(k.id))),Kroot=K.filter(k=>!k.parent_id||!ids.has(String(k.parent_id))),Kkids=id=>K.filter(k=>String(k.parent_id||"")===String(id));
       overlay("modal",{title:"Креативы из подборки",subtitle:manual?"По одному креативу на аккаунт, по порядку":"Добавятся к заголовкам, текстам и картинкам проекта",
-        body:`<div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end"><nv-select name="k" label="Папка" options="${esc(Kroot.map(k=>k.id+":"+k.name.replace(/[|:]/g," ")+" ("+(k.items_count||0)+")"+(Kkids(k.id).length?" · подпапок "+Kkids(k.id).length:"")).join("|"))}" value="${esc(String(Kroot[0].id))}"></nv-select><span data-col-sub></span></div>
+        body:`<div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end"><nv-select name="k" label="Коллекция / подборка" options="${esc(Kroot.map(k=>k.id+":"+k.name.replace(/[|:]/g," ")+" ("+(k.items_count||0)+")"+(Kkids(k.id).length?" · подборок "+Kkids(k.id).length:"")).join("|"))}" value="${esc(String(Kroot[0].id))}"></nv-select><span data-col-sub></span></div>
           <div class="stack" style="gap:6px;margin-top:10px"><label class="row" style="gap:8px"><input type="checkbox" name="h" checked><span>Заголовки (обрежем до 56 символов по слову)</span></label>
           <label class="row" style="gap:8px"><input type="checkbox" name="t" checked><span>Описания → тексты (до 81 символа; пустые пропустим)</span></label>
           <label class="row" style="gap:8px"><input type="checkbox" name="i" checked><span>Изображения (оригинал, обрежем под 4:3 для Директа; ${manual?"по одному на аккаунт":"в проекте до 20"})</span></label></div>
           <div class="muted" data-col-msg style="font-size:12.5px;margin-top:8px"></div>`,
         mount:r=>{const sel=r.querySelector('[name="k"]'),host=r.querySelector("[data-col-sub]");
-          const draw=()=>{const kids=Kkids(sel.value);host.innerHTML=kids.length?`<nv-select name="ks" label="Подпапка" value="all" options="${esc(["all:Все подпапки ("+((K.find(k=>String(k.id)===String(sel.value))||{}).items_count||0)+")"].concat(kids.map(k=>k.id+":"+k.name.replace(/[|:]/g," ")+" ("+(k.items_count||0)+")")).join("|"))}"></nv-select>`:""};
+          const draw=()=>{const kids=Kkids(sel.value);host.innerHTML=kids.length?`<nv-select name="ks" label="Подборка коллекции" value="all" options="${esc(["all:Все подборки коллекции ("+((K.find(k=>String(k.id)===String(sel.value))||{}).items_count||0)+")"].concat(kids.map(k=>k.id+":"+k.name.replace(/[|:]/g," ")+" ("+(k.items_count||0)+")")).join("|"))}"></nv-select>`:""};
           draw();sel.addEventListener("nv-change",draw)},
         actions:[{label:"Отмена"},{label:"Добавить",variant:"primary",fn(r,close){
           const sel=r.querySelector('[name="k"]'),subSel=r.querySelector('[name="ks"]'),kid=subSel&&subSel.value&&subSel.value!=="all"?subSel.value:(sel&&sel.value),useH=r.querySelector('[name="h"]').checked,useT=r.querySelector('[name="t"]').checked,useI=r.querySelector('[name="i"]').checked,m=r.querySelector("[data-col-msg]");
