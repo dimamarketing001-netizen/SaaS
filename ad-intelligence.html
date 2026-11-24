@@ -1873,6 +1873,11 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s3-dot{width:20px;height:20px;border-radius:50%;border:1px solid var(--line);cursor:pointer;padding:0}
 .pp-btn.sm{padding:3px 8px;font-size:11px;width:auto}
 .s3-tiles{grid-template-columns:repeat(4,1fr)}
+.s3-pre{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.s3-pre button{aspect-ratio:1;border:1px solid var(--line);border-radius:10px;background:radial-gradient(circle at 50% 40%,var(--surface),var(--surface-2));padding:4px;cursor:pointer;display:grid;place-items:center;overflow:hidden}
+.s3-pre button:hover{border-color:var(--svc)}
+.s3-pre img{max-width:100%;max-height:100%;display:block}
+.s3-pre img:not([src]){width:60%;height:60%;border-radius:50%;background:var(--surface-2);animation:s3pulse 1.2s ease-in-out infinite}
 .s3-tiles button{padding:8px 2px;font-size:10.5px}
 .vid-badge{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;padding:2px 4px;display:flex;pointer-events:none}
 .stud-vprev{position:absolute;inset:0;width:100%;height:100%;z-index:50;pointer-events:none}
@@ -9180,6 +9185,35 @@ async function studio3dFromLayer(l){const d=studioDesign();let polys,extra={};
   const i=d.layers.indexOf(l);if(i<0)return;d.layers.splice(i,1,n);d.selectedId=n.id;studioMultiSel=[];N.refresh();NEON.save();studio3dFitFrame(n,true);toast("Готово — объём и ракурс настраиваются справа")}
 const studio3dTexs=new Map();
 async function studio3dImgTex(T,src){let p=studio3dTexs.get(src);if(!p){p=studioLoadImg(src).then(img=>{const t=new T.Texture(img);t.colorSpace=T.SRGBColorSpace;t.anisotropy=8;t.needsUpdate=true;return t});studio3dTexs.set(src,p);p.catch(()=>studio3dTexs.delete(src))}return p}
+/* v9-8: готовые 3D-элементы (цвет "brand"/"brand2" — из бренд-кита). Превью рисуются один раз за сессию, по очереди. */
+const S3_PRESETS=[
+  ["SALE золотом",{kind:"text",text:"SALE",weight:"900",mat:"gold",depth:40,bevel:45,rx:10,ry:-20,rz:-4}],
+  ["−50%",{kind:"text",text:"−50%",weight:"900",mat:"gloss",color:"#e11d48",depth:45,bevel:40,rx:12,ry:-24,rz:-6}],
+  ["NEW неон",{kind:"text",text:"NEW",weight:"800",mat:"neon",color:"#22d3ee",depth:20,bevel:20,rx:0,ry:-14,rz:0}],
+  ["ХИТ",{kind:"text",text:"ХИТ",weight:"900",mat:"gloss",color:"brand",depth:45,bevel:45,rx:14,ry:-22,rz:-6}],
+  ["1+1",{kind:"text",text:"1+1",weight:"900",mat:"metal",color:"brand",depth:40,bevel:45,rx:10,ry:-24,rz:0}],
+  ["Монета",{kind:"shape",shape:"coin",mat:"gold",rx:8,ry:-32}],
+  ["Подарок",{kind:"shape",shape:"gift",color:"brand",color2:"brand2",mat:"gloss",rx:22,ry:-35}],
+  ["Сердце",{kind:"shape",shape:"heart",color:"#e11d48",mat:"gloss",depth:45,bevel:60,rx:8,ry:-24,rz:6}],
+  ["Звезда",{kind:"shape",shape:"star",mat:"gold",depth:40,bevel:55,rx:10,ry:-22,rz:-8}],
+  ["Стеклянный шар",{kind:"shape",shape:"sphere",color:"#60a5fa",mat:"glass",rx:0,ry:0}],
+  ["Неоновый тор",{kind:"shape",shape:"torus",color:"#a855f7",mat:"neon",rx:35,ry:-15}],
+  ["Стрелка",{kind:"shape",shape:"arrow",color:"brand",mat:"gloss",depth:40,bevel:50,rx:14,ry:-30,rz:12}],
+  ["Капля",{kind:"shape",shape:"blob",color:"#f9a8d4",mat:"matte",rx:10,ry:-20}],
+  ["Кристалл",{kind:"shape",shape:"gem",color:"#38bdf8",mat:"glass",rx:14,ry:-20}],
+  ["Таблетка",{kind:"shape",shape:"capsule",color:"brand",mat:"gloss",rx:10,ry:-20,rz:-40}],
+  ["Узел",{kind:"shape",shape:"knot",color:"brand",mat:"metal",rx:30,ry:-10}]];
+function studio3dPresetS3(i){const[,p]=S3_PRESETS[i],br=(S.studio.brand&&S.studio.brand.colors)||[],c=v=>v==="brand"?br[0]||"#7c3aed":v==="brand2"?br[1]||"#facc15":v;
+  const s={...studio3dDefaults(p.kind,p.shape),...p};s.color=c(s.color);s.color2=c(s.color2);return s}
+const studio3dPreImg=new Map();let studio3dPreBusy=false;
+function studio3dPresetsHtml(){setTimeout(studio3dPaintPresets,0);const br=((S.studio.brand&&S.studio.brand.colors)||[]).join();
+  return`<div class="s3-pre">${S3_PRESETS.map(([n],i)=>{const u=studio3dPreImg.get(i+"|"+br);return`<button type="button" data-act="stud3dPreset" data-i="${i}" data-tip="${esc(n)}" aria-label="${esc(n)}"><img data-s3pre="${i}" alt="" ${u?`src="${u}"`:""}></button>`}).join("")}</div>`}
+async function studio3dPaintPresets(){if(studio3dPreBusy)return;studio3dPreBusy=true;
+  try{const br=((S.studio.brand&&S.studio.brand.colors)||[]).join();
+    for(const im of [...document.querySelectorAll("img[data-s3pre]:not([src])")]){const i=+im.dataset.s3pre,k=i+"|"+br;let u=studio3dPreImg.get(k);
+      if(!u){try{const s=studio3dPresetS3(i),wide=s.kind==="text";const c=await studio3dCanvas({s3:s},wide?240:160,wide?120:160,null,{margin:0.9});u=c.toDataURL("image/png");studio3dPreImg.set(k,u)}catch(e){continue}}
+      document.querySelectorAll(`img[data-s3pre="${i}"]`).forEach(x=>x.src=u)}}
+  finally{studio3dPreBusy=false}}
 /* v9-5: 3D-мокапы. s3.model, s3.tex={page:i}|{src}, s3.tar — пропорции текстуры (от них зависят коробка/книга/билборд),
    s3.body — цвет корпуса, s3.color — цвет упаковки. Текстура страницы = рендер страницы без 3D-мокапов (нет рекурсии). */
 const S3_MODELS=[["phone","Телефон","smartphone",[8,-24,4]],["tablet","Планшет","tablet",[10,-22,0]],["laptop","Ноутбук","laptop",[16,-28,0]],["box","Коробка","package",[18,-34,0]],["book","Книга","book",[10,-32,0]],
@@ -9811,7 +9845,7 @@ function studioPanelHtml(tab){
       return Object.entries(grp).map(([id,L])=>blk("Шаблоны команды «"+esc((TEAM.list.find(t=>t.id===+id)||{}).name||"команда")+"»",L)).join("")+blk("Мои шаблоны",pers)})()}
     ${built.length?`${mine.length?'<div class="sect-t">Готовые</div>':""}<div class="s2-grid2">${built.map(([t,i])=>`<div class="th" data-act="studUseTplHere" data-i="${i}" title="${esc(t.name)}"><img data-s2tpl="${i}" alt=""></div>`).join("")}</div>`:""}`}
   if(tab==="elements")return`<h3>Элементы</h3><div class="sect-t">Фигуры</div><div class="s2-tiles">${STUDIO_SHAPES.map(([sh,icn,lb])=>`<button type="button" data-act="studAdd" data-type="shape" data-shape="${sh}">${ic(icn,20)}${lb}</button>`).join("")}</div>
-    <div class="sect-t">3D</div><div class="s2-tiles s3-tiles"><button type="button" data-act="stud3dAdd" data-k="text">${ic("type",20)}3D-текст</button>${S3_SHAPES.map(([k,lb,i])=>`<button type="button" data-act="stud3dAdd" data-k="shape:${k}">${ic(i,20)}${lb}</button>`).join("")}</div>
+    <div class="sect-t">3D</div>${studio3dPresetsHtml()}<div class="s2-tiles s3-tiles"><button type="button" data-act="stud3dAdd" data-k="text">${ic("type",20)}3D-текст</button>${S3_SHAPES.map(([k,lb,i])=>`<button type="button" data-act="stud3dAdd" data-k="shape:${k}">${ic(i,20)}${lb}</button>`).join("")}</div>
     <div class="sect-t">3D-мокапы</div><div class="s2-tiles s3-tiles">${S3_MODELS.map(([k,lb,i])=>`<button type="button" data-act="stud3dMock" data-k="${k}" data-tip="Дизайн на 3D-${lb.toLowerCase()} — на новой странице">${ic(i,20)}${lb}</button>`).join("")}</div>
     <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><button type="button" data-act="studTool" data-tool="draw">${ic("brush",20)}Рисовать</button><label class="s2-tiles-l" for="stud-vid-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("film",20)}Видео</label><label class="s2-tiles-l" for="stud-imp-file" data-tip="PDF — страницами, PSD — слоями" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-input",20)}PDF / PSD</label><button type="button" data-act="studTool" data-tool="note" data-tip="Булавка с комментарием для согласования — в файл не попадает">${ic("message-square-plus",20)}Заметка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
     <div class="sect-t">Графика</div><input type="search" class="num" data-s2gfx placeholder="Поиск: стрелка, бейдж, рамка…" value="${esc(studioGfxQ)}" style="width:100%;text-align:left;padding:0 10px">
@@ -12666,6 +12700,7 @@ Object.assign(N.chg,{
   studFmtF(v){S.studio.fmtF=v;N.refresh();NEON.save()}
 });
 Object.assign(N.acts,{
+  stud3dPreset(a,d){studioStartDismissed=true;const s=studio3dPresetS3(+d.i);studio3dAdd(s.kind,s.shape,s)},
   stud3dMock(a,d){studioStartDismissed=true;studio3dMockAdd(d.k||"phone")},
   stud3dAdd(a,d){studioStartDismissed=true;const[k,sub]=String(d.k||"text").split(":");studio3dAdd(k,sub)},
   studAdd(a,d){studioStartDismissed=true;studioBeforeChange();const l=studioLayerDefaults(d.type,d.shape);studioDesign().layers.push(l);studioDesign().selectedId=l.id;studioMultiSel=[];N.refresh();NEON.save()},
