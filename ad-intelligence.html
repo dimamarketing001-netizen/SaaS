@@ -3570,9 +3570,35 @@ function sideNav(){
   };
   return (svc.nav||[]).map(g=>{const k=s+"/"+g.group,closed=g.group&&shut[k];return `<div class="side-group">${g.group?`<button type="button" class="side-label" data-act="sideTog" data-k="${esc(k)}" aria-expanded="${!closed}"><span>${esc(g.group)}</span>${ic(closed?"chevron-down":"chevron-up",14)}</button>`:""}${closed?"":`<div class="${g.group?"tree":""}">${g.items.map(itemHtml).join("")}</div>`}</div>`}).join("");
 }
+/* Фокус в поле ввода переживает перерисовку экрана (25.11.2026, Дима: «вводится только одна буква»): экран строится
+   заново при каждом обновлении, и поле, в котором печатают, заменялось новым — фокус терялся после первой буквы.
+   Запоминаем поле по его «подписи» (компонент, data-chg/key, name, label, placeholder) и порядку среди таких же,
+   после перерисовки ставим фокус и курсор в такое же поле. */
+const FOCUS_SIG=["data-chg","data-key","name","label","placeholder","data-k","data-id"];  // id полей случайный — в подпись не берём
+function focusSig(el){const host=el.closest("[data-chg]")||el.parentElement&&el.parentElement.closest("[class*='-'],nv-input,nv-textarea")||el;
+  return el.tagName+"|"+host.tagName+"|"+FOCUS_SIG.map(a=>(host.getAttribute&&host.getAttribute(a))||el.getAttribute(a)||"").join("|")}
+function focusFields(root){return [...root.querySelectorAll("input,textarea,[contenteditable=true],[contenteditable='']")].filter(e=>!/^(checkbox|radio|range|file|button|submit|hidden)$/.test(e.type||""))}
+function saveFocus(root){const a=document.activeElement;if(!a||!root||!root.contains(a)||!(/^(INPUT|TEXTAREA)$/.test(a.tagName)||a.isContentEditable)||/^(checkbox|radio|range|file|button|submit)$/.test(a.type||""))return null;
+  const sig=focusSig(a),same=focusFields(root).filter(e=>focusSig(e)===sig);
+  let st=null,en=null;try{st=a.selectionStart;en=a.selectionEnd}catch(e){}
+  return{sig,idx:Math.max(0,same.indexOf(a)),st,en,dir:a.selectionDirection}}
+function restoreFocus(root,f){if(!f||!root)return;const same=focusFields(root).filter(e=>focusSig(e)===f.sig),el=same[f.idx]||same[0];
+  if(!el||document.activeElement===el)return;el.focus({preventScroll:true});
+  try{if(f.st!=null&&el.setSelectionRange){const n=(el.value||"").length;el.setSelectionRange(Math.min(f.st,n),Math.min(f.en,n),f.dir||"none")}}catch(e){}}
+NEON.saveFocus=saveFocus;NEON.restoreFocus=restoreFocus;  // и для частичных перерисовок (панели Студии и т. п.)
+/* Общая страховка для любых частичных перерисовок (окна, панели, мастера): если поле, в котором печатают,
+   убрали из страницы, — ставим фокус и курсор в такое же поле, пришедшее на его место. Срабатывает, только
+   когда фокус никуда не перешёл (человек не кликал в другое место). */
+document.addEventListener("focusout",e=>{const t=e.target;
+  if(!(t instanceof HTMLElement)||!(/^(INPUT|TEXTAREA)$/.test(t.tagName)||t.isContentEditable)||/^(checkbox|radio|range|file|button|submit)$/.test(t.type||""))return;
+  if(e.relatedTarget)return;
+  const sig=focusSig(t),same=focusFields(document).filter(x=>focusSig(x)===sig);let st=null,en=null;try{st=t.selectionStart;en=t.selectionEnd}catch(_){}
+  const info={sig,idx:Math.max(0,same.indexOf(t)),st,en,dir:t.selectionDirection};
+  setTimeout(()=>{if(t.isConnected)return;const a=document.activeElement;if(a&&a!==document.body&&a!==document.documentElement)return;restoreFocus(document,info)},0);
+},true);
 function renderView(keepScroll){
   /* scrollTop читаем ДО замены #view: после неё страница на миг пустая, прокрутка обнуляется — экран прыгал наверх при каждом фильтре */
-  const{s,v,svc}=route(),old=document.getElementById("view"),sc=document.getElementById("scroll");if(!old)return;const y=sc.scrollTop,root=old.cloneNode(false);old.replaceWith(root);
+  const{s,v,svc}=route(),old=document.getElementById("view"),sc=document.getElementById("scroll");if(!old)return;const y=sc.scrollTop,foc=saveFocus(old),root=old.cloneNode(false);old.replaceWith(root);
   const d=svc.views[v]();
   NEON.curHelp=d.help||null;
   const imm=!!d.immersive,sh=document.getElementById("shell"),ted=document.getElementById("top-ed");
@@ -3586,6 +3612,8 @@ function renderView(keepScroll){
   document.getElementById("side-nav").innerHTML=sideNav();
   d.after&&d.after(root);
   sc.scrollTop=keepScroll?y:0;
+  // компоненты (nv-input и др.) рисуют своё поле при подключении — фокус ставим сразу и, на всякий случай, в следующем кадре
+  if(foc){restoreFocus(root,foc);requestAnimationFrame(()=>{if(root.isConnected&&!root.contains(document.activeElement))restoreFocus(root,foc)})}
 }
 function render(){const{svc,s}=route();document.body.dataset.svc=s;document.getElementById("app").innerHTML=shell();renderView();updBell();document.title="ParsYa Ads · "+svc.name}
 NEON.render=render;
@@ -8747,9 +8775,11 @@ function studioRedo(){
 }
 function studioToBoxPct(stagePct,boxDim){return stagePct/Math.max(1,boxDim)*100}
 function studioRenderSidebar(root){
-  const cx=document.getElementById("stud-ctx-sel");if(cx)cx.innerHTML=studioCtxHtml();
-  const lp=root.querySelector("#stud-layers");if(lp)lp.innerHTML=studioLayersListHtml();
-  const pp=root.querySelector("#stud-props");if(pp)pp.innerHTML=studioPropsHtml();
+  // поле, в котором печатают (текст слоя, размеры…), после перерисовки панели остаётся в фокусе
+  const put=(el,html)=>{if(!el)return;const f=NEON.saveFocus(el);el.innerHTML=html;if(f)NEON.restoreFocus(el,f)};
+  put(document.getElementById("stud-ctx-sel"),studioCtxHtml());
+  put(root.querySelector("#stud-layers"),studioLayersListHtml());
+  put(root.querySelector("#stud-props"),studioPropsHtml());
   studioPaintContrast(root);studioDrawRulersSoon();studioPaintGroupBox();
 }
 function fileToDataUrl(file,maxDim){
