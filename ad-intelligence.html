@@ -1298,7 +1298,9 @@ button.tr-t:hover{background:var(--surface-2)}
 .pop-qa button:hover,.pop-qa button:focus-visible{background:var(--surface-2);color:var(--ink)}
 .pop-qa button[data-not]:hover,.pop-qa button[data-not]:focus-visible{color:var(--bad)}
 .pop-m{display:flex;gap:2px;padding:3px;margin-top:2px;background:var(--surface-2);border-radius:9px}
-.pop-m button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;border:0;background:none;padding:5px 8px;border-radius:7px;font:inherit;font-size:11.5px;color:var(--ink-3);cursor:pointer;white-space:nowrap}
+.pop-m button{flex:1 1 0;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:5px;border:0;background:none;padding:5px 8px;border-radius:7px;font:inherit;font-size:11.5px;line-height:1.25;color:var(--ink-3);cursor:pointer;text-align:center;white-space:normal;overflow-wrap:anywhere}
+.pop-m button nv-icon,.pop-m button svg{flex:none}
+.pop{max-width:calc(100vw - 16px)}
 .pop-m button[aria-checked="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line);font-weight:500}
 .pop-m button[data-mode="not"][aria-checked="true"]{color:var(--bad)}
 .pop-neg .pop-o input:checked+.box{background:var(--bad);border-color:var(--bad)}
@@ -2791,7 +2793,7 @@ define("nv-filter-select",class extends NvEl{
   mounted(){this.firstChild.onclick=()=>this._on?closePop():this.pop()}
   pop(){const o=parseOpts(this.a("options")),search=o.length>5,exc=this.b("exclude");this._neg=negSplit(this.a("value"),",").neg;this._on=true;this.firstChild.setAttribute("aria-expanded","true");
     const rows=q=>{const s=this.sel(),L=o.filter(x=>!q||x.label.toLowerCase().includes(q));return L.map(x=>`<div class="pop-r"><label class="pop-o"><input type="checkbox" value="${esc(x.value)}" ${s.includes(x.value)?"checked":""}><span class="box">${ic("check",12)}</span><span class="t">${esc(x.label)}</span></label>${L.length>1||exc?fsQa(x.value,x.label,exc):""}</div>`).join("")||'<p class="pop-e">Ничего не нашлось</p>'};
-    openPop(this,`${search?`<div class="pop-s">${ic("search",14)}<input type="search" placeholder="Найти" aria-label="Найти вариант"></div>`:""}<div class="pop-l" role="listbox" aria-multiselectable="true">${rows("")}</div>${fsFoot(this)}`,{width:Math.max(+this.a("min-width")||240,this.offsetWidth),onClose:()=>{this._on=false;this._neg=false;const b=this.firstChild;b&&b.setAttribute("aria-expanded","false")},mount:(p,close,place)=>{
+    openPop(this,`${search?`<div class="pop-s">${ic("search",14)}<input type="search" placeholder="Найти" aria-label="Найти вариант"></div>`:""}<div class="pop-l" role="listbox" aria-multiselectable="true">${rows("")}</div>${fsFoot(this)}`,{width:Math.max(+this.a("min-width")||240,exc?340:0,this.offsetWidth),onClose:()=>{this._on=false;this._neg=false;const b=this.firstChild;b&&b.setAttribute("aria-expanded","false")},mount:(p,close,place)=>{
       const list=p.querySelector(".pop-l"),inp=p.querySelector(".pop-s input"),q=()=>inp?inp.value.trim().toLowerCase():"";
       const set=v=>{const val=fsVal(this,v);this.setAttribute("value",val);this.firstChild.setAttribute("aria-expanded","true");fsSync(this,p);this.emit("nv-change",{value:val,name:this.name})};
       const setDraw=v=>{set(v);const y=list.scrollTop;list.innerHTML=rows(q());list.scrollTop=y};
