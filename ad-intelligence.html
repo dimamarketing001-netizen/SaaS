@@ -5451,7 +5451,9 @@ function projectWizard(existingProject){
     interests:null,interestTree:null,aiTopic:"",
     // Тип запуска (2026-11-18): single — один домен проекта на все аккаунты;
     // multi — несколько доменов из reg.ru, 1 домен = 1 аккаунт, на каждом сайт по шаблону.
-    launchType:"single",domains:[],templateIds:[],siteDomains:null,siteTemplates:null
+    // sub (2026-11-25) — поддомены одного домена (ИИ придумывает названия), 1 поддомен = 1 аккаунт.
+    launchType:"single",domains:[],templateIds:[],siteDomains:null,siteTemplates:null,
+    subBase:"",subList:"",subCount:null,subFqdns:[]
   };
   function reseedPools(p){
     wiz.headlines=p&&p.headlines?p.headlines.join("\n"):"";
@@ -5529,7 +5531,7 @@ function projectWizard(existingProject){
     const p=wiz.project||{};
     if(wiz.locked){
       body.innerHTML=`<nv-callout tone="info" heading="Проект уже запущен">Название, домен, ключевые фразы и регион менять нельзя — можно запустить ещё аккаунты с теми же настройками.</nv-callout>
-      <dl class="dl"><dt>Название</dt><dd>${esc(p.name)}</dd><dt>Домен</dt><dd>${esc(p.domain)}</dd>${p.launch_mode==="ozon"?`<dt>Источник креативов</dt><dd>Директ Озон — ${esc(p.ozon_url||"")}</dd>`:""}<dt>Регион</dt><dd>${esc(regionNames(p.region_ids||[]).join(", ")||"—")}</dd>${(p.interest_ids||[]).length?`<dt>Интересы</dt><dd>${esc(interestNames(p.interest_ids).join(", "))} · ${esc(INTEREST_TERMS[String(Math.floor(p.interest_ids[0]/1e11))]||"")}</dd>`:""}</dl>
+      <dl class="dl"><dt>Название</dt><dd>${esc(p.name)}</dd><dt>Домен</dt><dd>${esc(p.domain)}</dd>${p.launch_mode==="ozon"?`<dt>Источник креативов</dt><dd>Директ Озон — ${esc(p.ozon_url||"")}</dd>`:""}<dt>Структура</dt><dd>${p.campaign_mode==="single_epk"?"Одна ЕПК — Поиск + РСЯ (Карты выключены)":"Одна текстовая кампания — Поиск + РСЯ"}</dd><dt>Стратегия</dt><dd>Оплата за конверсии, ДРР ${esc(p.target_drr??30)}% · цель lead · в сетях — по настройкам поиска</dd><dt>Регион</dt><dd>${esc(regionNames(p.region_ids||[]).join(", ")||"—")}</dd>${(p.interest_ids||[]).length?`<dt>Интересы</dt><dd>${esc(interestNames(p.interest_ids).join(", "))} · ${esc(INTEREST_TERMS[String(Math.floor(p.interest_ids[0]/1e11))]||"")}</dd>`:""}</dl>
       ${stepHtml('<span></span><nv-button variant="primary" icon="arrow-right" data-wiz-next>Далее</nv-button>')}`;
       body.querySelector("[data-wiz-next]").onclick=()=>setStep(2);
       return;
@@ -5542,7 +5544,7 @@ function projectWizard(existingProject){
       <nv-input name="ozon_url" label="Ссылка на карточку товара Ozon" value="${esc(p.ozon_url||"")}" placeholder="https://www.ozon.ru/product/..."></nv-input>
       <nv-callout tone="info" heading="Заполнится автоматически">Домен, заголовки, тексты объявлений, ключевые и минус-фразы, картинки — сгенерирует Gemini после нажатия «Далее» (30–90 секунд). Можно поправить вручную на шаге 5 или перегенерировать позже.</nv-callout>
     </div>
-    <nv-select name="campaign_mode" label="Структура кампаний" value="${esc(p.campaign_mode||"separate")}" options="separate:Отдельные кампании (Поиск + РСЯ)|single_epk:Одна ЕПК"></nv-select>
+    <nv-select name="campaign_mode" label="Структура кампаний" value="${esc(p.campaign_mode||"single_epk")}" options="single_epk:Одна ЕПК — Поиск + РСЯ|separate:Одна текстовая кампания — Поиск + РСЯ"></nv-select>
     <nv-input name="target_drr" label="Целевой ДРР, %" type="number" value="${esc(p.target_drr??30)}"></nv-input>
     <nv-input name="mobile_bid_adjustment_percent" label="Корректировка ставки, моб. (необязательно)" type="number" value="${p.mobile_bid_adjustment_percent!=null?esc(p.mobile_bid_adjustment_percent):""}"></nv-input>
     <div id="wiz-kw-block"${isOzon?" hidden":""}>
@@ -5592,7 +5594,7 @@ function projectWizard(existingProject){
         ozonUrl=(v.ozon_url||"").trim();
         if(!ozonUrl){msg.textContent="Укажите ссылку на карточку товара Ozon";msg.style.color="var(--bad)";return}
         if(!/ozon\./i.test(ozonUrl)){msg.textContent="Это не похоже на ссылку Ozon";msg.style.color="var(--bad)";return}
-        payload={name:name||"Товар Ozon",domain:ozonUrl,campaign_mode:v.campaign_mode||"separate",target_drr:+v.target_drr||30,
+        payload={name:name||"Товар Ozon",domain:ozonUrl,campaign_mode:v.campaign_mode||"single_epk",target_drr:+v.target_drr||30,
           mobile_bid_adjustment_percent:v.mobile_bid_adjustment_percent?+v.mobile_bid_adjustment_percent:null,
           launch_mode:"ozon",ozon_url:ozonUrl,keywords:"",negative_keywords:"",region_ids:ids,interest_ids:interestIdsFrom(v)};
       }else{
@@ -5600,7 +5602,7 @@ function projectWizard(existingProject){
         if(!name){msg.textContent="Введите название проекта";msg.style.color="var(--bad)";return}
         if(domain.length<8){msg.textContent="Введите корректный домен";msg.style.color="var(--bad)";return}
         if(!(v.keywords||"").trim()){msg.textContent="Нужна хотя бы одна ключевая фраза";msg.style.color="var(--bad)";return}
-        payload={name,domain,campaign_mode:v.campaign_mode||"separate",target_drr:+v.target_drr||30,
+        payload={name,domain,campaign_mode:v.campaign_mode||"single_epk",target_drr:+v.target_drr||30,
           mobile_bid_adjustment_percent:v.mobile_bid_adjustment_percent?+v.mobile_bid_adjustment_percent:null,
           launch_mode:"direct",ozon_url:"",keywords:v.keywords||"",negative_keywords:v.negative_keywords||"",region_ids:ids,interest_ids:interestIdsFrom(v)};
       }
@@ -5732,15 +5734,47 @@ function projectWizard(existingProject){
       if(!S.ads.poolLoaded)await loadPool();
       const pool=S.ads.pool,free=pool.configured?pool.items.filter(a=>a.state?a.state==="free":a.is_free).length:null;
       const hint=free==null?"Не удалось получить статус пула ParsYa.":`Свободно в пуле: ${free} из ${pool.items.length}.`;
-      const multi=wiz.launchType==="multi";
+      const multi=wiz.launchType==="multi",subMode=wiz.launchType==="sub";
       body.innerHTML=`<nv-callout tone="info" heading="Сколько аккаунтов">${esc(hint)} Каждый — новый аккаунт Директа из пула, со своей кампанией.</nv-callout>
       <fieldset class="field field-wide mode-picker" style="margin-top:10px"><legend>Тип запуска</legend>
-        <label class="row" style="gap:8px"><input type="radio" name="wizLaunchType" value="single" ${multi?"":"checked"}><span><b>Один домен → несколько аккаунтов</b> — все аккаунты ведут на сайт проекта</span></label>
-        <label class="row" style="gap:8px"><input type="radio" name="wizLaunchType" value="multi" ${multi?"checked":""}><span><b>Несколько доменов → несколько аккаунтов</b> — домены из reg.ru, 1 домен = 1 аккаунт, на каждом сайт или квиз по шаблону</span></label></fieldset>
-      <div id="wiz-launch-type">${multi?'<span class="muted" style="font-size:12.5px">Загружаю домены reg.ru и шаблоны…</span>':`<nv-input name="count" label="Сколько аккаунтов запустить (1–20)" type="number" value="${wiz.count}" style="margin-top:10px"></nv-input>`}</div>
+        <label class="row" style="gap:8px"><input type="radio" name="wizLaunchType" value="single" ${multi||subMode?"":"checked"}><span><b>Один домен → несколько аккаунтов</b> — все аккаунты ведут на сайт проекта</span></label>
+        <label class="row" style="gap:8px"><input type="radio" name="wizLaunchType" value="multi" ${multi?"checked":""}><span><b>Несколько доменов → несколько аккаунтов</b> — домены из reg.ru, 1 домен = 1 аккаунт, на каждом сайт или квиз по шаблону</span></label>
+        <label class="row" style="gap:8px"><input type="radio" name="wizLaunchType" value="sub" ${subMode?"checked":""}><span><b>Поддомены одного домена → несколько аккаунтов</b> — ИИ придумывает поддомены по тематике (банкротство.мойюрист24.рф), 1 поддомен = 1 аккаунт, на каждом сайт по шаблону со счётчиком своего аккаунта</span></label></fieldset>
+      <div id="wiz-launch-type">${subMode?'<span class="muted" style="font-size:12.5px">Загружаю шаблоны…</span>':multi?'<span class="muted" style="font-size:12.5px">Загружаю домены reg.ru и шаблоны…</span>':`<nv-input name="count" label="Сколько аккаунтов запустить (1–20)" type="number" value="${wiz.count}" style="margin-top:10px"></nv-input>`}</div>
       ${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="arrow-right" data-wiz-next>Далее</nv-button>')}
       <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
       body.querySelectorAll('input[name="wizLaunchType"]').forEach(inp=>inp.onchange=()=>{wiz.launchType=inp.value;drawStep4(body)});
+      if(subMode)(async()=>{
+        try{if(!wiz.siteTemplates)wiz.siteTemplates=(await api("/api/v1/ads/site-templates",{})).items||[]}
+        catch(err){const h=body.querySelector("#wiz-launch-type");if(h)h.innerHTML=`<nv-callout tone="danger" heading="Не удалось загрузить шаблоны">${esc(err.message||"")}</nv-callout>`;return}
+        const h=body.querySelector("#wiz-launch-type");if(!h)return;
+        if(!wiz.subBase){try{wiz.subBase=hostToUnicode(new URL(wiz.project.domain).hostname.replace(/^www\./,""))}catch(e){wiz.subBase=""}}
+        if(wiz.subCount==null)wiz.subCount=wiz.count;
+        const tItems=wiz.siteTemplates.map(t=>({value:String(t.id),label:t.name+" ("+(t.kind==="quiz"?"квиз":t.kind==="design"?"квиз-лендинг":t.kind==="bundle"?"копия МЮ":"лендинг")+")"}));
+        h.innerHTML=`<div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:10px">
+            <nv-input name="sub_base" label="Основной домен" value="${esc(wiz.subBase)}" style="min-width:240px"></nv-input>
+            <nv-input name="sub_count" label="Сколько аккаунтов (1–20)" type="number" value="${esc(wiz.subCount)}" style="width:170px"></nv-input>
+            <nv-button variant="secondary" icon="sparkles" data-sub-gen>Придумать поддомены</nv-button></div>
+          <nv-textarea name="sub_list" label="Поддомены — по одному в строке (1 поддомен = 1 аккаунт)" rows="6" value="${esc(wiz.subList)}" style="margin-top:8px"></nv-textarea>
+          <div class="muted" data-sub-msg style="font-size:12.5px;margin-top:2px">Названия — тем же алфавитом, что и домен. Уже использованные на этом домене и в этой тематике ИИ не предложит.</div>
+          ${tItems.length?`<nv-tree-select name="templates" label="Шаблон(ы) сайта — по кругу на поддомены" items="${esc(JSON.stringify(tItems))}" value="${esc(wiz.templateIds.join(","))}" placeholder="Выберите шаблон" multiple min-width="340" style="margin-top:8px"></nv-tree-select>`
+            :'<nv-callout tone="warning" heading="Шаблонов нет" style="margin-top:8px">Создайте шаблон сайта или квиза в разделе «Сайты».</nv-callout>'}
+          <div class="muted" style="font-size:12.5px;margin-top:6px">При запуске на каждом поддомене: A-запись → наш сервер (если домен в reg.ru; иначе нужна запись «*» у DNS-провайдера домена), сайт по шаблону со счётчиком Метрики своего аккаунта, SSL; в объявлениях аккаунта — его поддомен с теми же UTM.</div>`;
+        const m=h.querySelector("[data-sub-msg]");
+        h.querySelector("[data-sub-gen]").onclick=async()=>{
+          const v=formVals(h),n=+v.sub_count;
+          if(!Number.isInteger(n)||n<1||n>20){m.textContent="Укажите число от 1 до 20";m.style.color="var(--bad)";return}
+          wiz.subBase=(v.sub_base||"").trim();wiz.subCount=n;
+          m.style.color="";m.textContent="ИИ придумывает поддомены…";
+          try{
+            const r=await apiPost("/api/v1/ads/projects/"+wiz.project.id+"/subdomains/suggest",{count:n,base_domain:wiz.subBase||null});
+            wiz.subBase=r.base_domain;wiz.subList=(r.items||[]).join("\n");
+            const bi=h.querySelector('nv-input[name="sub_base"]'),ta=h.querySelector('nv-textarea[name="sub_list"]');
+            if(bi)bi.setAttribute("value",wiz.subBase);if(ta){ta.setAttribute("value",wiz.subList);ta.value=wiz.subList}
+            m.textContent=`Готово: ${(r.items||[]).length} из ${n}`+(r.excluded?` · исключены уже использованные: ${r.excluded}`:"")+(r.items&&r.items.length<n?" — допишите недостающие вручную или нажмите ещё раз":"");
+          }catch(err){m.textContent=err.message||"ИИ не ответил";m.style.color="var(--bad)"}
+        };
+      })();
       if(multi)(async()=>{
         try{
           if(!wiz.siteDomains){const r=await api("/api/v1/sites/domains",{});wiz.siteDomains=r.items||[];wiz.regruAccounts=r.accounts||[]}
@@ -5774,6 +5808,23 @@ function projectWizard(existingProject){
       body.querySelector("[data-wiz-back]").onclick=()=>setStep(3);
       body.querySelector("[data-wiz-next]").onclick=()=>{
         const v=formVals(body),wm=body.querySelector("#wiz-msg");
+        const bad=t=>{wm.textContent=t;wm.style.color="var(--bad)"};
+        if(wiz.launchType==="sub"){
+          const base=(v.sub_base||wiz.subBase||"").trim().toLowerCase().replace(/^www\./,"");
+          const list=String(v.sub_list||"").split(/[\n,;]+/).map(x=>x.trim().toLowerCase().replace(/^https?:\/\//,"").replace(/\/.*$/,"")).filter(Boolean);
+          const ts=String(v.templates||"").split(",").map(x=>x.trim()).filter(Boolean).map(Number);
+          wiz.subBase=base;wiz.subList=list.join("\n");
+          if(!base||!base.includes("."))return bad("Укажите основной домен");
+          if(!list.length)return bad("Нажмите «Придумать поддомены» или впишите их вручную");
+          if(list.length>20)return bad("Не больше 20 поддоменов за запуск");
+          const wrong=list.filter(x=>!x.endsWith("."+base)||x.length<=base.length+2||x.slice(0,-base.length-1).includes("."));
+          if(wrong.length)return bad("Это не поддомены "+base+": "+wrong.slice(0,3).join(", "));
+          if(new Set(list).size!==list.length)return bad("Поддомены повторяются — один поддомен на один аккаунт");
+          if(!ts.length)return bad("Выберите шаблон сайта");
+          let ascii;
+          try{ascii=list.map(x=>new URL("https://"+x).hostname)}catch(e){return bad("Недопустимые символы в поддомене")}
+          wiz.subFqdns=list;wiz.domains=ascii;wiz.templateIds=ts;v.count=list.length;
+        }
         if(wiz.launchType==="multi"){
           const ds=String(v.domains||"").split(",").map(x=>x.trim()).filter(Boolean),ts=String(v.templates||"").split(",").map(x=>x.trim()).filter(Boolean).map(Number);
           if(!ds.length){wm.textContent="Выберите хотя бы один домен";wm.style.color="var(--bad)";return}
@@ -6013,7 +6064,11 @@ function projectWizard(existingProject){
           if(!wiz.locked)await apiPut("/api/v1/ads/projects/"+wiz.project.id,{...wiz.project,headlines,ad_texts:adTexts,image_urls:imageUrls,callouts_pool:calloutsPool,sitelinks_pool:sitelinksPool});
           // источник лидов Б24 — отдельная настройка проекта; её сбой запуск не срывает
           if(wiz.crmSources&&wiz.crmTouched){try{await apiPut("/api/v1/ads/projects/"+wiz.project.id+"/crm-source",{source_id:wiz.crmSourceId||null})}catch(e){toast("Источник Б24 не сохранён: "+(e.message||""),{tone:"warning"})}}
-          if(wiz.launchType==="multi"&&wiz.domains.length){
+          if(wiz.launchType==="sub"&&wiz.domains.length){
+            msg.textContent="Сохраняю поддомены…";
+            await apiPost("/api/v1/ads/projects/"+wiz.project.id+"/subdomains",{fqdns:wiz.subFqdns});
+          }
+          if((wiz.launchType==="multi"||wiz.launchType==="sub")&&wiz.domains.length){
             payload.domains=wiz.domains;
             // сайты: A-запись, nginx и SSL — фоном на сервере; запуск кампаний не ждёт SSL
             for(let i=0;i<wiz.domains.length;i++){
@@ -6071,6 +6126,16 @@ function displayUrlField(value,label){return `<nv-input name="display_url" label
 function mountDisplayUrl(root,onChange){const i=root.querySelector('nv-input[name="display_url"]'),m=root.querySelector("[data-durl-msg]");if(!i)return;
   const upd=v=>{const e=displayUrlError(v),n=(v||"").replace(/#/g,"").trim().length;m.textContent=e||`${n}/20 — пусто: Директ покажет домен`;m.style.color=e?"var(--bad)":"";onChange&&onChange(v)};
   upd(i.getAttribute("value")||"");i.addEventListener("nv-change",e=>upd(e.detail.value))}
+function hostToUnicode(host){
+  const dec=str=>{const b=36,tMin=1,tMax=26,skew=38,damp=700;let n=128,i=0,bias=72,out=[];
+    const d=str.lastIndexOf("-");if(d>0)for(let j=0;j<d;j++)out.push(str.charCodeAt(j));
+    const adapt=(delta,num,first)=>{delta=first?Math.floor(delta/damp):delta>>1;delta+=Math.floor(delta/num);let k=0;while(delta>((b-tMin)*tMax)>>1){delta=Math.floor(delta/(b-tMin));k+=b}return k+Math.floor((b-tMin+1)*delta/(delta+skew))};
+    for(let p=d>0?d+1:0;p<str.length;){const oldi=i;let w=1;
+      for(let k=b;;k+=b){const c=str.charCodeAt(p++),dig=c-48<10?c-22:c-65<26?c-65:c-97<26?c-97:b;if(dig>=b)throw new Error("bad");i+=dig*w;const t=k<=bias?tMin:k>=bias+tMax?tMax:k-bias;if(dig<t)break;w*=b-t}
+      bias=adapt(i-oldi,out.length+1,oldi===0);n+=Math.floor(i/(out.length+1));i%=out.length+1;out.splice(i++,0,n)}
+    return String.fromCodePoint(...out)};
+  try{return String(host||"").split(".").map(l=>l.startsWith("xn--")?dec(l.slice(4)):l).join(".")}catch(e){return host}
+}
 function buttonActionOptions(none="Без кнопки"){return ["NONE:"+none,...BUTTON_ACTIONS.map(([v,l])=>v+":"+l)].join("|")}
 // Кнопка и площадки для уже созданных кампаний проекта.
 function adSettingsDialog(p,acc,redraw){
