@@ -516,7 +516,7 @@ nv-avatar{display:inline-flex;flex:none}
 .nv-av-img.nv-av-fail .nv-av-fb{display:flex}
 nv-term{display:inline}
 .nv-term{border:0;background:none;padding:0;cursor:help;border-bottom:1px dashed var(--ink-3);color:inherit;font:inherit}
-#nv-tip{position:fixed;z-index:120;max-width:280px;background:var(--ink);color:var(--surface);padding:7px 10px;border-radius:8px;font-size:12.5px;line-height:1.4;pointer-events:none;box-shadow:var(--shadow-2)}
+#nv-tip{position:fixed;z-index:10000;max-width:280px;background:var(--ink);color:var(--surface);padding:7px 10px;border-radius:8px;font-size:12.5px;line-height:1.4;pointer-events:none;box-shadow:var(--shadow-2)}
 
 /* ---------- Формы ---------- */
 nv-input,nv-select,nv-textarea,nv-switch,nv-checkbox,nv-segmented,nv-range{display:block;min-width:0}
@@ -2808,11 +2808,28 @@ define("nv-topic-tree",class extends NvEl{
   get value(){return this.a("value")}get name(){return this.getAttribute("name")}
   sel(){return negSplit(this.a("value"),"~").list}
   tree(){return (window.NV_TREES||{})[this.a("tree-key")]||[]}
+  /* Дети узла дерева: раздел → подтемы, подтема → интенты (пути целиком) */
+  kids(path){const[m,sb]=path.split(">"),M=this.tree().find(x=>x.main===m);if(!M)return[];
+    if(sb===undefined)return (M.subs||[]).map(x=>m+">"+x.sub);
+    const S_=(M.subs||[]).find(x=>x.sub===sb);return S_?(S_.intents||[]).map(i=>path+">"+i.intent):[]}
+  /* Снята галка у v внутри выбранного предка anc: вместо предка — все его потомки, кроме ветки v */
+  without(anc,v){const out=[];let cur=anc;
+    while(cur!==v){const ks=this.kids(cur),next=ks.find(k=>v===k||v.startsWith(k+">"));if(!next)break;
+      ks.forEach(k=>{if(k!==next)out.push(k)});cur=next}
+    return out}
+  /* Отмечены все дети узла — заменяем их самим узлом (сначала интенты → подтема, потом подтемы → раздел) */
+  collapse(s){let set=new Set(s);
+    for(const M of this.tree()){
+      for(const S_ of (M.subs||[])){const sp=M.main+">"+S_.sub,ks=(S_.intents||[]).map(i=>sp+">"+i.intent);
+        if(ks.length&&ks.every(k=>set.has(k))){ks.forEach(k=>set.delete(k));set.add(sp)}}
+      const ms=(M.subs||[]).map(x=>M.main+">"+x.sub);
+      if(ms.length&&ms.every(k=>set.has(k))){ms.forEach(k=>set.delete(k));set.add(M.main)}}
+    return [...set]}
   html(){const s=this.sel(),last=p=>p.split(">").pop();return fsBtn(this,fsText(this,s.length?last(s[0]):""),"tree")}
   mounted(){this.firstChild.onclick=()=>this._on?closePop():this.pop()}
   rows(q){const T=this.tree(),s=new Set(this.sel()),open=this._open||(this._open=new Set()),out=[],hit=t=>String(t).toLowerCase().includes(q),exc=this.b("exclude");
     const row=(path,label,count,lvl,kids,implied,forceOpen)=>{const on=implied||s.has(path),part=!on&&[...s].some(x=>x.startsWith(path+">")),isOpen=forceOpen||open.has(path);
-      return `<div class="tr-r tr-${lvl}">${kids?`<button type="button" class="tr-t" data-tg="${esc(path)}" aria-expanded="${isOpen}" aria-label="${isOpen?"Свернуть":"Раскрыть"}">${ic(isOpen?"chevron-down":"chevron-right",14)}</button>`:`<span class="tr-t"></span>`}<label class="pop-o${part?" part":""}"><input type="checkbox" value="${esc(path)}" ${on?"checked":""} ${implied?"disabled":""}><span class="box">${ic(part?"minus":"check",12)}</span><span class="t">${esc(label)}</span><span class="tr-n num">${count}</span></label>${fsQa(path,label,exc)}${this.b("folders")&&lvl<2?`<button type="button" class="tr-f" data-fd="${esc(path)}" title="${lvl?"Подборка из подрубрики с текущими объявлениями":"Коллекция из раздела: внутри подборки по подрубрикам (отмеченным или всем)"}" aria-label="Создать ${lvl?"подборку":"коллекцию"} «${esc(label)}»">${ic("folder-plus",14)}</button>`:""}</div>`};
+      return `<div class="tr-r tr-${lvl}">${kids?`<button type="button" class="tr-t" data-tg="${esc(path)}" aria-expanded="${isOpen}" aria-label="${isOpen?"Свернуть":"Раскрыть"}">${ic(isOpen?"chevron-down":"chevron-right",14)}</button>`:`<span class="tr-t"></span>`}<label class="pop-o${part?" part":""}"><input type="checkbox" value="${esc(path)}" ${on?"checked":""}><span class="box">${ic(part?"minus":"check",12)}</span><span class="t">${esc(label)}</span><span class="tr-n num">${count}</span></label>${fsQa(path,label,exc)}${this.b("folders")&&lvl<2?`<button type="button" class="tr-f" data-fd="${esc(path)}" title="${lvl?"Подборка из подрубрики с текущими объявлениями":"Коллекция из раздела: внутри подборки по подрубрикам (отмеченным или всем)"}" aria-label="Создать ${lvl?"подборку":"коллекцию"} «${esc(label)}»">${ic("folder-plus",14)}</button>`:""}</div>`};
     for(const M of T){const mp=M.main,mHit=!q||hit(mp),sub=[];
       for(const S_ of (M.subs||[])){const sp=mp+">"+S_.sub,ints=S_.intents||[],iHit=q?ints.filter(i=>hit(i.intent)):[];
         if(q&&!mHit&&!hit(S_.sub)&&!iHit.length)continue;
@@ -2830,7 +2847,10 @@ define("nv-topic-tree",class extends NvEl{
       fsSync(this,p);fsWire(this,p,set);
       list.onclick=e=>{const fd=e.target.closest("[data-fd]");if(fd){e.preventDefault();closePop();this.emit("nv-folder",{path:fd.dataset.fd});return}
         const t=e.target.closest("[data-tg]");if(!t)return;e.preventDefault();const k=t.dataset.tg,o=this._open;o.has(k)?o.delete(k):o.add(k);redraw()};
-      list.onchange=e=>{const c=e.target,v=c.value;let s=this.sel().filter(x=>x!==v);if(c.checked)s=s.filter(x=>!x.startsWith(v+">")).concat(v);set(s)};
+      list.onchange=e=>{const c=e.target,v=c.value;let s=this.sel().filter(x=>x!==v);
+        if(c.checked)s=s.filter(x=>!x.startsWith(v+">")).concat(v);
+        else{const anc=s.find(a=>v.startsWith(a+">"));if(anc)s=s.filter(x=>x!==anc).concat(this.without(anc,v))}
+        set(this.collapse(s))};
       p.querySelector(".pop-x").onclick=()=>{this._neg=false;set([])};
       inp.oninput=()=>redraw();inp.focus()}})}
 },"Формы",{desc:"Фильтр-дерево с галочками: раздел → подрубрика → интент, у каждого пункта число объявлений. Выбор раздела включает все его подрубрики. Значения — пути через «~», уровни через «>». У строки — «только»; с атрибутом exclude — «кроме» и переключатель режима (значение тогда начинается с «!»).",events:["nv-change {value,name}"],attrs:{label:{type:"string",default:"Тема объявления",desc:"Подпись внутри поля"},"tree-key":{type:"string",default:"lib",desc:"Ключ данных в window.NV_TREES"},value:{type:"string",default:"",desc:"Выбранные пути через ~; «!» в начале — все, кроме них"},placeholder:{type:"string",default:"Все",desc:"Текст, когда ничего не выбрано"},name:{type:"string",default:"",desc:"Ключ значения"},exclude:{type:"bool",desc:"Разрешить режим «кроме»"},"min-width":{type:"number",default:400,desc:"Минимальная ширина списка, px"}}});
