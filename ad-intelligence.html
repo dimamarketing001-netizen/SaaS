@@ -3210,7 +3210,10 @@ function getAnaTopic(){try{return localStorage.getItem("parsya_ana_topic")||""}c
 function setAnaTopic(v){try{localStorage.setItem("parsya_ana_topic",v||"")}catch(e){}}
 function getActiveIntents(){try{return JSON.parse(localStorage.getItem("parsya_active_intents")||"[]")}catch(e){return[]}}
 function setActiveIntents(list){try{localStorage.setItem("parsya_active_intents",JSON.stringify(list||[]))}catch(e){}}
-function activeIntentParam(){const list=getActiveIntents();return list.length?list.join(","):""}
+function getActiveIntentsNeg(){try{return localStorage.getItem("parsya_active_intents_not")==="1"}catch(e){return false}}
+function setActiveIntentsNeg(v){try{localStorage.setItem("parsya_active_intents_not",v?"1":"")}catch(e){}}
+// «!» в начале — все объявления, кроме найденных по этим запросам
+function activeIntentParam(){const list=getActiveIntents();return list.length?(getActiveIntentsNeg()?"!":"")+list.join(","):""}
 // Все запросы ЛК идут через netFetch (2026-11-12, Dima: «два раза нажал
 // Применить»): пока запрос в работе — полоска вверху страницы, а кнопка,
 // нажатая перед запросом (в т.ч. в диалогах), крутит спиннер и не
@@ -3816,14 +3819,18 @@ async function loadCmpCandidates(more){
   if(more)C.limit=Math.min(96,(C.limit||12)+12);else C.limit=12;
   const seq=C._seq=(C._seq||0)+1;C.loading=true;
   try{
-    if(f.col){
-      const d=await api("/api/v1/collections/"+f.col+"/items",{deep:1});if(seq!==C._seq)return;
+    const cs=negSplit(f.col,","),colItems=async()=>{const ds=await Promise.all(cs.list.map(id=>api("/api/v1/collections/"+id+"/items",{deep:1}))),seen=new Set();
+      return ds.flatMap(d=>d.items||[]).filter(it=>!seen.has(it.id)&&seen.add(it.id))};
+    if(cs.list.length&&!cs.neg){
+      const items=await colItems();if(seq!==C._seq)return;
       const q=(f.q||"").toLowerCase();
-      let all=(d.items||[]).filter(it=>!q||((it.title||"")+" "+(it.domain||"")+" "+(it.description||"")).toLowerCase().includes(q)).map(kGroup);
+      let all=items.filter(it=>!q||((it.title||"")+" "+(it.domain||"")+" "+(it.description||"")).toLowerCase().includes(q)).map(kGroup);
       C.total=all.length;C.items=all.slice(0,C.limit);
     }else{
       const params={group:1,limit:C.limit,offset:0,sort:f.sort==="oldest"?"oldest":"recent",source:""};
       if(f.q)params.q=f.q;if(f.aiIntent)params.ai_intent=f.aiIntent;if(f.aiTree)params.ai_tree=f.aiTree;
+      // «кроме подборок» — вся библиотека без объявлений из них
+      if(cs.neg){const ex=(await colItems()).map(it=>it.id);if(seq!==C._seq)return;if(ex.length)params.exclude_ids=ex.slice(0,2000).join(",")}
       const d=await api("/api/v1/creatives",params);if(seq!==C._seq)return;
       C.items=groupRealCreatives(d.items);C.total=d.total||C.items.length;
     }
@@ -3966,7 +3973,7 @@ async function loadAnaTree(force){
 }
 function intentControlHtml(){
   const I=S.intel,opts=I.intents.map(i=>esc(i.intent)+":"+esc(i.intent)+" ("+(i.creatives_count||0)+")").join("|");
-  return `<nv-filter-select label="Ключевое слово запуска" value="${esc(I.activeIntents.join(","))}" options="${opts||"_:Пока нет запросов"}" placeholder="Все запросы" min-width="360" data-chg="intentSet"></nv-filter-select>`;
+  return `<nv-filter-select label="Ключевое слово запуска" value="${esc(activeIntentParam())}" exclude options="${opts||"_:Пока нет запросов"}" placeholder="Все запросы" min-width="360" data-chg="intentSet"></nv-filter-select>`;
 }
 
 /* ---------- Библиотека ---------- */
@@ -4924,7 +4931,7 @@ compare(){
   actions:I.cmp.length>=2?`<nv-button variant="secondary" icon="folder-plus" data-act="cmpCollect">Сохранить в подборку</nv-button>`:"",
   body:`<nv-card heading="${I.cmp.length>=2?"Сравнение":"Как сравнить"}" subtitle="Выбрано ${I.cmp.length} из 4">${cmpMatrixHtml()}</nv-card>
   <nv-card heading="${I.cmp.length>=4?"Объявления":"Добавить объявления"}" subtitle="${I.cmp.length>=4?"Выбрано максимум — уберите одно, чтобы добавить другое":"Отметьте флажком в углу карточки"}">
-    <div class="k-bar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="cmpF" data-key="q"></nv-input><nv-topic-tree label="Тема объявления" value="${esc(f.aiTree||"")}" tree-key="lib" placeholder="Любая тема" min-width="400" exclude data-chg="cmpF" data-key="aiTree" ${f.col?"disabled":""}></nv-topic-tree>${K.length?`<nv-filter-select label="Из подборки" value="${esc(f.col)}" options="${K.map(k=>esc(k.id)+":"+esc(k.name)+" ("+(k.items_count||0)+")").join("|")}" placeholder="Вся библиотека" data-chg="cmpF" data-key="col"></nv-filter-select>`:""}<nv-select label="Порядок" value="${esc(f.sort||"recent")}" options="recent:Сначала новые|oldest:Сначала старые" data-chg="cmpF" data-key="sort" ${f.col?"disabled":""}></nv-select></div>
+    <div class="k-bar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="cmpF" data-key="q"></nv-input><nv-topic-tree label="Тема объявления" value="${esc(f.aiTree||"")}" tree-key="lib" placeholder="Любая тема" min-width="400" exclude data-chg="cmpF" data-key="aiTree" ${f.col&&!String(f.col).startsWith("!")?"disabled":""}></nv-topic-tree>${K.length?`<nv-filter-select label="Из подборки" value="${esc(f.col)}" options="${K.map(k=>esc(k.id)+":"+esc(k.name)+" ("+(k.items_count||0)+")").join("|")}" placeholder="Вся библиотека" exclude data-chg="cmpF" data-key="col"></nv-filter-select>`:""}<nv-select label="Порядок" value="${esc(f.sort||"recent")}" options="recent:Сначала новые|oldest:Сначала старые" data-chg="cmpF" data-key="sort" ${f.col?"disabled":""}></nv-select></div>
     <div id="cmp-cnt" class="muted" style="font-size:13px;margin:10px 0">${cmpCountHtml()}</div>
     <div id="cmp-candidates">${cmpCandidatesHtml()}</div>
   </nv-card>`,
@@ -5281,11 +5288,11 @@ N.chg.libF=(v,d)=>{
 N.chg.libPage=v=>{S.intel.f.page=+v;const sc=document.getElementById("scroll");if(sc)sc.scrollTop=0;if(S.intel.lib.server)loadLibrary();else libRes()};
 N.chg.advSrc=v=>{S.intel.advSrc=v||"";loadAdvertisers(S.intel.advQ)};
 N.chg.advQ=v=>{S.intel.advQ=v;clearTimeout(S.intel._advT);S.intel._advT=setTimeout(()=>loadAdvertisers(v),350)};
-N.chg.cmpF=(v,d)=>{const f=S.intel.cmpF,was=f.col;f[d.key]=v;if(d.key==="q"){clearTimeout(S.intel._cmpQ);S.intel._cmpQ=setTimeout(()=>loadCmpCandidates(),350);return}S.intel.cmpC.loaded=false;if((d.key==="col")&&(!!was!==!!v))N.refresh();loadCmpCandidates()};
+N.chg.cmpF=(v,d)=>{const f=S.intel.cmpF,was=f.col;f[d.key]=v;if(d.key==="q"){clearTimeout(S.intel._cmpQ);S.intel._cmpQ=setTimeout(()=>loadCmpCandidates(),350);return}S.intel.cmpC.loaded=false;const colIn=x=>!!x&&!String(x).startsWith("!");if((d.key==="col")&&(colIn(was)!==colIn(v)))N.refresh();loadCmpCandidates()};
 N.chg.cmpRows=v=>{S.intel.cmpF.rows=v;N.refresh()};
 N.chg.scanF=(v,d)=>{S.intel.scanF[d.key]=v;N.refresh()};
 N.acts.scanFReset=()=>{S.intel.scanF={q:"",status:""};N.refresh()};
-N.chg.intentSet=v=>{const list=v?v.split(","):[];S.intel.activeIntents=list;setActiveIntents(list);loadLibrary();if(S.intel.ana.loaded)loadAnalytics(true);N.refresh()};
+N.chg.intentSet=v=>{const x=negSplit(v,","),list=x.list;S.intel.activeIntents=list;setActiveIntents(list);setActiveIntentsNeg(x.neg&&list.length);loadLibrary();if(S.intel.ana.loaded)loadAnalytics(true);N.refresh()};
 N.chg.anaTopic=v=>{
   const I=S.intel;I.anaTopic=v||"";setAnaTopic(I.anaTopic);
   if(I.lead){I.lead.theme="";I.lead.kw=null}
@@ -5412,12 +5419,16 @@ function fadeEval(imp,todayPartial){
   return{...o,code:"ok",label:"Работает",tone:"success"};
 }
 function withTimeout(p,ms,what){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error(what+": нет ответа за "+Math.round(ms/1000)+" с")),ms))])}
+/* Проекты отчёта для API: «кроме» превращаем в список всех остальных проектов */
+function repProjectIds(){const A=S.ads,x=negSplit(A.rep.projects,",");if(!x.list.length)return undefined;if(!x.neg)return x.list.join(",");
+  const all=((A.projects&&A.projects.length?A.projects:(A.rep.data&&A.rep.data.projects))||[]).map(p=>String(p.id)),keep=all.filter(id=>!x.list.includes(id));
+  return keep.length?keep.join(","):"0"}
 async function loadReport(refresh){
   const A=S.ads,r=A.rep,seq=(r.seq||0)+1;r.seq=seq;r.loading=true;N.refreshIf("ads-report");
   try{
     const per=String(r.period||"30"),cust=per.includes("..")?per.split(".."):null;
     // presets -> days: the server counts the range by ITS clock (browser clocks may be wrong, 2026-11-13)
-    const data=await withTimeout(api("/api/v1/ads/ads-dashboard",{date_from:cust?cust[0]:undefined,date_to:cust?cust[1]:undefined,days:cust?undefined:per,project_ids:r.projects||undefined,threshold:r.threshold,with_status:"false"}),60000,"Отчёт");
+    const data=await withTimeout(api("/api/v1/ads/ads-dashboard",{date_from:cust?cust[0]:undefined,date_to:cust?cust[1]:undefined,days:cust?undefined:per,project_ids:repProjectIds(),threshold:r.threshold,with_status:"false"}),60000,"Отчёт");
     if(seq!==r.seq)return;
     const prev={};((r.data&&r.data.items)||[]).forEach(a=>{if(a.status)prev[a.account_id]=a.status});
     (data.items||[]).forEach(a=>{if(!a.status&&prev[a.account_id])a.status=prev[a.account_id]});
@@ -5441,7 +5452,7 @@ async function loadReportCrm(refresh,seq){
   r.crmLoading=true;N.refreshIf("ads-report");
   try{
     const per=String(r.period||"30"),cust=per.includes("..")?per.split(".."):null;
-    const res=await withTimeout(api("/api/v1/ads/ads-crm",{date_from:cust?cust[0]:undefined,date_to:cust?cust[1]:undefined,days:cust?undefined:per,project_ids:r.projects||undefined,refresh:refresh?"true":undefined}),100000,"Б24");
+    const res=await withTimeout(api("/api/v1/ads/ads-crm",{date_from:cust?cust[0]:undefined,date_to:cust?cust[1]:undefined,days:cust?undefined:per,project_ids:repProjectIds(),refresh:refresh?"true":undefined}),100000,"Б24");
     if(seq!==r.seq||r.data!==d)return;
     d.crm=res;(res.errors||[]).forEach(e=>toast("Б24: "+e,{tone:"warning"}));
   }catch(err){if(seq===r.seq)toast("Лиды из Б24: "+(err.message||""),{tone:"warning"})}
@@ -6417,13 +6428,15 @@ function projFilter(){
 }
 function filteredProjects(){
   const f=projFilter(),q=(f.q||"").trim().toLowerCase();
-  const modes=(f.mode||"").split(",").filter(Boolean),stats=(f.status||"").split(",").filter(Boolean),payers=(f.payer||"").split(",").filter(Boolean),conns=(f.conn||"").split(",").filter(Boolean);
+  // фильтры «только / кроме»: значение с «!» — все, кроме выбранных
+  const modes=negSplit(f.mode,","),stats=negSplit(f.status,","),payers=negSplit(f.payer,","),conns=negSplit(f.conn,",");
+  const miss=(F,hit)=>F.list.length&&hit===F.neg;
   const rows=(S.ads.projects||[]).filter(p=>{
     if(q&&!((p.name||"")+" "+(p.domain||"")+" "+(p.ozon_url||"")).toLowerCase().includes(q))return false;
-    if(modes.length&&!modes.includes(p.launch_mode==="ozon"?"ozon":"direct"))return false;
-    if(stats.length&&!stats.includes(projStatus(p)))return false;
-    if(payers.length&&!((p.stats||{}).payer_ids||[]).some(id=>payers.includes(String(id))))return false;
-    if(conns.length&&!((p.stats||{}).connection_ids||[]).some(id=>conns.includes(String(id))))return false;
+    if(miss(modes,modes.list.includes(p.launch_mode==="ozon"?"ozon":"direct")))return false;
+    if(miss(stats,stats.list.includes(projStatus(p))))return false;
+    if(miss(payers,((p.stats||{}).payer_ids||[]).some(id=>payers.list.includes(String(id)))))return false;
+    if(miss(conns,((p.stats||{}).connection_ids||[]).some(id=>conns.list.includes(String(id)))))return false;
     if(f.camps==="yes"&&!(p.stats||{}).campaigns_count)return false;
     if(f.camps==="no"&&(p.stats||{}).campaigns_count)return false;
     if(f.period&&f.period!=="all"&&(String(f.period).includes("..")||+f.period>0)){const [a,b]=String(f.period).includes("..")?f.period.split(".."):[new Date(Date.now()-(+f.period||0)*864e5).toISOString().slice(0,10),""];
@@ -7007,10 +7020,10 @@ projects(){
   actions:`<nv-button icon="plus" data-act="adsNewProject">Новый проект</nv-button>`,
   body:(()=>{const f=projFilter(),payerIds=[...new Set((A.projects||[]).flatMap(p=>(p.stats||{}).payer_ids||[]))],by=new Map((A.payers||[]).map(x=>[x.id,x]));
     return `<div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Название, сайт, ссылка Ozon" value="${esc(f.q)}" data-chg="adsProjF" data-key="q"></nv-input>
-    <nv-filter-select label="Режим" value="${esc(f.mode)}" options="direct:Директ|ozon:Директ Озон" placeholder="Все" data-chg="adsProjF" data-key="mode"></nv-filter-select>
-    <nv-filter-select label="Статус" value="${esc(f.status)}" options="${Object.entries(PROJ_STATUS).map(([k,v])=>k+":"+v[0]).join("|")}" placeholder="Все" data-chg="adsProjF" data-key="status"></nv-filter-select>
-    <nv-filter-select label="Юрлицо" value="${esc(f.payer)}" options="${payerIds.length?payerIds.map(id=>id+":"+esc((by.has(id)?payerLabel(by.get(id)):"#"+id).replace(/[|:]/g," "))).join("|"):"_:Пока нет запусков с юрлицом"}" placeholder="Все" data-chg="adsProjF" data-key="payer"></nv-filter-select>
-    <nv-filter-select label="Подключение Click.ru" value="${esc(f.conn)}" options="${(A.clickru||[]).length?(A.clickru||[]).map(c=>c.id+":"+esc(String(c.label||("#"+c.id)).replace(/[|:]/g," "))).join("|"):"_:Подключений нет"}" placeholder="Все" data-chg="adsProjF" data-key="conn"></nv-filter-select>
+    <nv-filter-select label="Режим" value="${esc(f.mode)}" options="direct:Директ|ozon:Директ Озон" placeholder="Все" exclude data-chg="adsProjF" data-key="mode"></nv-filter-select>
+    <nv-filter-select label="Статус" value="${esc(f.status)}" options="${Object.entries(PROJ_STATUS).map(([k,v])=>k+":"+v[0]).join("|")}" placeholder="Все" exclude data-chg="adsProjF" data-key="status"></nv-filter-select>
+    <nv-filter-select label="Юрлицо" value="${esc(f.payer)}" options="${payerIds.length?payerIds.map(id=>id+":"+esc((by.has(id)?payerLabel(by.get(id)):"#"+id).replace(/[|:]/g," "))).join("|"):"_:Пока нет запусков с юрлицом"}" placeholder="Все" exclude data-chg="adsProjF" data-key="payer"></nv-filter-select>
+    <nv-filter-select label="Подключение Click.ru" value="${esc(f.conn)}" options="${(A.clickru||[]).length?(A.clickru||[]).map(c=>c.id+":"+esc(String(c.label||("#"+c.id)).replace(/[|:]/g," "))).join("|"):"_:Подключений нет"}" placeholder="Все" exclude data-chg="adsProjF" data-key="conn"></nv-filter-select>
     <nv-select label="Кампании" value="${esc(f.camps)}" options=":Все|yes:Есть кампании|no:Без кампаний" data-chg="adsProjF" data-key="camps"></nv-select>
     <nv-date-range label="Создан" presets="7:7 дней|30:30 дней|90:90 дней" value="${esc(f.period||"")}" data-chg="adsProjF" data-key="period"></nv-date-range>
     <nv-select label="Сортировка" value="${esc(f.sort)}" options="recent:Последняя активность|created:Дата создания|name:Название А–Я|campaigns:Больше кампаний" data-chg="adsProjF" data-key="sort"></nv-select>
@@ -7097,7 +7110,7 @@ report(){
   const projOpts=((d&&d.projects)||(A.projects||[]).map(p=>({id:p.id,name:p.name}))).map(p=>p.id+":"+String(p.name||("Проект "+p.id)).replace(/[|:,]/g," ")).join("|")||"_:Проектов пока нет";
   const stOpts=AD_ST_ORDER.map(c=>c+":"+adStLabel(c)).join("|");
   return{title:"Отчётность",sub:"Дашборд по проектам: аккаунты, показы, клики, лиды и расход Click.ru, статусы модерации.",
-  body:`<div class="toolbar"><nv-filter-select label="Проекты" value="${esc(r.projects)}" options="${esc(projOpts)}" placeholder="Все проекты" min-width="280" data-chg="adsRepProjects"></nv-filter-select>
+  body:`<div class="toolbar"><nv-filter-select label="Проекты" value="${esc(r.projects)}" options="${esc(projOpts)}" placeholder="Все проекты" min-width="280" exclude data-chg="adsRepProjects"></nv-filter-select>
     <nv-date-range label="Период" presets="7:7 дней|30:30 дней|90:90 дней|365:Год" value="${esc(r.period||"30")}" data-chg="adsRepPeriod"></nv-date-range>
     <nv-input label="Порог «больше»" type="number" value="${esc(String(r.threshold))}" style="max-width:150px" data-chg="adsRepThreshold"></nv-input>
     <nv-button icon="refresh-cw" data-act="adsRepLoad" hint="Заново спросить Click.ru и Директ, включая статусы">Обновить</nv-button></div>
@@ -7110,7 +7123,7 @@ report(){
     const fadeLbl={ok:"Работает",slow:"Снижается",young:"Раскачка",fade:"Угасла — на замену",zero:"0 показов — на замену",none:"Нет показов"};
     const fadeTone={ok:"success",slow:"warning",young:"info",fade:"danger",zero:"danger",none:"neutral"};
     const crmOf=a=>((d.crm&&d.crm.items)||{})[a.account_id]||null;
-    const items=(d.items||[]).filter(a=>(!r.status||r.status.split(",").includes((a.status||{}).code||"unknown"))&&(!r.q||(a.pool_login+" "+a.account_id+" "+(a.campaign_id||"")+" "+(a.project_name||"")).toLowerCase().includes(r.q.toLowerCase())));
+    const rst=negSplit(r.status,","),items=(d.items||[]).filter(a=>(!rst.list.length||rst.list.includes((a.status||{}).code||"unknown")!==rst.neg)&&(!r.q||(a.pool_login+" "+a.account_id+" "+(a.campaign_id||"")+" "+(a.project_name||"")).toLowerCase().includes(r.q.toLowerCase())));
     const by=sm.by_status||{};
     items.forEach(a=>{a._fade=fadeEval((a.series&&a.series.impressions)||[],todayPartial)});
     const fadeCnt={};["fade","zero","slow","young","ok","none"].forEach(k=>{const n=items.filter(a=>a._fade.code===k).length;if(n)fadeCnt[k]=n});
@@ -7158,7 +7171,7 @@ report(){
       ${leadsBar?`<nv-card heading="Лиды Б24 по дням" subtitle="По дате создания лида в Битрикс24" style="margin-top:12px"><nv-chart type="bar" height="200" label="Лиды Б24 по дням" data="${leadsBar}"></nv-chart></nv-card>`:""}
       <nv-card heading="Аккаунты" subtitle="Нажмите строку — откроется проект." style="margin-top:12px">
         <div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Логин, ID аккаунта, проект" value="${esc(r.q)}" data-chg="adsRepQ"></nv-input>
-          <nv-filter-select label="Статус" value="${esc(r.status)}" options="${esc(stOpts)}" placeholder="Все статусы" data-chg="adsRepStatus"></nv-filter-select></div>
+          <nv-filter-select label="Статус" value="${esc(r.status)}" options="${esc(stOpts)}" placeholder="Все статусы" exclude data-chg="adsRepStatus"></nv-filter-select></div>
         ${items.length?`<nv-table id="ads-rep-t" page-size="25" clickable></nv-table>`:`<nv-empty icon="bar-chart-3" heading="Нет аккаунтов" text="Измените проекты, период или фильтры."></nv-empty>`}
       </nv-card>
       ${items.length?`<nv-card heading="Показы и клики по кампаниям по дням" subtitle="В ячейке: показы и клики за день, цвет — доля от пика кампании. Оценка — то же правило, что у автозамены: «на замену», если вчера 0 показов или 2 полных дня в среднем меньше ${Math.round(FADE.ratio*100)}% от пика и меньше ${FADE.maxImp} показов в день (с первого показа от ${FADE.minAge} дней). «Снижается» — меньше ${Math.round(FADE.slowRatio*100)}% от пика. Сегодняшний день неполный и в оценке не участвует." style="margin-top:12px">
