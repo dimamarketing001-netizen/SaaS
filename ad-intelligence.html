@@ -5822,8 +5822,16 @@ function projectWizard(existingProject){
         <label class="row" style="gap:8px"><input type="radio" name="wizLaunchType" value="multi" ${multi?"checked":""}><span><b>Несколько доменов → несколько аккаунтов</b> — домены из reg.ru, 1 домен = 1 аккаунт, на каждом сайт или квиз по шаблону</span></label>
         <label class="row" style="gap:8px"><input type="radio" name="wizLaunchType" value="sub" ${subMode?"checked":""}><span><b>Поддомены одного домена → несколько аккаунтов</b> — ИИ придумывает поддомены по тематике (банкротство.мойюрист24.рф), 1 поддомен = 1 аккаунт, на каждом сайт по шаблону со счётчиком своего аккаунта</span></label></fieldset>
       <div id="wiz-launch-type">${subMode?'<span class="muted" style="font-size:12.5px">Загружаю шаблоны…</span>':multi?'<span class="muted" style="font-size:12.5px">Загружаю домены reg.ru и шаблоны…</span>':`<nv-input name="count" label="Сколько аккаунтов запустить (1–20)" type="number" value="${wiz.count}" style="margin-top:10px"></nv-input>`}</div>
+      <fieldset class="field field-wide" style="margin-top:12px"><legend>Замены умерших аккаунтов</legend><div id="wiz-repl"><span class="muted" style="font-size:12.5px">Загружаю регистраторов…</span></div></fieldset>
       ${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="arrow-right" data-wiz-next>Далее</nv-button>')}
       <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
+      (async()=>{const rh=body.querySelector("#wiz-repl");
+        try{
+          if(!wiz.replSt)wiz.replSt=wiz.project&&wiz.project.id?await api("/api/v1/ads/projects/"+wiz.project.id+"/autoreplace",{}):{domain_mode:"same",registrars:[],template_ids:[]};
+          const{accs,tpls}=await replaceSourcesLoad();if(!rh.isConnected)return;
+          rh.innerHTML=replaceSourcesHtml(wiz.replSt,accs,tpls,"wr")+'<div class="muted" style="font-size:12.5px;margin-top:4px">Сохранится в настройках автозамены проекта при запуске. Саму автозамену включает переключатель в карточке проекта.</div>';
+          replaceSourcesMount(rh,"wr",()=>{wiz.replSt={...wiz.replSt,...replaceSourcesVals(rh,"wr")};wiz.replTouched=true});
+        }catch(err){if(rh)rh.innerHTML=`<span class="muted" style="font-size:12.5px">Регистраторы не загрузились: ${esc(err.message||"")}</span>`}})();
       body.querySelectorAll('input[name="wizLaunchType"]').forEach(inp=>inp.onchange=()=>{wiz.launchType=inp.value;drawStep4(body)});
       if(subMode)(async()=>{
         try{if(!wiz.siteTemplates)wiz.siteTemplates=(await api("/api/v1/ads/site-templates",{})).items||[]}
@@ -5906,6 +5914,7 @@ function projectWizard(existingProject){
           try{ascii=list.map(x=>new URL("https://"+x).hostname)}catch(e){return bad("Недопустимые символы в поддомене")}
           wiz.subFqdns=list;wiz.domains=ascii;wiz.templateIds=ts;v.count=list.length;
         }
+        if(wiz.replTouched&&wiz.replSt&&wiz.replSt.domain_mode==="new_domain"&&!(wiz.replSt.registrars||[]).length)return bad("Замены на новый домен: выберите хотя бы одного регистратора");
         if(wiz.launchType==="multi"){
           const ds=String(v.domains||"").split(",").map(x=>x.trim()).filter(Boolean),ts=String(v.templates||"").split(",").map(x=>x.trim()).filter(Boolean).map(Number);
           if(!ds.length){wm.textContent="Выберите хотя бы один домен";wm.style.color="var(--bad)";return}
@@ -6158,6 +6167,10 @@ function projectWizard(existingProject){
             }
           }
           const job=await apiPost("/api/v1/ads/projects/"+wiz.project.id+"/campaigns/bulk-create",payload);
+          if(wiz.replTouched&&wiz.replSt){try{
+            const cur=await api("/api/v1/ads/projects/"+wiz.project.id+"/autoreplace",{});
+            await apiPut("/api/v1/ads/projects/"+wiz.project.id+"/autoreplace",{enabled:!!cur.enabled,domain_mode:wiz.replSt.domain_mode,registrars:wiz.replSt.registrars||[],template_ids:wiz.replSt.template_ids||[]});
+          }catch(e){toast("Настройки замен не сохранены: "+(e.message||""),{tone:"warning"})}}
           close();toast("Запуск начат — отслеживаем прогресс",{tone:"success"});openJobDrawer(wiz.project,job.job_id);
         }catch(err){msg.textContent=err.message||"Не удалось запустить";msg.style.color="var(--bad)"}
       })();
@@ -6217,6 +6230,30 @@ function hostToUnicode(host){
     return String.fromCodePoint(...out)};
   try{return String(host||"").split(".").map(l=>l.startsWith("xn--")?dec(l.slice(4)):l).join(".")}catch(e){return host}
 }
+// Замена умерших аккаунтов на новый домен + поддомен (2026-11-25): регистраторы
+// (аккаунты reg.ru и WebHOST1 из агента сайтов) и шаблоны сайта для новых доменов.
+async function replaceSourcesLoad(){
+  if(!S.ads.regAccs){try{S.ads.regAccs=(await api("/api/v1/sites/regru-accounts",{})).accounts||[]}catch(e){S.ads.regAccs=null;throw e}}
+  if(!S.ads.siteTpls)S.ads.siteTpls=(await api("/api/v1/ads/site-templates",{})).items||[];
+  return{accs:S.ads.regAccs,tpls:S.ads.siteTpls}}
+function replaceSourcesHtml(st,accs,tpls,prefix){
+  const nd=st.domain_mode==="new_domain";
+  const aItems=accs.map(a=>({value:String(a.id),label:a.login+(a.ok?` — доменов ${a.count}`:" — нет доступа: "+String(a.error||"").slice(0,60))}));
+  const tItems=tpls.map(t=>({value:String(t.id),label:t.name}));
+  return `<label class="row" style="gap:8px;margin-top:8px"><input type="checkbox" name="${prefix}_nd" ${nd?"checked":""}><span>Заменять <b>только на новый домен + поддомен</b> — свободный домен из привязанных регистраторов, поддомен от ИИ, сайт по шаблону со счётчиком нового аккаунта</span></label>
+    <div data-${prefix}-nd-box ${nd?"":"hidden"}>
+      <nv-tree-select name="${prefix}_regs" label="Регистраторы — откуда брать домены" items="${esc(JSON.stringify(aItems))}" value="${esc((st.registrars||[]).join(","))}" placeholder="Выберите регистраторов" multiple min-width="340" style="margin-top:8px"></nv-tree-select>
+      <nv-tree-select name="${prefix}_tpls" label="Шаблон(ы) сайта для новых доменов (пусто — как у сайтов проекта)" items="${esc(JSON.stringify(tItems))}" value="${esc((st.template_ids||[]).join(","))}" placeholder="Как у сайтов проекта" multiple min-width="340" style="margin-top:8px"></nv-tree-select>
+    </div>`}
+function replaceSourcesVals(root,prefix){
+  const ids=n=>{const e=root.querySelector(`nv-tree-select[name="${prefix}_${n}"]`);return String(e&&e.value||"").split(",").map(x=>+x.trim()).filter(Boolean)};
+  const cb=root.querySelector(`input[name="${prefix}_nd"]`);
+  return{domain_mode:cb&&cb.checked?"new_domain":"same",registrars:ids("regs"),template_ids:ids("tpls")}}
+function replaceSourcesMount(root,prefix,onChange){
+  const cb=root.querySelector(`input[name="${prefix}_nd"]`),box=root.querySelector(`[data-${prefix}-nd-box]`);
+  if(!cb)return;
+  cb.onchange=()=>{box.hidden=!cb.checked;onChange&&onChange()};
+  root.querySelectorAll(`nv-tree-select[name^="${prefix}_"]`).forEach(e=>e.addEventListener("nv-change",()=>onChange&&onChange()))}
 function buttonActionOptions(none="Без кнопки"){return ["NONE:"+none,...BUTTON_ACTIONS.map(([v,l])=>v+":"+l)].join("|")}
 // Кнопка и площадки для уже созданных кампаний проекта.
 function adSettingsDialog(p,acc,redraw){
@@ -6499,12 +6536,19 @@ function openProjectPanel(p){
           try{
             const st=await api("/api/v1/ads/projects/"+p.id+"/autoreplace",{});
             lfHost.innerHTML=`<nv-switch name="ar_on" label="Автозамена умерших аккаунтов" description="0 показов за сутки или угасание (2 дня меньше ${Math.round(FADE.ratio*100)}% от пика и меньше ${FADE.maxImp} показов в день) → остановить, завести новый с теми же настройками, через 2 суток — возврат денег на Click.ru. Без лимита в день" ${st.enabled?"checked":""}></nv-switch>
-              <nv-button size="sm" variant="ghost" icon="play" data-ar-run hint="План за вчера по этому проекту, выполнение — по кнопке">Проверить сейчас</nv-button>`;
-            const save=async()=>{const on=lfHost.querySelector('[name="ar_on"]').checked;
-              try{const r=await apiPut("/api/v1/ads/projects/"+p.id+"/autoreplace",{enabled:on});
-                toast(r.enabled?"Автозамена включена":"Автозамена выключена",{tone:r.enabled?"success":"info"});S.ads.lifeLoaded=false}
+              <nv-button size="sm" variant="ghost" icon="play" data-ar-run hint="План за вчера по этому проекту, выполнение — по кнопке">Проверить сейчас</nv-button>
+              <div data-ar-src><span class="muted" style="font-size:12.5px">Загружаю регистраторов…</span></div>`;
+            const srcHost=lfHost.querySelector("[data-ar-src]");
+            let srcReady=false;
+            const save=async(quiet)=>{const on=lfHost.querySelector('[name="ar_on"]').checked;
+              const src=srcReady?replaceSourcesVals(srcHost,"ar"):{};
+              if(src.domain_mode==="new_domain"&&!src.registrars.length){if(!quiet)toast("Выберите хотя бы одного регистратора",{tone:"warning"});return}
+              try{const r=await apiPut("/api/v1/ads/projects/"+p.id+"/autoreplace",{enabled:on,...src});
+                toast((r.enabled?"Автозамена включена":"Автозамена выключена")+(r.domain_mode==="new_domain"?" · новый домен + поддомен":""),{tone:r.enabled?"success":"info"});S.ads.lifeLoaded=false}
               catch(err){toast("Не удалось сохранить: "+(err.message||""),{tone:"danger"})}};
-            lfHost.querySelector('[name="ar_on"]').addEventListener("nv-change",save);
+            lfHost.querySelector('[name="ar_on"]').addEventListener("nv-change",()=>save());
+            replaceSourcesLoad().then(({accs,tpls})=>{srcHost.innerHTML=replaceSourcesHtml(st,accs,tpls,"ar");srcReady=true;replaceSourcesMount(srcHost,"ar",()=>save(true))})
+              .catch(err=>{srcHost.innerHTML=`<span class="muted" style="font-size:12.5px">Регистраторы не загрузились: ${esc(err.message||"")}</span>`});
             lfHost.querySelector("[data-ar-run]").onclick=()=>lifeRunDlg([p.id]);
           }catch(e){lfHost.innerHTML=""}
         })();
