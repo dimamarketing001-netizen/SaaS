@@ -1289,6 +1289,20 @@ button.tr-t:hover{background:var(--surface-2)}
 .pop-e{padding:10px 8px;color:var(--ink-3)}
 .pop-f{display:flex;justify-content:space-between;align-items:center;padding:6px 8px 3px;border-top:1px solid var(--line);font-size:11.5px}
 .pop-x{border:0;background:none;padding:0;cursor:pointer;color:var(--svc-ink);font-weight:500}
+/* «только / кроме» в фильтрах (nv-filter-select, nv-topic-tree) */
+.pop-r{display:flex;align-items:center;gap:2px}.pop-r .pop-o{flex:1 1 auto;min-width:0;width:auto}
+.pop-qa{display:flex;gap:1px;flex:none;opacity:0;transition:opacity .1s}
+.pop-r:hover .pop-qa,.tr-r:hover .pop-qa,.pop-r:focus-within .pop-qa,.tr-r:focus-within .pop-qa{opacity:1}
+@media (hover:none){.pop-qa{opacity:1}}
+.pop-qa button{border:0;background:none;padding:3px 7px;border-radius:6px;font:inherit;font-size:11px;line-height:1.3;color:var(--ink-3);cursor:pointer;white-space:nowrap}
+.pop-qa button:hover,.pop-qa button:focus-visible{background:var(--surface-2);color:var(--ink)}
+.pop-qa button[data-not]:hover,.pop-qa button[data-not]:focus-visible{color:var(--bad)}
+.pop-m{display:flex;gap:2px;padding:3px;margin-top:2px;background:var(--surface-2);border-radius:9px}
+.pop-m button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;border:0;background:none;padding:5px 8px;border-radius:7px;font:inherit;font-size:11.5px;color:var(--ink-3);cursor:pointer;white-space:nowrap}
+.pop-m button[aria-checked="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line);font-weight:500}
+.pop-m button[data-mode="not"][aria-checked="true"]{color:var(--bad)}
+.pop-neg .pop-o input:checked+.box{background:var(--bad);border-color:var(--bad)}
+.fs.fs-neg .fs-v{color:var(--bad);display:inline-flex;align-items:center;gap:4px}
 .pop-d{display:flex;flex-direction:column;gap:6px;padding:8px;border-top:1px solid var(--line)}
 .pop-d label{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--ink-2)}
 .pop-d input{border:1px solid var(--line-2);border-radius:8px;background:var(--surface);padding:3px 6px;font-size:12px;color:var(--ink)}
@@ -2742,34 +2756,63 @@ window.nvOpenPop=openPop;window.nvClosePop=()=>{if(popClose)popClose()};
 /* ---------- Новые компоненты: формы ---------- */
 const rangeOf=v=>{if(!v||v==="all")return null;if(v.includes("..")){const[a,b]=v.split("..");return[+new Date(a+"T00:00:00"),+new Date(b+"T23:59:59")]}return[Date.now()-(+v)*864e5,Date.now()]};
 const fmtD=s=>new Date(s+"T00:00:00").toLocaleDateString("ru-RU",{day:"2-digit",month:"2-digit"});
+/* «Только» и «кроме» в фильтрах (25.11.2026). Значение с «!» в начале — режим «кроме»: показать всё, кроме выбранного.
+   Атрибут exclude включает режим «кроме» (переключатель внизу и кнопка «кроме» у строки); «только» есть всегда. */
+const negSplit=(v,sep)=>{v=String(v||"");const n=v.startsWith("!");return{neg:n,list:(n?v.slice(1):v).split(sep).filter(Boolean)}};
+window.negSplit=negSplit;  // разбор значения фильтра и в коде экранов
+const fsQa=(val,label,exc)=>`<span class="pop-qa"><button type="button" data-only="${esc(val)}" title="Показать только «${esc(label)}»" aria-label="Только «${esc(label)}»">только</button>${exc?`<button type="button" data-not="${esc(val)}" title="Показать всё, кроме «${esc(label)}»" aria-label="Кроме «${esc(label)}»">кроме</button>`:""}</span>`;
+const fsMode=neg=>`<div class="pop-m" role="radiogroup" aria-label="Как применить выбор"><button type="button" role="radio" data-mode="in" aria-checked="${!neg}">${ic("check",12)}Только выбранные</button><button type="button" role="radio" data-mode="not" aria-checked="${!!neg}">${ic("ban",12)}Все, кроме выбранных</button></div>`;
+/* Общая логика режима для обоих фильтров: пока список открыт, режим — el._neg (переключатель, «только», «кроме»),
+   закрыт — из значения («!» в начале) */
+const fsNeg=el=>el.b("exclude")&&(el._on?!!el._neg:negSplit(el.a("value"),el.sep).neg);
+const fsVal=(el,list)=>(list.length&&fsNeg(el)?"!":"")+list.join(el.sep);
+const fsText=(el,first)=>{const s=el.sel();if(!s.length)return el.a("placeholder")||"Все";const t=first+(s.length>1?" +"+(s.length-1):"");return fsNeg(el)?"Кроме: "+t:t};
+const fsBtn=(el,txt,popup)=>{const s=el.sel(),l=el.a("label"),neg=s.length&&fsNeg(el);
+  return `<button type="button" class="fs${s.length?" act":""}${neg?" fs-neg":""}" aria-haspopup="${popup}" aria-expanded="${!!el._on}">${l?`<span class="fs-l">${esc(l)}</span>`:""}<span class="fs-v${s.length?" on":""}">${neg?ic("ban",12):""}${esc(txt)}</span>${ic("chevron-down",14)}</button>`};
+/* Подвал всплывашки: переключатель режима, «Сбросить», счётчик. sync() — обновить после смены значения/режима */
+const fsFoot=el=>`${el.b("exclude")?fsMode(fsNeg(el)):""}<div class="pop-f"><button type="button" class="pop-x">Сбросить</button><span class="muted"><span class="pop-nl">${fsNeg(el)?"Исключено":"Выбрано"}</span>: <b class="pop-n num">${el.sel().length}</b></span></div>`;
+const fsSync=(el,p)=>{const neg=fsNeg(el);p.classList.toggle("pop-neg",!!neg);p.querySelector(".pop-n").textContent=el.sel().length;p.querySelector(".pop-nl").textContent=neg?"Исключено":"Выбрано";
+  p.querySelectorAll(".pop-m [data-mode]").forEach(b=>b.setAttribute("aria-checked",String((b.dataset.mode==="not")===!!neg)))};
+/* Клики «только / кроме» и переключатель режима; set(list) — записать выбор и перерисовать */
+const fsWire=(el,p,set)=>{
+  p.addEventListener("click",e=>{
+    const o=e.target.closest("[data-only],[data-not]");
+    if(o){e.preventDefault();e.stopPropagation();el._neg=o.hasAttribute("data-not");set([o.dataset.only||o.dataset.not]);return}
+    const m=e.target.closest(".pop-m [data-mode]");
+    if(m){e.preventDefault();const neg=m.dataset.mode==="not";if(!!fsNeg(el)===neg)return;el._neg=neg;
+      if(el.sel().length)set(el.sel());else fsSync(el,p)}
+  },true)};
 define("nv-filter-select",class extends NvEl{
+  get sep(){return ","}
   get value(){return this.a("value")}get name(){return this.getAttribute("name")}
-  sel(){return this.a("value").split(",").filter(Boolean)}
-  html(){const o=parseOpts(this.a("options")),s=this.sel(),f=o.find(x=>x.value===s[0]),txt=!s.length?(this.a("placeholder")||"Все"):f?f.label+(s.length>1?" +"+(s.length-1):""):String(s.length),l=this.a("label");
-    return `<button type="button" class="fs${s.length?" act":""}" aria-haspopup="listbox" aria-expanded="${!!this._on}">${l?`<span class="fs-l">${esc(l)}</span>`:""}<span class="fs-v${s.length?" on":""}">${esc(txt)}</span>${ic("chevron-down",14)}</button>`}
+  sel(){return negSplit(this.a("value"),",").list}
+  html(){const o=parseOpts(this.a("options")),s=this.sel(),f=o.find(x=>x.value===s[0]);
+    return fsBtn(this,fsText(this,f?f.label:String(s.length)),"listbox")}
   mounted(){this.firstChild.onclick=()=>this._on?closePop():this.pop()}
-  pop(){const o=parseOpts(this.a("options")),search=o.length>5;this._on=true;this.firstChild.setAttribute("aria-expanded","true");
-    const rows=q=>{const s=this.sel(),L=o.filter(x=>!q||x.label.toLowerCase().includes(q));return L.map(x=>`<label class="pop-o"><input type="checkbox" value="${esc(x.value)}" ${s.includes(x.value)?"checked":""}><span class="box">${ic("check",12)}</span><span class="t">${esc(x.label)}</span></label>`).join("")||'<p class="pop-e">Ничего не нашлось</p>'};
-    openPop(this,`${search?`<div class="pop-s">${ic("search",14)}<input type="search" placeholder="Найти" aria-label="Найти вариант"></div>`:""}<div class="pop-l" role="listbox" aria-multiselectable="true">${rows("")}</div><div class="pop-f"><button type="button" class="pop-x">Сбросить</button><span class="muted">Выбрано: <b class="pop-n num">${this.sel().length}</b></span></div>`,{width:Math.max(+this.a("min-width")||220,this.offsetWidth),onClose:()=>{this._on=false;const b=this.firstChild;b&&b.setAttribute("aria-expanded","false")},mount:(p,close,place)=>{
-      const set=v=>{this.setAttribute("value",v.join(","));this.firstChild.setAttribute("aria-expanded","true");p.querySelector(".pop-n").textContent=v.length;this.emit("nv-change",{value:v.join(","),name:this.name})};
-      const list=p.querySelector(".pop-l"),inp=p.querySelector(".pop-s input");
+  pop(){const o=parseOpts(this.a("options")),search=o.length>5,exc=this.b("exclude");this._neg=negSplit(this.a("value"),",").neg;this._on=true;this.firstChild.setAttribute("aria-expanded","true");
+    const rows=q=>{const s=this.sel(),L=o.filter(x=>!q||x.label.toLowerCase().includes(q));return L.map(x=>`<div class="pop-r"><label class="pop-o"><input type="checkbox" value="${esc(x.value)}" ${s.includes(x.value)?"checked":""}><span class="box">${ic("check",12)}</span><span class="t">${esc(x.label)}</span></label>${L.length>1||exc?fsQa(x.value,x.label,exc):""}</div>`).join("")||'<p class="pop-e">Ничего не нашлось</p>'};
+    openPop(this,`${search?`<div class="pop-s">${ic("search",14)}<input type="search" placeholder="Найти" aria-label="Найти вариант"></div>`:""}<div class="pop-l" role="listbox" aria-multiselectable="true">${rows("")}</div>${fsFoot(this)}`,{width:Math.max(+this.a("min-width")||240,this.offsetWidth),onClose:()=>{this._on=false;this._neg=false;const b=this.firstChild;b&&b.setAttribute("aria-expanded","false")},mount:(p,close,place)=>{
+      const list=p.querySelector(".pop-l"),inp=p.querySelector(".pop-s input"),q=()=>inp?inp.value.trim().toLowerCase():"";
+      const set=v=>{const val=fsVal(this,v);this.setAttribute("value",val);this.firstChild.setAttribute("aria-expanded","true");fsSync(this,p);this.emit("nv-change",{value:val,name:this.name})};
+      const setDraw=v=>{set(v);const y=list.scrollTop;list.innerHTML=rows(q());list.scrollTop=y};
+      fsSync(this,p);fsWire(this,p,setDraw);
       list.onchange=e=>{const c=e.target,s=this.sel();c.checked?s.push(c.value):s.splice(s.indexOf(c.value),1);set(s)};
-      p.querySelector(".pop-x").onclick=()=>{set([]);list.innerHTML=rows(inp?inp.value.trim().toLowerCase():"")};
-      if(inp){inp.oninput=()=>{list.innerHTML=rows(inp.value.trim().toLowerCase());place()};inp.focus()}else{const c=list.querySelector("input");c&&c.focus()}}})}
-},"Формы",{desc:"Фильтр с выбором нескольких значений. При большом списке появляется поиск. Значения передаются через запятую.",events:["nv-change {value,name}"],attrs:{label:{type:"string",default:"Площадка",desc:"Подпись внутри поля"},options:{type:"string",default:"yandex:Яндекс / РСЯ|vk:VK Ads|tg:Telegram Ads|web:Web display",desc:"значение:подпись, через |"},value:{type:"string",default:"yandex",desc:"Выбранные значения через запятую"},placeholder:{type:"string",default:"Все",desc:"Текст, когда ничего не выбрано"},name:{type:"string",default:"",desc:"Ключ значения"},"min-width":{type:"number",default:220,desc:"Минимальная ширина выпадающего списка, px — увеличьте для длинных подписей"}}});
+      p.querySelector(".pop-x").onclick=()=>{this._neg=false;setDraw([])};
+      if(inp){inp.oninput=()=>{list.innerHTML=rows(q());place()};inp.focus()}else{const c=list.querySelector("input");c&&c.focus()}}})}
+},"Формы",{desc:"Фильтр с выбором нескольких значений. При большом списке появляется поиск. Значения передаются через запятую. У строки — «только» (выбрать одно это значение); с атрибутом exclude — ещё «кроме» и переключатель «Только выбранные / Все, кроме выбранных» (значение тогда начинается с «!»).",events:["nv-change {value,name}"],attrs:{label:{type:"string",default:"Площадка",desc:"Подпись внутри поля"},options:{type:"string",default:"yandex:Яндекс / РСЯ|vk:VK Ads|tg:Telegram Ads|web:Web display",desc:"значение:подпись, через |"},value:{type:"string",default:"yandex",desc:"Выбранные значения через запятую; «!» в начале — все, кроме них"},placeholder:{type:"string",default:"Все",desc:"Текст, когда ничего не выбрано"},name:{type:"string",default:"",desc:"Ключ значения"},exclude:{type:"bool",desc:"Разрешить режим «кроме»"},"min-width":{type:"number",default:240,desc:"Минимальная ширина выпадающего списка, px — увеличьте для длинных подписей"}}});
 
 /* Дерево с галочками: раздел → подрубрика → интент. Данные — window.NV_TREES[tree-key]:
-   [{main,count,subs:[{sub,count,intents:[{intent,count}]}]}]. Значение — пути через «~», уровни через «>». */
+   [{main,count,subs:[{sub,count,intents:[{intent,count}]}]}]. Значение — пути через «~», уровни через «>»; «!» в начале — «кроме». */
 define("nv-topic-tree",class extends NvEl{
+  get sep(){return "~"}
   get value(){return this.a("value")}get name(){return this.getAttribute("name")}
-  sel(){return this.a("value").split("~").filter(Boolean)}
+  sel(){return negSplit(this.a("value"),"~").list}
   tree(){return (window.NV_TREES||{})[this.a("tree-key")]||[]}
-  html(){const s=this.sel(),l=this.a("label"),last=p=>p.split(">").pop(),txt=!s.length?(this.a("placeholder")||"Все"):last(s[0])+(s.length>1?" +"+(s.length-1):"");
-    return `<button type="button" class="fs${s.length?" act":""}" aria-haspopup="tree" aria-expanded="${!!this._on}">${l?`<span class="fs-l">${esc(l)}</span>`:""}<span class="fs-v${s.length?" on":""}">${esc(txt)}</span>${ic("chevron-down",14)}</button>`}
+  html(){const s=this.sel(),last=p=>p.split(">").pop();return fsBtn(this,fsText(this,s.length?last(s[0]):""),"tree")}
   mounted(){this.firstChild.onclick=()=>this._on?closePop():this.pop()}
-  rows(q){const T=this.tree(),s=new Set(this.sel()),open=this._open||(this._open=new Set()),out=[],hit=t=>String(t).toLowerCase().includes(q);
+  rows(q){const T=this.tree(),s=new Set(this.sel()),open=this._open||(this._open=new Set()),out=[],hit=t=>String(t).toLowerCase().includes(q),exc=this.b("exclude");
     const row=(path,label,count,lvl,kids,implied,forceOpen)=>{const on=implied||s.has(path),part=!on&&[...s].some(x=>x.startsWith(path+">")),isOpen=forceOpen||open.has(path);
-      return `<div class="tr-r tr-${lvl}">${kids?`<button type="button" class="tr-t" data-tg="${esc(path)}" aria-expanded="${isOpen}" aria-label="${isOpen?"Свернуть":"Раскрыть"}">${ic(isOpen?"chevron-down":"chevron-right",14)}</button>`:`<span class="tr-t"></span>`}<label class="pop-o${part?" part":""}"><input type="checkbox" value="${esc(path)}" ${on?"checked":""} ${implied?"disabled":""}><span class="box">${ic(part?"minus":"check",12)}</span><span class="t">${esc(label)}</span><span class="tr-n num">${count}</span></label>${this.b("folders")&&lvl<2?`<button type="button" class="tr-f" data-fd="${esc(path)}" title="${lvl?"Подборка из подрубрики с текущими объявлениями":"Коллекция из раздела: внутри подборки по подрубрикам (отмеченным или всем)"}" aria-label="Создать ${lvl?"подборку":"коллекцию"} «${esc(label)}»">${ic("folder-plus",14)}</button>`:""}</div>`};
+      return `<div class="tr-r tr-${lvl}">${kids?`<button type="button" class="tr-t" data-tg="${esc(path)}" aria-expanded="${isOpen}" aria-label="${isOpen?"Свернуть":"Раскрыть"}">${ic(isOpen?"chevron-down":"chevron-right",14)}</button>`:`<span class="tr-t"></span>`}<label class="pop-o${part?" part":""}"><input type="checkbox" value="${esc(path)}" ${on?"checked":""} ${implied?"disabled":""}><span class="box">${ic(part?"minus":"check",12)}</span><span class="t">${esc(label)}</span><span class="tr-n num">${count}</span></label>${fsQa(path,label,exc)}${this.b("folders")&&lvl<2?`<button type="button" class="tr-f" data-fd="${esc(path)}" title="${lvl?"Подборка из подрубрики с текущими объявлениями":"Коллекция из раздела: внутри подборки по подрубрикам (отмеченным или всем)"}" aria-label="Создать ${lvl?"подборку":"коллекцию"} «${esc(label)}»">${ic("folder-plus",14)}</button>`:""}</div>`};
     for(const M of T){const mp=M.main,mHit=!q||hit(mp),sub=[];
       for(const S_ of (M.subs||[])){const sp=mp+">"+S_.sub,ints=S_.intents||[],iHit=q?ints.filter(i=>hit(i.intent)):[];
         if(q&&!mHit&&!hit(S_.sub)&&!iHit.length)continue;
@@ -2780,16 +2823,17 @@ define("nv-topic-tree",class extends NvEl{
       const showS=q?!!sub.length&&(!mHit||open.has(mp)||sub.length<=12):open.has(mp);
       out.push(row(mp,mp,M.count,0,(M.subs||[]).length,false,showS));if(showS)out.push(...sub)}
     return out.join("")||'<p class="pop-e">Ничего не нашлось</p>'}
-  pop(){this._on=true;this.firstChild.setAttribute("aria-expanded","true");
-    openPop(this,`<div class="pop-s">${ic("search",14)}<input type="search" placeholder="Найти раздел, подрубрику или интент" aria-label="Найти"></div>${this.b("folders")?`<p class="tr-hint">${ic("folder-plus",13)} у темы — собрать коллекцию (раздел) или подборку (подрубрика) из текущих объявлений</p>`:""}<div class="pop-l tr-l" role="tree" aria-multiselectable="true">${this.rows("")}</div><div class="pop-f"><button type="button" class="pop-x">Сбросить</button><span class="muted">Выбрано: <b class="pop-n num">${this.sel().length}</b></span></div>`,{width:Math.max(+this.a("min-width")||380,this.offsetWidth),onClose:()=>{this._on=false;const b=this.firstChild;b&&b.setAttribute("aria-expanded","false")},mount:(p,close,place)=>{
+  pop(){this._neg=negSplit(this.a("value"),"~").neg;this._on=true;this.firstChild.setAttribute("aria-expanded","true");
+    openPop(this,`<div class="pop-s">${ic("search",14)}<input type="search" placeholder="Найти раздел, подрубрику или интент" aria-label="Найти"></div>${this.b("folders")?`<p class="tr-hint">${ic("folder-plus",13)} у темы — собрать коллекцию (раздел) или подборку (подрубрика) из текущих объявлений</p>`:""}<div class="pop-l tr-l" role="tree" aria-multiselectable="true">${this.rows("")}</div>${fsFoot(this)}`,{width:Math.max(+this.a("min-width")||400,this.offsetWidth),onClose:()=>{this._on=false;this._neg=false;const b=this.firstChild;b&&b.setAttribute("aria-expanded","false")},mount:(p,close,place)=>{
       const list=p.querySelector(".pop-l"),inp=p.querySelector(".pop-s input"),q=()=>inp.value.trim().toLowerCase(),redraw=()=>{const y=list.scrollTop;list.innerHTML=this.rows(q());list.scrollTop=y;place()};
-      const set=v=>{this.setAttribute("value",v.join("~"));this.firstChild.setAttribute("aria-expanded","true");p.querySelector(".pop-n").textContent=v.length;this.emit("nv-change",{value:v.join("~"),name:this.name});redraw()};
+      const set=v=>{const val=fsVal(this,v);this.setAttribute("value",val);this.firstChild.setAttribute("aria-expanded","true");fsSync(this,p);this.emit("nv-change",{value:val,name:this.name});redraw()};
+      fsSync(this,p);fsWire(this,p,set);
       list.onclick=e=>{const fd=e.target.closest("[data-fd]");if(fd){e.preventDefault();closePop();this.emit("nv-folder",{path:fd.dataset.fd});return}
         const t=e.target.closest("[data-tg]");if(!t)return;e.preventDefault();const k=t.dataset.tg,o=this._open;o.has(k)?o.delete(k):o.add(k);redraw()};
       list.onchange=e=>{const c=e.target,v=c.value;let s=this.sel().filter(x=>x!==v);if(c.checked)s=s.filter(x=>!x.startsWith(v+">")).concat(v);set(s)};
-      p.querySelector(".pop-x").onclick=()=>set([]);
+      p.querySelector(".pop-x").onclick=()=>{this._neg=false;set([])};
       inp.oninput=()=>redraw();inp.focus()}})}
-},"Формы",{desc:"Фильтр-дерево с галочками: раздел → подрубрика → интент, у каждого пункта число объявлений. Выбор раздела включает все его подрубрики. Значения — пути через «~», уровни через «>».",events:["nv-change {value,name}"],attrs:{label:{type:"string",default:"Тема объявления",desc:"Подпись внутри поля"},"tree-key":{type:"string",default:"lib",desc:"Ключ данных в window.NV_TREES"},value:{type:"string",default:"",desc:"Выбранные пути через ~"},placeholder:{type:"string",default:"Все",desc:"Текст, когда ничего не выбрано"},name:{type:"string",default:"",desc:"Ключ значения"},"min-width":{type:"number",default:380,desc:"Минимальная ширина списка, px"}}});
+},"Формы",{desc:"Фильтр-дерево с галочками: раздел → подрубрика → интент, у каждого пункта число объявлений. Выбор раздела включает все его подрубрики. Значения — пути через «~», уровни через «>». У строки — «только»; с атрибутом exclude — «кроме» и переключатель режима (значение тогда начинается с «!»).",events:["nv-change {value,name}"],attrs:{label:{type:"string",default:"Тема объявления",desc:"Подпись внутри поля"},"tree-key":{type:"string",default:"lib",desc:"Ключ данных в window.NV_TREES"},value:{type:"string",default:"",desc:"Выбранные пути через ~; «!» в начале — все, кроме них"},placeholder:{type:"string",default:"Все",desc:"Текст, когда ничего не выбрано"},name:{type:"string",default:"",desc:"Ключ значения"},exclude:{type:"bool",desc:"Разрешить режим «кроме»"},"min-width":{type:"number",default:400,desc:"Минимальная ширина списка, px"}}});
 
 define("nv-date-range",class extends NvEl{
   get value(){return this.a("value")}get name(){return this.getAttribute("name")}
@@ -3134,9 +3178,14 @@ const DEFAULT_API_BASE="https://xn--80ak2afbe.xn--b1ajdba5acbodeeeaj1qb.xn--p1ai
 const API_BASE=(localStorage.getItem("parsya_api_base")||DEFAULT_API_BASE).replace(/\/+$/,"");
 /* Интент-скоуп (как в прежней версии страницы): по умолчанию весь кабинет
    (библиотека + аналитика) ограничен выбранными поисковыми запросами. */
-const INTENT_SCOPED_PATHS=new Set(["/api/v1/creatives","/api/v1/advertisers","/api/v1/coverage",
- "/api/v1/analytics/cross-platform","/api/v1/analytics/carousels","/api/v1/analytics/campaigns",
+const INTENT_SCOPED_PATHS=new Set(["/api/v1/creatives"]);
+/* Анализ (25.11.2026, Дима): вместо «ключевого слова запуска» — тема объявлений (раздел → подрубрика → интент,
+   «!» в начале — все, кроме выбранных). Выбор общий для всех экранов анализа, хранится в localStorage. */
+const TOPIC_SCOPED_PATHS=new Set(["/api/v1/advertisers","/api/v1/coverage",
+ "/api/v1/analytics/cross-platform","/api/v1/analytics/carousels","/api/v1/analytics/campaigns","/api/v1/analytics/ad-signals",
  "/api/v1/analytics/keywords","/api/v1/analytics/fastest-growing","/api/v1/analytics/landing-mismatch","/api/v1/analytics/daily","/api/v1/analytics/summary","/api/v1/analytics/leaders"]);
+function getAnaTopic(){try{return localStorage.getItem("parsya_ana_topic")||""}catch(e){return""}}
+function setAnaTopic(v){try{localStorage.setItem("parsya_ana_topic",v||"")}catch(e){}}
 function getActiveIntents(){try{return JSON.parse(localStorage.getItem("parsya_active_intents")||"[]")}catch(e){return[]}}
 function setActiveIntents(list){try{localStorage.setItem("parsya_active_intents",JSON.stringify(list||[]))}catch(e){}}
 function activeIntentParam(){const list=getActiveIntents();return list.length?list.join(","):""}
@@ -3172,6 +3221,7 @@ async function api(path,params){
  const url=new URL(API_BASE+path);
  const finalParams={...(params||{})};
  if(INTENT_SCOPED_PATHS.has(path)&&finalParams.intent===undefined){const intent=activeIntentParam();if(intent)finalParams.intent=intent}
+ if(TOPIC_SCOPED_PATHS.has(path)&&finalParams.ai_tree===undefined){const t=getAnaTopic();if(t)finalParams.ai_tree=t}
  Object.entries(finalParams).forEach(([k,v])=>{if(v!==undefined&&v!==""&&v!==null)url.searchParams.set(k,v)});
  const res=await netFetch(url,{headers:{Authorization:"Bearer "+session.token}});
  if(res.status===401){localStorage.removeItem("parsya_session");location.replace("index.html");throw new Error("session expired")}
@@ -3727,8 +3777,9 @@ function filtered(){
   if(I.lib.server)return CR();  // фильтры, сортировку и страницы уже применил сервер
   let r=CR().filter(g=>{
     const rep=g.representative;
-    if(f.platform&&realPlatformLabel(rep.detection_method)!==f.platform)return false;
-    if(f.format&&formatOf(rep)!==f.format)return false;
+    const pl=negSplit(f.platform,","),fm=negSplit(f.format,",");
+    if(pl.list.length&&pl.list.includes(realPlatformLabel(rep.detection_method))===pl.neg)return false;
+    if(fm.list.length&&fm.list.includes(formatOf(rep))===fm.neg)return false;
     if(f.saved==="yes"&&!savedSet.has(String(rep.id)))return false;
     if(f.saved==="no"&&savedSet.has(String(rep.id)))return false;
     return true;
@@ -3869,9 +3920,27 @@ function bindCards(root,target){
     else N.refresh();
   });
 }
+/* Текст выбранной темы анализа: «Юристы › Семейные споры, Химчистка» / «всё, кроме …» */
+function anaTopicText(){
+  const v=S.intel.anaTopic||"",neg=v.startsWith("!"),list=(neg?v.slice(1):v).split("~").filter(Boolean);
+  if(!list.length)return"";
+  const t=list.slice(0,3).map(x=>"«"+x.split(">").join(" › ")+"»").join(", ")+(list.length>3?" и ещё "+(list.length-3):"");
+  return neg?"все темы, кроме "+t:(list.length>1?"темы ":"тема ")+t;
+}
 function anaSub(text){
-  const a=S.intel.activeIntents||[];
-  return text+(a.length?" Данные по запросам: "+a.map(x=>"«"+x+"»").join(", ")+".":" Данные по всем запросам — выберите «Ключевое слово запуска», чтобы сузить.");
+  const t=anaTopicText();
+  return text+(t?" Показано: "+t+".":" Все темы — выберите «Тему объявлений», чтобы сузить.");
+}
+function anaTopicHtml(){
+  return `<nv-topic-tree label="Тема объявлений" value="${esc(S.intel.anaTopic||"")}" tree-key="ana" placeholder="Все темы" min-width="440" exclude data-chg="anaTopic"></nv-topic-tree>`;
+}
+/* Дерево тем для анализа — по всем объявлениям пользователя (без привязки к запуску) */
+async function loadAnaTree(force){
+  const I=S.intel;if(I._anaTreeLoading||(!force&&I._anaTreeAt&&Date.now()-I._anaTreeAt<180000))return;
+  I._anaTreeLoading=true;
+  try{const t=await api("/api/v1/ai-intent-tree",{});(window.NV_TREES=window.NV_TREES||{}).ana=t.items||[];I._anaTreeAt=Date.now()}
+  catch(e){}
+  I._anaTreeLoading=false;
 }
 function intentControlHtml(){
   const I=S.intel,opts=I.intents.map(i=>esc(i.intent)+":"+esc(i.intent)+" ("+(i.creatives_count||0)+")").join("|");
@@ -3936,7 +4005,7 @@ async function loadLeaders(theme){
   try{
     const d=await api("/api/v1/analytics/leaders",L.theme?{ai_intent:L.theme}:{});
     if(seq!==L.seq)return;
-    L.data=d;L.theme=d.theme||"";L.kw=(S.intel.activeIntents||[]).join(",");L.at=Date.now();
+    L.data=d;L.theme=d.theme||"";L.kw=S.intel.anaTopic||"";L.at=Date.now();
   }catch(err){if(seq!==L.seq)return;toast("Не удалось загрузить сильные объявления: "+(err.message||""),{tone:"danger"})}
   L.loading=false;L.loaded=true;
   N.refreshIf("intel-leaders");
@@ -3987,12 +4056,12 @@ async function loadAiIntents(){
     I.aiIntents=d.items||[];I.aiPending=d.pending||0;I.aiLoaded=true;
     (window.NV_TREES=window.NV_TREES||{}).lib=t.items||[];
     // выбранные разделы, которых нет у этого запуска, снимаем
-    const mains=new Set((t.items||[]).map(x=>x.main)),keepT=String(I.f.aiTree||"").split("~").filter(Boolean).filter(x=>mains.has(x.split(">")[0])).join("~");
+    const mains=new Set((t.items||[]).map(x=>x.main)),tr=negSplit(I.f.aiTree,"~"),tk=tr.list.filter(x=>mains.has(x.split(">")[0])),keepT=tk.length?(tr.neg?"!":"")+tk.join("~"):"";
     if(t.items&&t.items.length&&keepT!==String(I.f.aiTree||"")){I.f.aiTree=keepT;I.f.page=1;loadLibrary();return}
     // выбранные интенты, которых нет у этого запуска, снимаем
     const have=new Set(I.aiIntents.map(x=>String(x.intent||"").toLowerCase()).concat(I.aiPending?["__pending__"]:[]));
-    const keep=String(I.f.aiIntent||"").split(",").filter(Boolean).filter(x=>have.has(x.toLowerCase()));
-    if(keep.join(",")!==String(I.f.aiIntent||"")){I.f.aiIntent=keep.join(",");I.f.page=1;loadLibrary();return}
+    const ai=negSplit(I.f.aiIntent,","),keep=ai.list.filter(x=>have.has(x.toLowerCase())),keepA=keep.length?(ai.neg?"!":"")+keep.join(","):"";
+    if(keepA!==String(I.f.aiIntent||"")){I.f.aiIntent=keepA;I.f.page=1;loadLibrary();return}
     refreshLibSafe();
   }catch(err){I.aiLoaded=true}
 }
@@ -4230,7 +4299,7 @@ async function topicFolder(path,allSubs){
   try{
     // раздел, в котором отмечены отдельные подрубрики (или интенты), — подпапки только для отмеченных
     toast(`Собираю ${sub?"подборку":"коллекцию"} «${sub||main}» из текущих объявлений…`);
-    const picked=sub||allSubs?[]:[...new Set(String(S.intel.f.aiTree||"").split("~").filter(x=>x.startsWith(main+">")).map(x=>x.split(">")[1]))];
+    const tr=negSplit(S.intel.f.aiTree,"~"),picked=sub||allSubs||tr.neg?[]:[...new Set(tr.list.filter(x=>x.startsWith(main+">")).map(x=>x.split(">")[1]))];
     const r=await apiPost("/api/v1/collections/from-topic",{path,filters,subs:picked});
     await loadCollections();
     const what=sub?`Подборка «${sub}» в коллекции «${main}»`:`Коллекция «${main}»: ${r.folders.length} ${plural(r.folders.length,"подборка","подборки","подборок")}`;
@@ -4615,12 +4684,14 @@ async function loadAnalytics(force){
   if(I.loaded&&!force)return;
   I.loading=true;if(!I.loaded)N.refreshIf("intel-overview","intel-sources","intel-carousels","intel-campaigns","intel-fresh","intel-platforms","intel-advertisers");
   const safe=p=>p.catch(()=>({}));
+  loadAnaTree();
+  const sc={intent:"",ai_tree:S.intel.anaTopic||""};  // креативы для анализа: тема объявлений вместо ключевого слова запуска
   const[coverage,recent,fresh,discounts,apps,cross,carousels,campaigns,keywords,growing,mismatch,coverageReport,daily,summary]=await Promise.all([
     safe(api("/api/v1/coverage",{})),
-    safe(api("/api/v1/creatives",{sort:"recent",limit:200})),
-    safe(api("/api/v1/creatives",{date_from:new Date(Date.now()-7*864e5).toISOString().slice(0,10),sort:"recent",limit:12})),
-    safe(api("/api/v1/creatives",{has_discount:"true",sort:"discount",limit:30})),
-    safe(api("/api/v1/creatives",{has_app:"true",sort:"recent",limit:30})),
+    safe(api("/api/v1/creatives",{...sc,sort:"recent",limit:200})),
+    safe(api("/api/v1/creatives",{...sc,date_from:new Date(Date.now()-7*864e5).toISOString().slice(0,10),sort:"recent",limit:12})),
+    safe(api("/api/v1/creatives",{...sc,has_discount:"true",sort:"discount",limit:30})),
+    safe(api("/api/v1/creatives",{...sc,has_app:"true",sort:"recent",limit:30})),
     safe(api("/api/v1/analytics/cross-platform",{})),
     safe(api("/api/v1/analytics/carousels",{})),
     safe(api("/api/v1/analytics/campaigns",{})),
@@ -4697,7 +4768,7 @@ function renderGalleries(host){
 }
 async function loadSignals(){
   const G=S.intel.sig=S.intel.sig||{};const seq=G.seq=(G.seq||0)+1;G.loading=true;
-  try{const d=await api("/api/v1/analytics/ad-signals",{});if(seq!==G.seq)return;G.data=d;G.kw=(S.intel.activeIntents||[]).join(",");G.at=Date.now()}
+  try{const d=await api("/api/v1/analytics/ad-signals",{});if(seq!==G.seq)return;G.data=d;G.kw=S.intel.anaTopic||"";G.at=Date.now()}
   catch(err){if(seq===G.seq){toast("Не удалось загрузить пометки: "+(err.message||""),{tone:"danger"});G.data=G.data||{totals:{}};G.at=Date.now()}}
   G.loading=false;N.refreshIf("intel-signals");
 }
@@ -4790,8 +4861,8 @@ library(){
   actions:`<nv-button icon="radar" data-act="newScan">Новое сканирование</nv-button>`,
   help:{title:"С чего начать",steps:["Запустите сканирование по своему запросу и городу.","Откройте креатив — там цена, ERID и ссылка.","Сохраняйте находки или собирайте их в подборки."]},
   body:`<div class="grid g4">${stat("Найдено объявлений",fmt(I.lib.server?(I.lib.total||0):r.length),'note="по текущим фильтрам"')}${libMatchTile()}${stat("С кодом ERID",erid,'note="на этой странице"')}${stat("В избранном",savedN,'note="всего сохранено"')}</div>
-  <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-select label="Запуск" value="${esc(f.job||"")}" options="${esc(jobFilterOptions())}" data-chg="libF" data-key="job"></nv-select><nv-topic-tree label="Тема объявления" value="${esc(f.aiTree||"")}" tree-key="lib" placeholder="Все темы" min-width="430" folders data-chg="libF" data-key="aiTree"></nv-topic-tree>${f.aiIntent?`<nv-filter-select label="Интент" value="${esc(f.aiIntent)}" options="${esc(aiIntentOptions()||"_:Пока не определены")}" placeholder="Все" min-width="320" data-chg="libF" data-key="aiIntent"></nv-filter-select>`:""}<nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-button variant="${moreN||I.fMore?"secondary":"ghost"}" icon="sliders-horizontal" data-act="libMore">Ещё фильтры${moreN?" · "+moreN:""}</nv-button></div>
-  ${I.fMore||moreN?`<div class="toolbar"><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" data-chg="libF" data-key="format"></nv-filter-select><nv-filter-select label="Пометки" value="${esc(f.feature||"")}" options="promo:Акция или промокод|old_price:Старая цена|warning:Предупреждение|age:Возрастная метка|social:Соцреклама|callouts:Уточнения|offers:Товары в плитке|gallery:Галерея картинок|app:Реклама приложения|ad_id:С номером объявления РСЯ" data-chg="libF" data-key="feature"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select>${intentControlHtml()}</div>`:""}
+  <div class="stack"><div class="toolbar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="libF" data-key="q"></nv-input><nv-select label="Запуск" value="${esc(f.job||"")}" options="${esc(jobFilterOptions())}" data-chg="libF" data-key="job"></nv-select><nv-topic-tree label="Тема объявления" value="${esc(f.aiTree||"")}" tree-key="lib" placeholder="Все темы" min-width="440" folders exclude data-chg="libF" data-key="aiTree"></nv-topic-tree>${f.aiIntent?`<nv-filter-select label="Интент" value="${esc(f.aiIntent)}" options="${esc(aiIntentOptions()||"_:Пока не определены")}" placeholder="Все" min-width="320" exclude data-chg="libF" data-key="aiIntent"></nv-filter-select>`:""}<nv-date-range label="Период" value="${esc(f.period||"all")}" data-chg="libF" data-key="period"></nv-date-range><nv-button variant="${moreN||I.fMore?"secondary":"ghost"}" icon="sliders-horizontal" data-act="libMore">Ещё фильтры${moreN?" · "+moreN:""}</nv-button></div>
+  ${I.fMore||moreN?`<div class="toolbar"><nv-filter-select label="Площадка" value="${esc(f.platform)}" options="${plats.map(p=>esc(p)+":"+esc(p)).join("|")}" exclude data-chg="libF" data-key="platform"></nv-filter-select><nv-filter-select label="Формат" value="${esc(f.format)}" options="${Object.entries(FORMAT).map(([k,v])=>k+":"+v).join("|")}" exclude data-chg="libF" data-key="format"></nv-filter-select><nv-filter-select label="Пометки" value="${esc(f.feature||"")}" options="promo:Акция или промокод|old_price:Старая цена|warning:Предупреждение|age:Возрастная метка|social:Соцреклама|callouts:Уточнения|offers:Товары в плитке|gallery:Галерея картинок|app:Реклама приложения|ad_id:С номером объявления РСЯ" exclude data-chg="libF" data-key="feature"></nv-filter-select><nv-select label="Сохранённые" value="${f.saved}" options=":Все|yes:Только сохранённые|no:Не сохранённые" data-chg="libF" data-key="saved"></nv-select>${intentControlHtml()}</div>`:""}
   ${jobBannerHtml()}
   <nv-saved-views id="lib-views" views="${esc(JSON.stringify(I.savedViews.map(v=>({id:v.id,name:v.name}))))}" value="${esc(activeViewId())}" can-save></nv-saved-views>
   <div class="row between" style="gap:10px;align-items:center;flex-wrap:wrap"><div id="lib-count" class="muted" style="font-size:13px"></div><div class="row" style="gap:8px;flex-wrap:wrap"><nv-select label="Сортировка" value="${f.sort}" options="recent:Сначала новые|oldest:Сначала старые|name:Домен А-Я" data-chg="libF" data-key="sort"></nv-select><nv-select label="На странице" value="${+f.pageSize||25}" options="25:25|50:50|100:100|200:200" data-chg="libF" data-key="pageSize"></nv-select></div></div></div><div id="lib-res">${I.lib.loading&&!I.lib.loaded?'<nv-skeleton count="6"></nv-skeleton>':""}</div><div id="lib-page" class="row" style="justify-content:center;margin-top:16px"></div><div class="bulk" id="lib-bulk" hidden></div>`,
@@ -4831,7 +4902,7 @@ compare(){
   actions:I.cmp.length>=2?`<nv-button variant="secondary" icon="folder-plus" data-act="cmpCollect">Сохранить в подборку</nv-button>`:"",
   body:`<nv-card heading="${I.cmp.length>=2?"Сравнение":"Как сравнить"}" subtitle="Выбрано ${I.cmp.length} из 4">${cmpMatrixHtml()}</nv-card>
   <nv-card heading="${I.cmp.length>=4?"Объявления":"Добавить объявления"}" subtitle="${I.cmp.length>=4?"Выбрано максимум — уберите одно, чтобы добавить другое":"Отметьте флажком в углу карточки"}">
-    <div class="k-bar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="cmpF" data-key="q"></nv-input><nv-topic-tree label="Тема объявления" value="${esc(f.aiTree||"")}" tree-key="lib" placeholder="Любая тема" min-width="400" data-chg="cmpF" data-key="aiTree" ${f.col?"disabled":""}></nv-topic-tree>${K.length?`<nv-filter-select label="Из подборки" value="${esc(f.col)}" options="${K.map(k=>esc(k.id)+":"+esc(k.name)+" ("+(k.items_count||0)+")").join("|")}" placeholder="Вся библиотека" data-chg="cmpF" data-key="col"></nv-filter-select>`:""}<nv-select label="Порядок" value="${esc(f.sort||"recent")}" options="recent:Сначала новые|oldest:Сначала старые" data-chg="cmpF" data-key="sort" ${f.col?"disabled":""}></nv-select></div>
+    <div class="k-bar"><nv-input class="grow" icon="search" type="search" label="Поиск" placeholder="Текст объявления или домен" value="${esc(f.q)}" data-chg="cmpF" data-key="q"></nv-input><nv-topic-tree label="Тема объявления" value="${esc(f.aiTree||"")}" tree-key="lib" placeholder="Любая тема" min-width="400" exclude data-chg="cmpF" data-key="aiTree" ${f.col?"disabled":""}></nv-topic-tree>${K.length?`<nv-filter-select label="Из подборки" value="${esc(f.col)}" options="${K.map(k=>esc(k.id)+":"+esc(k.name)+" ("+(k.items_count||0)+")").join("|")}" placeholder="Вся библиотека" data-chg="cmpF" data-key="col"></nv-filter-select>`:""}<nv-select label="Порядок" value="${esc(f.sort||"recent")}" options="recent:Сначала новые|oldest:Сначала старые" data-chg="cmpF" data-key="sort" ${f.col?"disabled":""}></nv-select></div>
     <div id="cmp-cnt" class="muted" style="font-size:13px;margin:10px 0">${cmpCountHtml()}</div>
     <div id="cmp-candidates">${cmpCandidatesHtml()}</div>
   </nv-card>`,
@@ -4914,18 +4985,20 @@ schedules(){
 overview(){
   const I=S.intel.ana;
   ensureAna();
-  if(I.loading&&!I.loaded)return{title:"Обзор",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="4"></nv-skeleton>'};
+  if(I.loading&&!I.loaded)return{title:"Обзор",sub:"Загружаем отчёты…",actions:anaTopicHtml(),body:'<nv-skeleton count="4"></nv-skeleton>'};
   const M=I.summary||{totals:{},intents:[],advertisers:[],top_creatives:[],sites:[]},T=M.totals||{},ot=M.on_topic;
-  const kw=S.intel.activeIntents||[],kwTxt=kw.map(x=>"«"+x+"»").join(", ");
+  const tp=anaTopicText(),topics=M.topics||[],top1=topics[0];
   const pd7=periodDelta(I.recentItems,7),trendSpark=dailyTrend(I.recentItems,7);
-  const offTopic=(M.intents||[]).filter(x=>!x.on_topic).slice(0,3).map(x=>x.intent);
+  // подписи тем: если все из одного раздела — только подтема, иначе «раздел › подтема»
+  const oneMain=topics.length&&topics.every(x=>x.main===topics[0].main),tLabel=x=>x.sub?(oneMain?x.sub:x.main+" › "+x.sub):x.main;
   // Главный вывод одной фразой: что нашли и сколько из этого по делу
   let lead;
-  if(!T.creatives)lead="Объявлений пока нет. Запустите сканирование по своему запросу — здесь появится сводка.";
-  else if(ot)lead=`По ${kw.length>1?"запросам":"запросу"} ${esc(kwTxt)} найдено <b>${fmt(T.creatives)}</b> объявлений, из них по теме — <b>${fmt(ot.count)}</b> (${ot.pct}%).`+(offTopic.length?` Остальное рекламная сеть показала по аудитории, а не по теме: чаще всего это ${esc(offTopic.join(", "))}.`:"")+(M.topic_only?" Списки рекламодателей и объявлений ниже — только по теме запроса.":"");
-  else lead=`В базе <b>${fmt(T.creatives)}</b> объявлений от <b>${fmt(T.advertisers||0)}</b> рекламодателей. Выберите справа «Ключевое слово запуска» — увидите, сколько объявлений по теме вашего запроса и кто именно рекламируется по нему.`;
+  if(!T.creatives)lead=tp?"По выбранной теме объявлений пока нет — выберите другую тему справа или запустите сканирование.":"Объявлений пока нет. Запустите сканирование по своему запросу — здесь появится сводка.";
+  else lead=(tp?esc(tp.charAt(0).toUpperCase()+tp.slice(1))+": ":"В базе ")+`<b>${fmt(T.creatives)}</b> объявлений от <b>${fmt(T.advertisers||0)}</b> рекламодателей.`
+    +(top1?` Больше всего — «${esc(tLabel(top1))}» (${top1.pct}% объявлений с темой).`:"")
+    +(tp?"":" Выберите справа «Тему объявлений» — сводка сузится до неё; там же можно исключить темы («кроме»).");
   const tiles=[stat("Объявлений",fmt(T.creatives||0),`delta="${esc(pd7.delta)}" trend="${pd7.trend}" note="новых за 7 дней к прошлым 7" spark="${esc(JSON.stringify(trendSpark.values))}"`),
-    ot?stat("По теме запроса",ot.pct+"%",`note="${fmt(ot.count)} из ${fmt(ot.of)} с определённой темой" hint="Объявление по теме, если его интент по смыслу относится к ключевому слову запуска. Остальное показано по аудитории."`):stat("Сайтов с рекламой",fmt(T.sites||0),'note="где парсер нашёл объявления"'),
+    stat("Сайтов с рекламой",fmt(T.sites||0),'note="где парсер нашёл объявления"'),
     stat("Рекламодателей",fmt(T.advertisers||0),'note="с раскрытым юрлицом" hint="Компании, чей ИНН удалось узнать из объявления"'),
     stat("Новых за 7 дней",fmt(T.fresh_7d||0),'note="впервые замечены"')].join("");
   const attn=[
@@ -4933,12 +5006,12 @@ overview(){
     ["fresh","discounts","badge-percent",T.discounts,"Со скидкой или ценой","Чем заманивают"],
     ["advertisers","mismatch","unlink",T.landing_mismatch,"Ведут на чужой сайт","Посадочная не на домене рекламодателя: партнёрки, агрегаторы"],
     ["","","scale",T.legal_mismatch,"Другое юрлицо на сайте","ИНН на сайте не совпадает с ИНН в объявлении — видно в карточке объявления"]];
-  return{title:"Обзор",sub:kw.length?"Сводка по "+(kw.length>1?"запросам ":"запросу ")+kwTxt+".":"Сводка по всей найденной рекламе.",actions:intentControlHtml(),
-  help:{title:"Как пользоваться обзором",steps:["Справа выберите «Ключевое слово запуска» — запрос, по которому искал парсер.","«О чём реклама» показывает, какие темы сеть показала по этому запросу. Зелёные — по теме.","Нажмите на тему, рекламодателя или объявление — откроются подробности."]},
+  return{title:"Обзор",sub:tp?"Сводка: "+tp+".":"Сводка по всей найденной рекламе, по темам объявлений.",actions:anaTopicHtml(),
+  help:{title:"Как пользоваться обзором",steps:["Справа выберите «Тему объявлений»: раздел, подтему или интент. «только» у строки — оставить одну тему, «кроме» — убрать её из анализа.","«Темы объявлений» показывает, сколько объявлений в каждой подтеме; выбор темы действует на все экраны анализа.","Нажмите на тему, рекламодателя или объявление — откроются подробности."]},
   body:`<p class="ov-lead">${lead}</p>
   <div class="grid g4">${tiles}</div>
   <div class="grid g2">
-    <nv-card heading="О чём реклама" subtitle="Темы найденных объявлений. Нажмите — откроются объявления этой темы"><nv-bar-list id="ov-intents" clickable empty-text="Темы ещё определяются"></nv-bar-list></nv-card>
+    <nv-card heading="Темы объявлений" subtitle="Раздел › подтема: сколько разных объявлений. Нажмите — откроются объявления этой темы"><nv-bar-list id="ov-intents" clickable empty-text="Темы ещё определяются"></nv-bar-list></nv-card>
     <nv-card heading="${M.topic_only?"Кто рекламируется по теме":"Кто рекламируется больше всех"}" subtitle="По числу разных объявлений. Нажмите — откроются объявления компании"><nv-bar-list id="ov-adv" clickable empty-text="Рекламодатели пока не раскрыты"></nv-bar-list></nv-card>
   </div>
   <div><div class="sect-t" style="margin-bottom:4px">${M.topic_only?"Объявления по теме, которые встречаются чаще всего":"Объявления, которые встречаются чаще всего"}</div><div class="muted" style="font-size:12.5px;margin-bottom:10px">Если объявление находится из запуска в запуск, его не выключают — скорее всего, оно окупается. <button type="button" class="run-link" data-act="anaGo" data-id="leaders" data-sub="">Все сильные объявления по темам</button></div><div id="ov-top" class="grid g3"></div></div>
@@ -4950,8 +5023,9 @@ overview(){
   after(root){
     wireAnalyticsTables(root,I);
     const q=id=>root.querySelector(id),bi=q("#ov-intents"),ba=q("#ov-adv"),bs=q("#ov-sites"),top=q("#ov-top");
-    if(bi){bi.rows=(M.intents||[]).map(x=>({id:x.intent,label:x.intent,value:x.count,display:fmt(x.count)+" · "+x.pct+"%",badge:x.on_topic?"по теме":"",tone:x.on_topic?"success":""}));
-      bi.addEventListener("nv-pick",e=>N.acts.aiFilter(null,{v:e.detail.id}))}
+    if(bi){const shown=topics.slice(0,12);
+      bi.rows=shown.map((x,i)=>({id:String(i),label:tLabel(x),value:x.count,display:fmt(x.count)+" · "+x.pct+"%"}));
+      bi.addEventListener("nv-pick",e=>{const x=shown[+e.detail.id];if(x)N.acts.aiTreeFilter(null,{v:x.sub?x.main+">"+x.sub:x.main})})}
     if(ba){ba.rows=(M.advertisers||[]).map(a=>({id:a.inn,label:a.name,value:a.creatives,display:fmt(a.creatives)+" объявл.",note:"ИНН "+a.inn+(a.website_url?" · "+hostOf(a.website_url):"")+" · встречено "+fmt(a.shows||0)+" раз"}));
       ba.addEventListener("nv-pick",e=>{const a=(M.advertisers||[]).find(x=>String(x.inn)===String(e.detail.id));if(a)filterByAdvertiser(a.inn,a.name)})}
     if(bs)bs.rows=(M.sites||[]).map(x=>({id:x.site,label:x.site,value:x.count,display:fmt(x.count)+" · "+x.pct+"%"}));
@@ -4961,19 +5035,19 @@ overview(){
       bindCards(top,"ov")}
   }}},
 leaders(){
-  const L=S.intel.lead=S.intel.lead||{},kw=(S.intel.activeIntents||[]).join(",");
+  const L=S.intel.lead=S.intel.lead||{},kw=S.intel.anaTopic||"";loadAnaTree();
   // тему выбирали под другой запрос — выбираем заново
   if(!L.loading&&(!L.loaded||L.kw!==kw||Date.now()-(L.at||0)>120000)){if(L.kw!==kw)L.theme="";setTimeout(()=>loadLeaders(),0)}
   const D=L.data;
-  if(!D)return{title:"Сильные объявления",sub:"Загружаем…",actions:intentControlHtml(),body:'<nv-skeleton count="6"></nv-skeleton>'};
+  if(!D)return{title:"Сильные объявления",sub:"Загружаем…",actions:anaTopicHtml(),body:'<nv-skeleton count="6"></nv-skeleton>'};
   const themes=D.themes||[],items=D.items||[],lead=items.filter(x=>x.level==="leader").length,strong=items.filter(x=>x.level==="strong").length;
   const best=items[0];
   const leadTxt=!D.theme?"Тем пока нет — они появятся, когда у объявлений определится интент."
     :`В теме <b>«${esc(D.theme)}»</b> — <b>${fmt(D.total_in_theme)}</b> ${plural(D.total_in_theme,"объявление","объявления","объявлений")}, из них <b>${fmt(D.repeated)}</b> ${plural(D.repeated,"встречено","встречены","встречены")} больше одного раза или на нескольких сайтах.`
       +(best&&best.score>=30?` Сильнее всех — «${esc((best.creative.title||best.creative.domain||"").slice(0,70))}»${best.advertiser&&best.advertiser.name?" ("+esc(best.advertiser.name)+")":""}: ${best.sites} ${plural(best.sites,"сайт","сайта","сайтов")}, ${best.runs} ${plural(best.runs,"запуск","запуска","запусков")}, ${best.cities} ${plural(best.cities,"город","города","городов")}.`
         :" Явных лидеров пока нет: объявления встречались по одному разу. Запустите сканирование по этому запросу ещё несколько раз или в других городах — лидеры проявятся.");
-  return{title:"Сильные объявления",sub:"Какие объявления в своей теме встречаются чаще, шире и дольше остальных — их не выключают, значит, они работают.",actions:intentControlHtml(),
-  help:{title:"Как читать",steps:["Слева выберите тему. Зелёные темы подходят под выбранный запрос.","Балл 0–100 складывается из числа сайтов, запусков, городов и дней, когда объявление встречалось.","Лидер темы — от 60 баллов. Нажмите на карточку, чтобы увидеть детали и рекламодателя."]},
+  return{title:"Сильные объявления",sub:"Какие объявления в своей теме встречаются чаще, шире и дольше остальных — их не выключают, значит, они работают.",actions:anaTopicHtml(),
+  help:{title:"Как читать",steps:["Справа вверху можно сузить анализ до темы объявлений или исключить темы. Слева выберите интент внутри неё.","Балл 0–100 складывается из числа сайтов, запусков, городов и дней, когда объявление встречалось.","Лидер темы — от 60 баллов. Нажмите на карточку, чтобы увидеть детали и рекламодателя."]},
   body:`<p class="ov-lead">${leadTxt}</p>
   <div class="ld-wrap">
     <nv-card heading="Темы" subtitle="Сколько разных объявлений в теме"><nv-bar-list id="ld-themes" clickable empty-text="Темы ещё определяются"></nv-bar-list></nv-card>
@@ -4996,26 +5070,26 @@ leaders(){
 sources(){
   const I=S.intel.ana;
   ensureAna();
-  if(I.loading&&!I.loaded)return{title:"Источники",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="3"></nv-skeleton>'};
-  return{title:"Источники",sub:"Среди последних 200 креативов — по какому признаку распознана площадка.",actions:intentControlHtml(),
+  if(I.loading&&!I.loaded)return{title:"Источники",sub:"Загружаем отчёты…",actions:anaTopicHtml(),body:'<nv-skeleton count="3"></nv-skeleton>'};
+  return{title:"Источники",sub:"Среди последних 200 креативов — по какому признаку распознана площадка.",actions:anaTopicHtml(),
   body:`<nv-card heading="Источники"><nv-chart id="an-brk-chart" type="hbar" label="Источники"></nv-chart></nv-card>
   <nv-card flush><nv-table id="an-brk" empty-text="Пока нет данных"></nv-table></nv-card>`,
   after(root){wireAnalyticsTables(root,I)}}},
 signals(){
-  const G=S.intel.sig=S.intel.sig||{},kw=(S.intel.activeIntents||[]).join(",");
+  const G=S.intel.sig=S.intel.sig||{},kw=S.intel.anaTopic||"";loadAnaTree();
   if(!G.loading&&(!G.data||G.kw!==kw||Date.now()-(G.at||0)>120000))setTimeout(()=>loadSignals(),0);
   const D=G.data;
-  if(!D)return{title:"Промокоды и пометки",sub:"Загружаем…",actions:intentControlHtml(),body:'<nv-skeleton count="4"></nv-skeleton>'};
+  if(!D)return{title:"Промокоды и пометки",sub:"Загружаем…",actions:anaTopicHtml(),body:'<nv-skeleton count="4"></nv-skeleton>'};
   const T=D.totals||{},tot=T.total||0,pct=n=>tot?Math.round(100*n/tot)+"%":"—";
   const FMT_L={text_image:"Текст и картинка",gallery:"Галерея картинок",video:"Видео",offers:"Товары в плитке",app:"Приложения",text:"Только текст"};
   const row=(id,main,sub,right)=>`<button type="button" class="sig-row" data-sig-open="${esc(id==null?"":id)}"><span class="sig-m"><b>${main}</b>${sub?`<span class="muted">${sub}</span>`:""}</span>${right?`<span class="sig-r">${right}</span>`:""}</button>`;
   const empty=t=>`<div class="muted" style="font-size:13px;padding:8px 0">${t}</div>`;
-  return{title:"Промокоды и пометки",sub:anaSub("Что рекламодатели пишут в объявлениях помимо заголовка: акции и промокоды, старые цены, предупреждения, возрастные метки, товары в плитке. Данные — из разметки самих объявлений."),actions:intentControlHtml(),
-  help:{title:"Как читать",steps:["Цифры сверху — сколько объявлений с каждой пометкой (доля от всех объявлений выбранного запроса).","«Акции и промокоды» — готовые офферы конкурентов с датой, когда их видели последний раз.","Нажмите на строку, чтобы открыть объявление целиком."]},
+  return{title:"Промокоды и пометки",sub:anaSub("Что рекламодатели пишут в объявлениях помимо заголовка: акции и промокоды, старые цены, предупреждения, возрастные метки, товары в плитке. Данные — из разметки самих объявлений."),actions:anaTopicHtml(),
+  help:{title:"Как читать",steps:["Цифры сверху — сколько объявлений с каждой пометкой (доля от всех объявлений выбранной темы).","«Акции и промокоды» — готовые офферы конкурентов с датой, когда их видели последний раз.","Нажмите на строку, чтобы открыть объявление целиком."]},
   body:`<div class="dash-g4">${stat("Объявлений разобрано",fmt(tot))}${stat("С акцией или промокодом",fmt(T.promo||0),`note="${pct(T.promo||0)}"`)}${stat("Со старой ценой",fmt(T.old_price||0),`note="${pct(T.old_price||0)}"`)}${stat("С предупреждением",fmt(T.warning||0),`note="${pct(T.warning||0)}"`)}</div>
   <div class="dash-g4" style="margin-top:12px">${stat("С возрастной меткой",fmt(T.age||0),`note="${pct(T.age||0)}"`)}${stat("Социальная реклама",fmt(T.social||0),`note="${pct(T.social||0)}"`)}${stat("С уточнениями",fmt(T.callouts||0),`note="${pct(T.callouts||0)}"`)}${stat("С номером объявления РСЯ",fmt(T.with_ad_id||0),`note="${pct(T.with_ad_id||0)}"`)}</div>
   <div class="dash-g2" style="margin-top:12px">
-    <nv-card heading="Акции и промокоды" subtitle="Свежие сверху">${(D.promos||[]).length?D.promos.map(p=>row(p.id,esc(p.text),esc(p.domain||"")+" · "+esc(fmtDateTime(p.last_seen_at)),p.n>1?p.n+" "+plural(p.n,"показ","показа","показов"):"")).join(""):empty("В объявлениях выбранного запроса акций и промокодов не найдено.")}</nv-card>
+    <nv-card heading="Акции и промокоды" subtitle="Свежие сверху">${(D.promos||[]).length?D.promos.map(p=>row(p.id,esc(p.text),esc(p.domain||"")+" · "+esc(fmtDateTime(p.last_seen_at)),p.n>1?p.n+" "+plural(p.n,"показ","показа","показов"):"")).join(""):empty("В объявлениях выбранной темы акций и промокодов не найдено.")}</nv-card>
     <nv-card heading="Снижение цены" subtitle="Объявления со старой и новой ценой">${(D.price_drops||[]).length?D.price_drops.slice(0,20).map(p=>row(p.id,esc(p.title||p.domain||""),esc(p.domain||""),`<b>${esc(p.price_current||"")}</b> <s class="muted">${esc(p.price_old||"")}</s> ${esc(p.discount_text||"")}`)).join(""):empty("Нет объявлений со старой ценой.")}</nv-card>
   </div>
   <div class="dash-g2" style="margin-top:12px">
@@ -5031,10 +5105,10 @@ signals(){
 carousels(){
   const I=S.intel.ana;
   ensureAna();
-  if(I.loading&&!I.loaded)return{title:"Карусели",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="2"></nv-skeleton>'};
+  if(I.loading&&!I.loaded)return{title:"Карусели",sub:"Загружаем отчёты…",actions:anaTopicHtml(),body:'<nv-skeleton count="2"></nv-skeleton>'};
   const kind=I.carKind||"ads",gal=I.galleries||[];
   const all=kind==="gallery"?gal:(I.carousels||[]),slides=kind==="gallery"?gal.reduce((n,g)=>n+((g.images||[]).length),0):all.reduce((n,g)=>n+(g.member_count||(g.members||[]).length),0),plats=[...new Set(all.map(g=>g.platform||"—"))];
-  return{title:"Карусели",sub:anaSub(kind==="gallery"?"Одно объявление с несколькими картинками — порядок картинок как в рекламе.":"Рекламные блоки из нескольких разных объявлений, показанных рядом."),actions:intentControlHtml(),
+  return{title:"Карусели",sub:anaSub(kind==="gallery"?"Одно объявление с несколькими картинками — порядок картинок как в рекламе.":"Рекламные блоки из нескольких разных объявлений, показанных рядом."),actions:anaTopicHtml(),
   help:{title:"Как читать",steps:["Две вкладки: «Разные объявления» — блок из нескольких объявлений разных рекламодателей; «Одно объявление» — галерея картинок внутри одного объявления.","Каждый блок — одна карусель с площадки: объявления (или картинки) стоят на тех же местах, что и там.","Сразу видно столько объявлений, сколько показывала площадка (метка «видно сразу»); остальные — «после прокрутки», листайте стрелками, свайпом или клавишами ← →.","Нажмите на объявление, чтобы открыть его целиком."]},
   body:`<nv-segmented label="Вид карусели" value="${esc(kind)}" options="ads:Разные объявления (${(I.carousels||[]).length})|gallery:Одно объявление — галерея (${gal.length})" data-chg="anaCarKind"></nv-segmented>
   <div class="grid g3" style="margin-top:12px">${stat(kind==="gallery"?"Объявлений с галереей":"Каруселей",all.length)}${stat(kind==="gallery"?"Картинок в них":"Объявлений в них",slides)}${stat("Площадок",plats.length)}</div>
@@ -5044,20 +5118,20 @@ carousels(){
 campaigns(){
   const I=S.intel.ana;
   ensureAna();
-  if(I.loading&&!I.loaded)return{title:"Кампании и слова",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="3"></nv-skeleton>'};
+  if(I.loading&&!I.loaded)return{title:"Кампании и слова",sub:"Загружаем отчёты…",actions:anaTopicHtml(),body:'<nv-skeleton count="3"></nv-skeleton>'};
   const sub=I.campSub||"campaigns";
   const bodies={
     campaigns:`<nv-card heading="Самые частые кампании" subtitle="Топ-10 по числу креативов"><nv-chart id="an-camp-chart" type="hbar" label="Кампании"></nv-chart></nv-card><nv-card flush><nv-table id="an-camp" clickable empty-text="Кампании пока не найдены"></nv-table></nv-card>`,
     keywords:`<nv-card heading="Самые частые слова" subtitle="Топ-10 по числу креативов"><nv-chart id="an-kw-chart" type="hbar" label="Ключевые слова"></nv-chart></nv-card><nv-card flush><nv-table id="an-kw" clickable empty-text="Ключевые слова пока не найдены"></nv-table></nv-card>`
   };
   const hints={campaigns:"Рекламные кампании конкурентов (campaign_id из разметки). Нажмите на строку — в библиотеке откроются объявления этой кампании.",keywords:"Ключевые слова, по которым конкуренты запускают рекламу (utm_term из ссылки). Нажмите на строку — откроются связанные объявления."};
-  return{title:"Кампании и слова",sub:anaSub("Какие кампании и ключевые слова стоят за найденной рекламой."),actions:intentControlHtml(),
+  return{title:"Кампании и слова",sub:anaSub("Какие кампании и ключевые слова стоят за найденной рекламой."),actions:anaTopicHtml(),
   body:`<div class="tabbed"><nv-tabs items="campaigns:Кампании|keywords:Ключевые слова" value="${esc(sub)}" data-chg="anaCampSub"></nv-tabs><p class="tab-hint">${esc(hints[sub]||hints.campaigns)}</p><div class="tab-b" style="padding:16px">${bodies[sub]||bodies.campaigns}</div></div>`,
   after(root){wireAnalyticsTables(root,I)}}},
 fresh(){
   const I=S.intel.ana;
   ensureAna();
-  if(I.loading&&!I.loaded)return{title:"Новое и акции",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="3"></nv-skeleton>'};
+  if(I.loading&&!I.loaded)return{title:"Новое и акции",sub:"Загружаем отчёты…",actions:anaTopicHtml(),body:'<nv-skeleton count="3"></nv-skeleton>'};
   const sub=I.freshSub||"fresh";
   const bodies={
     fresh:`<nv-card flush><nv-table id="an-fresh" clickable empty-text="За 7 дней новых креативов не найдено"></nv-table><div id="an-fresh-total" class="muted" style="padding:10px 14px;font-size:12.5px"></div></nv-card>`,
@@ -5065,13 +5139,13 @@ fresh(){
     apps:`<nv-card flush><nv-table id="an-apps" clickable empty-text="Реклама приложений не найдена"></nv-table><div id="an-apps-total" class="muted" style="padding:10px 14px;font-size:12.5px"></div></nv-card>`
   };
   const hints={fresh:"Объявления, которые парсер впервые заметил за последние 7 дней. Нажмите на строку, чтобы открыть объявление.",discounts:"Объявления с указанной скидкой или ценой — смотрите, чем конкуренты заманивают.",apps:"Реклама мобильных приложений (магазины приложений, установки)."};
-  return{title:"Новое и акции",sub:anaSub("Свежие объявления, скидки и реклама приложений."),actions:intentControlHtml(),
+  return{title:"Новое и акции",sub:anaSub("Свежие объявления, скидки и реклама приложений."),actions:anaTopicHtml(),
   body:`<div class="tabbed"><nv-tabs items="fresh:Новое за 7 дней|discounts:Со скидкой|apps:Реклама приложений" value="${esc(sub)}" data-chg="anaFreshSub"></nv-tabs><p class="tab-hint">${esc(hints[sub]||hints.fresh)}</p><div class="tab-b" style="padding:16px">${bodies[sub]||bodies.fresh}</div></div>`,
   after(root){wireAnalyticsTables(root,I)}}},
 platforms(){
   const I=S.intel.ana;
   ensureAna();
-  if(I.loading&&!I.loaded)return{title:"Площадки",sub:"Загружаем отчёты…",actions:intentControlHtml(),body:'<nv-skeleton count="4"></nv-skeleton>'};
+  if(I.loading&&!I.loaded)return{title:"Площадки",sub:"Загружаем отчёты…",actions:anaTopicHtml(),body:'<nv-skeleton count="4"></nv-skeleton>'};
   const sub=I.platSub||"coverage";
   const bodies={
     coverage:`<nv-card heading="Раскрытие рекламодателя по площадкам" subtitle="Доля креативов с известным юрлицом"><nv-chart id="an-cov-chart" type="hbar" label="Раскрытие по площадкам"></nv-chart></nv-card><nv-card flush><nv-table id="an-cov" empty-text="Пока нет данных"></nv-table></nv-card>`,
@@ -5080,7 +5154,7 @@ platforms(){
     conditions:`<nv-card flush><nv-table id="an-cr" empty-text="Пока нет данных"></nv-table></nv-card>`
   };
   const hints={coverage:"Для каждой рекламной сети: у какой доли объявлений удалось узнать рекламодателя (юрлицо). Чем выше процент — тем надёжнее данные.",sources:"По какому признаку парсер понял, на какой площадке показана реклама (разметка, ссылка, домен и т. д.).",repeats:"Объявления, которые один и тот же рекламодатель крутит сразу на нескольких площадках.",conditions:"При каких условиях (площадка, способ, тип креатива) рекламодатель раскрывается чаще или реже."};
-  return{title:"Качество данных",sub:anaSub("Служебный отчёт: насколько полно парсер распознаёт рекламу и рекламодателя на каждой площадке."),actions:intentControlHtml(),
+  return{title:"Качество данных",sub:anaSub("Служебный отчёт: насколько полно парсер распознаёт рекламу и рекламодателя на каждой площадке."),actions:anaTopicHtml(),
   body:`<div class="tabbed"><nv-tabs items="coverage:Покрытие|sources:Как распознали|repeats:Повторы|conditions:Условия" value="${esc(sub)}" data-chg="anaPlatSub"></nv-tabs><p class="tab-hint">${esc(hints[sub]||hints.coverage)}</p><div class="tab-b" style="padding:16px">${bodies[sub]||bodies.coverage}</div></div>`,
   after(root){wireAnalyticsTables(root,I)}}},
 advertisers(){
@@ -5190,6 +5264,12 @@ N.chg.cmpRows=v=>{S.intel.cmpF.rows=v;N.refresh()};
 N.chg.scanF=(v,d)=>{S.intel.scanF[d.key]=v;N.refresh()};
 N.acts.scanFReset=()=>{S.intel.scanF={q:"",status:""};N.refresh()};
 N.chg.intentSet=v=>{const list=v?v.split(","):[];S.intel.activeIntents=list;setActiveIntents(list);loadLibrary();if(S.intel.ana.loaded)loadAnalytics(true);N.refresh()};
+N.chg.anaTopic=v=>{
+  const I=S.intel;I.anaTopic=v||"";setAnaTopic(I.anaTopic);
+  if(I.lead){I.lead.theme="";I.lead.kw=null}
+  I.advertisersLoaded=false;loadAdvertisers(I.advQ);
+  loadAnalytics(true);N.refresh();
+};
 N.chg.anaCarPlat=v=>{S.intel.ana.carPlat=v;N.refresh()};
 N.chg.anaCarKind=v=>{S.intel.ana.carKind=v;S.intel.ana.carPlat="all";N.refresh()};
 N.chg.anaCampSub=v=>{S.intel.ana.campSub=v;N.refresh()};
@@ -5236,6 +5316,7 @@ S.intel.savedViews=loadSavedViews();
 if(S.intel.ana){S.intel.ana.loading=false;S.intel.ana.loaded=false;S.intel.ana.at=0}
 if(S.intel.lib){S.intel.lib.loading=false;S.intel.lib.loaded=false}
 S.intel.activeIntents=getActiveIntents();
+S.intel.anaTopic=getAnaTopic();
 
 loadLibrary();
 loadCollections();
