@@ -1895,6 +1895,14 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s3-pre img{max-width:100%;max-height:100%;display:block}
 .s3-pre img:not([src]){width:60%;height:60%;border-radius:50%;background:var(--surface-2);animation:s3pulse 1.2s ease-in-out infinite}
 .s3-tiles button{padding:8px 2px;font-size:10.5px}
+/* v10: библиотека 3D-элементов — поиск, темы, группы */
+.s3-q{width:100%;text-align:left;padding:0 10px;margin-bottom:6px}
+.s3-cats{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.s3-cats button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 9px;font:inherit;font-size:11px;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.s3-cats button:hover{border-color:var(--svc)}.s3-cats button.on{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.s3-h{display:flex;justify-content:space-between;align-items:baseline;margin:10px 0 5px;font-size:11.5px;font-weight:600;color:var(--ink-2)}
+.s3-h button{border:0;background:none;padding:0;font:inherit;font-size:11px;font-weight:500;color:var(--svc-ink,var(--ink-3));cursor:pointer}
+.s3-none{font-size:12px;color:var(--ink-3);margin:6px 0}.s3-count{font-size:11px;color:var(--ink-3);margin:6px 0 2px}
 .vid-badge{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;padding:2px 4px;display:flex;pointer-events:none}
 .stud-vprev{position:absolute;inset:0;width:100%;height:100%;z-index:50;pointer-events:none}
 .vid-prog{position:fixed;right:18px;bottom:18px;z-index:9600;width:280px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-2);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
@@ -5882,7 +5890,7 @@ function projectWizard(existingProject){
         <label class="row" style="gap:8px"><input type="radio" name="wizLaunchType" value="single" ${multi||subMode?"":"checked"}><span><b>Один домен → несколько аккаунтов</b> — все аккаунты ведут на сайт проекта</span></label>
         <label class="row" style="gap:8px"><input type="radio" name="wizLaunchType" value="multi" ${multi?"checked":""}><span><b>Несколько доменов → несколько аккаунтов</b> — домены из reg.ru, 1 домен = 1 аккаунт, на каждом сайт или квиз по шаблону</span></label>
         <label class="row" style="gap:8px"><input type="radio" name="wizLaunchType" value="sub" ${subMode?"checked":""}><span><b>Поддомены одного домена → несколько аккаунтов</b> — ИИ придумывает поддомены по тематике (банкротство.мойюрист24.рф), 1 поддомен = 1 аккаунт, на каждом сайт по шаблону со счётчиком своего аккаунта</span></label></fieldset>
-      <div id="wiz-launch-type">${subMode?'<span class="muted" style="font-size:12.5px">Загружаю шаблоны…</span>':multi?'<span class="muted" style="font-size:12.5px">Загружаю домены reg.ru и шаблоны…</span>':`<nv-input name="count" label="Сколько аккаунтов запустить (1–20)" type="number" value="${wiz.count}" style="margin-top:10px"></nv-input>`}</div>
+      <div id="wiz-launch-type">${subMode?'<span class="muted" style="font-size:12.5px">Загружаю шаблоны…</span>':multi?'<span class="muted" style="font-size:12.5px">Загружаю домены reg.ru и шаблоны…</span>':`<nv-input name="count" label="Сколько аккаунтов запустить (1–100)" type="number" value="${wiz.count}" style="margin-top:10px"></nv-input>`}</div>
       <fieldset class="field field-wide" style="margin-top:12px"><legend>Замены умерших аккаунтов</legend><div id="wiz-repl"><span class="muted" style="font-size:12.5px">Загружаю регистраторов…</span></div></fieldset>
       ${stepHtml('<nv-button variant="secondary" icon="arrow-left" data-wiz-back>Назад</nv-button><nv-button variant="primary" icon="arrow-right" data-wiz-next>Далее</nv-button>')}
       <div id="wiz-msg" class="muted" style="font-size:12.5px;margin-top:6px"></div>`;
@@ -5903,7 +5911,7 @@ function projectWizard(existingProject){
         const tItems=wiz.siteTemplates.map(t=>({value:String(t.id),label:t.name+" ("+(t.kind==="quiz"?"квиз":t.kind==="design"?"квиз-лендинг":t.kind==="bundle"?"копия МЮ":"лендинг")+")"}));
         h.innerHTML=`<div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:10px">
             <nv-input name="sub_base" label="Основной домен" value="${esc(wiz.subBase)}" style="min-width:240px"></nv-input>
-            <nv-input name="sub_count" label="Сколько аккаунтов (1–20)" type="number" value="${esc(wiz.subCount)}" style="width:170px"></nv-input>
+            <nv-input name="sub_count" label="Сколько аккаунтов (1–100)" type="number" value="${esc(wiz.subCount)}" style="width:170px"></nv-input>
             <nv-button variant="secondary" icon="sparkles" data-sub-gen>Придумать поддомены</nv-button></div>
           <nv-textarea name="sub_list" label="Поддомены — по одному в строке (1 поддомен = 1 аккаунт)" rows="6" value="${esc(wiz.subList)}" style="margin-top:8px"></nv-textarea>
           <div class="muted" data-sub-msg style="font-size:12.5px;margin-top:2px">Названия — тем же алфавитом, что и домен. Уже использованные на этом домене и в этой тематике ИИ не предложит.</div>
@@ -5913,7 +5921,7 @@ function projectWizard(existingProject){
         const m=h.querySelector("[data-sub-msg]");
         h.querySelector("[data-sub-gen]").onclick=async()=>{
           const v=formVals(h),n=+v.sub_count;
-          if(!Number.isInteger(n)||n<1||n>20){m.textContent="Укажите число от 1 до 20";m.style.color="var(--bad)";return}
+          if(!Number.isInteger(n)||n<1||n>100){m.textContent="Укажите число от 1 до 100";m.style.color="var(--bad)";return}
           wiz.subBase=(v.sub_base||"").trim();wiz.subCount=n;
           m.style.color="";m.textContent="ИИ придумывает поддомены…";
           try{
@@ -5966,7 +5974,7 @@ function projectWizard(existingProject){
           wiz.subBase=base;wiz.subList=list.join("\n");
           if(!base||!base.includes("."))return bad("Укажите основной домен");
           if(!list.length)return bad("Нажмите «Придумать поддомены» или впишите их вручную");
-          if(list.length>20)return bad("Не больше 20 поддоменов за запуск");
+          if(list.length>100)return bad("Не больше 100 поддоменов за запуск");
           const wrong=list.filter(x=>!x.endsWith("."+base)||x.length<=base.length+2||x.slice(0,-base.length-1).includes("."));
           if(wrong.length)return bad("Это не поддомены "+base+": "+wrong.slice(0,3).join(", "));
           if(new Set(list).size!==list.length)return bad("Поддомены повторяются — один поддомен на один аккаунт");
@@ -5979,12 +5987,12 @@ function projectWizard(existingProject){
         if(wiz.launchType==="multi"){
           const ds=String(v.domains||"").split(",").map(x=>x.trim()).filter(Boolean),ts=String(v.templates||"").split(",").map(x=>x.trim()).filter(Boolean).map(Number);
           if(!ds.length){wm.textContent="Выберите хотя бы один домен";wm.style.color="var(--bad)";return}
-          if(ds.length>20){wm.textContent="Не больше 20 доменов за запуск";wm.style.color="var(--bad)";return}
+          if(ds.length>100){wm.textContent="Не больше 100 доменов за запуск";wm.style.color="var(--bad)";return}
           if(!ts.length){wm.textContent="Выберите шаблон сайта";wm.style.color="var(--bad)";return}
           wiz.domains=ds;wiz.templateIds=ts;v.count=ds.length;
         }
         const count=+v.count;
-        if(!Number.isInteger(count)||count<1||count>20){body.querySelector("#wiz-msg").textContent="Укажите число от 1 до 20";body.querySelector("#wiz-msg").style.color="var(--bad)";return}
+        if(!Number.isInteger(count)||count<1||count>100){body.querySelector("#wiz-msg").textContent="Укажите число от 1 до 100";body.querySelector("#wiz-msg").style.color="var(--bad)";return}
         wiz.count=count;
         wiz.manualSets=Array.from({length:count},(_,i)=>wiz.manualSets[i]||{headline:"",ad_text:"",image_url:""});
         setStep(5);
@@ -6236,12 +6244,21 @@ function projectWizard(existingProject){
         }catch(err){msg.textContent=err.message||"Не удалось запустить";msg.style.color="var(--bad)"}
       })();
       // Реальные деньги — только после явного подтверждения суммы.
+      (async()=>{
+      // лимит Click.ru: 20 новых аккаунтов в сутки; резерв — сверх него
+      let plan="";
+      try{const r=await api("/api/v1/ads/clickru-connections/"+wiz.connectionId+"/reserve",{});
+        const today=Math.min(wiz.count,(r.ready||0)+(r.budget_today||0)),rest=wiz.count-today;
+        if(rest>0){const days=[];let left=rest;while(left>0){days.push(Math.min(20,left));left-=20}
+          plan=` Сегодня — ${today} (резерв ${r.ready||0} + лимит Click.ru ${r.budget_today||0}), остальные ${rest} — автоматически в следующие дни в ${String(r.hour_msk).padStart(2,"0")}:${String(r.minute_msk).padStart(2,"0")} МСК: ${days.join(" + ")}.`}}catch(e){}
       if(topup>0){
         msg.textContent="";
         confirm({title:"Пополнить аккаунты с Click.ru?",
-          text:`После создания каждой кампании аккаунт пополнится на ${topup.toLocaleString("ru-RU")} ₽ с НДС — всего до ${(wiz.count*topup).toLocaleString("ru-RU")} ₽ за ${wiz.count} ${accountsWord(wiz.count)}${wiz.autoStart?", и кампании сразу уйдут на модерацию и включатся":""}.`,
+          text:`После создания каждой кампании аккаунт пополнится на ${topup.toLocaleString("ru-RU")} ₽ с НДС — всего до ${(wiz.count*topup).toLocaleString("ru-RU")} ₽ за ${wiz.count} ${accountsWord(wiz.count)}${wiz.autoStart?", и кампании сразу уйдут на модерацию и включатся":""}.${plan}`,
           confirm:"Запустить и пополнить",fn(){msg.textContent="Запускаю…";go()}});
-      }else go();
+      }else if(plan){confirm({title:"Запуск в несколько дней",text:plan.trim(),confirm:"Запустить",fn(){msg.textContent="Запускаю…";go()}})}
+      else go();
+      })();
     };
   }
 }
@@ -6257,6 +6274,12 @@ async function duplicateProject(p){
     projectWizard((S.ads.projects||[]).find(x=>x.id===copy.id)||copy);
   }catch(err){toast(err.message||"Не удалось сделать копию",{tone:"danger"})}
 }
+N.acts.adsDel=(a,d)=>{const p=(S.ads.projects||[]).find(x=>String(x.id)===String(d.id));if(!p)return;
+  overlay("modal",{title:"Удалить проект?",body:`<p>Точно хотите удалить проект <b>«${esc(p.name)}»</b>? Это нельзя отменить.</p>`+
+    ((p.stats||{}).campaigns_count?`<p class="muted" style="font-size:12.5px">Проект с аккаунтами удаляется, только когда по всем аккаунтам деньги уже вернулись на Click.ru — иначе они выпали бы из автозамены и возврата.</p>`:""),
+    actions:[{label:"Нет"},{label:"Да, удалить",variant:"danger",fn(r,close){
+      (async()=>{try{await apiDelete("/api/v1/ads/projects/"+p.id);close();toast("Проект удалён",{tone:"success"});await loadProjects()}
+        catch(err){close();toast(err.message||"Не удалось удалить",{tone:"danger"})}})();return false}}]})};
 N.acts.adsDup=(a,d)=>{const p=(S.ads.projects||[]).find(x=>String(x.id)===String(d.id));if(p)duplicateProject(p)};
 // Кнопки объявлений — только варианты Директа, своего текста нет (2026-11-12).
 // Тот же список, что BUTTON_ACTIONS в addAvto (app/schemas.py).
@@ -6315,6 +6338,24 @@ function replaceSourcesMount(root,prefix,onChange){
   if(!cb)return;
   cb.onchange=()=>{box.hidden=!cb.checked;onChange&&onChange()};
   root.querySelectorAll(`nv-tree-select[name^="${prefix}_"]`).forEach(e=>e.addEventListener("nv-change",()=>onChange&&onChange()))}
+async function drawClickruReserve(host,cid,data){
+  if(!host)return;
+  let r=data;
+  if(!r){try{r=await api("/api/v1/ads/clickru-connections/"+cid+"/reserve",{})}catch(err){host.innerHTML=`<span class="muted">Резерв не загрузился: ${esc(err.message||"")}</span>`;return}}
+  const at=String(r.hour_msk).padStart(2,"0")+":"+String(r.minute_msk).padStart(2,"0");
+  const last=(r.runs||[])[0];
+  host.innerHTML=`<div class="row" style="gap:14px;flex-wrap:wrap;align-items:flex-end">
+      <nv-switch name="rs_on" label="Заводить аккаунты каждый день" description="В ${at} МСК: сначала продолжаются запуски, ждущие лимита (поровну), остаток лимита — в резерв" ${r.enabled?"checked":""}></nv-switch>
+      <nv-input name="rs_n" label="Сколько в день (1–20)" type="number" value="${esc(r.per_day)}" style="width:170px"></nv-input></div>
+    <div class="dash-g4" style="margin-top:10px">${stat("Готово в резерве",fmt(r.ready))}${stat("Использовано",fmt(r.used))}${stat("Создано сегодня",fmt(r.created_today)+" / "+r.daily_limit,r.limit_hit_today?'note="лимит Click.ru на сегодня исчерпан"':`note="можно ещё ${r.budget_today}"`)}${stat("Ждут лимита",fmt((r.waiting||[]).reduce((a,x)=>a+x.remaining,0)),(r.waiting||[]).length?`note="запусков: ${r.waiting.length}"`:"")}</div>
+    ${last?`<div class="muted" style="font-size:12.5px;margin-top:8px">Последний проход ${esc(fmtDateTime(last.started_at))}: ${esc((last.summary||"").split("\n").join(" · "))}</div>`:""}`;
+  const save=async()=>{const on=host.querySelector('[name="rs_on"]').checked,n=+host.querySelector('[name="rs_n"]').value;
+    if(!Number.isInteger(n)||n<1||n>20){toast("Количество в день — от 1 до 20",{tone:"warning"});return}
+    try{const d=await apiPut("/api/v1/ads/clickru-connections/"+cid+"/reserve",{enabled:on,per_day:n});toast(on?`Резерв: ${n} акк. в день`:"Ежедневный резерв выключен",{tone:on?"success":"info"});drawClickruReserve(host,cid,d)}
+    catch(err){toast("Не сохранилось: "+(err.message||""),{tone:"danger"})}};
+  host.querySelector('[name="rs_on"]').addEventListener("nv-change",save);
+  host.querySelector('[name="rs_n"]').addEventListener("nv-change",save);
+}
 function buttonActionOptions(none="Без кнопки"){return ["NONE:"+none,...BUTTON_ACTIONS.map(([v,l])=>v+":"+l)].join("|")}
 // Кнопка и площадки для уже созданных кампаний проекта.
 function adSettingsDialog(p,acc,redraw){
@@ -6437,12 +6478,14 @@ function openJobDrawer(project,jobId){
     }});
 }
 // ---- Проекты: статус, фильтры, панель проекта (2026-11-10) ----
-const PROJ_STATUS={draft:["Черновик",""],generating:["Генерация","info"],running:["Идёт запуск","info"],launched:["Запущен","success"],failed:["Ошибка запуска","danger"]};
+const PROJ_STATUS={draft:["Черновик",""],generating:["Генерация","info"],running:["Идёт запуск","info"],launched:["Запущен","success"],stopped:["Остановлено","warning"],failed:["Ошибка запуска","danger"]};
 function projStatus(p){
   const s=p.stats||{};
   if(s.running_job_id)return"running";
   if(s.ozon_running)return"generating";
   if(!s.jobs_count)return"draft";
+  // нет ни одного работающего аккаунта (все остановлены автозаменой / на возврате) — «Остановлено»
+  if(s.campaigns_count>0&&s.active_accounts===0)return"stopped";
   return s.last_job_status==="failed"?"failed":"launched";
 }
 function projPayerNames(p){
@@ -7073,7 +7116,7 @@ projects(){
        {key:"_last",label:"Последний запуск",render:p=>(p.stats||{}).last_job_at?esc(fmtDateTime(p.stats.last_job_at)):"—"},
        {key:"_payer",label:"Юрлицо",render:p=>esc(projPayerNames(p).join(", ")||"—")},
        {key:"_conn",label:"Click.ru",render:p=>esc(((p.stats||{}).connection_ids||[]).map(id=>{const c=(S.ads.clickru||[]).find(x=>x.id===id);return c?c.label:"#"+id}).join(", ")||"—")},
-       {key:"_launch",label:"",align:"right",render:p=>`<nv-button size="sm" variant="${p.has_launched?"secondary":"primary"}" icon="rocket" data-act="adsLaunch" data-id="${p.id}">${p.has_launched?"Запустить ещё":"Запустить"}</nv-button> <nv-button size="sm" variant="ghost" icon="copy" icon-only hint="Дублировать: копия со всеми настройками для правок" data-act="adsDup" data-id="${p.id}">Дублировать</nv-button>`}],
+       {key:"_launch",label:"",align:"right",render:p=>`<nv-button size="sm" variant="${p.has_launched?"secondary":"primary"}" icon="rocket" data-act="adsLaunch" data-id="${p.id}">${p.has_launched?"Запустить ещё":"Запустить"}</nv-button> <nv-button size="sm" variant="ghost" icon="copy" icon-only hint="Дублировать: копия со всеми настройками для правок" data-act="adsDup" data-id="${p.id}">Дублировать</nv-button> <nv-button size="sm" variant="ghost" icon="trash-2" icon-only hint="Удалить проект" data-act="adsDel" data-id="${p.id}">Удалить</nv-button>`}],
       p=>openProjectPanel(p));
   }}
 },
@@ -7087,6 +7130,8 @@ clickru(){
     const el=root.querySelector("#ads-cr-res");
     el.innerHTML=A.clickru.length?`<div class="grid g3">${A.clickru.map(c=>`<nv-integration-card logo="${esc((c.label||"??").slice(0,2).toUpperCase())}" name="${esc(c.label)}" category="${c.user_id?"User ID "+esc(c.user_id):"Добавлено "+esc(fmtDateTime(c.created_at))}" description="${esc("Токен: "+c.token_preview+(c.web_username?" · кабинет: "+c.web_username:"")+(c.web_status_message?" · "+c.web_status_message:"")+(c.web_checked_at?" ("+fmtDateTime(c.web_checked_at)+")":""))}" status="${clickruWeb(c)[0]}" status-label="${esc(clickruWeb(c)[1])}"><span class="int-actions">${c.has_web_password?`<nv-button size="sm" variant="secondary" icon="refresh-cw" hint="Проверить сохранённую сессию, при необходимости войти заново" data-act="adsCheckClickru" data-id="${c.id}">Проверить вход</nv-button>`:""}<nv-button size="sm" variant="${c.has_web_password?"ghost":"primary"}" icon="key-round" hint="Логин и пароль веб-кабинета Click.ru" data-act="adsCredsClickru" data-id="${c.id}">${c.has_web_password?"Логин и пароль":"Указать вход"}</nv-button><nv-button size="sm" variant="danger" icon="trash-2" icon-only hint="Удалить" data-act="adsDelClickru" data-id="${c.id}">Удалить</nv-button></span></nv-integration-card>`).join("")}</div>`:
       `<nv-card><nv-empty icon="link" heading="Подключений нет" text="Добавьте токен Click.ru, чтобы запускать кампании."><nv-button icon="link" data-act="adsNewClickru">Подключить</nv-button></nv-empty></nv-card>`;
+    if(A.clickru.length){el.insertAdjacentHTML("beforeend",A.clickru.map(c=>`<nv-card heading="Резерв аккаунтов · ${esc(c.label)}" subtitle="Click.ru создаёт не больше 20 аккаунтов Директа в сутки. Резерв — аккаунты без кампаний, заведённые заранее: запуски и замены берут их первыми." style="margin-top:12px"><div data-cr-reserve="${c.id}"><nv-skeleton count="2"></nv-skeleton></div></nv-card>`).join(""));
+      A.clickru.forEach(c=>drawClickruReserve(el.querySelector(`[data-cr-reserve="${c.id}"]`),c.id))}
   }}
 },
 accounts(){
@@ -9130,6 +9175,7 @@ async function studio3dMakeParts(T,s){
     return[{g:ext(shapes,(+s.depth||0)/100*1.2,bev/100*0.1,bev/100*0.12,5),m:["main","side"]}]}
   if(s.kind==="mockup")return studio3dMockParts(T,s);
   const sh=s.shape||"sphere",D=(+s.depth||45)/100;
+  if(S3_GEN[sh])return await S3_GEN[sh](T,studio3dGenH(T),s);  // v10: модели библиотеки 3D-элементов
   if(sh==="sphere")return[{g:new T.SphereGeometry(1,96,64),m:"main"}];
   if(sh==="cube")return[{g:rbox(1.6,1.6,1.6,0.02+bev/100*0.5),m:"main"}];
   if(sh==="torus")return[{g:new T.TorusGeometry(0.72,0.3,64,160),m:"main"}];
@@ -9166,6 +9212,10 @@ function studio3dMat(T,kind,color,side){
   m.envMapIntensity=kind==="matte"?0.5:kind==="neon"?0.3:kind==="gold"||kind==="chrome"?1.7:kind==="metal"?1.4:1;return m;
 }
 function studio3dRoleMat(T,s,role,tex){const mk=s.mat||"gloss";
+  // v10: деталь своего цвета ("#hex") и детали с собственным материалом (золото, хром, прозрачное стекло)
+  if(typeof role==="string"&&role[0]==="#")return studio3dMat(T,mk==="glass"||mk==="neon"||mk==="gold"||mk==="chrome"?"gloss":mk,role);
+  if(role==="gold"||role==="chrome")return studio3dMat(T,role,"#ffffff");
+  if(role==="glassW")return studio3dMat(T,"glass","#dbeafe");
   if(role==="main"&&tex&&s.kind==="extrude"){const m=studio3dMat(T,mk==="gold"||mk==="chrome"?"gloss":mk,"#ffffff");m.map=tex;if(mk==="neon"){m.emissiveMap=tex;m.emissive.set(0xffffff)}return m}
   if(role==="side")return studio3dMat(T,mk,s.side||studioMix(s.color||"#7c3aed","#000000",0.32),true);
   if(role==="accent")return studio3dMat(T,mk==="glass"||mk==="neon"?"gloss":mk,s.color2||"#facc15");
@@ -9458,34 +9508,468 @@ async function studio3dFromLayer(l){const d=studioDesign();let polys,extra={};
   const i=d.layers.indexOf(l);if(i<0)return;d.layers.splice(i,1,n);d.selectedId=n.id;studioMultiSel=[];N.refresh();NEON.save();studio3dFitFrame(n,true);toast("Готово — объём и ракурс настраиваются справа")}
 const studio3dTexs=new Map();
 async function studio3dImgTex(T,src){let p=studio3dTexs.get(src);if(!p){p=studioLoadImg(src).then(img=>{const t=new T.Texture(img);t.colorSpace=T.SRGBColorSpace;t.anisotropy=8;t.needsUpdate=true;return t});studio3dTexs.set(src,p);p.catch(()=>studio3dTexs.delete(src))}return p}
-/* v9-8: готовые 3D-элементы (цвет "brand"/"brand2" — из бренд-кита). Превью рисуются один раз за сессию, по очереди. */
-const S3_PRESETS=[
-  ["SALE золотом",{kind:"text",text:"SALE",weight:"900",mat:"gold",depth:40,bevel:45,rx:10,ry:-20,rz:-4}],
-  ["−50%",{kind:"text",text:"−50%",weight:"900",mat:"gloss",color:"#e11d48",depth:45,bevel:40,rx:12,ry:-24,rz:-6}],
-  ["NEW неон",{kind:"text",text:"NEW",weight:"800",mat:"neon",color:"#22d3ee",depth:20,bevel:20,rx:0,ry:-14,rz:0}],
-  ["ХИТ",{kind:"text",text:"ХИТ",weight:"900",mat:"gloss",color:"brand",depth:45,bevel:45,rx:14,ry:-22,rz:-6}],
-  ["1+1",{kind:"text",text:"1+1",weight:"900",mat:"metal",color:"brand",depth:40,bevel:45,rx:10,ry:-24,rz:0}],
-  ["Монета",{kind:"shape",shape:"coin",mat:"gold",rx:8,ry:-32}],
-  ["Подарок",{kind:"shape",shape:"gift",color:"brand",color2:"brand2",mat:"gloss",rx:22,ry:-35}],
-  ["Сердце",{kind:"shape",shape:"heart",color:"#e11d48",mat:"gloss",depth:45,bevel:60,rx:8,ry:-24,rz:6}],
-  ["Звезда",{kind:"shape",shape:"star",mat:"gold",depth:40,bevel:55,rx:10,ry:-22,rz:-8}],
-  ["Стеклянный шар",{kind:"shape",shape:"sphere",color:"#60a5fa",mat:"glass",rx:0,ry:0}],
-  ["Неоновый тор",{kind:"shape",shape:"torus",color:"#a855f7",mat:"neon",rx:35,ry:-15}],
-  ["Стрелка",{kind:"shape",shape:"arrow",color:"brand",mat:"gloss",depth:40,bevel:50,rx:14,ry:-30,rz:12}],
-  ["Капля",{kind:"shape",shape:"blob",color:"#f9a8d4",mat:"matte",rx:10,ry:-20}],
-  ["Кристалл",{kind:"shape",shape:"gem",color:"#38bdf8",mat:"glass",rx:14,ry:-20}],
-  ["Таблетка",{kind:"shape",shape:"capsule",color:"brand",mat:"gloss",rx:10,ry:-20,rz:-40}],
-  ["Узел",{kind:"shape",shape:"knot",color:"brand",mat:"metal",rx:30,ry:-10}]];
-function studio3dPresetS3(i){const[,p]=S3_PRESETS[i],br=(S.studio.brand&&S.studio.brand.colors)||[],c=v=>v==="brand"?br[0]||"#7c3aed":v==="brand2"?br[1]||"#facc15":v;
-  const s={...studio3dDefaults(p.kind,p.shape),...p};s.color=c(s.color);s.color2=c(s.color2);return s}
+/* v10 (25.11.2026): библиотека 3D-элементов — 150+ готовых элементов по тематикам, с поиском. Модели собраны из
+   примитивов Three.js (S3_GEN), надписи — объёмным шрифтом. Цвет "brand"/"brand2" — из бренд-кита; роли деталей:
+   main (цвет), accent (цвет 2), side (тёмный край), "#hex" — свой цвет, gold/chrome/glassW — материал детали. */
+function studio3dGenH(T){
+  const PI=Math.PI,V2=(x,y)=>new T.Vector2(x,y);
+  const shp=pts=>{const s=new T.Shape();pts.forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));s.closePath();return s};
+  const path=pts=>new T.Path(pts.map(([x,y])=>V2(x,y)));
+  const toS=a=>a instanceof T.Shape||(Array.isArray(a)&&a[0] instanceof T.Shape)?a:shp(a);
+  const mk=(a,d,b,seg)=>new T.ExtrudeGeometry(toS(a),{depth:Math.max(0.002,d),bevelEnabled:b>0,bevelThickness:b,bevelSize:b,bevelSegments:b>0?(seg||4):0,curveSegments:32,steps:1});
+  const ex=(a,d,b=0.04,seg)=>{const g=mk(a,d,b,seg);g.center();return g};                       // по центру целиком
+  const exz=(a,d,b=0.04,seg)=>{const g=mk(a,d,b,seg);g.translate(0,0,-d/2);return g};          // по центру только по глубине
+  const circ=(r,n=64,cx=0,cy=0)=>Array.from({length:n},(_,i)=>[cx+r*Math.cos(i/n*2*PI),cy+r*Math.sin(i/n*2*PI)]);
+  const star=(n,R,r,a0=PI/2)=>Array.from({length:2*n},(_,i)=>{const a=a0+i*PI/n,q=i%2?r:R;return[q*Math.cos(a),q*Math.sin(a)]});
+  const holes=(outer,...hs)=>{const s=toS(outer);hs.forEach(h=>s.holes.push(path(h.slice().reverse())));return s};
+  const rrect=(w,h,r)=>{r=Math.max(0.0005,Math.min(r,w/2-0.0005,h/2-0.0005));const s=new T.Shape(),x=-w/2,y=-h/2;s.moveTo(x+r,y);s.lineTo(x+w-r,y);s.quadraticCurveTo(x+w,y,x+w,y+r);s.lineTo(x+w,y+h-r);s.quadraticCurveTo(x+w,y+h,x+w-r,y+h);s.lineTo(x+r,y+h);s.quadraticCurveTo(x,y+h,x,y+h-r);s.lineTo(x,y+r);s.quadraticCurveTo(x,y,x+r,y);return s};
+  const box=(w,h,d,r=0.06)=>{r=Math.max(0.003,Math.min(r,w/2-0.004,h/2-0.004,d/2-0.004));const iw=Math.max(0.002,w-2*r),ih=Math.max(0.002,h-2*r);
+    const g=new T.ExtrudeGeometry(rrect(iw,ih,Math.min(r,iw/2,ih/2)*0.98),{depth:Math.max(0.002,d-2*r),bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:4,curveSegments:8,steps:1});g.center();return g};
+  const cyl=(rt,rb,h,n=64,open=false,t0=0,tl=2*PI)=>new T.CylinderGeometry(rt,rb,h,n,1,open,t0,tl);
+  const cone=(r,h,n=64)=>new T.ConeGeometry(r,h,n);
+  const sph=(r=1,w=64,h=48)=>new T.SphereGeometry(r,w,h);
+  const tor=(R,r,arc=2*PI,ns=24,nt=96)=>new T.TorusGeometry(R,r,ns,nt,arc);
+  const cap=(r,l)=>new T.CapsuleGeometry(r,l,16,48);
+  const lathe=(pts,n=96)=>new T.LatheGeometry(pts.map(([x,y])=>V2(Math.max(0.0001,x),y)),n);
+  const tube=(fn,r,steps=200,closed=false)=>{const c=new T.Curve();c.getPoint=(t,o=new T.Vector3())=>{const p=fn(t);return o.set(p[0],p[1],p[2])};return new T.TubeGeometry(c,steps,r,16,closed)};
+  const flat=g=>{const n=g.toNonIndexed();n.computeVertexNormals();return n};
+  const rnd=seed=>()=>((seed=(seed*16807)%2147483647)-1)/2147483646;
+  const leaf=()=>{const s=new T.Shape();s.moveTo(0,-1);s.bezierCurveTo(0.7,-0.6,0.7,0.6,0,1);s.bezierCurveTo(-0.7,0.6,-0.7,-0.6,0,-1);return s};
+  const plus=(w,l)=>[[-w,l],[w,l],[w,w],[l,w],[l,-w],[w,-w],[w,-l],[-w,-l],[-w,-w],[-l,-w],[-l,w],[-w,w]];
+  const rot=(pts,a)=>pts.map(([x,y])=>[x*Math.cos(a)-y*Math.sin(a),x*Math.sin(a)+y*Math.cos(a)]);
+  const sector=(r0,r1,a0,a1,n=48)=>{const o=[];for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n;o.push([r1*Math.cos(a),r1*Math.sin(a)])}
+    if(r0<=0)o.push([0,0]);else for(let i=n;i>=0;i--){const a=a0+(a1-a0)*i/n;o.push([r0*Math.cos(a),r0*Math.sin(a)])}return o};
+  const txt=async(text,w,d=0.2,o={})=>{const polys=await studio3dTextPolys({text,font:o.font||"Onest",weight:o.weight||"900",ls:o.ls||0});
+    const g=ex(studio3dShapes(T,polys),d,o.b==null?0.015:o.b,3);g.computeBoundingBox();const bb=g.boundingBox,k=w/Math.max(1e-6,bb.max.x-bb.min.x);g.scale(k,k,1);return g};
+  const P=(g,m,p,r,s)=>({g,m,p,r,s});
+  return{PI,shp,path,ex,exz,circ,star,holes,rrect,box,cyl,cone,sph,tor,cap,lathe,tube,flat,rnd,leaf,plus,rot,sector,txt,P};
+}
+const S3_CHECK=[[-0.75,0.05],[-0.45,0.35],[-0.15,0.05],[0.5,0.7],[0.8,0.4],[-0.15,-0.55]];
+const S3_BAL=[[0,-1.1],[0.15,-1.05],[0.5,-0.8],[0.78,-0.35],[0.85,0.1],[0.75,0.55],[0.5,0.88],[0.2,1.02],[0,1.05]];
+const S3_FLAME=[[0,-1],[0.45,-0.85],[0.62,-0.45],[0.55,0.05],[0.3,0.55],[0,1]];
+const S3_BELL=[[0,1],[0.18,1],[0.3,0.85],[0.38,0.5],[0.45,0.1],[0.62,-0.3],[0.95,-0.62],[1.0,-0.7],[0.9,-0.72],[0,-0.72]];
+const S3_COLORS5=["accent","#38bdf8","#f472b6","#a3e635","#facc15"];
+const S3_GEN={
+  /* ---- Фигуры ---- */
+  pyramid:(T,H)=>[H.P(H.flat(H.cone(1.1,1.6,4)),"main",null,[0,H.PI/4,0])],
+  prism:(T,H)=>[H.P(H.flat(H.cyl(1,1,1.7,3)),"main")],
+  tetra:(T,H)=>[H.P(new T.TetrahedronGeometry(1.15),"main",null,[0.3,0.6,0])],
+  octa:(T,H)=>[H.P(new T.OctahedronGeometry(1.1),"main")],
+  icosa:(T,H)=>[H.P(new T.IcosahedronGeometry(1.05),"main")],
+  dodeca:(T,H)=>[H.P(new T.DodecahedronGeometry(1.05),"main")],
+  hexagon:(T,H)=>[H.P(H.ex(H.circ(1,6),0.45,0.08),["main","side"])],
+  ring:(T,H)=>[H.P(H.tor(0.95,0.12,undefined,32,160),"main")],
+  hemi:(T,H)=>[H.P(new T.SphereGeometry(1,64,32,0,2*H.PI,0,H.PI/2),"main"),H.P(H.cyl(1,1,0.04,64),"accent")],
+  helix:(T,H)=>[H.P(H.tube(t=>{const a=t*H.PI*8;return[Math.cos(a)*0.7,(t-0.5)*2.2,Math.sin(a)*0.7]},0.13,500),"main")],
+  wave:(T,H)=>[H.P(H.tube(t=>[(t-0.5)*3,Math.sin(t*H.PI*4)*0.35,0],0.16,300),"main")],
+  stairs:(T,H)=>[0,1,2,3].map(i=>H.P(H.box(1.6,0.36,0.52,0.04),i%2?"accent":"main",[0,i*0.36-0.55,-i*0.52+0.78])),
+  cubes:(T,H)=>[H.P(H.box(1,1,1,0.14),"main",[-0.55,-0.4,0]),H.P(H.box(1,1,1,0.14),"accent",[0.55,-0.4,0.1]),H.P(H.box(1,1,1,0.14),"#38bdf8",[0,0.6,0])],
+  cubeframe:(T,H)=>{const L=1.6,t=0.15,o=[];for(const a of[-1,1])for(const b of[-1,1])o.push(H.P(H.box(L+t,t,t,0.03),"main",[0,a*L/2,b*L/2]),H.P(H.box(t,L+t,t,0.03),"main",[a*L/2,0,b*L/2]),H.P(H.box(t,t,L+t,0.03),"main",[a*L/2,b*L/2,0]));return o},
+  starburst:(T,H)=>[H.P(H.ex(H.star(16,1,0.82),0.3,0.05),["main","side"])],
+  /* ---- Деньги ---- */
+  coinstack:(T,H)=>{const o=[];for(let i=0;i<5;i++)o.push(H.P(H.cyl(0.8,0.8,0.18,64),"gold",[Math.sin(i*1.7)*0.06,i*0.19-0.4,Math.cos(i*1.3)*0.06]));o.push(H.P(H.cyl(0.8,0.8,0.18,64),"gold",[1.0,-0.4,0.35]));return o},
+  bills:(T,H)=>{const o=[];for(let i=0;i<3;i++)o.push(H.P(H.box(2,0.06,1,0.02),"main",[i*0.05,i*0.09,i*0.04],[0,i*0.08,0]));o.push(H.P(H.box(0.36,0.075,1.02,0.01),"#f8fafc",[0.1,0.19,0.08],[0,0.16,0]));return o},
+  wallet:(T,H)=>[H.P(H.box(1.9,1.3,0.5,0.14),"main"),H.P(H.box(1.0,0.7,0.56,0.12),"accent",[0.5,0,0.02]),H.P(H.cyl(0.11,0.11,0.06,32),"gold",[0.72,0,0.31],[H.PI/2,0,0])],
+  piggy:(T,H)=>{const o=[H.P(H.sph(1),"main",null,null,[1.25,1,1]),H.P(H.cyl(0.32,0.34,0.3,48),"main",[1.25,-0.05,0],[0,0,H.PI/2])];
+    o.push(H.P(H.cyl(0.05,0.05,0.04,16),"#7f1d1d",[1.41,-0.05,0.1],[0,0,H.PI/2]),H.P(H.cyl(0.05,0.05,0.04,16),"#7f1d1d",[1.41,-0.05,-0.1],[0,0,H.PI/2]));
+    [[-0.5,0.4],[0.5,0.4],[-0.5,-0.4],[0.5,-0.4]].forEach(([x,z])=>o.push(H.P(H.cyl(0.18,0.2,0.45,32),"main",[x,-0.95,z])));
+    [0.35,-0.35].forEach(z=>o.push(H.P(H.cone(0.2,0.35,24),"main",[0.75,0.85,z],[0,0,-0.5])));
+    [0.3,-0.3].forEach(z=>o.push(H.P(H.sph(0.08,16,12),"#111827",[1.05,0.35,z])));
+    o.push(H.P(H.box(0.5,0.08,0.1,0.03),"#111827",[0,1.0,0]));return o},
+  card:(T,H)=>{const o=[H.P(H.box(2,1.26,0.06,0.03),"main"),H.P(H.box(0.36,0.28,0.03,0.01),"gold",[-0.6,0.14,0.04])];for(let i=0;i<4;i++)o.push(H.P(new T.BoxGeometry(0.32,0.07,0.02),"#f8fafc",[-0.66+i*0.42,-0.22,0.04]));o.push(H.P(new T.BoxGeometry(0.6,0.06,0.02),"#f8fafc",[-0.5,-0.42,0.04]));return o},
+  goldbar:(T,H)=>[H.P(H.ex([[-1,-0.35],[1,-0.35],[0.75,0.35],[-0.75,0.35]],0.9,0.04),"gold")],
+  goldbars:(T,H)=>{const tr=[[-0.9,-0.3],[0.9,-0.3],[0.68,0.3],[-0.68,0.3]];return[H.P(H.ex(tr,0.8,0.03),"gold",[-0.55,-0.32,0]),H.P(H.ex(tr,0.8,0.03),"gold",[0.55,-0.32,0.1]),H.P(H.ex(tr,0.8,0.03),"gold",[0,0.32,0.05])]},
+  moneybag:async(T,H)=>[H.P(H.lathe([[0,-1],[0.55,-0.95],[0.95,-0.6],[1.0,-0.1],[0.75,0.35],[0.32,0.62],[0.3,0.72],[0.45,0.95],[0.2,1.0],[0,1.0]]),"main"),H.P(H.tor(0.33,0.07,undefined,16,48),"accent",[0,0.68,0],[H.PI/2,0,0]),H.P(await H.txt("₽",0.7,0.15),"gold",[0,-0.25,0.95])],
+  chart:(T,H)=>{const hs=[0.6,1.0,1.4,2.0];return[H.P(H.box(2.6,0.12,1,0.04),"#e5e7eb",[0,-0.06,0]),...hs.map((h,i)=>H.P(H.box(0.45,h,0.45,0.06),i%2?"accent":"main",[(i-1.5)*0.6,h/2,0]))]},
+  pie:(T,H)=>[[0,2.2,"main",0],[2.2,1.9,"accent",0],[4.1,2.18,"#38bdf8",0.2]].map(([a,l,m,off])=>{const mid=a+l/2;return H.P(H.cyl(1,1,0.4,64,false,a,l),m,[Math.sin(mid)*off,0,Math.cos(mid)*off])}),
+  pricetag:(T,H)=>[H.P(H.ex(H.holes([[-1,-0.55],[0.55,-0.55],[1.05,0],[0.55,0.55],[-1,0.55]],H.circ(0.12,32,0.6,0)),0.14,0.04),["main","side"])],
+  safe:(T,H)=>[H.P(H.box(1.8,1.8,1.6,0.1),"main"),H.P(H.box(1.45,1.45,0.08,0.04),"side",[0,0,0.82]),H.P(H.cyl(0.32,0.32,0.12,48),"chrome",[0.1,0.1,0.9],[H.PI/2,0,0]),H.P(H.box(0.08,0.5,0.1,0.02),"chrome",[0.55,0.1,0.9]),H.P(H.box(0.3,0.15,1.5,0.04),"#1f2937",[-0.6,-0.95,0]),H.P(H.box(0.3,0.15,1.5,0.04),"#1f2937",[0.6,-0.95,0])],
+  calc:(T,H)=>{const o=[H.P(H.box(1.4,2,0.25,0.1),"main"),H.P(H.box(1.1,0.45,0.06,0.03),"#0f172a",[0,0.6,0.13])];for(let r=0;r<4;r++)for(let c=0;c<3;c++)o.push(H.P(H.box(0.26,0.2,0.08,0.04),r===3&&c===2?"accent":"#f8fafc",[(c-1)*0.34,0.15-r*0.28,0.13]));return o},
+  coinpct:async(T,H)=>[H.P(H.cyl(1,1,0.2,64),"gold",null,[H.PI/2,0,0]),H.P(H.tor(0.85,0.04,undefined,12,96),"gold",[0,0,0.11]),H.P(await H.txt("%",0.9,0.12),"gold",[0,0,0.12])],
+  /* ---- Праздники ---- */
+  balloon:(T,H)=>[H.P(H.lathe(S3_BAL),"main"),H.P(H.cone(0.1,0.14,16),"main",[0,-1.15,0],[H.PI,0,0]),H.P(H.tube(t=>[Math.sin(t*9)*0.08,-1.2-t*1.2,0],0.012,80),"#9ca3af")],
+  balloons:(T,H)=>{const o=[];[["main",-0.6,0.2,0.1],["accent",0.55,0.35,-0.1],["#38bdf8",0,0.75,-0.3]].forEach(([m,x,y,z])=>{o.push(H.P(H.lathe(S3_BAL),m,[x,y,z],[0,0,-x*0.25],[0.75,0.75,0.75]));
+    o.push(H.P(H.tube(t=>[x*(1-t),(y-0.85)*(1-t)-1.9*t,z*(1-t)],0.012,60),"#9ca3af"))});return o},
+  cake:(T,H)=>[H.P(H.cyl(1,1,0.7,64),"main",[0,-0.45,0]),H.P(H.cyl(1.04,1.04,0.08,64),"#fff7ed",[0,-0.08,0]),H.P(H.cyl(0.65,0.65,0.55,64),"accent",[0,0.25,0]),H.P(H.cyl(0.69,0.69,0.07,64),"#fff7ed",[0,0.53,0]),H.P(H.cyl(0.06,0.06,0.4,16),"#f8fafc",[0,0.76,0]),H.P(H.lathe(S3_FLAME,32),"#fbbf24",[0,1.08,0],null,[0.12,0.18,0.12])],
+  candle:(T,H)=>[H.P(H.cyl(0.35,0.38,1.6,48),"main",[0,-0.3,0]),H.P(H.cyl(0.025,0.025,0.2,8),"#1f2937",[0,0.58,0]),H.P(H.lathe(S3_FLAME,32),"#f59e0b",[0,0.92,0],null,[0.16,0.28,0.16])],
+  popper:(T,H)=>{const r=H.rnd(7),o=[H.P(H.cyl(0.5,0.05,1.4,48),"main",[-0.3,-0.4,0],[0,0,-0.6])];for(let i=0;i<24;i++){const a=r()*1.6-0.1,d=0.4+r()*1.1;
+    o.push(H.P(i%3?new T.BoxGeometry(0.13,0.05,0.13):H.sph(0.07,12,8),S3_COLORS5[i%5],[0.2+Math.cos(a)*d*0.8,0.3+Math.sin(a)*d*0.8,(r()-0.5)*0.8],[r()*3,r()*3,r()*3]))}return o},
+  xtree:(T,H)=>{const o=[H.P(H.cyl(0.15,0.18,0.4,24),"#7c4a1e",[0,-1.2,0])];[[1.0,0.9,-0.6],[0.8,0.8,-0.05],[0.55,0.7,0.45]].forEach(([r,h,y])=>o.push(H.P(H.cone(r,h,48),"main",[0,y,0])));
+    o.push(H.P(H.ex(H.star(5,0.26,0.11),0.08,0.02),"gold",[0,0.95,0]));const r=H.rnd(3);
+    for(let i=0;i<12;i++){const a=r()*H.PI*2,lv=i%3,rr=[0.78,0.65,0.47][lv]*0.97,y=[-0.85,-0.3,0.2][lv];o.push(H.P(H.sph(0.08,16,12),S3_COLORS5[i%5],[Math.sin(a)*rr,y,Math.cos(a)*rr]))}return o},
+  snowman:(T,H)=>[H.P(H.sph(0.75),"#f8fafc",[0,-0.75,0]),H.P(H.sph(0.55),"#f8fafc",[0,0.25,0]),H.P(H.sph(0.4),"#f8fafc",[0,0.98,0]),H.P(H.cone(0.07,0.4,16),"#f97316",[0,0.95,0.55],[H.PI/2,0,0]),
+    H.P(H.sph(0.05,12,8),"#111827",[-0.14,1.08,0.35]),H.P(H.sph(0.05,12,8),"#111827",[0.14,1.08,0.35]),H.P(H.cyl(0.42,0.42,0.06,48),"#111827",[0,1.3,0]),H.P(H.cyl(0.27,0.27,0.4,48),"#111827",[0,1.5,0]),H.P(H.tor(0.42,0.07,undefined,16,64),"main",[0,0.66,0],[H.PI/2,0,0])],
+  ornament:(T,H)=>[H.P(H.sph(1),"main"),H.P(H.cyl(0.22,0.22,0.22,32),"gold",[0,1.02,0]),H.P(H.tor(0.12,0.03,undefined,12,32),"gold",[0,1.22,0]),H.P(H.tor(0.968,0.045,undefined,16,128),"accent",[0,0.25,0],[H.PI/2,0,0]),H.P(H.tor(0.968,0.045,undefined,16,128),"accent",[0,-0.25,0],[H.PI/2,0,0])],
+  candy:(T,H)=>[H.P(H.sph(0.6),"main",null,null,[1.3,1,1]),H.P(H.cone(0.42,0.5,32),"accent",[1.0,0,0],[0,0,H.PI/2]),H.P(H.cone(0.42,0.5,32),"accent",[-1.0,0,0],[0,0,-H.PI/2])],
+  lollipop:(T,H)=>[H.P(H.cyl(0.035,0.035,1.6,16),"#f8fafc",[0,-1.1,0]),H.P(H.tube(t=>{const a=t*H.PI*8,r=0.08+t*0.78;return[Math.cos(a)*r,Math.sin(a)*r,0.08]},0.1,400),"main",[0,0.4,0]),H.P(H.cyl(0.9,0.9,0.16,64),"accent",[0,0.4,0],[H.PI/2,0,0])],
+  bell:(T,H)=>[H.P(H.lathe(S3_BELL),"main"),H.P(H.sph(0.16),"main",[0,-0.8,0]),H.P(H.tor(0.12,0.04,undefined,12,32),"main",[0,1.08,0])],
+  bow:(T,H)=>[H.P(H.tor(0.45,0.16,undefined,24,64),"main",[-0.55,0,0],[0,0,0.3],[1,0.6,0.5]),H.P(H.tor(0.45,0.16,undefined,24,64),"main",[0.55,0,0],[0,0,-0.3],[1,0.6,0.5]),H.P(H.sph(0.24),"main"),
+    H.P(H.box(0.22,0.9,0.08,0.03),"main",[-0.25,-0.55,0],[0,0,-0.35]),H.P(H.box(0.22,0.9,0.08,0.03),"main",[0.25,-0.55,0],[0,0,0.35])],
+  pumpkin:(T,H)=>{const g=H.sph(1,96,64),p=g.attributes.position,v=new T.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const a=Math.atan2(v.z,v.x),f=1-0.08*Math.pow(Math.abs(Math.cos(a*4)),0.6);p.setXYZ(i,v.x*f*1.15,v.y*0.85,v.z*f*1.15)}
+    g.computeVertexNormals();return[H.P(g,"main"),H.P(H.cyl(0.08,0.12,0.4,12),"#3f6212",[0,0.95,0],[0,0,0.2])]},
+  /* ---- Еда ---- */
+  donut:(T,H)=>{const o=[H.P(H.tor(0.75,0.38,undefined,48,128),"#d9a066",null,[H.PI/2,0,0]),H.P(H.tor(0.75,0.39,undefined,48,128),"main",[0,0.07,0],[H.PI/2,0,0],[1.02,1.02,0.75])];const r=H.rnd(11);
+    for(let i=0;i<34;i++){const a=r()*H.PI*2,rr=0.75+(r()-0.5)*0.5,y=0.07+0.75*Math.sqrt(Math.max(0,0.39*0.39-(rr-0.75)*(rr-0.75)))+0.01;o.push(H.P(H.cap(0.025,0.09),S3_COLORS5[(i+1)%5],[Math.cos(a)*rr,y,Math.sin(a)*rr],[H.PI/2,r()*3,0]))}return o},
+  icecream:(T,H)=>[H.P(H.cone(0.55,1.5,48),"#d4a373",[0,-0.55,0],[H.PI,0,0]),H.P(H.sph(0.6),"main",[0,0.35,0]),H.P(H.sph(0.5),"accent",[0,0.95,0]),H.P(H.sph(0.13),"#dc2626",[0,1.48,0])],
+  burger:(T,H)=>[H.P(H.cyl(1,0.95,0.3,64),"#d97706",[0,-0.8,0]),H.P(H.cyl(1.02,1.02,0.28,64),"#4a2511",[0,-0.5,0]),H.P(new T.BoxGeometry(1.85,0.05,1.85),"#facc15",[0,-0.34,0],[0,0.4,0]),
+    H.P(H.cyl(0.95,0.95,0.08,64),"#ef4444",[0,-0.25,0]),H.P(H.tor(0.95,0.07,undefined,16,96),"#22c55e",[0,-0.18,0],[H.PI/2,0,0]),H.P(new T.SphereGeometry(1,64,32,0,2*H.PI,0,H.PI/2),"#d97706",[0,-0.15,0],null,[1,0.7,1])],
+  coffee:(T,H)=>[H.P(H.cyl(0.62,0.45,1.6,64),"#f8fafc",[0,-0.1,0]),H.P(H.cyl(0.6,0.54,0.55,64),"main",[0,-0.05,0]),H.P(H.cyl(0.68,0.68,0.14,64),"#1f2937",[0,0.76,0]),H.P(H.cyl(0.5,0.6,0.14,64),"#1f2937",[0,0.88,0])],
+  apple:(T,H)=>{const g=H.sph(1,96,64),p=g.attributes.position,v=new T.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const k=1-0.25*Math.exp(-(v.x*v.x+v.z*v.z)*6)*(v.y>0?1:0.6);p.setXYZ(i,v.x*1.05,v.y*0.95*k,v.z*1.05)}
+    g.computeVertexNormals();return[H.P(g,"main"),H.P(H.cyl(0.04,0.05,0.45,12),"#78350f",[0.05,0.85,0],[0,0,-0.2]),H.P(H.ex(H.leaf(),0.04,0.01),"#22c55e",[0.32,0.95,0],[0.3,0,-0.9],[0.3,0.3,0.3])]},
+  cherries:(T,H)=>[H.P(H.sph(0.5),"main",[-0.5,-0.6,0]),H.P(H.sph(0.5),"main",[0.45,-0.75,0.1]),H.P(H.tube(t=>[-0.5+t*0.55,-0.15+Math.sin(t*H.PI/2)*1.3,0],0.035,60),"#3f6212"),
+    H.P(H.tube(t=>[0.45-t*0.4,-0.3+Math.sin(t*H.PI/2)*1.45,0.1*(1-t)],0.035,60),"#3f6212"),H.P(H.ex(H.leaf(),0.04,0.01),"#22c55e",[0.35,1.1,0],[0,0,-1.0],[0.35,0.35,0.35])],
+  melon:(T,H)=>{const a0=H.PI/2-0.6,a1=H.PI/2+0.6,o=[H.P(H.exz(H.sector(0,1.15,a0,a1),0.35,0.02),"#ef4444",[0,-0.6,0]),H.P(H.exz(H.sector(1.15,1.22,a0,a1),0.36,0.02),"#f8fafc",[0,-0.6,0]),H.P(H.exz(H.sector(1.22,1.4,a0,a1),0.37,0.03),"#16a34a",[0,-0.6,0])];
+    const r=H.rnd(4);for(let i=0;i<9;i++){const a=a0+0.15+r()*(a1-a0-0.3),d=0.35+r()*0.65;o.push(H.P(H.sph(0.05,12,8),"#111827",[Math.cos(a)*d,-0.6+Math.sin(a)*d,0.2],[0,0,a],[0.6,1.2,0.5]))}return o},
+  pizza:(T,H)=>{const a0=H.PI/2-0.45,a1=H.PI/2+0.45,o=[H.P(H.exz(H.sector(0,1.4,a0,a1),0.12,0.02),"#facc15",[0,-0.7,0]),H.P(H.tube(t=>{const a=a0+(a1-a0)*t;return[Math.cos(a)*1.42,Math.sin(a)*1.42-0.7,0]},0.12,60),"#d97706")];
+    [[0,0.25],[-0.18,0.6],[0.2,0.75],[0.0,1.0]].forEach(([x,y])=>o.push(H.P(H.cyl(0.13,0.13,0.05,32),"#dc2626",[x,y-0.6,0.1],[H.PI/2,0,0])));return o},
+  bottle:(T,H)=>[H.P(H.lathe([[0,-1.2],[0.45,-1.2],[0.5,-1.1],[0.5,0.1],[0.45,0.35],[0.2,0.65],[0.18,0.95],[0,0.95]]),"main"),H.P(H.cyl(0.21,0.21,0.25,32),"accent",[0,1.05,0]),H.P(H.cyl(0.515,0.515,0.6,64,true),"#f8fafc",[0,-0.45,0])],
+  wine:(T,H)=>[H.P(H.lathe([[0,-1.2],[0.55,-1.2],[0.55,-1.14],[0.06,-1.1],[0.05,-0.2],[0.12,-0.1],[0.42,0.1],[0.55,0.5],[0.56,1.0],[0.53,1.0],[0.52,0.5],[0.4,0.13],[0.1,-0.07],[0,-0.07]]),"glassW"),H.P(H.lathe([[0,-0.05],[0.1,-0.04],[0.38,0.14],[0.5,0.45],[0,0.45]]),"main")],
+  cupcake:(T,H)=>[H.P(H.flat(H.cyl(0.7,0.5,0.8,20)),"accent",[0,-0.6,0]),H.P(H.tor(0.55,0.22,undefined,24,64),"main",[0,-0.08,0],[H.PI/2,0,0]),H.P(H.tor(0.38,0.2,undefined,24,64),"main",[0,0.22,0],[H.PI/2,0,0]),
+    H.P(H.tor(0.2,0.16,undefined,24,48),"main",[0,0.47,0],[H.PI/2,0,0]),H.P(H.sph(0.16),"main",[0,0.62,0]),H.P(H.sph(0.14),"#dc2626",[0,0.85,0])],
+  strawberry:(T,H)=>{const pr=[[0,-1.1],[0.35,-0.8],[0.7,-0.2],[0.8,0.25],[0.65,0.6],[0.3,0.75],[0,0.75]],rad=y=>{for(let i=1;i<pr.length;i++)if(y<=pr[i][1]){const[a,b]=[pr[i-1],pr[i]];return a[0]+(b[0]-a[0])*(y-a[1])/(b[1]-a[1])}return 0};
+    const o=[H.P(H.lathe(pr),"main"),H.P(H.ex(H.star(6,0.55,0.18),0.05,0.01),"#16a34a",[0,0.77,0],[-H.PI/2,0,0])],r=H.rnd(9);
+    for(let i=0;i<40;i++){const y=-0.85+r()*1.35,a=r()*H.PI*2,rr=rad(y);o.push(H.P(H.sph(0.035,10,8),"#fde047",[Math.sin(a)*rr,y,Math.cos(a)*rr]))}return o},
+  /* ---- Покупки ---- */
+  shopbag:(T,H)=>[H.P(H.box(1.5,1.7,0.7,0.04),"main",[0,-0.3,0]),H.P(H.tor(0.3,0.045,H.PI,12,48),"accent",[0,0.55,0.2]),H.P(H.tor(0.3,0.045,H.PI,12,48),"accent",[0,0.55,-0.2])],
+  parcel:(T,H)=>[H.P(H.box(1.8,1.3,1.4,0.04),"#c8955a"),H.P(new T.BoxGeometry(0.3,1.31,1.41),"#9a6b3a"),H.P(new T.BoxGeometry(0.5,0.35,0.01),"#f8fafc",[0.55,-0.25,0.705])],
+  receipt:(T,H)=>{const pts=[[-0.7,1.1],[0.7,1.1]];for(let i=0;i<=8;i++)pts.push([0.7-i*0.175,i%2?-1.0:-1.1]);const o=[H.P(H.exz(pts,0.04,0.01),"#f8fafc")];
+    [0.8,0.6,0.4,0.2,0.0].forEach((y,i)=>o.push(H.P(new T.BoxGeometry(i===4?0.6:1.0-(i%2)*0.3,0.07,0.02),"#9ca3af",[-0.2+(i%2)*0.15,y,0.04])));o.push(H.P(new T.BoxGeometry(1.1,0.12,0.02),"main",[0,-0.35,0.04]));return o},
+  barcode:(T,H)=>{const o=[H.P(H.box(2,1.2,0.08,0.04),"#f8fafc")],r=H.rnd(5);let x=-0.8;while(x<0.78){const w=0.03+Math.floor(r()*3)*0.03;o.push(H.P(new T.BoxGeometry(w,0.8,0.02),"#111827",[x+w/2,0.05,0.05]));x+=w+0.03+Math.floor(r()*2)*0.03}return o},
+  shop:(T,H)=>{const o=[H.P(H.box(2,1.3,1.2,0.03),"#f8fafc",[0,-0.35,0]),H.P(H.box(2.2,0.18,1.35,0.03),"main",[0,0.4,0]),H.P(H.box(0.5,0.85,0.05,0.02),"#334155",[-0.45,-0.57,0.61]),H.P(H.box(0.8,0.55,0.05,0.02),"glassW",[0.45,-0.35,0.61])];
+    for(let i=0;i<8;i++)o.push(H.P(new T.BoxGeometry(0.275,0.06,0.5),i%2?"#f8fafc":"accent",[-0.96+i*0.275,0.22,0.75],[0.5,0,0]));return o},
+  truck:(T,H)=>{const o=[H.P(H.box(1.8,1.1,1,0.06),"main",[-0.35,0.15,0]),H.P(H.box(0.8,0.8,0.95,0.08),"accent",[0.95,0,0]),H.P(H.box(0.05,0.32,0.75,0.02),"#1e293b",[1.36,0.15,0]),H.P(H.box(0.4,0.3,0.97,0.03),"#1e293b",[1.05,0.15,0])];
+    [[-0.85,0.5],[-0.85,-0.5],[0.9,0.5],[0.9,-0.5]].forEach(([x,z])=>o.push(H.P(H.cyl(0.27,0.27,0.18,32),"#111827",[x,-0.45,z],[H.PI/2,0,0]),H.P(H.cyl(0.13,0.13,0.2,24),"chrome",[x,-0.45,z],[H.PI/2,0,0])));return o},
+  plane:(T,H)=>{const tri=(a,b,c)=>{const g=new T.BufferGeometry();g.setAttribute("position",new T.Float32BufferAttribute([...a,...b,...c,...a,...c,...b],3));g.computeVertexNormals();return g};
+    const N=[1.3,0,0],L=[-1,0.08,-0.95],R=[-1,0.08,0.95],C=[-1,0.18,0],K=[-1,-0.45,0];return[H.P(tri(N,L,C),"#f8fafc"),H.P(tri(N,C,R),"#f8fafc"),H.P(tri(N,K,C),"main")]},
+  /* ---- Связь ---- */
+  chat:(T,H)=>[H.P(H.exz(H.rrect(2,1.4,0.4),0.3,0.06),"main"),H.P(H.exz([[-0.55,-0.6],[-0.1,-0.6],[-0.8,-1.15]],0.3,0.06),"main"),...[-0.45,0,0.45].map(x=>H.P(H.sph(0.13,24,16),"#f8fafc",[x,0,0.22]))],
+  notify:(T,H)=>[H.P(H.lathe(S3_BELL),"main"),H.P(H.sph(0.16),"main",[0,-0.8,0]),H.P(H.tor(0.12,0.04,undefined,12,32),"main",[0,1.08,0]),H.P(H.sph(0.3),"#ef4444",[0.62,0.72,0.3])],
+  envelope:(T,H)=>[H.P(H.box(2,1.3,0.16,0.04),"main"),H.P(H.exz([[-0.98,0.63],[0.98,0.63],[0,-0.1]],0.03,0.01),"accent",[0,0,0.1]),H.P(H.exz([[-0.98,-0.63],[0,0.05],[0.98,-0.63]],0.02,0.01),"side",[0,0,0.095])],
+  megaphone:(T,H)=>[H.P(H.cyl(0.75,0.25,1.4,48),"main",[0.3,0,0],[0,0,-H.PI/2]),H.P(H.cyl(0.79,0.79,0.08,48),"accent",[1.0,0,0],[0,0,-H.PI/2]),H.P(H.cyl(0.7,0.7,0.02,48),"#1f2937",[1.03,0,0],[0,0,-H.PI/2]),
+    H.P(H.cyl(0.28,0.28,0.5,32),"accent",[-0.6,0,0],[0,0,-H.PI/2]),H.P(H.box(0.22,0.6,0.22,0.06),"#1f2937",[-0.2,-0.5,0])],
+  play:(T,H)=>[H.P(H.cyl(1,1,0.3,64),"main",null,[H.PI/2,0,0]),H.P(H.exz(H.rot(H.circ(0.48,3),0),0.12,0.05),"#f8fafc",[0.08,0,0.2])],
+  mic:(T,H)=>[H.P(H.cap(0.45,0.5),"#334155",[0,0.7,0]),H.P(H.cyl(0.47,0.47,0.1,48),"chrome",[0,0.38,0]),H.P(H.cyl(0.3,0.18,1.3,32),"main",[0,-0.35,0]),H.P(H.cyl(0.19,0.17,0.1,32),"chrome",[0,-1.02,0])],
+  camera:(T,H)=>[H.P(H.box(2,1.3,0.7,0.18),"main"),H.P(H.box(0.6,0.25,0.5,0.06),"main",[-0.45,0.72,0]),H.P(H.cyl(0.48,0.48,0.25,48),"#1f2937",[0.1,-0.05,0.42],[H.PI/2,0,0]),H.P(H.cyl(0.34,0.34,0.27,48),"glassW",[0.1,-0.05,0.45],[H.PI/2,0,0]),H.P(H.cyl(0.12,0.12,0.1,24),"accent",[0.7,0.72,0])],
+  headphones:(T,H)=>[H.P(H.tor(0.95,0.09,H.PI,16,64),"main",[0,0.1,0]),...[-1,1].flatMap(s=>[H.P(H.cyl(0.38,0.38,0.3,48),"accent",[s*0.95,-0.25,0],[0,0,H.PI/2]),H.P(H.tor(0.27,0.1,undefined,16,48),"#1f2937",[s*0.78,-0.25,0],[0,H.PI/2,0])])],
+  pin:(T,H)=>[H.P(H.lathe([[0,-1.3],[0.2,-0.9],[0.55,-0.25],[0.75,0.3],[0.7,0.7],[0.45,0.98],[0,1.08]]),"main"),H.P(H.sph(0.28),"#f8fafc",[0,0.42,0.62],null,[1,1,0.4])],
+  wifi:(T,H)=>[...[0.35,0.7,1.05].map(R=>H.P(H.tor(R,0.09,H.PI/2,16,64),"main",[0,-0.6,0],[0,0,H.PI/4])),H.P(H.sph(0.15),"main",[0,-0.6,0])],
+  likebox:(T,H)=>{const h=new T.Shape();h.moveTo(0,-0.95);h.bezierCurveTo(-0.2,-0.75,-1.05,-0.25,-1.0,0.3);h.bezierCurveTo(-0.95,0.9,-0.25,1.02,0,0.55);h.bezierCurveTo(0.25,1.02,0.95,0.9,1.0,0.3);h.bezierCurveTo(1.05,-0.25,0.2,-0.75,0,-0.95);
+    return[H.P(H.box(2,2,0.4,0.4),"main"),H.P(H.exz(h,0.12,0.05),"#f8fafc",[0,0.02,0.22],null,[0.55,0.55,1])]},
+  /* ---- Бизнес ---- */
+  briefcase:(T,H)=>[H.P(H.box(2,1.4,0.7,0.12),"main"),H.P(H.tor(0.3,0.06,H.PI,12,48),"#1f2937",[0,0.7,0]),H.P(new T.BoxGeometry(2.0,0.08,0.72),"side",[0,0.15,0]),H.P(H.box(0.16,0.2,0.05,0.02),"gold",[-0.5,0.15,0.37]),H.P(H.box(0.16,0.2,0.05,0.02),"gold",[0.5,0.15,0.37])],
+  bulb:(T,H)=>{const o=[H.P(H.lathe([[0,1.3],[0.45,1.18],[0.75,0.8],[0.8,0.4],[0.6,-0.05],[0.38,-0.35],[0.36,-0.5],[0,-0.5]]),"main")];for(let i=0;i<3;i++)o.push(H.P(H.tor(0.36,0.05,undefined,12,48),"chrome",[0,-0.58-i*0.12,0],[H.PI/2,0,0]));
+    o.push(H.P(H.cyl(0.35,0.3,0.4,32),"chrome",[0,-0.72,0]),H.P(H.cyl(0.15,0.08,0.12,24),"#1f2937",[0,-0.97,0]));return o},
+  rocket:(T,H)=>{const o=[H.P(H.lathe([[0,-1.1],[0.42,-1.05],[0.52,-0.6],[0.55,0],[0.5,0.5],[0,0.5]]),"#f1f5f9"),H.P(H.lathe([[0,0.49],[0.5,0.49],[0.32,0.95],[0,1.3]]),"main")];
+    const fin=H.exz([[0,0],[0.5,-0.45],[0.5,-0.85],[0,-0.55]],0.06,0.02);for(let k=0;k<3;k++){const a=k*2*H.PI/3;o.push(H.P(fin,"accent",[Math.sin(a)*0.45,-0.55,Math.cos(a)*0.45],[0,a-H.PI/2,0]))}
+    o.push(H.P(H.tor(0.18,0.05,undefined,12,48),"chrome",[0,0.12,0.53]),H.P(H.cyl(0.18,0.18,0.04,32),"#38bdf8",[0,0.12,0.53],[H.PI/2,0,0]),H.P(H.lathe(S3_FLAME,32),"#f97316",[0,-1.4,0],[H.PI,0,0],[0.3,0.45,0.3]));return o},
+  target:(T,H)=>{const o=[1,0.78,0.56,0.34,0.14].map((r,i)=>H.P(H.cyl(r,r,0.2+i*0.04,64),i%2?"#f8fafc":"main",null,[H.PI/2,0,0]));const d=new T.Vector3(0.55,0.45,1).normalize();
+    const sh=new T.CylinderGeometry(0.035,0.035,1.4,12);sh.translate(0,0.7,0);sh.rotateX(H.PI/2);sh.lookAt(d);const tip=new T.ConeGeometry(0.07,0.22,16);tip.rotateX(-H.PI/2);tip.lookAt(d);
+    const fl=new T.BoxGeometry(0.02,0.18,0.3);fl.translate(0,0,1.25);fl.lookAt(d);const fl2=new T.BoxGeometry(0.18,0.02,0.3);fl2.translate(0,0,1.25);fl2.lookAt(d);
+    o.push(H.P(sh,"#1f2937",[0,0,0.14]),H.P(tip,"#1f2937",[0,0,0.14]),H.P(fl,"accent",[0,0,0.14]),H.P(fl2,"accent",[0,0,0.14]));return o},
+  trophy:(T,H)=>[H.P(H.lathe([[0,-0.2],[0.2,-0.15],[0.55,0.1],[0.78,0.5],[0.85,1.1],[0.8,1.12],[0,1.12]]),"main"),H.P(H.cyl(0.08,0.12,0.6,24),"main",[0,-0.45,0]),H.P(H.cyl(0.4,0.45,0.15,48),"main",[0,-0.8,0]),
+    H.P(H.box(1.1,0.35,0.8,0.05),"#1f2937",[0,-1.05,0]),H.P(H.tor(0.3,0.06,H.PI,16,48),"main",[-0.82,0.65,0],[0,0,H.PI/2]),H.P(H.tor(0.3,0.06,H.PI,16,48),"main",[0.82,0.65,0],[0,0,-H.PI/2])],
+  medal:async(T,H)=>[H.P(H.cyl(0.75,0.75,0.12,64),"gold",[0,-0.45,0],[H.PI/2,0,0]),H.P(H.tor(0.62,0.035,undefined,12,96),"gold",[0,-0.45,0.07]),H.P(await H.txt("1",0.32,0.1),"gold",[0,-0.45,0.1]),
+    H.P(H.box(0.35,1.1,0.03,0.01),"main",[-0.22,0.45,-0.05],[0,0,-0.35]),H.P(H.box(0.35,1.1,0.03,0.01),"accent",[0.22,0.45,-0.05],[0,0,0.35])],
+  crown:(T,H)=>{const o=[H.P(H.lathe([[0.8,-0.62],[0.92,-0.62],[0.95,-0.2],[0.83,-0.2],[0.8,-0.62]]),"main")];for(let i=0;i<5;i++){const a=i/5*2*H.PI;
+    o.push(H.P(H.cone(0.24,0.75,24),"main",[Math.sin(a)*0.87,0.15,Math.cos(a)*0.87]),H.P(H.sph(0.1,16,12),"main",[Math.sin(a)*0.87,0.57,Math.cos(a)*0.87]),H.P(H.sph(0.09,16,12),"accent",[Math.sin(a+H.PI/5)*0.95,-0.4,Math.cos(a+H.PI/5)*0.95]))}return o},
+  clock:(T,H)=>{const o=[H.P(H.cyl(1,1,0.3,64),"main",null,[H.PI/2,0,0]),H.P(H.cyl(0.85,0.85,0.32,64),"#f8fafc",null,[H.PI/2,0,0])];
+    for(let i=0;i<12;i++){const a=i/12*2*H.PI;o.push(H.P(new T.BoxGeometry(0.04,i%3?0.08:0.16,0.02),"#1f2937",[Math.sin(a)*0.72,Math.cos(a)*0.72,0.17],[0,0,-a]))}
+    const hand=(len,w,a,m)=>H.P(new T.BoxGeometry(w,len,0.02),m,[-Math.sin(a)*len/2,Math.cos(a)*len/2,0.18],[0,0,a]);o.push(hand(0.55,0.06,-0.5,"#1f2937"),hand(0.4,0.07,-2.2,"#1f2937"),H.P(H.sph(0.06,16,12),"accent",[0,0,0.19]));return o},
+  calendar:(T,H)=>{const o=[H.P(H.box(1.8,1.7,0.2,0.08),"#f8fafc"),H.P(H.box(1.8,0.45,0.22,0.08),"main",[0,0.63,0])];[-0.45,0.45].forEach(x=>o.push(H.P(H.tor(0.12,0.04,undefined,12,32),"#334155",[x,0.9,0],[0,H.PI/2,0])));
+    for(let r=0;r<3;r++)for(let c=0;c<4;c++)o.push(H.P(H.box(0.26,0.2,0.04,0.02),r===1&&c===2?"accent":"#cbd5e1",[(c-1.5)*0.36,0.15-r*0.3,0.11]));return o},
+  key:(T,H)=>[H.P(H.tor(0.38,0.12,undefined,24,64),"main",[-0.9,0,0]),H.P(H.cyl(0.09,0.09,1.6,24),"main",[0.3,0,0],[0,0,H.PI/2]),H.P(H.box(0.12,0.35,0.12,0.02),"main",[0.85,-0.2,0]),H.P(H.box(0.12,0.25,0.12,0.02),"main",[0.6,-0.15,0])],
+  lock:(T,H)=>[H.P(H.box(1.6,1.3,0.7,0.15),"main",[0,-0.35,0]),H.P(H.tor(0.5,0.12,H.PI,16,64),"chrome",[0,0.45,0]),H.P(H.cyl(0.12,0.12,0.3,24),"chrome",[-0.5,0.3,0]),H.P(H.cyl(0.12,0.12,0.3,24),"chrome",[0.5,0.3,0]),
+    H.P(H.cyl(0.13,0.13,0.05,24),"#1f2937",[0,-0.25,0.36],[H.PI/2,0,0]),H.P(H.box(0.08,0.3,0.05,0.02),"#1f2937",[0,-0.42,0.36])],
+  shield:(T,H)=>{const s=new T.Shape();s.moveTo(0,1.1);s.quadraticCurveTo(0.55,0.85,1,0.9);s.lineTo(0.95,0.0);s.quadraticCurveTo(0.85,-0.7,0,-1.15);s.quadraticCurveTo(-0.85,-0.7,-0.95,0);s.lineTo(-1,0.9);s.quadraticCurveTo(-0.55,0.85,0,1.1);
+    return[H.P(H.exz(s,0.3,0.08),["main","side"]),H.P(H.exz(S3_CHECK,0.12,0.03),"#f8fafc",[0,-0.05,0.25],null,[0.55,0.55,1])]},
+  gear:(T,H)=>{const n=10,st=2*H.PI/n,pts=[];for(let i=0;i<n;i++){const a=i*st;pts.push([Math.cos(a-st*0.3)*0.8,Math.sin(a-st*0.3)*0.8],[Math.cos(a-st*0.17)*1.02,Math.sin(a-st*0.17)*1.02],[Math.cos(a+st*0.17)*1.02,Math.sin(a+st*0.17)*1.02],[Math.cos(a+st*0.3)*0.8,Math.sin(a+st*0.3)*0.8])}
+    return[H.P(H.ex(H.holes(pts,H.circ(0.3,48)),0.35,0.04),["main","side"])]},
+  trendup:(T,H)=>{const P=[[-1,-0.7],[-0.3,0],[0.1,-0.35],[0.75,0.4]],seg=t=>{const k=Math.min(2.999,t*3),i=Math.floor(k),f=k-i;return[P[i][0]+(P[i+1][0]-P[i][0])*f,P[i][1]+(P[i+1][1]-P[i][1])*f,0]};
+    const ang=Math.atan2(0.75,0.65);return[H.P(H.tube(seg,0.11,240),"main"),H.P(H.cone(0.25,0.45,32),"main",[0.85,0.52,0],[0,0,ang-H.PI/2])]},
+  flag:(T,H)=>{const g=new T.BoxGeometry(1.6,1.0,0.04,40,1,1),p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i);p.setZ(i,p.getZ(i)+Math.sin((x+0.8)*3.2)*0.13*(x+0.8)/1.6)}g.computeVertexNormals();
+    return[H.P(g,"main",[0.85,0.6,0]),H.P(H.cyl(0.05,0.05,2.6,16),"chrome",[0,-0.1,0]),H.P(H.sph(0.09,16,12),"gold",[0,1.24,0])]},
+  magnifier:(T,H)=>[H.P(H.tor(0.65,0.1,undefined,24,96),"#1f2937",[-0.3,0.3,0]),H.P(H.cyl(0.62,0.62,0.04,64),"glassW",[-0.3,0.3,0],[H.PI/2,0,0]),H.P(H.cyl(0.12,0.12,0.9,24),"main",[0.55,-0.55,0],[0,0,H.PI/4])],
+  pencil:(T,H)=>[H.P(H.flat(H.cyl(0.22,0.22,1.8,6)),"main"),H.P(H.flat(H.cone(0.22,0.45,6)),"#f5d0a9",[0,1.12,0]),H.P(H.cone(0.07,0.14,16),"#1f2937",[0,1.29,0]),H.P(H.cyl(0.23,0.23,0.22,24),"chrome",[0,-1.0,0]),H.P(H.cyl(0.22,0.22,0.25,24),"#f472b6",[0,-1.22,0])],
+  hourglass:(T,H)=>{const o=[H.P(H.lathe([[0,-1],[0.6,-1],[0.62,-0.6],[0.4,-0.2],[0.08,0],[0.4,0.2],[0.62,0.6],[0.6,1],[0,1]]),"glassW"),H.P(H.lathe([[0,-0.98],[0.58,-0.98],[0.55,-0.65],[0,-0.45]]),"accent"),H.P(H.lathe([[0,0.15],[0.3,0.3],[0.5,0.55],[0,0.55]]),"accent"),
+    H.P(H.cyl(0.8,0.8,0.12,48),"main",[0,1.06,0]),H.P(H.cyl(0.8,0.8,0.12,48),"main",[0,-1.06,0])];for(let k=0;k<3;k++){const a=k*2*H.PI/3;o.push(H.P(H.cyl(0.05,0.05,2.1,12),"main",[Math.sin(a)*0.7,0,Math.cos(a)*0.7]))}return o},
+  /* ---- Природа ---- */
+  sun:(T,H)=>{const o=[H.P(H.sph(0.75),"main")];for(let i=0;i<12;i++){const a=i/12*2*H.PI;o.push(H.P(H.cone(0.14,0.4,24),"accent",[Math.cos(a)*1.02,Math.sin(a)*1.02,0],[0,0,a-H.PI/2]))}return o},
+  cloud:(T,H)=>[[-0.75,-0.1,0.5],[-0.2,0.25,0.7],[0.45,0.1,0.6],[0.95,-0.15,0.42],[0.1,-0.25,0.55]].map(([x,y,r])=>H.P(H.sph(r),"main",[x,y,0])),
+  bolt:(T,H)=>[H.P(H.ex([[0.2,1.2],[-0.6,-0.1],[-0.05,-0.1],[-0.3,-1.2],[0.6,0.2],[0.05,0.2],[0.45,1.2]],0.35,0.06),["main","side"])],
+  moon:(T,H)=>{const R=1,r=0.85,d=0.55,x=(d*d+R*R-r*r)/(2*d),y=Math.sqrt(R*R-x*x),f=Math.atan2(y,x),q=Math.atan2(y,x-d),s=new T.Shape();s.moveTo(Math.cos(f)*R,Math.sin(f)*R);s.absarc(0,0,R,f,2*H.PI-f,false);s.absarc(d,0,r,-q,q,true);
+    return[H.P(H.ex(s,0.4,0.08),["main","side"])]},
+  snowflake:(T,H)=>{const o=[H.P(H.ex(H.circ(0.22,6),0.14,0.03),"main")];for(let i=0;i<6;i++){const a=i*H.PI/3,dx=Math.cos(a),dy=Math.sin(a);o.push(H.P(H.box(0.14,1.1,0.14,0.04),"main",[dx*0.6,dy*0.6,0],[0,0,a-H.PI/2]));
+    for(const sg of[-1,1]){const b=a+sg*0.75,bx=Math.cos(b),by=Math.sin(b);o.push(H.P(H.box(0.1,0.36,0.1,0.03),"main",[dx*0.75+bx*0.17,dy*0.75+by*0.17,0],[0,0,b-H.PI/2]))}}return o},
+  drop:(T,H)=>[H.P(H.lathe([[0,-1],[0.45,-0.9],[0.72,-0.55],[0.75,-0.15],[0.55,0.35],[0.25,0.8],[0,1.15]]),"main")],
+  flame:(T,H)=>{const fl=()=>{const s=new T.Shape();s.moveTo(0,-1);s.bezierCurveTo(0.95,-1,0.9,0.3,0.1,1.25);s.bezierCurveTo(0.3,0.6,-0.1,0.4,-0.35,0.15);s.bezierCurveTo(-0.4,0.45,-0.55,0.55,-0.6,0.6);s.bezierCurveTo(-0.95,0.1,-0.8,-1,0,-1);return s};
+    return[H.P(H.exz(fl(),0.3,0.08),"main"),H.P(H.exz(fl(),0.3,0.08),"accent",[0.02,-0.35,0.12],null,[0.55,0.55,1])]},
+  leaf:(T,H)=>[H.P(H.exz(H.leaf(),0.08,0.03),"main",null,null,[0.9,1.2,1]),H.P(H.box(0.04,2.1,0.04,0.015),"side",[0,0,0.08]),H.P(H.cyl(0.04,0.04,0.5,12),"side",[0,-1.4,0])],
+  flower:(T,H)=>{const o=[H.P(H.sph(0.32),"accent",[0,0.6,0.05])];for(let i=0;i<8;i++){const a=i/8*2*H.PI;o.push(H.P(H.sph(0.3),"main",[Math.cos(a)*0.52,0.6+Math.sin(a)*0.52,0],[0,0,a],[1.4,0.75,0.35]))}
+    o.push(H.P(H.cyl(0.05,0.05,1.5,12),"#16a34a",[0,-0.45,-0.05]),H.P(H.ex(H.leaf(),0.04,0.01),"#22c55e",[0.3,-0.5,0],[0,0,-0.9],[0.3,0.3,0.3]));return o},
+  tree:(T,H)=>[H.P(H.cyl(0.14,0.2,1.0,24),"#7c4a1e",[0,-0.8,0]),H.P(H.sph(0.7),"main",[0,0.25,0]),H.P(H.sph(0.5),"main",[-0.5,0.0,0.15]),H.P(H.sph(0.52),"main",[0.5,0.05,0.1]),H.P(H.sph(0.45),"main",[0.1,0.75,0.05])],
+  planet:(T,H)=>[H.P(H.sph(0.8),"main"),H.P(H.tor(1.25,0.18,undefined,16,128),"accent",null,[H.PI/2+0.35,0,0.25],[1,1,0.12])],
+  rainbow:(T,H)=>[...["#ef4444","#f59e0b","#facc15","#22c55e","#3b82f6","#8b5cf6"].map((c,i)=>H.P(H.tor(1.2-i*0.15,0.075,H.PI,16,96),c,[0,-0.5,0])),H.P(H.sph(0.3),"#f8fafc",[-0.9,-0.55,0.1]),H.P(H.sph(0.24),"#f8fafc",[-0.6,-0.6,0.15]),H.P(H.sph(0.3),"#f8fafc",[0.9,-0.55,0.1]),H.P(H.sph(0.24),"#f8fafc",[0.6,-0.6,0.15])],
+  mountains:(T,H)=>[H.P(H.flat(H.cone(0.9,1.6,7)),"main",[-0.4,0,0]),H.P(H.flat(H.cone(0.36,0.6,7)),"#f8fafc",[-0.4,0.5,0]),H.P(H.flat(H.cone(0.7,1.2,7)),"accent",[0.55,-0.2,-0.2]),H.P(H.flat(H.cone(0.27,0.45,7)),"#f8fafc",[0.55,0.2,-0.2])],
+  /* ---- Спорт и игры ---- */
+  basketball:(T,H)=>[H.P(H.sph(1),"main"),H.P(H.tor(1.003,0.025,undefined,12,128),"#1f2937",null,[H.PI/2,0,0]),H.P(H.tor(1.003,0.025,undefined,12,128),"#1f2937"),H.P(H.tor(0.71,0.025,undefined,12,96),"#1f2937",[0.71,0,0],[0,H.PI/2,0]),H.P(H.tor(0.71,0.025,undefined,12,96),"#1f2937",[-0.71,0,0],[0,H.PI/2,0])],
+  tennis:(T,H)=>[H.P(H.sph(1),"main"),H.P(H.tube(t=>{const a=t*2*H.PI,A=0.75,B=0.25,x=A*Math.cos(a)+B*Math.cos(3*a),y=A*Math.sin(a)-B*Math.sin(3*a),z=2*Math.sqrt(A*B)*Math.sin(2*a),k=1.005/Math.hypot(x,y,z);return[x*k,y*k,z*k]},0.035,300,true),"#f8fafc")],
+  dumbbell:(T,H)=>[H.P(H.cyl(0.08,0.08,2.4,24),"chrome",null,[0,0,H.PI/2]),...[-1,1].flatMap(s=>[H.P(H.cyl(0.55,0.55,0.18,48),"main",[s*0.75,0,0],[0,0,H.PI/2]),H.P(H.cyl(0.45,0.45,0.16,48),"main",[s*0.93,0,0],[0,0,H.PI/2]),H.P(H.cyl(0.15,0.15,0.1,24),"chrome",[s*1.08,0,0],[0,0,H.PI/2])])],
+  dice:(T,H)=>{const o=[H.P(H.box(1.6,1.6,1.6,0.25),"#f8fafc")],pip=(x,y,z,s)=>o.push(H.P(H.sph(0.14,20,14),"main",[x,y,z],null,s));pip(0,0,0.8,[1,1,0.35]);
+    [[-0.4,-0.4],[0,0],[0.4,0.4]].forEach(([a,b])=>pip(a,0.8,b,[1,0.35,1]));[[-0.4,0.4],[0.4,-0.4]].forEach(([a,b])=>pip(0.8,a,b,[0.35,1,1]));return o},
+  pawn:(T,H)=>[H.P(H.lathe([[0,-1.2],[0.75,-1.2],[0.75,-1.05],[0.6,-0.95],[0.62,-0.85],[0.45,-0.75],[0.3,-0.2],[0.25,0.25],[0.45,0.32],[0.45,0.4],[0.25,0.45],[0,0.45]]),"main"),H.P(H.sph(0.42),"main",[0,0.8,0])],
+  gamepad:(T,H)=>{const o=[H.P(H.exz(H.rrect(2.2,1.1,0.5),0.45,0.1),"main"),H.P(H.sph(0.45),"main",[-0.75,-0.45,0],null,[1,1.2,0.6]),H.P(H.sph(0.45),"main",[0.75,-0.45,0],null,[1,1.2,0.6]),H.P(H.exz(H.plus(0.07,0.24),0.08,0.02),"#1f2937",[-0.55,0.05,0.3])];
+    [[0.5,0.25,"#22c55e"],[0.72,0.03,"#ef4444"],[0.5,-0.19,"#3b82f6"],[0.28,0.03,"#facc15"]].forEach(([x,y,c])=>o.push(H.P(H.sph(0.09,16,12),c,[x,y,0.3],null,[1,1,0.6])));return o},
+  bowlingpin:(T,H)=>[H.P(H.lathe([[0,-1.3],[0.32,-1.3],[0.5,-0.9],[0.55,-0.5],[0.42,0],[0.22,0.35],[0.2,0.55],[0.3,0.85],[0.3,1.05],[0.18,1.25],[0,1.3]]),"#f8fafc"),H.P(H.tor(0.215,0.035,undefined,12,48),"main",[0,0.42,0],[H.PI/2,0,0]),H.P(H.tor(0.205,0.035,undefined,12,48),"main",[0,0.55,0],[H.PI/2,0,0])],
+  /* ---- Дом, авто, здоровье ---- */
+  house:(T,H)=>{const roof=H.flat(H.cyl(1.05,1.05,1.9,3,false,H.PI/2));return[H.P(H.box(1.6,1.1,1.4,0.03),"main",[0,-0.35,0]),H.P(roof,"accent",[0,0.72,0],[0,0,H.PI/2]),H.P(H.box(0.35,0.6,0.05,0.02),"#334155",[0.25,-0.6,0.71]),
+    H.P(H.box(0.35,0.3,0.05,0.02),"glassW",[-0.4,-0.3,0.71]),H.P(H.box(0.25,0.5,0.25,0.03),"accent",[-0.45,1.0,0])]},
+  building:(T,H)=>{const o=[H.P(H.box(1.1,2.4,1.1,0.04),"main")];for(let r=0;r<6;r++)for(let c=0;c<3;c++)o.push(H.P(new T.BoxGeometry(0.22,0.22,0.02),"#bfdbfe",[(c-1)*0.32,0.85-r*0.34,0.56]),H.P(new T.BoxGeometry(0.02,0.22,0.22),"#bfdbfe",[0.56,0.85-r*0.34,(c-1)*0.32]));o.push(H.P(H.box(0.6,0.3,0.6,0.03),"side",[0,1.35,0]));return o},
+  car:(T,H)=>{const o=[H.P(H.box(2.4,0.6,1.2,0.22),"main",[0,-0.15,0]),H.P(H.box(1.3,0.55,1.05,0.2),"main",[-0.1,0.38,0]),H.P(H.box(1.2,0.38,1.08,0.1),"#1e293b",[-0.1,0.42,0])];
+    [[-0.8,0.55],[-0.8,-0.55],[0.8,0.55],[0.8,-0.55]].forEach(([x,z])=>o.push(H.P(H.cyl(0.3,0.3,0.22,32),"#111827",[x,-0.45,z],[H.PI/2,0,0]),H.P(H.cyl(0.15,0.15,0.24,24),"chrome",[x,-0.45,z],[H.PI/2,0,0])));
+    o.push(H.P(H.sph(0.09,16,12),"#fde047",[1.2,-0.05,0.35]),H.P(H.sph(0.09,16,12),"#fde047",[1.2,-0.05,-0.35]));return o},
+  tire:(T,H)=>[H.P(H.tor(0.7,0.32,undefined,32,96),"#111827"),H.P(H.cyl(0.5,0.5,0.4,48),"chrome",null,[H.PI/2,0,0]),H.P(H.cyl(0.16,0.16,0.45,24),"#1f2937",null,[H.PI/2,0,0])],
+  pharmacy:(T,H)=>[H.P(H.box(1.8,1.8,0.4,0.3),"#f8fafc"),H.P(H.exz(H.plus(0.25,0.7),0.2,0.04),"main",[0,0,0.2])],
+  lipstick:(T,H)=>{const b=H.cyl(0.24,0.24,0.7,48),p=b.attributes.position;for(let i=0;i<p.count;i++)if(p.getY(i)>0)p.setY(i,0.35-(p.getX(i)+0.24)/0.48*0.35);b.computeVertexNormals();
+    return[H.P(H.cyl(0.38,0.38,1.1,48),"gold",[0,-0.6,0]),H.P(H.cyl(0.3,0.3,0.4,48),"#1f2937",[0,0.15,0]),H.P(b,"main",[0,0.6,0])]},
+  perfume:(T,H)=>[H.P(H.box(1.3,1.2,0.7,0.12),"glassW",[0,-0.4,0]),H.P(H.box(1.1,0.95,0.5,0.1),"main",[0,-0.48,0]),H.P(H.cyl(0.12,0.14,0.25,24),"gold",[0,0.32,0]),H.P(H.box(0.5,0.4,0.4,0.08),"gold",[0,0.62,0])],
+  pill2:(T,H)=>[H.P(H.cyl(0.45,0.45,0.6,48),"main",[0,0.3,0]),H.P(new T.SphereGeometry(0.45,48,24,0,2*H.PI,0,H.PI/2),"main",[0,0.6,0]),H.P(H.cyl(0.45,0.45,0.6,48),"accent",[0,-0.3,0]),H.P(new T.SphereGeometry(0.45,48,24,0,2*H.PI,H.PI/2,H.PI/2),"accent",[0,-0.6,0])],
+  /* ---- Значки и кнопки ---- */
+  check:(T,H)=>[H.P(H.ex(S3_CHECK,0.35,0.08),["main","side"])],
+  cross:(T,H)=>[H.P(H.ex(H.rot(H.plus(0.22,0.95),H.PI/4),0.35,0.08),["main","side"])],
+  plus:(T,H)=>[H.P(H.ex(H.plus(0.28,1),0.35,0.08),["main","side"])],
+  rating:(T,H)=>[0,1,2,3,4].map(i=>H.P(H.ex(H.star(5,0.38,0.16),0.15,0.03),i<4?"gold":"#d1d5db",[(i-2)*0.85,0,0])),
+  toggle:(T,H)=>[H.P(H.cap(0.5,1.0),"main",null,[0,0,H.PI/2]),H.P(H.sph(0.42),"#f8fafc",[0.5,0,0.12])],
+  cursor:(T,H)=>[H.P(H.ex([[0,0],[0,-1.6],[0.42,-1.22],[0.72,-1.85],[0.98,-1.72],[0.7,-1.1],[1.2,-1.1]],0.2,0.05),["#f8fafc","#111827"])],
+  refresh:(T,H)=>[H.P(H.tor(0.8,0.13,H.PI*1.5,24,96),"main"),H.P(H.cone(0.3,0.45,32),"main",[0.12,-0.8,0],[0,0,-H.PI/2])],
+  progress:(T,H)=>[H.P(H.cap(0.22,2.0),"#e5e7eb",null,[0,0,H.PI/2]),H.P(H.cap(0.24,1.1),"main",[-0.45,0,0.02],[0,0,H.PI/2])],
+  badge50:async(T,H)=>[H.P(H.ex(H.star(18,1.05,0.88),0.25,0.04),["main","side"]),H.P(await H.txt("−50%",1.3,0.12),"#ffffff",[0,0,0.2])],
+  newcircle:async(T,H)=>[H.P(H.cyl(1,1,0.25,64),"main",null,[H.PI/2,0,0]),H.P(await H.txt("NEW",1.3,0.12),"#ffffff",[0,0,0.17])],
+  tagsale:async(T,H)=>[H.P(H.ex(H.holes([[-1,-0.55],[0.55,-0.55],[1.05,0],[0.55,0.55],[-1,0.55]],H.circ(0.12,32,0.6,0)),0.14,0.04),["main","side"]),H.P(await H.txt("SALE",1.05,0.08),"#ffffff",[-0.25,0,0.14])],
+  ribbonhit:async(T,H)=>[H.P(H.box(2.2,0.7,0.15,0.04),"main"),H.P(H.exz([[0,0.32],[0.55,0.32],[0.35,0],[0.55,-0.32],[0,-0.32]],0.12,0.02),"side",[1.05,-0.12,-0.12]),H.P(H.exz([[0,0.32],[-0.55,0.32],[-0.35,0],[-0.55,-0.32],[0,-0.32]],0.12,0.02),"side",[-1.05,-0.12,-0.12]),H.P(await H.txt("ХИТ",1.0,0.1),"#ffffff",[0,0,0.12])],
+  bubblewow:async(T,H)=>[H.P(H.exz(H.rrect(2,1.4,0.4),0.3,0.06),"main"),H.P(H.exz([[-0.55,-0.6],[-0.1,-0.6],[-0.8,-1.15]],0.3,0.06),"main"),H.P(await H.txt("WOW",1.3,0.12),"#ffffff",[0,0.02,0.2])],
+  buybtn:async(T,H)=>[H.P(H.box(2.6,0.8,0.3,0.38),"main"),H.P(await H.txt("КУПИТЬ",1.8,0.1),"#ffffff",[0,0,0.17])],
+  timer24:async(T,H)=>[H.P(H.cyl(1,1,0.25,64),"main",null,[H.PI/2,0,0]),H.P(H.cyl(0.82,0.82,0.27,64),"#f8fafc",null,[H.PI/2,0,0]),H.P(await H.txt("24",0.85,0.1),"main",[0,0.06,0.15]),H.P(H.cyl(0.12,0.12,0.25,24),"main",[0,1.1,0]),H.P(H.box(0.4,0.12,0.2,0.04),"main",[0,1.25,0])],
+  rubcoin:async(T,H)=>[H.P(H.cyl(1,1,0.2,64),"gold",null,[H.PI/2,0,0]),H.P(H.tor(0.85,0.04,undefined,12,96),"gold",[0,0,0.11]),H.P(await H.txt("₽",0.6,0.12),"gold",[0,0,0.12])]
+};
+/* Каталог: [id, название, тема, слова для поиска, параметры]. Тексты — kind:"text", модели — kind:"shape" с shape из S3_GEN или встроенной фигурой. */
+const S3_CATS=["Надписи и скидки","Цифры и знаки","Деньги и финансы","Покупки и доставка","Праздники и подарки","Еда и напитки","Бизнес и офис","Связь и соцсети","Значки и кнопки","Природа и погода","Спорт и игры","Дом, авто, здоровье","Фигуры"];
+const S3_T=(text,o)=>({kind:"text",text,weight:"900",depth:40,bevel:45,rx:10,ry:-22,rz:-4,...o});
+const S3_M=(shape,o)=>({kind:"shape",shape,...o});
+const S3_LIB=[
+  ["t-aa","Свой 3D-текст","Надписи и скидки","текст буквы надпись шрифт",S3_T("Aa",{color:"brand",mat:"gloss"})],
+  ["t-sale","SALE золотом","Надписи и скидки","распродажа скидка",S3_T("SALE",{mat:"gold",ry:-20})],
+  ["t-50","−50%","Надписи и скидки","скидка процент минус",S3_T("−50%",{mat:"gloss",color:"#e11d48",rz:-6})],
+  ["t-30","−30%","Надписи и скидки","скидка процент",S3_T("−30%",{mat:"metal",color:"brand"})],
+  ["t-70","−70%","Надписи и скидки","скидка процент распродажа",S3_T("−70%",{mat:"neon",color:"#f43f5e",depth:20,bevel:20})],
+  ["t-new","NEW неон","Надписи и скидки","новинка новое",S3_T("NEW",{weight:"800",mat:"neon",color:"#22d3ee",depth:20,bevel:20,rx:0,ry:-14,rz:0})],
+  ["t-hit","ХИТ","Надписи и скидки","хит продаж популярное",S3_T("ХИТ",{mat:"gloss",color:"brand",rx:14,rz:-6})],
+  ["t-11","1+1","Надписи и скидки","акция два по цене одного",S3_T("1+1",{mat:"metal",color:"brand",rz:0})],
+  ["t-21","2=1","Надписи и скидки","акция",S3_T("2=1",{mat:"gloss",color:"#f97316"})],
+  ["t-free","FREE","Надписи и скидки","бесплатно",S3_T("FREE",{mat:"chrome"})],
+  ["t-top","TOP","Надписи и скидки","топ лучший",S3_T("TOP",{mat:"gold",rx:8})],
+  ["t-wow","WOW","Надписи и скидки","вау эмоция",S3_T("WOW",{mat:"gloss",color:"#a855f7"})],
+  ["t-vip","VIP","Надписи и скидки","премиум",S3_T("VIP",{mat:"gold",weight:"800"})],
+  ["t-pro","PRO","Надписи и скидки","профи",S3_T("PRO",{mat:"chrome",ry:-30})],
+  ["t-ok","OK","Надписи и скидки","хорошо да",S3_T("OK",{mat:"gloss",color:"#22c55e"})],
+  ["t-love","LOVE","Надписи и скидки","любовь",S3_T("LOVE",{mat:"gloss",color:"#ec4899"})],
+  ["t-akc","АКЦИЯ","Надписи и скидки","акция предложение",S3_T("АКЦИЯ",{mat:"gloss",color:"#dc2626"})],
+  ["t-skid","СКИДКА","Надписи и скидки","скидка",S3_T("СКИДКА",{mat:"gold"})],
+  ["t-podar","ПОДАРОК","Надписи и скидки","подарок бонус",S3_T("ПОДАРОК",{mat:"gloss",color:"brand"})],
+  ["t-nov","НОВИНКА","Надписи и скидки","новинка",S3_T("НОВИНКА",{mat:"neon",color:"#22c55e",depth:20,bevel:20})],
+  ["t-leto","ЛЕТО","Надписи и скидки","лето сезон",S3_T("ЛЕТО",{mat:"gloss",color:"#f59e0b"})],
+  ["t-zima","ЗИМА","Надписи и скидки","зима сезон",S3_T("ЗИМА",{mat:"glass",color:"#7dd3fc"})],
+  ["g-b50","Бейдж −50%","Надписи и скидки","скидка стикер звезда",S3_M("badge50",{color:"#e11d48",mat:"gloss",rx:8,ry:-18})],
+  ["g-newc","Кружок NEW","Надписи и скидки","новинка значок",S3_M("newcircle",{color:"brand",mat:"gloss",rx:10,ry:-22})],
+  ["g-tags","Ценник SALE","Надписи и скидки","ценник распродажа",S3_M("tagsale",{color:"#f97316",mat:"gloss",rx:10,ry:-20,rz:-8})],
+  ["g-ribh","Лента ХИТ","Надписи и скидки","лента хит баннер",S3_M("ribbonhit",{color:"#dc2626",mat:"gloss",rx:8,ry:-20})],
+  ["g-buy","Кнопка КУПИТЬ","Надписи и скидки","кнопка купить заказать",S3_M("buybtn",{color:"brand",mat:"gloss",rx:12,ry:-18})],
+  ["t-0","0%","Цифры и знаки","рассрочка ноль процентов",S3_T("0%",{mat:"chrome"})],
+  ["t-100","100%","Цифры и знаки","гарантия сто процентов",S3_T("100%",{mat:"gloss",color:"#16a34a"})],
+  ["t-247","24/7","Цифры и знаки","круглосуточно",S3_T("24/7",{mat:"neon",color:"#38bdf8",depth:20,bevel:20})],
+  ["t-x2","x2","Цифры и знаки","вдвое удвоение",S3_T("x2",{mat:"gold"})],
+  ["t-1","1","Цифры и знаки","один первый цифра",S3_T("1",{mat:"gold",rz:0})],
+  ["t-2","2","Цифры и знаки","два цифра",S3_T("2",{mat:"gloss",color:"brand"})],
+  ["t-3","3","Цифры и знаки","три цифра",S3_T("3",{mat:"metal",color:"#0ea5e9"})],
+  ["t-10","10","Цифры и знаки","десять цифра",S3_T("10",{mat:"gloss",color:"#f97316"})],
+  ["t-pct","%","Цифры и знаки","процент",S3_T("%",{mat:"gloss",color:"#e11d48"})],
+  ["t-rub","₽","Цифры и знаки","рубль валюта деньги",S3_T("₽",{mat:"gold"})],
+  ["t-usd","$","Цифры и знаки","доллар валюта",S3_T("$",{mat:"gloss",color:"#16a34a"})],
+  ["t-eur","€","Цифры и знаки","евро валюта",S3_T("€",{mat:"metal",color:"#2563eb"})],
+  ["t-q","?","Цифры и знаки","вопрос",S3_T("?",{mat:"gloss",color:"brand"})],
+  ["t-ex","!","Цифры и знаки","восклицание внимание",S3_T("!",{mat:"gloss",color:"#f59e0b"})],
+  ["t-at","@","Цифры и знаки","почта email собака",S3_T("@",{mat:"chrome"})],
+  ["t-hash","#","Цифры и знаки","хэштег решётка",S3_T("#",{mat:"gloss",color:"#8b5cf6"})],
+  ["t-ai","AI","Цифры и знаки","ии нейросеть искусственный интеллект",S3_T("AI",{mat:"neon",color:"#a855f7",depth:20,bevel:20})],
+  ["s-coin","Монета","Деньги и финансы","монета золото деньги",S3_M("coin",{mat:"gold",rx:8,ry:-32})],
+  ["g-rubc","Монета ₽","Деньги и финансы","рубль монета",S3_M("rubcoin",{rx:8,ry:-28})],
+  ["g-pctc","Монета %","Деньги и финансы","процент кэшбэк монета",S3_M("coinpct",{rx:8,ry:-28})],
+  ["g-cstk","Стопка монет","Деньги и финансы","монеты накопления",S3_M("coinstack",{rx:22,ry:-30})],
+  ["g-bills","Купюры","Деньги и финансы","деньги банкноты наличные",S3_M("bills",{color:"#22c55e",mat:"gloss",rx:35,ry:-25})],
+  ["g-wallet","Кошелёк","Деньги и финансы","кошелёк оплата",S3_M("wallet",{color:"#7c2d12",color2:"#a16207",mat:"gloss",rx:10,ry:-25})],
+  ["g-piggy","Копилка","Деньги и финансы","копилка свинка накопления",S3_M("piggy",{color:"#f9a8d4",mat:"gloss",rx:8,ry:-35})],
+  ["g-card","Банковская карта","Деньги и финансы","карта оплата банк",S3_M("card",{color:"brand",mat:"gloss",rx:14,ry:-24,rz:6})],
+  ["g-bar","Слиток","Деньги и финансы","золото слиток",S3_M("goldbar",{rx:22,ry:-28})],
+  ["g-bars","Слитки","Деньги и финансы","золото инвестиции",S3_M("goldbars",{rx:18,ry:-28})],
+  ["g-bag","Мешок денег","Деньги и финансы","мешок деньги прибыль",S3_M("moneybag",{color:"#d6b98c",color2:"#7c2d12",mat:"matte",rx:6,ry:-20})],
+  ["g-chart","График","Деньги и финансы","график рост аналитика",S3_M("chart",{color:"brand",color2:"#38bdf8",mat:"gloss",rx:16,ry:-30})],
+  ["g-pie","Круговая диаграмма","Деньги и финансы","диаграмма доля",S3_M("pie",{color:"brand",color2:"#facc15",mat:"gloss",rx:40,ry:-20})],
+  ["g-trend","Рост","Деньги и финансы","стрелка рост тренд",S3_M("trendup",{color:"#22c55e",mat:"gloss",rx:10,ry:-24})],
+  ["g-safe","Сейф","Деньги и финансы","сейф безопасность",S3_M("safe",{color:"#475569",mat:"metal",rx:12,ry:-30})],
+  ["g-calc","Калькулятор","Деньги и финансы","калькулятор расчёт",S3_M("calc",{color:"#334155",color2:"#f97316",mat:"gloss",rx:16,ry:-22})],
+  ["g-tag","Ценник","Покупки и доставка","ценник бирка цена",S3_M("pricetag",{color:"#facc15",mat:"gloss",rx:10,ry:-24,rz:-10})],
+  ["g-sbag","Пакет с покупками","Покупки и доставка","пакет шопинг покупки",S3_M("shopbag",{color:"brand",color2:"#1f2937",mat:"matte",rx:10,ry:-28})],
+  ["g-parcel","Посылка","Покупки и доставка","коробка доставка посылка",S3_M("parcel",{rx:18,ry:-32})],
+  ["g-truck","Грузовик","Покупки и доставка","доставка машина",S3_M("truck",{color:"brand",color2:"#f8fafc",mat:"gloss",rx:12,ry:-35})],
+  ["g-plane","Бумажный самолётик","Покупки и доставка","отправка самолёт",S3_M("plane",{color:"brand",mat:"gloss",rx:18,ry:-30,rz:8})],
+  ["g-rcpt","Чек","Покупки и доставка","чек квитанция",S3_M("receipt",{color:"brand",mat:"matte",rx:8,ry:-20})],
+  ["g-barc","Штрихкод","Покупки и доставка","штрихкод товар",S3_M("barcode",{rx:8,ry:-20})],
+  ["g-shop","Магазин","Покупки и доставка","магазин витрина",S3_M("shop",{color:"brand",color2:"#ef4444",mat:"gloss",rx:10,ry:-28})],
+  ["s-gift","Подарок","Праздники и подарки","подарок коробка",S3_M("gift",{color:"brand",color2:"brand2",mat:"gloss",rx:22,ry:-35})],
+  ["g-ball","Воздушный шар","Праздники и подарки","шарик праздник",S3_M("balloon",{color:"#ef4444",mat:"gloss",rx:4,ry:-20})],
+  ["g-balls","Шарики","Праздники и подарки","шары день рождения",S3_M("balloons",{color:"brand",color2:"#facc15",mat:"gloss",rx:4,ry:-18})],
+  ["g-cake","Торт","Праздники и подарки","торт день рождения",S3_M("cake",{color:"#f9a8d4",color2:"#fda4af",mat:"gloss",rx:18,ry:-25})],
+  ["g-candle","Свеча","Праздники и подарки","свеча",S3_M("candle",{color:"#fef3c7",mat:"matte",rx:8,ry:-20})],
+  ["g-popper","Хлопушка","Праздники и подарки","хлопушка конфетти праздник",S3_M("popper",{color:"brand",mat:"gloss",rx:8,ry:-20})],
+  ["g-xtree","Ёлка","Праздники и подарки","ёлка новый год",S3_M("xtree",{color:"#16a34a",mat:"gloss",rx:8,ry:-20})],
+  ["g-snow","Снеговик","Праздники и подарки","снеговик зима новый год",S3_M("snowman",{color:"#dc2626",mat:"matte",rx:6,ry:-25})],
+  ["g-orn","Ёлочный шар","Праздники и подарки","игрушка новый год",S3_M("ornament",{color:"#dc2626",color2:"#facc15",mat:"gloss",rx:6,ry:-20})],
+  ["g-candy","Конфета","Праздники и подарки","конфета сладкое",S3_M("candy",{color:"#ec4899",color2:"#fbcfe8",mat:"gloss",rx:10,ry:-25,rz:10})],
+  ["g-lolli","Леденец","Праздники и подарки","леденец сладкое",S3_M("lollipop",{color:"#ef4444",color2:"#ffffff",mat:"gloss",rx:6,ry:-20})],
+  ["g-bell","Колокольчик","Праздники и подарки","колокол праздник",S3_M("bell",{mat:"gold",rx:8,ry:-20})],
+  ["g-bow","Бант","Праздники и подарки","бант лента",S3_M("bow",{color:"#e11d48",mat:"gloss",rx:6,ry:-18})],
+  ["g-pump","Тыква","Праздники и подарки","тыква хэллоуин осень",S3_M("pumpkin",{color:"#f97316",mat:"gloss",rx:10,ry:-20})],
+  ["s-heart","Сердце","Праздники и подарки","любовь сердечко",S3_M("heart",{color:"#e11d48",mat:"gloss",depth:45,bevel:60,rx:8,ry:-24,rz:6})],
+  ["g-donut","Пончик","Еда и напитки","пончик выпечка",S3_M("donut",{color:"#f472b6",mat:"gloss",rx:40,ry:-15})],
+  ["g-ice","Мороженое","Еда и напитки","мороженое десерт",S3_M("icecream",{color:"#fbcfe8",color2:"#a7f3d0",mat:"gloss",rx:6,ry:-20})],
+  ["g-burg","Бургер","Еда и напитки","бургер фастфуд",S3_M("burger",{rx:14,ry:-25})],
+  ["g-coffee","Кофе с собой","Еда и напитки","кофе стакан напиток",S3_M("coffee",{color:"#92400e",mat:"matte",rx:10,ry:-20})],
+  ["g-apple","Яблоко","Еда и напитки","яблоко фрукт",S3_M("apple",{color:"#dc2626",mat:"gloss",rx:8,ry:-20})],
+  ["g-cherr","Вишня","Еда и напитки","вишня ягода",S3_M("cherries",{color:"#b91c1c",mat:"gloss",rx:4,ry:-18})],
+  ["g-melon","Арбуз","Еда и напитки","арбуз долька лето",S3_M("melon",{rx:8,ry:-25})],
+  ["g-pizza","Пицца","Еда и напитки","пицца кусок",S3_M("pizza",{rx:30,ry:-20})],
+  ["g-bottle","Бутылка","Еда и напитки","бутылка напиток",S3_M("bottle",{color:"#16a34a",color2:"#facc15",mat:"glass",rx:6,ry:-20})],
+  ["g-wine","Бокал","Еда и напитки","бокал вино праздник",S3_M("wine",{color:"#9f1239",mat:"gloss",rx:6,ry:-20})],
+  ["g-cupc","Капкейк","Еда и напитки","капкейк кекс десерт",S3_M("cupcake",{color:"#fbcfe8",color2:"#60a5fa",mat:"gloss",rx:10,ry:-20})],
+  ["g-straw","Клубника","Еда и напитки","клубника ягода",S3_M("strawberry",{color:"#e11d48",mat:"gloss",rx:6,ry:-20})],
+  ["g-case","Портфель","Бизнес и офис","портфель работа бизнес",S3_M("briefcase",{color:"#7c2d12",mat:"gloss",rx:10,ry:-25})],
+  ["g-bulb","Лампочка","Бизнес и офис","идея лампа",S3_M("bulb",{color:"#fde047",mat:"neon",rx:6,ry:-20})],
+  ["g-rocket","Ракета","Бизнес и офис","ракета запуск старт рост",S3_M("rocket",{color:"#ef4444",color2:"brand",mat:"gloss",rx:8,ry:-25,rz:-25})],
+  ["g-target","Мишень","Бизнес и офис","цель мишень",S3_M("target",{color:"#ef4444",color2:"#facc15",mat:"gloss",rx:8,ry:-28})],
+  ["g-trophy","Кубок","Бизнес и офис","кубок победа награда",S3_M("trophy",{mat:"gold",rx:8,ry:-22})],
+  ["g-medal","Медаль","Бизнес и офис","медаль первое место",S3_M("medal",{color:"#2563eb",color2:"#dc2626",rx:6,ry:-20})],
+  ["g-crown","Корона","Бизнес и офис","корона премиум лидер",S3_M("crown",{mat:"gold",color2:"#e11d48",rx:18,ry:-20})],
+  ["g-clock","Часы","Бизнес и офис","часы время",S3_M("clock",{color:"brand",color2:"#ef4444",mat:"gloss",rx:8,ry:-24})],
+  ["g-24","Таймер 24","Бизнес и офис","таймер сутки срок",S3_M("timer24",{color:"#ef4444",mat:"gloss",rx:8,ry:-22})],
+  ["g-cal","Календарь","Бизнес и офис","календарь дата",S3_M("calendar",{color:"#ef4444",color2:"brand",mat:"gloss",rx:8,ry:-24})],
+  ["g-key","Ключ","Бизнес и офис","ключ доступ",S3_M("key",{mat:"gold",rx:30,ry:-20,rz:-20})],
+  ["g-lock","Замок","Бизнес и офис","замок защита безопасность",S3_M("lock",{color:"#f59e0b",mat:"gloss",rx:8,ry:-24})],
+  ["g-shield","Щит","Бизнес и офис","защита гарантия",S3_M("shield",{color:"#2563eb",mat:"gloss",rx:8,ry:-22})],
+  ["g-gear","Шестерёнка","Бизнес и офис","настройки механизм",S3_M("gear",{color:"#64748b",mat:"metal",rx:12,ry:-24})],
+  ["g-flag","Флаг","Бизнес и офис","флаг цель финиш",S3_M("flag",{color:"brand",mat:"gloss",rx:6,ry:-24})],
+  ["g-mag","Лупа","Бизнес и офис","поиск лупа",S3_M("magnifier",{color:"brand",mat:"gloss",rx:8,ry:-22})],
+  ["g-pencil","Карандаш","Бизнес и офис","карандаш письмо учёба",S3_M("pencil",{color:"#facc15",mat:"gloss",rx:10,ry:-20,rz:-45})],
+  ["g-hglass","Песочные часы","Бизнес и офис","время ожидание",S3_M("hourglass",{color:"#78350f",color2:"#f59e0b",mat:"gloss",rx:8,ry:-20})],
+  ["g-chat","Сообщение","Связь и соцсети","чат сообщение переписка",S3_M("chat",{color:"brand",mat:"gloss",rx:8,ry:-22})],
+  ["g-wow","Пузырь WOW","Связь и соцсети","реакция вау",S3_M("bubblewow",{color:"#f97316",mat:"gloss",rx:8,ry:-20})],
+  ["g-notif","Уведомление","Связь и соцсети","колокольчик уведомление",S3_M("notify",{color:"brand",mat:"gloss",rx:8,ry:-20})],
+  ["g-env","Конверт","Связь и соцсети","письмо почта рассылка",S3_M("envelope",{color:"#f8fafc",color2:"brand",mat:"gloss",rx:10,ry:-22})],
+  ["g-mega","Рупор","Связь и соцсети","мегафон объявление реклама",S3_M("megaphone",{color:"brand",color2:"#f8fafc",mat:"gloss",rx:8,ry:-28})],
+  ["g-play","Кнопка Play","Связь и соцсети","видео плей воспроизвести",S3_M("play",{color:"#ef4444",mat:"gloss",rx:8,ry:-20})],
+  ["g-mic","Микрофон","Связь и соцсети","микрофон подкаст звук",S3_M("mic",{color:"#1f2937",mat:"gloss",rx:6,ry:-20,rz:-12})],
+  ["g-cam","Фотоаппарат","Связь и соцсети","камера фото",S3_M("camera",{color:"#1f2937",color2:"#ef4444",mat:"gloss",rx:10,ry:-25})],
+  ["g-head","Наушники","Связь и соцсети","наушники музыка",S3_M("headphones",{color:"brand",color2:"#1f2937",mat:"gloss",rx:4,ry:-20})],
+  ["g-pin","Метка на карте","Связь и соцсети","геолокация адрес карта",S3_M("pin",{color:"#ef4444",mat:"gloss",rx:6,ry:-20})],
+  ["g-wifi","Wi-Fi","Связь и соцсети","интернет сеть",S3_M("wifi",{color:"brand",mat:"gloss",rx:6,ry:-20})],
+  ["g-like","Лайк","Связь и соцсети","лайк нравится сердце",S3_M("likebox",{color:"#e11d48",mat:"gloss",rx:8,ry:-22})],
+  ["g-check","Галочка","Значки и кнопки","готово да галочка",S3_M("check",{color:"#22c55e",mat:"gloss",rx:8,ry:-22})],
+  ["g-cross","Крестик","Значки и кнопки","нет закрыть",S3_M("cross",{color:"#ef4444",mat:"gloss",rx:8,ry:-22})],
+  ["g-plus","Плюс","Значки и кнопки","плюс добавить",S3_M("plus",{color:"brand",mat:"gloss",rx:8,ry:-22})],
+  ["g-rate","Рейтинг","Значки и кнопки","звёзды отзыв оценка",S3_M("rating",{rx:14,ry:-18})],
+  ["g-togg","Переключатель","Значки и кнопки","тумблер включить",S3_M("toggle",{color:"#22c55e",mat:"gloss",rx:8,ry:-22})],
+  ["g-curs","Курсор","Значки и кнопки","курсор клик мышь",S3_M("cursor",{rx:10,ry:-24,rz:12})],
+  ["g-refr","Обновить","Значки и кнопки","обновить повтор стрелка",S3_M("refresh",{color:"brand",mat:"gloss",rx:8,ry:-22})],
+  ["g-prog","Прогресс","Значки и кнопки","загрузка шкала",S3_M("progress",{color:"brand",mat:"gloss",rx:10,ry:-20})],
+  ["s-arrow","Стрелка","Значки и кнопки","стрелка направление",S3_M("arrow",{color:"brand",mat:"gloss",depth:40,bevel:50,rx:14,ry:-30,rz:12})],
+  ["s-star","Звезда","Значки и кнопки","звезда лучший",S3_M("star",{mat:"gold",depth:40,bevel:55,rx:10,ry:-22,rz:-8})],
+  ["g-burst","Стикер-звезда","Значки и кнопки","стикер бейдж",S3_M("starburst",{color:"#facc15",mat:"gloss",rx:8,ry:-20})],
+  ["g-sun","Солнце","Природа и погода","солнце лето погода",S3_M("sun",{color:"#facc15",color2:"#f97316",mat:"gloss",rx:6,ry:-18})],
+  ["g-cloud","Облако","Природа и погода","облако погода",S3_M("cloud",{color:"#f8fafc",mat:"matte",rx:6,ry:-18})],
+  ["g-bolt","Молния","Природа и погода","молния энергия быстро",S3_M("bolt",{color:"#facc15",mat:"gloss",rx:8,ry:-22,rz:-6})],
+  ["g-moon","Луна","Природа и погода","луна ночь",S3_M("moon",{color:"#fde68a",mat:"gloss",rx:8,ry:-22,rz:-20})],
+  ["g-flake","Снежинка","Природа и погода","снежинка зима",S3_M("snowflake",{color:"#93c5fd",mat:"gloss",rx:10,ry:-22})],
+  ["s-drop","Капля","Природа и погода","капля вода",S3_M("drop",{color:"#38bdf8",mat:"glass",rx:6,ry:-18})],
+  ["g-flame","Огонь","Природа и погода","огонь горячее пламя",S3_M("flame",{color:"#f97316",color2:"#facc15",mat:"gloss",rx:6,ry:-20})],
+  ["g-leaf","Лист","Природа и погода","лист эко природа",S3_M("leaf",{color:"#22c55e",mat:"gloss",rx:10,ry:-25,rz:-25})],
+  ["g-flower","Цветок","Природа и погода","цветок весна",S3_M("flower",{color:"#f472b6",color2:"#facc15",mat:"gloss",rx:4,ry:-18})],
+  ["g-tree","Дерево","Природа и погода","дерево эко",S3_M("tree",{color:"#22c55e",mat:"matte",rx:6,ry:-20})],
+  ["g-planet","Планета","Природа и погода","планета космос",S3_M("planet",{color:"#8b5cf6",color2:"#f9a8d4",mat:"gloss",rx:6,ry:-18})],
+  ["g-rainb","Радуга","Природа и погода","радуга",S3_M("rainbow",{mat:"gloss",rx:6,ry:-18})],
+  ["g-mount","Горы","Природа и погода","горы путешествие",S3_M("mountains",{color:"#64748b",color2:"#475569",mat:"matte",rx:12,ry:-24})],
+  ["s-blob","Капля-клякса","Природа и погода","клякса абстракция",S3_M("blob",{color:"#f9a8d4",mat:"matte",rx:10,ry:-20})],
+  ["g-bball","Баскетбольный мяч","Спорт и игры","мяч баскетбол спорт",S3_M("basketball",{color:"#ea580c",mat:"matte",rx:20,ry:-25})],
+  ["g-tball","Теннисный мяч","Спорт и игры","мяч теннис",S3_M("tennis",{color:"#d9f99d",mat:"matte",rx:20,ry:-25})],
+  ["g-dumb","Гантель","Спорт и игры","гантель фитнес спорт",S3_M("dumbbell",{color:"#1f2937",mat:"gloss",rx:14,ry:-28,rz:12})],
+  ["g-dice","Игральный кубик","Спорт и игры","кубик игра удача",S3_M("dice",{color:"#111827",mat:"gloss",rx:28,ry:-35})],
+  ["g-pawn","Пешка","Спорт и игры","шахматы стратегия",S3_M("pawn",{color:"#1f2937",mat:"gloss",rx:8,ry:-20})],
+  ["g-pad","Геймпад","Спорт и игры","игры джойстик",S3_M("gamepad",{color:"#334155",mat:"gloss",rx:20,ry:-20})],
+  ["g-bowl","Кегля","Спорт и игры","боулинг",S3_M("bowlingpin",{color:"#ef4444",mat:"gloss",rx:6,ry:-20})],
+  ["g-house","Домик","Дом, авто, здоровье","дом недвижимость",S3_M("house",{color:"#f8fafc",color2:"#ef4444",mat:"gloss",rx:12,ry:-32})],
+  ["g-build","Здание","Дом, авто, здоровье","дом офис небоскрёб",S3_M("building",{color:"#475569",mat:"gloss",rx:12,ry:-32})],
+  ["g-car","Машина","Дом, авто, здоровье","авто машина",S3_M("car",{color:"#ef4444",mat:"gloss",rx:12,ry:-35})],
+  ["g-tire","Колесо","Дом, авто, здоровье","шина колесо шиномонтаж",S3_M("tire",{rx:10,ry:-30})],
+  ["g-pharm","Аптечный крест","Дом, авто, здоровье","аптека медицина",S3_M("pharmacy",{color:"#16a34a",mat:"gloss",rx:8,ry:-22})],
+  ["s-pill","Таблетка","Дом, авто, здоровье","таблетка капсула",S3_M("capsule",{color:"brand",mat:"gloss",rx:10,ry:-20,rz:-40})],
+  ["g-pill2","Капсула 2 цвета","Дом, авто, здоровье","витамины лекарство",S3_M("pill2",{color:"#ef4444",color2:"#f8fafc",mat:"gloss",rx:10,ry:-20,rz:-40})],
+  ["g-lip","Помада","Дом, авто, здоровье","помада косметика красота",S3_M("lipstick",{color:"#be123c",mat:"gloss",rx:8,ry:-20})],
+  ["g-perf","Духи","Дом, авто, здоровье","духи парфюм красота",S3_M("perfume",{color:"#f9a8d4",mat:"gloss",rx:8,ry:-24})],
+  ["s-sphere","Стеклянный шар","Фигуры","шар сфера стекло",S3_M("sphere",{color:"#60a5fa",mat:"glass",rx:0,ry:0})],
+  ["s-cube","Куб","Фигуры","куб",S3_M("cube",{color:"brand",mat:"gloss"})],
+  ["s-cyl","Цилиндр","Фигуры","цилиндр",S3_M("cylinder",{color:"#38bdf8",mat:"matte"})],
+  ["s-cone","Конус","Фигуры","конус",S3_M("cone",{color:"#f97316",mat:"gloss"})],
+  ["s-torus","Неоновый тор","Фигуры","тор кольцо неон",S3_M("torus",{color:"#a855f7",mat:"neon",rx:35,ry:-15})],
+  ["s-gem","Кристалл","Фигуры","кристалл алмаз",S3_M("gem",{color:"#38bdf8",mat:"glass",rx:14,ry:-20})],
+  ["s-knot","Узел","Фигуры","узел абстракция",S3_M("knot",{color:"brand",mat:"metal",rx:30,ry:-10})],
+  ["g-pyr","Пирамида","Фигуры","пирамида",S3_M("pyramid",{color:"#facc15",mat:"gloss",rx:14,ry:-20})],
+  ["g-prism","Призма","Фигуры","призма треугольник",S3_M("prism",{color:"#22d3ee",mat:"glass",rx:14,ry:-25})],
+  ["g-tetra","Тетраэдр","Фигуры","многогранник",S3_M("tetra",{color:"#f472b6",mat:"gloss"})],
+  ["g-octa","Октаэдр","Фигуры","многогранник",S3_M("octa",{color:"#a78bfa",mat:"gloss",rx:10,ry:-20})],
+  ["g-icosa","Икосаэдр","Фигуры","многогранник",S3_M("icosa",{color:"#34d399",mat:"metal",rx:10,ry:-20})],
+  ["g-dodec","Додекаэдр","Фигуры","многогранник",S3_M("dodeca",{color:"#fb923c",mat:"gloss",rx:10,ry:-20})],
+  ["g-hex","Шестигранник","Фигуры","соты шестиугольник",S3_M("hexagon",{color:"#facc15",mat:"gloss",rx:10,ry:-22})],
+  ["g-ring","Кольцо","Фигуры","кольцо",S3_M("ring",{mat:"chrome",rx:55,ry:-10})],
+  ["g-hemi","Полусфера","Фигуры","купол",S3_M("hemi",{color:"brand",color2:"#1f2937",mat:"gloss",rx:20,ry:-20})],
+  ["g-helix","Спираль","Фигуры","пружина спираль",S3_M("helix",{color:"brand",mat:"metal",rx:10,ry:-20})],
+  ["g-wave","Волна","Фигуры","волна",S3_M("wave",{color:"#38bdf8",mat:"gloss",rx:18,ry:-24})],
+  ["g-stairs","Ступени","Фигуры","лестница шаги",S3_M("stairs",{color:"brand",color2:"#f8fafc",mat:"gloss",rx:20,ry:-35})],
+  ["g-cubes","Кубики","Фигуры","кубы блоки",S3_M("cubes",{color:"brand",color2:"#facc15",mat:"gloss",rx:20,ry:-30})],
+  ["g-frame","Каркас куба","Фигуры","каркас рамка",S3_M("cubeframe",{color:"brand",mat:"metal",rx:22,ry:-32})]
+].map(([id,n,c,t,s])=>({id,n,c,t,s}));
+let studio3dLibQ="",studio3dLibCat="";
+window.NEON_3D_LIB={list:()=>S3_LIB,preset:id=>studio3dPresetS3(id)};  // для проверок и отладки
+function studio3dPresetS3(id){const e=S3_LIB.find(x=>x.id===id)||S3_LIB[0],p=e.s,br=(S.studio.brand&&S.studio.brand.colors)||[],c=v=>v==="brand"?br[0]||"#7c3aed":v==="brand2"?br[1]||"#facc15":v;
+  const s={...studio3dDefaults(p.kind,S3_GEN[p.shape]?"sphere":p.shape),...p};s.color=c(s.color);s.color2=c(s.color2);return s}
 const studio3dPreImg=new Map();let studio3dPreBusy=false;
-function studio3dPresetsHtml(){setTimeout(studio3dPaintPresets,0);const br=((S.studio.brand&&S.studio.brand.colors)||[]).join();
-  return`<div class="s3-pre">${S3_PRESETS.map(([n],i)=>{const u=studio3dPreImg.get(i+"|"+br);return`<button type="button" data-act="stud3dPreset" data-i="${i}" data-tip="${esc(n)}" aria-label="${esc(n)}"><img data-s3pre="${i}" alt="" ${u?`src="${u}"`:""}></button>`}).join("")}</div>`}
+function studio3dLibTile(e,br){const u=studio3dPreImg.get(e.id+"|"+br);return`<button type="button" data-act="stud3dPreset" data-k="${e.id}" data-tip="${esc(e.n)}" aria-label="${esc(e.n)}"><img data-s3pre="${e.id}" alt="" ${u?`src="${u}"`:""}></button>`}
+function studio3dLibGridHtml(){setTimeout(studio3dPaintPresets,0);const br=((S.studio.brand&&S.studio.brand.colors)||[]).join(),q=studio3dLibQ.trim().toLowerCase(),cat=studio3dLibCat;
+  const L=S3_LIB.filter(e=>(!cat||e.c===cat)&&(!q||(e.n+" "+e.c+" "+e.t).toLowerCase().includes(q)));
+  if(!L.length)return`<p class="s3-none">Ничего не нашлось — попробуйте другое слово или тему.</p>`;
+  if(q||cat)return`<div class="s3-pre">${L.map(e=>studio3dLibTile(e,br)).join("")}</div>`;
+  return S3_CATS.map(c=>{const g=L.filter(e=>e.c===c);return g.length?`<div class="s3-h"><span>${esc(c)}</span><button type="button" data-s3cat="${esc(c)}">все ${g.length}</button></div><div class="s3-pre">${g.slice(0,8).map(e=>studio3dLibTile(e,br)).join("")}</div>`:""}).join("")}
+function studio3dCatsHtml(){return`<div class="s3-cats">${["",...S3_CATS].map(c=>`<button type="button" data-s3cat="${esc(c)}" class="${c===studio3dLibCat?"on":""}">${esc(c||"Все")}</button>`).join("")}</div>`}
+function studio3dPresetsHtml(){return`<input type="search" class="num s3-q" data-s3q placeholder="Поиск 3D: торт, ракета, скидка…" value="${esc(studio3dLibQ)}" aria-label="Поиск 3D-элементов">
+  ${studio3dCatsHtml()}<div data-s3grid>${studio3dLibGridHtml()}</div><p class="s3-count">${S3_LIB.length} элементов · цвета берутся из бренд-кита, всё меняется справа</p>`}
+function studio3dLibRedraw(){const g=document.querySelector("[data-s3grid]");if(g)g.innerHTML=studio3dLibGridHtml();const c=document.querySelector(".s3-cats");if(c)c.outerHTML=studio3dCatsHtml()}
+document.addEventListener("input",e=>{if(e.target.matches&&e.target.matches("[data-s3q]")){studio3dLibQ=e.target.value;studio3dLibRedraw()}});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-s3cat]");if(!b)return;e.preventDefault();studio3dLibCat=studio3dLibCat===b.dataset.s3cat?"":b.dataset.s3cat;studio3dLibRedraw();
+  const g=document.querySelector("[data-s3grid]");if(g&&studio3dLibCat)g.scrollIntoView({block:"nearest"})});
+/* Превью рисуются по одному: сначала те, что видны на экране; один раз за сессию (на каждый набор цветов бренда) */
 async function studio3dPaintPresets(){if(studio3dPreBusy)return;studio3dPreBusy=true;
   try{const br=((S.studio.brand&&S.studio.brand.colors)||[]).join();
-    for(const im of [...document.querySelectorAll("img[data-s3pre]:not([src])")]){const i=+im.dataset.s3pre,k=i+"|"+br;let u=studio3dPreImg.get(k);
-      if(!u){try{const s=studio3dPresetS3(i),wide=s.kind==="text";const c=await studio3dCanvas({s3:s},wide?240:160,wide?120:160,null,{margin:0.9});u=c.toDataURL("image/png");studio3dPreImg.set(k,u)}catch(e){continue}}
-      document.querySelectorAll(`img[data-s3pre="${i}"]`).forEach(x=>x.src=u)}}
+    for(let guard=0;guard<600;guard++){const all=[...document.querySelectorAll("img[data-s3pre]:not([src]):not([data-s3fail])")];if(!all.length)break;
+      const vis=all.find(im=>{const r=im.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight&&r.width>0}),im=vis||all[0],id=im.dataset.s3pre,k=id+"|"+br;let u=studio3dPreImg.get(k);
+      if(!u){try{const s=studio3dPresetS3(id),wide=s.kind==="text"&&String(s.text||"").length>2;const c=await studio3dCanvas({s3:s},wide?240:160,wide?120:160,null,{margin:0.9});u=c.toDataURL("image/png");studio3dPreImg.set(k,u)}
+        catch(e){document.querySelectorAll(`img[data-s3pre="${CSS.escape(id)}"]`).forEach(x=>x.setAttribute("data-s3fail",""));continue}}
+      document.querySelectorAll(`img[data-s3pre="${CSS.escape(id)}"]`).forEach(x=>x.src=u)}}
   finally{studio3dPreBusy=false}}
 /* v9-5: 3D-мокапы. s3.model, s3.tex={page:i}|{src}, s3.tar — пропорции текстуры (от них зависят коробка/книга/билборд),
    s3.body — цвет корпуса, s3.color — цвет упаковки. Текстура страницы = рендер страницы без 3D-мокапов (нет рекурсии). */
@@ -10118,7 +10602,7 @@ function studioPanelHtml(tab){
       return Object.entries(grp).map(([id,L])=>blk("Шаблоны команды «"+esc((TEAM.list.find(t=>t.id===+id)||{}).name||"команда")+"»",L)).join("")+blk("Мои шаблоны",pers)})()}
     ${built.length?`${mine.length?'<div class="sect-t">Готовые</div>':""}<div class="s2-grid2">${built.map(([t,i])=>`<div class="th" data-act="studUseTplHere" data-i="${i}" title="${esc(t.name)}"><img data-s2tpl="${i}" alt=""></div>`).join("")}</div>`:""}`}
   if(tab==="elements")return`<h3>Элементы</h3><div class="sect-t">Фигуры</div><div class="s2-tiles">${STUDIO_SHAPES.map(([sh,icn,lb])=>`<button type="button" data-act="studAdd" data-type="shape" data-shape="${sh}">${ic(icn,20)}${lb}</button>`).join("")}</div>
-    <div class="sect-t">3D</div>${studio3dPresetsHtml()}<div class="s2-tiles s3-tiles"><button type="button" data-act="stud3dAdd" data-k="text">${ic("type",20)}3D-текст</button>${S3_SHAPES.map(([k,lb,i])=>`<button type="button" data-act="stud3dAdd" data-k="shape:${k}">${ic(i,20)}${lb}</button>`).join("")}</div>
+    <div class="sect-t">3D-элементы</div>${studio3dPresetsHtml()}
     <div class="sect-t">3D-мокапы</div><div class="s2-tiles s3-tiles">${S3_MODELS.map(([k,lb,i])=>`<button type="button" data-act="stud3dMock" data-k="${k}" data-tip="Дизайн на 3D-${lb.toLowerCase()} — на новой странице">${ic(i,20)}${lb}</button>`).join("")}</div>
     <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><button type="button" data-act="studTool" data-tool="draw">${ic("brush",20)}Рисовать</button><label class="s2-tiles-l" for="stud-vid-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("film",20)}Видео</label><label class="s2-tiles-l" for="stud-imp-file" data-tip="PDF — страницами, PSD — слоями" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-input",20)}PDF / PSD</label><button type="button" data-act="studTool" data-tool="note" data-tip="Булавка с комментарием для согласования — в файл не попадает">${ic("message-square-plus",20)}Заметка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
     <div class="sect-t">Графика</div><input type="search" class="num" data-s2gfx placeholder="Поиск: стрелка, бейдж, рамка…" value="${esc(studioGfxQ)}" style="width:100%;text-align:left;padding:0 10px">
@@ -12973,7 +13457,7 @@ Object.assign(N.chg,{
   studFmtF(v){S.studio.fmtF=v;N.refresh();NEON.save()}
 });
 Object.assign(N.acts,{
-  stud3dPreset(a,d){studioStartDismissed=true;const s=studio3dPresetS3(+d.i);studio3dAdd(s.kind,s.shape,s)},
+  stud3dPreset(a,d){studioStartDismissed=true;const s=studio3dPresetS3(d.k);studio3dAdd(s.kind,s.shape,s)},
   stud3dMock(a,d){studioStartDismissed=true;studio3dMockAdd(d.k||"phone")},
   stud3dAdd(a,d){studioStartDismissed=true;const[k,sub]=String(d.k||"text").split(":");studio3dAdd(k,sub)},
   studAdd(a,d){studioStartDismissed=true;studioBeforeChange();const l=studioLayerDefaults(d.type,d.shape);studioDesign().layers.push(l);studioDesign().selectedId=l.id;studioMultiSel=[];N.refresh();NEON.save()},
