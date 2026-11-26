@@ -2293,6 +2293,7 @@ body.gl-h,body.gl-h *{cursor:row-resize!important}body.gl-v,body.gl-v *{cursor:c
 .fr-list small{font:11px var(--font-mono);color:var(--ink-3)}.fr-list mark{background:color-mix(in srgb,#facc15 55%,transparent);color:inherit;border-radius:3px;padding:0 1px}
 .ph-ov{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
 .stud-layer-image{isolation:isolate}
+.stud-warps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-bottom:6px}.stud-warps button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 2px;border:1px solid var(--line-2);border-radius:8px;background:transparent;color:var(--ink-2,inherit);font-size:10.5px;cursor:pointer}.stud-warps button.on{border-color:var(--svc-ink);color:var(--svc-ink);background:var(--svc-soft,transparent)}
 .duo-pre{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:6px 0}
 .duo-pre button{height:22px;border:1px solid var(--line-2);border-radius:6px;cursor:pointer;padding:0}
 .duo-pre button:hover{outline:2px solid var(--svc-ink);outline-offset:1px}
@@ -8118,7 +8119,7 @@ function studioContourD(pts,closed){
 function studioPathD(l){return[studioContourD(l.points,l.closed),...(l.subs||[]).map(c=>studioContourD(c.points,c.closed))].filter(Boolean).join(" ")}
 function studioLayerInner(l){
   if(l.type==="3d")return studio3dInner(l);
-  if(l.type==="text"&&+l.curve){studioEnsureFont(studioFontOf(l));return`<canvas class="stud-curve" style="position:absolute;left:-50%;top:-100%;width:200%;height:300%;display:block;pointer-events:none"></canvas>`}
+  if(l.type==="text"&&studioCanvText(l)){studioEnsureFont(studioFontOf(l));return`<canvas class="stud-curve" style="position:absolute;left:-50%;top:-100%;width:200%;height:300%;display:block;pointer-events:none"></canvas>`}
   if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}${studioTfxCss(l)}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent${studioListOf(l)?";display:block;width:100%":""}">${studioListHtml(l)||esc(l.text)}</span>`:studioListHtml(l)||esc(l.text)}</div>`}
   if(l.type==="video"){const v=l.video||{};return`<div class="stud-layer-image" style="${studioMaskCss(l)}"><video src="${esc(studioVideoSrc(v))}" muted loop autoplay playsinline preload="auto" data-t0="${+v.trim0||0}" data-t1="${+v.trim1||0}" style="width:100%;height:100%;object-fit:cover;object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1})"></video><span class="vid-badge">${ic("film",12)}</span></div>`}
   if(l.type==="image"){const bd=l.border&&l.border.enabled?`box-shadow:inset 0 0 0 ${l.border.width||4}px ${esc(l.border.color||"#fff")};`:"";
@@ -8349,7 +8350,36 @@ async function studioPaintContrast(root){
 }
 /* Изогнутый текст: и на холсте, и в экспорте рисуется ОДНОЙ функцией по дуге.
    curve: -100..100 (плюс — дуга вверх, минус — вниз). */
+/* v10 (26.11.2026): формы текста как в Kittl — арка, волна, флаг, подъём, выпуклость, наклон.
+   Рисуются на canvas побуквенно (как изогнутый текст): на холсте и в экспорте одна функция. */
+const STUDIO_WARPS=[["arch","Арка"],["wave","Волна"],["flag","Флаг"],["rise","Подъём"],["bulge","Выпуклость"],["angle","Наклон"]];
+const studioWarpOn=l=>!!l.warp&&STUDIO_WARPS.some(w=>w[0]===l.warp);
+const studioCanvText=l=>!!(+l.curve||studioWarpOn(l));
+function studioDrawWarp(ctx,l,x,y,w,h,fs){
+  const T=l.warp,k=Math.max(-100,Math.min(100,l.warpAmt==null?50:+l.warpAmt))/100,ol=l.outline&&l.outline.enabled;
+  ctx.font=`${l.weight||"700"} ${fs}px "${studioFontOf(l)}","Onest",Arial,sans-serif`;
+  if("letterSpacing" in ctx)ctx.letterSpacing=((+l.letterSpacing||0)/100*fs)+"px";
+  ctx.fillStyle=l.color;ctx.textAlign="center";ctx.textBaseline="alphabetic";
+  const lines=(l.upper?String(l.text||"").toUpperCase():String(l.text||"")).split("\n"),lh=fs*(+l.lineHeight||1.18),top=y+h/2-lines.length*lh/2,P=Math.PI;
+  lines.forEach((ln,i)=>{const chars=[...ln],ws=chars.map(c=>ctx.measureText(c).width),tot=ws.reduce((a,b)=>a+b,0)||1;
+    const x0=l.align==="left"?x:l.align==="right"?x+w-tot:x+w/2-tot/2,mid=top+(i+0.5)*lh,base=mid+fs*0.34;let acc=0;
+    chars.forEach((ch,j)=>{const cw=ws[j],u=(acc+cw/2)/tot,gx=x0+acc+cw/2;acc+=cw;if(!ch.trim())return;
+      let dy=0,sy=1,rot=0,sk=0,anc=base;
+      if(T==="wave"){const A=k*fs*0.45;dy=-A*Math.sin(u*2*P);rot=-Math.atan(A*2*P*Math.cos(u*2*P)/tot)}
+      else if(T==="flag"){dy=-k*fs*0.3*Math.sin(u*2*P);sy=1+k*0.35*Math.cos(u*2*P);anc=mid}
+      else if(T==="arch")sy=1+k*1.3*Math.sin(u*P);
+      else if(T==="bulge"){sy=1+k*1.3*Math.sin(u*P);anc=mid}
+      else if(T==="rise")sy=1+Math.abs(k)*2.2*(k>=0?u:1-u);
+      else if(T==="angle"){dy=-k*(u-0.5)*tot*0.35;sk=-k*0.35}
+      sy=Math.max(0.15,sy);
+      ctx.save();ctx.translate(gx,anc+dy);if(rot)ctx.rotate(rot);if(sk)ctx.transform(1,sk,0,1,0,0);ctx.scale(1,sy);
+      const oy=anc===mid?base-mid:0;
+      if(ol){ctx.lineJoin="round";ctx.lineWidth=(l.outline.width||2)*2*fs/40;ctx.strokeStyle=l.outline.color||"#000";ctx.strokeText(ch,0,oy)}
+      ctx.fillText(ch,0,oy);ctx.restore()})})
+}
+function studioWarpIcon(v){const P={none:"M3 12h18",arch:"M3 16Q12 2 21 16M3 20h18",wave:"M3 12q4.5-8 9 0t9 0",flag:"M3 9q4.5-6 9 0t9 0M3 17q4.5-6 9 0t9 0",rise:"M3 16 21 4M3 20h18",bulge:"M3 9Q12 1 21 9M3 15q9 8 18 0",angle:"M3 18 21 6M3 22 21 10"}[v]||"";return`<svg viewBox="0 0 24 24" width="22" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="${P}"/></svg>`}
 function studioDrawCurved(ctx,l,x,y,w,h,fs){
+  if(studioWarpOn(l)&&!+l.curve)return studioDrawWarp(ctx,l,x,y,w,h,fs);
   const txt=(l.upper?String(l.text||"").toUpperCase():String(l.text||"")).replace(/\n/g," ");
   ctx.font=`${l.weight||"700"} ${fs}px "${studioFontOf(l)}","Onest",Arial,sans-serif`;
   if("letterSpacing" in ctx)ctx.letterSpacing=((+l.letterSpacing||0)/100*fs)+"px";
@@ -8699,7 +8729,7 @@ function studioPropsHtml0(){
       <div class="pp-ibs wide"><button type="button" class="pp-btn" data-act-fit="1" data-tip="Подобрать кегль, чтобы текст точно влез в рамку">${ic("scaling",14)}Вписать в рамку</button>${ppIb("maximize-2",'data-act-fit="grow"',false,"Максимальный кегль, который влезает")}</div>
       <div class="pp-row"><span class="pp-l">Роль для ИИ</span><nv-select options=":—|headline:Заголовок|subheadline:Подзаголовок|cta:Кнопка|badge:Плашка|disclaimer:Мелкий текст" value="${esc(l.role||"")}" data-prop="role"></nv-select></div>`)
     +studioTsSecHtml(l)
-    +ppSec("spacing","Интервалы и изгиб",`${ppRng("Межстрочный","lineHeight",+l.lineHeight||1.18,0.8,2,0.05)}${ppRng("Межбуквенный","letterSpacing",+l.letterSpacing||0,-5,30,1)}${ppRng("Изгиб","curve",+l.curve||0,-100,100,5)}`)
+    +ppSec("spacing","Интервалы и изгиб",`${ppRng("Межстрочный","lineHeight",+l.lineHeight||1.18,0.8,2,0.05)}${ppRng("Межбуквенный","letterSpacing",+l.letterSpacing||0,-5,30,1)}${ppRng("Изгиб по дуге","curve",+l.curve||0,-100,100,5)}<div class="pp-l" style="margin:8px 0 4px">Форма текста</div><div class="stud-warps">${[["none","Нет"]].concat(STUDIO_WARPS).map(([v,t])=>`<button type="button" class="${(l.warp||"none")===v&&!+l.curve||(v==="none"&&!studioWarpOn(l))?"on":""}" data-prop-set="warp" data-val="${v}">${studioWarpIcon(v)}<span>${t}</span></button>`).join("")}</div>${studioWarpOn(l)?ppRng("Сила","warpAmt",l.warpAmt==null?50:+l.warpAmt,-100,100,5):""}`)
     +ppSec("tcolor","Цвет",`${ppSeg([["Цвет",'data-act-tgrad=""',!g],["Градиент",'data-act-tgrad="1"',g]])}
       ${ppColor(g?"Цвет 1":"Цвет","color",l.color)}
       ${g?ppColor("Цвет 2","grad.color2",l.grad.color2||"#0ea5e9")+ppRng("Угол","grad.angle",+l.grad.angle||90,0,360,5):""}`)
@@ -8797,7 +8827,7 @@ function studioLayoutStage(root,ids){
   const els=ids?ids.map(id=>stage.querySelector(`.stud-layer[data-id="${id}"][data-type="text"]`)).filter(Boolean):stage.querySelectorAll('.stud-layer[data-type="text"]');
   els.forEach(el=>{
     const l=by.get(el.dataset.id);if(!l)return;
-    if(+l.curve)studioPaintCurved(el,l);
+    if(studioCanvText(l))studioPaintCurved(el,l);
     const t=el.querySelector(".stud-layer-text");if(t){t.style.fontSize=Math.max(8,h*l.fontSize/100)+"px";t.style.borderRadius=l.bgColor?Math.min(el.offsetHeight,el.offsetWidth)/2*Math.min(50,+l.bgRadius||0)/50+"px":""}
   });
 }
@@ -9089,7 +9119,7 @@ async function studioRenderCanvas(design,scale,anim){
     }else if(l.type==="text"){
       const cx=x+w/2,cy=y+h/2;let x2=x,y2=y,w2=w,h2=h;
       if(l.vertical){ctx.translate(cx,cy);ctx.rotate(Math.PI/2);ctx.translate(-cx,-cy);x2=cx-h/2;y2=cy-w/2;w2=h;h2=w}
-      if(+l.curve){if(l.shadow){const sh=studioShadowOf(l),k=W/560;ctx.shadowColor=studioShadowRgba(sh);ctx.shadowBlur=sh.blur*k;ctx.shadowOffsetX=sh.x*k;ctx.shadowOffsetY=sh.y*k}studioDrawCurved(ctx,l,x2,y2,w2,h2,Math.max(8,H*l.fontSize/100));ctx.restore();continue}
+      if(studioCanvText(l)){if(l.shadow){const sh=studioShadowOf(l),k=W/560;ctx.shadowColor=studioShadowRgba(sh);ctx.shadowBlur=sh.blur*k;ctx.shadowOffsetX=sh.x*k;ctx.shadowOffsetY=sh.y*k}studioDrawCurved(ctx,l,x2,y2,w2,h2,Math.max(8,H*l.fontSize/100));ctx.restore();continue}
       /* Как на холсте (DOM): шрифт по фактическому семейству, перенос по словам с учётом
          ручных переводов строки, межстрочный/межбуквенный, регистр, плашка и тень. */
       const fs=Math.max(8,H*l.fontSize/100);
@@ -9486,7 +9516,7 @@ function studio3dAct(a,b){const[k,arg]=a.split(":");const l=studioSelected();
 /* v9-4: объём из своего — фигура/кривая/логотип → контуры (px макета, y вниз) → нормированные (y вверх, max 2) → s3.polys.
    Логотип: обводка по прозрачности (или по отличию от цвета фона в углах), сам рисунок — текстурой на лицевой грани (s3.img + s3.uv). */
 function studio3dToHtml(l){
-  if(l.type==="text"&&!+l.curve)return ppSec("to3d","3D",`<button type="button" class="pp-btn" data-s3act="fromText">${ic("box",14)}Сделать объёмным (3D-текст)</button>`);
+  if(l.type==="text"&&!studioCanvText(l))return ppSec("to3d","3D",`<button type="button" class="pp-btn" data-s3act="fromText">${ic("box",14)}Сделать объёмным (3D-текст)</button>`);
   if(l.type==="shape"||l.type==="path"&&(l.closed||(l.subs||[]).some(c=>c.closed)))return ppSec("to3d","3D",`<button type="button" class="pp-btn" data-s3act="fromLayer">${ic("box",14)}Сделать объёмным</button>`);
   if(l.type==="image"&&l.src)return ppSec("to3d","3D",`<button type="button" class="pp-btn" data-s3act="fromLayer">${ic("box",14)}Объёмный логотип</button><p class="pp-hint">Лучше всего — PNG с прозрачным фоном или логотип на однотонном фоне.</p>`);
   return""}
@@ -10089,7 +10119,7 @@ function studioMarkDirty(){
 /* Вписать текст в рамку: уменьшаем кегль, пока самое длинное слово влезает по ширине,
    а все строки — по высоте (те же правила переноса, что в экспорте). */
 /* Списки в тексте: l.list = "bullet" | "number"; маркер на каждый непустой абзац, висячий отступ (в em). */
-function studioListOf(l){if(!l.list||l.vertical||+l.curve)return null;const paras=String(l.text||"").split("\n");let n=0;
+function studioListOf(l){if(!l.list||l.vertical||studioCanvText(l))return null;const paras=String(l.text||"").split("\n");let n=0;
   const marks=paras.map(p=>p.trim()?(l.list==="number"?(++n)+".":"•"):"");return{em:l.list==="number"?String(n).length*0.6+0.75:1.05,marks,paras}}
 function studioListHtml(l,inner){const L=studioListOf(l);if(!L)return null;
   return`<div class="stl-wrap">${L.paras.map((p,i)=>L.marks[i]?`<div class="stl-p" style="padding-left:${L.em}em;text-indent:-${L.em}em"><span class="stl-m" style="width:${L.em}em">${L.marks[i]}</span>${esc(p)}</div>`:`<div class="stl-p">${esc(p)||"&nbsp;"}</div>`).join("")}</div>`}
@@ -11277,7 +11307,7 @@ editor(){
         if(l&&l.type==="image"&&l.src&&!l.locked){studioCropOn(l);return}
         if(l&&l.type==="table"&&!l.locked){studioTableEdit(layerEl,l,e);return}
         if(l&&l.type==="path"){studioEditingPathId=l.id;studioEditingPointIndex=null;N.refresh()}
-        if(l&&l.type==="text"&&!l.locked){if(+l.curve){toast("Изогнутый текст правьте в панели справа");return}studioInlineEdit(layerEl,l)}
+        if(l&&l.type==="text"&&!l.locked){if(studioCanvText(l)){toast("Текст с формой правьте в панели справа");return}studioInlineEdit(layerEl,l)}
       });
     }
     const lp=root.querySelector("#stud-layers");
@@ -11342,7 +11372,8 @@ editor(){
         studioSetPath(l,k,v);
         if(e.target.type==="range")e.target.style.setProperty("--rng-p",rngPct(v,e.target.min,e.target.max));
         const out=e.target.closest(".rng");if(out)out.querySelector("output").textContent=studioOutFmt(k,v);
-        if(k==="bgRadius"||k==="lineHeight"||k==="letterSpacing"||k==="curve")studioLayoutStage(document,[l.id]);
+        if(k==="curve"&&v)delete l.warp;
+        if(k==="bgRadius"||k==="lineHeight"||k==="letterSpacing"||k==="curve"||k==="warpAmt")studioLayoutStage(document,[l.id]);
         studioPatchLayerDom(l);studioSyncProps(e.target);NEON.save();
       });
       /* nv-textarea/nv-color-picker (FieldEl-like) stop their native events from
@@ -11429,6 +11460,7 @@ editor(){
         const set=e.target.closest("[data-prop-set]");
         if(set){
           const k=set.dataset.propSet,boolKeys=["video.muted","closed","stroke.enabled","vertical","upper","shadow","neon","lockRatio","showValues","qrMargin","photo.duo"];if(k==="tblHead"||k==="tblZebra"){l[k==="tblHead"?"head":"zebra"]=set.dataset.val==="1";studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
+          if(k==="warp"){studioBeforeChange();if(set.dataset.val==="none")delete l.warp;else{l.warp=set.dataset.val;l.curve=0}studioPatchLayerDom(l);studioLayoutStage(document,[l.id]);studioRenderSidebar(root);NEON.save();return}
           studioSetPath(l,k,boolKeys.includes(k)?set.dataset.val==="1":set.dataset.val);
           studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return;
         }
@@ -11955,7 +11987,7 @@ function studioAnimAt(l,t,len){
   const a=l.anim;if(!a||((!a.type||a.type==="none")&&!a.out))return null;
   const dl=+a.delay||0,du=Math.max(0.1,+a.dur||0.6),p=Math.max(0,Math.min(1,(t-dl)/du)),e=1-Math.pow(1-p,3),R={op:1,dx:0,dy:0,s:1};
   let ty=a.type||"none";const isU=ty==="type"||ty==="words"||ty==="chars";
-  if(isU&&(l.type!=="text"||l.vertical||+l.curve))ty="fade";
+  if(isU&&(l.type!=="text"||l.vertical||studioCanvText(l)))ty="fade";
   else if(isU){const kind=ty==="words"?"words":"chars",fade=ty==="type"?0:ty==="words"?0.35:0.3;
     R.op=t>=dl?1:0;R.units={kind,f:(i,n)=>{const st=dl+du*i/Math.max(1,n);if(!fade)return t>=st?1:0;return Math.max(0,Math.min(1,(t-st)/fade))}}}
   if(a.out&&len){const od=0.5,os=len-od-0.15,q=Math.max(0,Math.min(1,(t-os)/od)),qe=q*q;
@@ -12212,7 +12244,7 @@ async function studioExportGif(){
   finally{studioImgCache=null;bar.remove()}
 }
 function studioAnimSecHtml(l){
-  const a=l.anim||{},on=a.type&&a.type!=="none",txt=l.type==="text"&&!l.vertical&&!+l.curve,opts=STUDIO_ANIMS.concat(txt?STUDIO_TEXT_ANIMS:[]);
+  const a=l.anim||{},on=a.type&&a.type!=="none",txt=l.type==="text"&&!l.vertical&&!studioCanvText(l),opts=STUDIO_ANIMS.concat(txt?STUDIO_TEXT_ANIMS:[]);
   return ppSec("anim","Анимация",`<div class="pp-row"><span class="pp-l">Появление</span><nv-select options="${opts.map(([k,t])=>k+":"+t).join("|")}" value="${esc(a.type||"none")}" data-prop="anim.type" aria-label="Анимация появления"></nv-select></div>
     ${on?ppRng("Задержка","anim.delay",+a.delay||0,0,8,0.1)+ppRng("Длительность","anim.dur",+a.dur||0.6,0.2,4,0.1):""}
     <div class="pp-row"><span class="pp-l">В конце</span><nv-select options="${STUDIO_ANIM_OUT.map(([k,t])=>k+":"+t).join("|")}" value="${esc(a.out||"")}" data-prop="anim.out" aria-label="Исчезновение в конце"></nv-select></div>
@@ -12590,7 +12622,7 @@ async function studioVectorPdf(){
         const fx=studioFillOf(l),sk=studioStrokeOf(l),eff=(l.effect&&l.effect.shadow)||(l.blendMode&&l.blendMode!=="normal")||l.skewX||l.skewY;
         const vecShape=l.type==="shape"&&!eff&&["solid","none"].includes(fx.type)&&(!sk.enabled||sk.dash==="solid"||!sk.dash);
         const vecPath=l.type==="path"&&!eff&&["solid","none"].includes(fx.type)&&(!sk.enabled||!sk.dash||sk.dash==="solid");
-        const vecText=l.type==="text"&&!eff&&!l.shadow&&!l.neon&&!(l.outline&&l.outline.enabled)&&!l.tfx&&!(l.grad&&l.grad.enabled)&&!+l.curve&&!l.vertical&&!studioListOf(l);
+        const vecText=l.type==="text"&&!eff&&!l.shadow&&!l.neon&&!(l.outline&&l.outline.enabled)&&!l.tfx&&!(l.grad&&l.grad.enabled)&&!studioCanvText(l)&&!l.vertical&&!studioListOf(l);
         if(studioPerspOn(l)||!vecShape&&!vecPath&&!vecText){const r=studioRotBox?studioRotBox(l):null,mg=Math.max(24,0.15*Math.max(W,H)),bx=r?{x:r.x1/100*F.w-mg,y:r.y1/100*F.h-mg,w:(r.x2-r.x1)/100*F.w+2*mg,h:(r.y2-r.y1)/100*F.h+2*mg}:{x:X-W*0.3,y:Y-H*0.3,w:W*1.6,h:H*1.6};
           await placeRaster({...pd,bg:{type:"color",color:"transparent"},layers:[l]},bx);rasterized.push(studioLayerLabel(l));continue}
         let pre="q ";if(op<1){const g="G"+Object.keys(gs).length;gs[g]=op;pre+=`/${g} gs `}
