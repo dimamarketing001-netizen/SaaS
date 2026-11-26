@@ -1812,6 +1812,7 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 .vec-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}.vec-prev{width:100%;max-height:340px;border:1px solid var(--line);border-radius:10px;background:repeating-conic-gradient(#e5e7eb 0 25%,#fff 0 50%) 0 0/16px 16px;overflow:hidden}
 @media (max-width:640px){.vec-wrap{grid-template-columns:1fr}}
 .stl-rt{display:block;width:100%}
+.stud-lgrid .lg-c{position:absolute;top:0;bottom:0;background:rgba(236,72,153,.10);border-left:1px solid rgba(236,72,153,.35);border-right:1px solid rgba(236,72,153,.35)}.stud-lgrid .lg-r{position:absolute;left:0;right:0;background:rgba(236,72,153,.07);border-top:1px solid rgba(236,72,153,.3);border-bottom:1px solid rgba(236,72,153,.3)}
 .stud-rtbar{position:fixed;z-index:60;display:flex;align-items:center;gap:3px;padding:4px;border-radius:12px;background:var(--surface);border:1px solid var(--line-2);box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .stud-rtbar button{min-width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--ink);cursor:pointer;font:14px/1 var(--font-display,inherit);display:grid;place-items:center;padding:0 4px}.stud-rtbar button:hover{background:var(--surface-2)}
 .stud-rtbar .sep{width:1px;height:20px;background:var(--line);margin:0 3px}.stud-rtbar .sw{min-width:20px;width:20px;height:20px;border-radius:50%;border:1px solid var(--line-2);padding:0;position:relative}
@@ -3509,7 +3510,7 @@ let saveT;
    сохраняется как есть, чтобы перенос не потерял их. Переполнение — предупреждаем. */
 let saveWarned=false;
 NEON.save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{
-  const st=S.studio,snap=st?{...S,studio:{lastId:st.lastId,migrated:st.migrated,brief:st.brief,q:st.q,fmtF:st.fmtF,tplFmt:st.tplFmt,tab:st.tab,brand:st.brand,zones:st.zones,grid:st.grid,rulers:st.rulers,guidesOff:st.guidesOff,guideSnap:st.guideSnap,startPf:st.startPf,startFmt:st.startFmt,brandMine:st.brandMine,timeline:st.timeline,notesOff:st.notesOff,draw:st.draw,favs:st.favs,
+  const st=S.studio,snap=st?{...S,studio:{lastId:st.lastId,migrated:st.migrated,brief:st.brief,q:st.q,fmtF:st.fmtF,tplFmt:st.tplFmt,tab:st.tab,brand:st.brand,zones:st.zones,grid:st.grid,rulers:st.rulers,guidesOff:st.guidesOff,guideSnap:st.guideSnap,startPf:st.startPf,startFmt:st.startFmt,brandMine:st.brandMine,timeline:st.timeline,notesOff:st.notesOff,draw:st.draw,favs:st.favs,gridOff:st.gridOff,
     ...(!st.migrated&&saved.studio&&saved.studio.designs?{designs:saved.studio.designs,editor:saved.studio.editor}:{})}}:S;
   try{localStorage.setItem(KEY,JSON.stringify(snap))}
   catch(e){if(!saveWarned){saveWarned=true;toast("Браузер не смог сохранить настройки кабинета (переполнено хранилище)",{tone:"warning"})}}
@@ -8311,7 +8312,14 @@ function studioStageHtml(){
 /* Безопасные зоны: поля 5% (текст ближе к краю режут превью площадок) и, для
    вертикальных форматов, полосы под интерфейс сторис (шапка ~14%, низ ~20%). */
 let studioZoom=1;
-function studioGridX(){const n=+S.studio.grid||0;if(!n)return[];const out=[];for(let i=0;i<=n;i++)out.push(5+i*90/n);return out}
+/* v11 (26.11.2026): сетка макета — колонки и модульная сетка (d.lgrid={cols,gutter,margin,rows,rgutter,rmargin}, px макета).
+   Хранится в дизайне (общая для команды), S.studio.gridOff — только скрыть. Прилипание к краям колонок/модулей. */
+function studioLGrid(d){d=d||studioDesign();if(d.lgrid&&(+d.lgrid.cols||+d.lgrid.rows))return d.lgrid;const n=+S.studio.grid||0;return n?{cols:n,gutter:0,margin:0,mpct:5}:null}
+function studioLGridCells(d){const G=studioLGrid(d);if(!G)return null;const F=studioFmtOf(d),xs=[],ys=[];
+  const axis=(n,gut,mar,full,mpct)=>{n=Math.max(0,Math.min(24,+n||0));if(!n)return[];const m=mpct!=null?mpct:(+mar||0)/full*100,g=(+gut||0)/full*100,cw=(100-2*m-g*(n-1))/n,out=[];for(let i=0;i<n;i++){const a=m+i*(cw+g);out.push([a,a+cw])}return out};
+  return{c:axis(G.cols,G.gutter,G.margin,F.w,G.mpct),r:axis(G.rows,G.rgutter,G.rmargin,F.h)}}
+function studioGridX(){const C=studioLGridCells();return C?C.c.flatMap(c=>c):[]}
+function studioGridY(){const C=studioLGridCells();return C?C.r.flatMap(c=>c):[]}
 /* ---------- Заметки для согласования: d.notes=[{id,page,x,y,text,done,at}] — булавки поверх холста, в файл не попадают ---------- */
 /* v8-17: комментарии клиента со страницы просмотра → заметки дизайна (n.cid — id комментария) */
 async function studioPullComments(d){if(typeof d.id!=="number")return;let L=[];try{L=(await api("/api/v1/studio/designs/"+d.id+"/comments")).comments||[]}catch(e){return}
@@ -8343,15 +8351,30 @@ document.addEventListener("pointerdown",e=>{
   const n={id:"n"+Date.now().toString(36),page:d.page||0,x:Math.round((e.clientX-r.left)/r.width*1000)/10,y:Math.round((e.clientY-r.top)/r.height*1000)/10,text:"",done:false,at:Date.now()};
   (d.notes=d.notes||[]).push(n);S.studio.notesOff=false;studioTool="select";st.classList.remove("note-on");NEON.save();studioNotesRepaint();setTimeout(()=>studioNoteOpen(n.id),0);
 },true);
+function studioLGridHtml(d){const GC=S.studio.gridOff?null:studioLGridCells(d);return GC&&(GC.c.length||GC.r.length)?`<div class="stud-zones stud-lgrid">${GC.c.map(([a,b])=>`<div class="lg-c" style="left:${a}%;width:${b-a}%"></div>`).join("")}${GC.r.map(([a,b])=>`<div class="lg-r" style="top:${a}%;height:${b-a}%"></div>`).join("")}</div>`:""}
+function studioGridDlg(){const d=studioDesign(),F=studioFmtOf(d),G0=studioLGrid(d)||{},G={cols:+G0.cols||0,gutter:+G0.gutter||Math.round(F.w*0.02),margin:G0.mpct!=null?Math.round(F.w*G0.mpct/100):+G0.margin||Math.round(F.w*0.05),rows:+G0.rows||0,rgutter:+G0.rgutter||Math.round(F.h*0.02),rmargin:+G0.rmargin||Math.round(F.h*0.05)};
+  const PRE=[["Нет",0,0],["2 колонки",2,0],["3 колонки",3,0],["4 колонки",4,0],["6 колонок",6,0],["12 колонок",12,0],["Модули 2×2",2,2],["Модули 3×3",3,3],["Модули 4×4",4,4],["Модули 6×6",6,6]];
+  const num=(k,lb,max)=>`<label class="pp-in" style="flex:1"><span style="width:auto;padding:0 6px">${lb}</span><input type="number" min="0" max="${max}" step="1" value="${G[k]}" data-lg="${k}"></label>`;
+  const {root}=overlay("modal",{title:"Сетка макета",subtitle:`Колонки и модули с полями и промежутками (в px макета ${F.w}×${F.h}). Элементы прилипают к краям колонок.`,service:"studio",size:"md",
+    body:`<div class="stack" style="gap:10px"><div class="pp-chips">${PRE.map(([t,c,r])=>`<button type="button" data-lgp="${c}x${r}">${esc(t)}</button>`).join("")}</div>
+      <div class="pp-l">Колонки</div><div class="row" style="gap:6px">${num("cols","Кол-во",24)}${num("gutter","Промежуток",400)}${num("margin","Поля",600)}</div>
+      <div class="pp-l">Строки (модульная сетка)</div><div class="row" style="gap:6px">${num("rows","Кол-во",24)}${num("rgutter","Промежуток",400)}${num("rmargin","Поля",600)}</div>
+      <label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-lgshow ${S.studio.gridOff?"":"checked"}> Показывать сетку на холсте</label></div>`,
+    actions:[{label:"Закрыть"}]});
+  const put=()=>{studioBeforeChange();if(!G.cols&&!G.rows)delete d.lgrid;else d.lgrid={...G};S.studio.grid=0;NEON.save();const host=document.querySelector(".stud-stage");if(host){const z=host.querySelector(".stud-lgrid");if(z)z.remove();host.insertAdjacentHTML("beforeend",studioLGridHtml(d))}const b=document.querySelector('[data-act="studGrid"]');if(b){b.classList.toggle("on",!!studioLGrid()&&!S.studio.gridOff)}};
+  root.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.lg;if(!k)return;G[k]=Math.max(0,+e.target.value||0);put()});
+  root.addEventListener("click",e=>{const b=e.target.closest("[data-lgp]");if(!b)return;const[c,r]=b.dataset.lgp.split("x").map(Number);G.cols=c;G.rows=r;root.querySelectorAll("[data-lg]").forEach(i=>i.value=G[i.dataset.lg]);put()});
+  root.addEventListener("change",e=>{if(e.target.matches("[data-lgshow]")){S.studio.gridOff=!e.target.checked;NEON.save();put()}});
+  const close0=root.querySelector("[data-x]");if(close0)close0.addEventListener("click",()=>setTimeout(()=>N.refresh(),0))}
 function studioZonesHtml(d){
-  const gx=studioGridX(),grid=gx.length?`<div class="stud-zones">${gx.map((x,i)=>i<gx.length-1?`<div style="position:absolute;top:0;bottom:0;left:${x}%;width:${90/(gx.length-1)}%;background:${i%2?"rgba(90,140,255,.07)":"rgba(90,140,255,.13)"};border-left:1px solid rgba(90,140,255,.35)"></div>`:"").join("")}</div>`:"";
+  const grid=studioLGridHtml(d);
   if(!S.studio.zones)return grid;
   const f=STUDIO_FMT[d.format],tall=f.h/f.w>1.5;
   return grid+`<div class="stud-zones"><div class="m"></div>${tall?`<div class="ui" style="top:0;height:14%">Шапка сторис — сюда не ставьте текст</div><div class="ui" style="bottom:0;height:20%">Кнопка и подпись площадки</div>`:""}</div>`;
 }
 function studioZoomHtml(){
   const z=studioZoom;
-  return`<div class="stud-zoom"><button type="button" data-act="studZoom" data-z="-">−</button><button type="button" data-act="studZoom" data-z="fit" class="${z===1?"on":""}">${z===1?"По экрану":Math.round(z*100)+"%"}</button><button type="button" data-act="studZoom" data-z="+">+</button><button type="button" data-act="studZones" class="${S.studio.zones?"on":""}" data-tip="Поля 5% и зоны интерфейса сторис">${ic("scan",13)} Зоны</button><button type="button" data-act="studRulers" class="${S.studio.rulers!==false?"on":""}" data-tip="Линейки в пикселях макета">${ic("ruler",13)} Линейки</button><button type="button" data-act="studGrid" class="${S.studio.grid?"on":""}" data-tip="Сетка колонок с прилипанием">${ic("columns-3",13)} ${S.studio.grid?S.studio.grid+" кол.":"Сетка"}</button></div>`;
+  return`<div class="stud-zoom"><button type="button" data-act="studZoom" data-z="-">−</button><button type="button" data-act="studZoom" data-z="fit" class="${z===1?"on":""}">${z===1?"По экрану":Math.round(z*100)+"%"}</button><button type="button" data-act="studZoom" data-z="+">+</button><button type="button" data-act="studZones" class="${S.studio.zones?"on":""}" data-tip="Поля 5% и зоны интерфейса сторис">${ic("scan",13)} Зоны</button><button type="button" data-act="studRulers" class="${S.studio.rulers!==false?"on":""}" data-tip="Линейки в пикселях макета">${ic("ruler",13)} Линейки</button><button type="button" data-act="studGrid" class="${studioLGrid()&&!S.studio.gridOff?"on":""}" data-tip="Сетка макета: колонки, модули, поля — с прилипанием">${ic("columns-3",13)} ${(()=>{const G=studioLGrid();return G?(+G.cols||0)+(+G.rows?"×"+G.rows:" кол."):"Сетка"})()}</button></div>`;
 }
 /* Контраст выбранного текста с тем, что реально под ним (WCAG): рисуем макет без
    этого слоя и усредняем пиксели в его рамке. Для текста на плашке — с плашкой. */
@@ -13858,7 +13881,7 @@ function studioGroup(on){
 }
 /* Прилипание к краям/центру холста и других видимых слоёв (порог ~1%). */
 function studioSnap(d,l,nx,ny){
-  const T=1.1,X=[0,50,100].concat(studioGridX()),Y=[0,50,100];
+  const T=1.1,X=[0,50,100].concat(studioGridX()),Y=[0,50,100].concat(studioGridY());
   if(!S.studio.guidesOff&&S.studio.guideSnap!==false){const F=STUDIO_FMT[d.format]||STUDIO_FMT.square;studioGuides(d).forEach(g=>{if(g.t==="v")X.push(g.p/F.w*100);else if(g.t==="h")Y.push(g.p/F.h*100)})}
   d.layers.forEach(o=>{if(o.id===l.id||o.hidden)return;X.push(o.x,o.x+o.w/2,o.x+o.w);Y.push(o.y,o.y+o.h/2,o.y+o.h)});
   const best=(edges,targets)=>{let r=null;edges.forEach(ev=>targets.forEach(t=>{const dd=t-ev;if(Math.abs(dd)<=T&&(!r||Math.abs(dd)<Math.abs(r.d)))r={d:dd,t}}));return r};
@@ -14065,7 +14088,7 @@ Object.assign(N.acts,{
   studAddEmoji(a,d){studioAddEmoji(d.e)},studMove(a,d){studioMoveDlg(+d.id)},studAnimAuto(){studioAutoAnimate()},studQuickStart(){studioQuickStart()},studVideoSet(){studioVideoSet()},studTimeline(){S.studio.timeline=!S.studio.timeline;NEON.save();N.refresh()},studTlPlay(){studioAnimPreview(true)},studAnimPlay(){studioAnimPreview()},studVideo(){studioExportVideo()},studGif(){studioExportGif()},
   studAnimClear(){const d=studioDesign();studioBeforeChange();d.layers.forEach(l=>delete l.anim);N.refresh();NEON.save()},
   studRulers(){S.studio.rulers=S.studio.rulers===false;N.refresh();NEON.save()},
-  studGrid(){const seq=[0,2,3,4,6,12],i=seq.indexOf(+S.studio.grid||0);S.studio.grid=seq[(i+1)%seq.length];N.refresh();NEON.save()},
+  studGrid(){studioGridDlg()},
   studAiTexts:studioAiTexts,
   studAiDesign:studioAiDesign,
   studAiCritique:studioAiCritique,
