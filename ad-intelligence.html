@@ -1833,7 +1833,11 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 /* как закладка на карточках Разведки (.cr-save), но в цвете раздела: белая плашка, в избранном — заливка как у пункта «Студия» в меню (.rail-item.on) */
 .s2-fav{position:absolute;right:3px;top:3px;z-index:2;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.94);color:#111;box-shadow:0 1px 3px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;cursor:pointer;line-height:1}
 .s2-fav svg{width:12px;height:12px}.s2-fav:hover{background:#fff}.s2-fav.on{background:var(--svc,#c4a7ff);color:#0d1211;opacity:1}.s2-fav.on svg{fill:currentColor}
-.s2-favable:hover>.s2-fav{opacity:1}.s2-grid2 .th.s2-favable .x{right:auto;left:4px}.s2-grid2 .th>.s2-fav{width:26px;height:26px;right:6px;top:6px}.s2-grid2 .th>.s2-fav svg{width:14px;height:14px}
+.s2-favable:hover>.s2-fav{opacity:1}
+/* на мелких плитках закладка маленькая и в самом углу: центр плитки всегда добавляет элемент, а не «в избранное» */
+.el-mini .s2-fav,.s2-icons .s2-fav,.s3-pre .s2-fav{width:15px;height:15px;right:1px;top:1px}.el-mini .s2-fav svg,.s2-icons .s2-fav svg,.s3-pre .s2-fav svg{width:9px;height:9px}
+.s2-emo .s2-fav{width:13px;height:13px;right:0;top:0}.s2-emo .s2-fav svg{width:8px;height:8px}
+.s2-grid2 .th.s2-favable .x{right:auto;left:4px}.s2-grid2 .th>.s2-fav{width:26px;height:26px;right:6px;top:6px}.s2-grid2 .th>.s2-fav svg{width:14px;height:14px}
 .s2-fav-empty{text-align:center;color:var(--ink-3);padding:24px 8px;font-size:12.5px;line-height:1.45}.s2-fav-empty p{margin:8px 0 0}
 .s2-grid2>*{min-width:0}
 .s2-panel input[type=search]{width:100%;height:32px;border:1px solid var(--line-2);border-radius:8px;padding:0 10px;font-size:13px;background:var(--surface)}
@@ -1955,6 +1959,55 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 .s2-gfx button{aspect-ratio:1;border:1px solid var(--line);border-radius:9px;background:var(--surface);display:grid;place-items:center;cursor:pointer;padding:4px}
 .s2-gfx button:hover{border-color:var(--svc-ink);background:var(--svc-soft)}
 .s2-coll{grid-template-columns:repeat(2,1fr)!important}
+/* Элементы: каталог полками */
+.el-tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:4px}
+.el-tools>button,.el-tools>label{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:7px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;line-height:1.15;color:var(--ink-2);cursor:pointer;text-align:center;font-family:inherit}
+.el-tools>button:hover,.el-tools>label:hover{border-color:var(--svc-ink);color:var(--ink)}
+.el-tools.el-5{grid-template-columns:repeat(5,1fr)}
+.el-mini{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}.el-mini button{height:42px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink-2);display:grid;place-items:center;cursor:pointer}.el-mini button:hover{border-color:var(--svc-ink);color:var(--ink)}
+.el-tools-l{font-size:11px;color:var(--ink-3);margin:2px 0 -4px}
+.el-q{width:100%;text-align:left;padding:0 10px;margin-top:4px}
+.el-res{display:flex;flex-direction:column;gap:4px}
+.el-shelf{display:flex;flex-direction:column;gap:7px;padding:10px 0 12px;border-top:1px solid var(--line)}
+.el-shelf:first-child{border-top:0;padding-top:4px}
+.el-sh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.el-sh-t{display:flex;align-items:center;gap:7px;border:0;background:none;padding:0;cursor:pointer;font:600 13.5px var(--font-display);color:var(--ink)}
+.el-sh-t svg{color:var(--svc-ink)}.el-sh-t small{font:500 11px var(--font-mono);color:var(--ink-3)}
+.el-all{display:inline-flex;align-items:center;gap:1px;border:0;background:none;padding:3px 4px 3px 8px;border-radius:999px;cursor:pointer;font:500 12px var(--font-ui,inherit);color:var(--svc-ink)}
+.el-all:hover{background:var(--svc-soft)}
+.el-emo{max-height:none!important;overflow:visible!important}
+.el-head{display:flex;align-items:center;gap:8px}.el-head h3{margin:0}
+.el-back{width:30px;height:30px;border-radius:999px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.el-back:hover{border-color:var(--svc-ink)}
+.el-full{display:flex;flex-direction:column;gap:10px}.el-full .s2-emo{max-height:none}
+/* Фото → SVG: отдельный полноэкранный редактор */
+.vx{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;outline:0}
+.vx-top{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+.vx-back{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink);flex:none}
+.vx-back:hover{border-color:var(--svc-ink)}
+.vx-title{display:flex;flex-direction:column;min-width:0;flex:none;max-width:300px}.vx-title b{font:600 15px var(--font-display)}.vx-title span{font-size:12px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vx-mid{flex:1;display:flex;justify-content:center;align-items:center;gap:12px;min-width:0}
+.vx-zoom{display:flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--surface)}
+.vx-zoom button{border:0;background:none;height:28px;min-width:30px;padding:0 8px;border-radius:999px;cursor:pointer;color:var(--ink-2);font:500 12px var(--font-mono);display:grid;place-items:center}
+.vx-zoom button:hover{background:var(--surface-2);color:var(--ink)}.vx-zoom .vx-zv{min-width:54px}
+.vx-act{display:flex;gap:8px;align-items:center;flex:none}
+.vx-body{flex:1;display:flex;min-height:0}
+.vx-stage{flex:1;overflow:auto;cursor:grab;background:var(--surface-2);position:relative}.vx-stage.pan{cursor:grabbing}
+.vx-canvas{min-width:100%;min-height:100%;width:max-content;height:max-content;display:flex;align-items:center;justify-content:center;gap:16px;padding:28px;box-sizing:border-box}
+.vx-fig{margin:0;display:flex;flex-direction:column;gap:6px}.vx-fig figcaption{font:500 11px var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3)}
+.vx-pane{position:relative;flex:none;background-color:#fff;background-image:conic-gradient(#ececec 25%,#fff 0 50%,#ececec 0 75%,#fff 0);background-size:16px 16px;box-shadow:0 1px 3px rgba(0,0,0,.12),0 10px 30px rgba(0,0,0,.08);border-radius:4px;overflow:hidden}
+.vx-pane>img,.vx-pane>svg,.vx-over{position:absolute;inset:0;width:100%;height:100%;display:block}
+.vx-pane img{user-select:none;pointer-events:none}.vx-over{opacity:.6}.vx-over svg{width:100%;height:100%;display:block}
+.vx-drop{margin:auto;display:flex;flex-direction:column;align-items:center;gap:10px;padding:48px 56px;border:2px dashed var(--line);border-radius:18px;background:var(--surface);color:var(--ink-2);text-align:center;cursor:pointer;max-width:520px}
+.vx-drop svg{color:var(--svc-ink)}.vx-drop b{font:600 17px var(--font-display);color:var(--ink)}.vx-drop span{font-size:13px}
+.vx.drag .vx-stage{outline:3px dashed var(--svc-ink);outline-offset:-12px}
+.vx-side{width:340px;flex:none;border-left:1px solid var(--line);background:var(--surface);overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.vx-colh{display:flex;flex-direction:column;gap:2px;margin-top:6px}.vx-colh small{font-size:12px;color:var(--ink-3)}
+.vx-cols{display:flex;flex-direction:column;gap:4px}
+.vx-col{display:flex;align-items:center;gap:8px;padding:5px 8px;border:1px solid var(--line);border-radius:9px;cursor:pointer;font-size:12.5px}
+.vx-col i{width:18px;height:18px;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);flex:none}
+.vx-col code{font:500 12px var(--font-mono)}.vx-col small{margin-left:auto;color:var(--ink-3)}.vx-col:has(input:not(:checked)){opacity:.5}
+@media (max-width:1100px){.vx-title{display:none}.vx-side{width:290px}}
 .s2-coll button{color:var(--ink-2)}.s2-coll button:hover{color:var(--svc-ink)}
 .stud-layer-data{width:100%;height:100%}.stud-layer-data svg{width:100%;height:100%;display:block}
 .bk-sum{display:flex;align-items:center;gap:8px;margin:12px 0 8px;font-size:13px;color:var(--ink-2)}.bk-sum b{color:var(--ink);font-weight:500}.bk-sum span{font:11.5px var(--font-mono);color:var(--ink-3)}.bk-sum .warn{color:var(--warning,#b7791f)}
@@ -11160,33 +11213,79 @@ function studioTraceToLayers(T,box){const g="g"+studioUid(),pt=(p,W,H)=>({x:p[0]
   const toPts=segs=>segs.map((B,i)=>{const prev=segs[(i-1+segs.length)%segs.length],p=pt(B[0],T.W,T.H),o=pt(B[1],T.W,T.H),inn=pt(prev[2],T.W,T.H);return{x:p.x,y:p.y,type:"smooth",in:{dx:inn.x-p.x,dy:inn.y-p.y},out:{dx:o.x-p.x,dy:o.y-p.y}}});
   return{g,layers:T.layers.map(L=>{const[first,...rest]=L.paths;return Object.assign(studioLayerDefaults("path"),{x:box.x,y:box.y,w:box.w,h:box.h,rotation:box.rotation||0,points:toPts(first),subs:rest.map(sg=>({points:toPts(sg),closed:true})),closed:true,fillRule:"evenodd",
     fill:{...studioDefFill(L.color),type:"solid",color:L.color},stroke:{...studioDefStroke(false,L.color),enabled:false},name:"Цвет "+L.color,group:g})})}}
-async function studioTraceDlg(src,o0){/* src: {canvas} уже видимая часть картинки; o0: {layer} — заменить фото */
-  const cv=src.canvas,ar=cv.width/cv.height;let preset="logo",o={...STUDIO_TRACE_PRESETS.logo,dropBg:false},T=null,busy=false,again=false;
-  {const G=studioTraceGuess(cv);preset=G.preset;o={...STUDIO_TRACE_PRESETS[preset],dropBg:G.dropBg}}
-  const rng=(k,lb,mn,mx,st,u)=>`<nv-range data-tr="${k}" label="${lb}" min="${mn}" max="${mx}" step="${st}" value="${o[k]}" unit="${u||""}"></nv-range>`;
+/* Фото → SVG — отдельный полноэкранный редактор (а не окно): большой просмотр с масштабом и перемещением, «Рядом»/«Наложение»,
+   цвета списком (лишний — например, фон — снимается галочкой), картинку можно перетащить, вставить Ctrl+V или выбрать заново.
+   src: {canvas} — картинка; o0: {layer} — заменить фото в дизайне. Без src — пустой экран с местом для картинки. */
+let studioVxOpen=null;
+async function studioTraceDlg(src,o0){if(studioVxOpen)studioVxOpen.close();
+  let cv=null,preset="logo",o={...STUDIO_TRACE_PRESETS.logo,dropBg:false},T=null,busy=false,again=false,view="svg",zoom=0,off=new Set(),srcUrl="";
   const PI_={logo:"badge",art:"palette",photo:"image",poster:"layers"};
-  const ctl=()=>`<nv-choice-bar data-trp label="Что трассируем" value="${preset}" options="${esc(JSON.stringify(Object.entries(STUDIO_TRACE_PRESETS).map(([k,P])=>({value:k,label:P.label,icon:PI_[k]}))))}"></nv-choice-bar>
-    ${rng("colors","Цветов",2,64,1)}${rng("size","Детализация",400,2400,50,"px")}${rng("err","Допуск кривых",0.3,4,0.05,"px")}${rng("speckle","Убирать пятна до",0,200,2,"px²")}${rng("corner","Острые углы до",60,160,5,"°")}${rng("blur","Убрать шум JPEG",0,3,1)}
+  const rng=(k,lb,mn,mx,st,u)=>`<nv-range data-tr="${k}" label="${lb}" min="${mn}" max="${mx}" step="${st}" value="${o[k]}" unit="${u||""}"></nv-range>`;
+  const ctl=()=>`<nv-choice-bar data-trp label="Что на картинке" value="${preset}" options="${esc(JSON.stringify(Object.entries(STUDIO_TRACE_PRESETS).map(([k,P])=>({value:k,label:P.label,icon:PI_[k]}))))}"></nv-choice-bar>
+    ${rng("colors","Цветов (не больше)",2,64,1)}${rng("size","Детализация",400,2400,50,"px")}${rng("err","Допуск кривых",0.3,4,0.05,"px")}${rng("speckle","Убирать пятна до",0,200,2,"px²")}${rng("corner","Острые углы до",60,160,5,"°")}${rng("blur","Убрать шум JPEG",0,3,1)}
     <nv-switch data-trbg label="Убрать фон" description="Цвет, который по краям картинки" ${o.dropBg?"checked":""}></nv-switch>`;
-  const {root,close}=overlay("modal",{title:"Фото → SVG",subtitle:"Настоящий вектор: цвета → контуры → кривые Безье. Работает в браузере, без ИИ.",service:"studio",size:"lg",
-    body:`<div class="tr-wrap"><div class="tr-prev"><div class="tr-box" style="aspect-ratio:${ar}" data-trprev></div><div style="margin-top:8px"><nv-segmented data-trv value="svg" options="svg:SVG|src:Исходник|both:Наложение"></nv-segmented></div></div><div class="stack" style="gap:8px;min-width:0" data-trctl>${ctl()}</div></div><p class="pp-hint" data-trinfo>Считаю…</p>`,
-    actions:[{label:"Отмена"},{label:"Скачать SVG",icon:"download",fn:()=>{if(!T)return false;studioDownload(new Blob([studioTraceSvg(T,true)],{type:"image/svg+xml"}),"vector.svg");return false}},{label:o0&&o0.layer?"Заменить фото кривыми":"Вставить в дизайн",variant:"primary",icon:"spline",fn:()=>{if(!T||!T.layers.length){toast("Сначала дождитесь результата",{tone:"warning"});return false}studioTraceInsert(T,o0)}}]});
-  const prev=root.querySelector("[data-trprev]"),info=root.querySelector("[data-trinfo]");let view="svg";
-  const paint=()=>{if(!T)return;const svg=studioTraceSvg(T,false),img=`<img src="${cv.toDataURL("image/png")}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">`;
-    prev.innerHTML=view==="svg"?svg:view==="src"?img:img+`<div style="position:absolute;inset:0;opacity:.6">${svg}</div>`};
-  const run=async()=>{if(busy){again=true;return}busy=true;info.textContent="Считаю…";const t0=performance.now();
+  const root=document.createElement("div");root.className="vx";root.dataset.svc="studio";root.tabIndex=-1;root.setAttribute("role","dialog");root.setAttribute("aria-label","Фото → SVG");
+  root.innerHTML=`<header class="vx-top"><button type="button" class="vx-back" data-vx="close" data-tip="Esc">${ic("arrow-left",16)}<span>К дизайну</span></button>
+    <div class="vx-title"><b>Фото → SVG</b><span>Настоящий вектор: цвета → контуры → кривые Безье. В браузере, без ИИ</span></div>
+    <div class="vx-mid"><nv-segmented data-vxv value="svg" options="svg:SVG|src:Исходник|both:Наложение|side:Рядом"></nv-segmented>
+      <div class="vx-zoom"><button type="button" data-vx="zout" aria-label="Мельче" data-tip="Мельче (Ctrl + колесо)">${ic("minus",15)}</button><button type="button" data-vx="fit" class="vx-zv" data-tip="По размеру окна">—</button><button type="button" data-vx="zin" aria-label="Крупнее" data-tip="Крупнее (Ctrl + колесо)">${ic("plus",15)}</button><button type="button" data-vx="z100" data-tip="Пиксель в пиксель">1:1</button></div></div>
+    <div class="vx-act"><label class="nv-btn v-ghost s-sm" for="vx-file">${ic("image-up",14)}Другая картинка</label><input type="file" id="vx-file" accept="image/*" class="sr">
+      <nv-button variant="secondary" size="sm" icon="download" data-vx="dl">Скачать SVG</nv-button><nv-button variant="primary" size="sm" icon="spline" data-vx="ins">${o0&&o0.layer?"Заменить фото кривыми":"Вставить в дизайн"}</nv-button></div></header>
+    <div class="vx-body"><div class="vx-stage" data-vxstage><div class="vx-canvas" data-vxcan></div></div>
+      <aside class="vx-side"><div class="stack" style="gap:10px" data-vxctl></div>
+        <div class="vx-colh"><span class="sect-t">Цвета</span><small>снимите галочку — цвет не попадёт в SVG</small></div><div class="vx-cols" data-vxcols></div>
+        <p class="pp-hint" data-trinfo></p></aside></div>`;
+  document.body.appendChild(root);
+  const $=s=>root.querySelector(s),stage=$("[data-vxstage]"),can=$("[data-vxcan]"),info=$("[data-trinfo]"),cols=$("[data-vxcols]");
+  const Tf=()=>T&&{...T,layers:T.layers.filter((L,i)=>!off.has(i))};
+  const fitZ=()=>{if(!cv)return 1;const n=view==="side"?2:1,sw=stage.clientWidth-56,sh=stage.clientHeight-56;return Math.max(0.05,Math.min((sw-(n-1)*16)/(cv.width*n),sh/cv.height))};
+  const paint=()=>{if(!cv){can.innerHTML=`<label class="vx-drop" for="vx-file">${ic("image-up",34)}<b>Перетащите картинку сюда</b><span>или вставьте её (Ctrl+V), или нажмите, чтобы выбрать файл · PNG, JPG, WebP</span></label>`;$(".vx-zv").textContent="—";return}
+    const z=zoom||fitZ(),w=Math.round(cv.width*z),h=Math.round(cv.height*z),svg=T?studioTraceSvg(Tf(),false):"",img=`<img src="${srcUrl}" alt="" draggable="false">`;
+    const pane=(inner,attr)=>`<div class="vx-pane" style="width:${w}px;height:${h}px" ${attr||""}>${inner}</div>`;
+    can.innerHTML=view==="svg"?pane(svg,"data-trprev"):view==="src"?pane(img):view==="both"?pane(img+`<div class="vx-over">${svg}</div>`,"data-trprev"):`<figure class="vx-fig"><figcaption>Исходник</figcaption>${pane(img)}</figure><figure class="vx-fig"><figcaption>SVG</figcaption>${pane(svg,"data-trprev")}</figure>`;
+    can.classList.toggle("vx-sbs",view==="side");$(".vx-zv").textContent=Math.round(z*100)+"%"};
+  const paintCols=()=>{cols.innerHTML=T&&T.layers.length?T.layers.map((L,i)=>`<label class="vx-col"><input type="checkbox" data-vxcol="${i}" ${off.has(i)?"":"checked"}><i style="background:${L.color}"></i><code>${L.color}</code><small>${L.paths.length} ${studioPlural(L.paths.length,["контур","контура","контуров"])}</small></label>`).join(""):'<p class="muted" style="font-size:12px;margin:0">Появятся после расчёта</p>'};
+  const run=async()=>{if(!cv)return;if(busy){again=true;return}busy=true;info.textContent="Считаю…";const t0=performance.now();
     try{const sc=Math.min(3,o.size/Math.max(cv.width,cv.height)),w=Math.max(8,Math.round(cv.width*sc)),h=Math.max(8,Math.round(cv.height*sc)),k=document.createElement("canvas");k.width=w;k.height=h;const g=k.getContext("2d");g.imageSmoothingQuality="high";g.drawImage(cv,0,0,w,h);
-      T=await studioTraceImage(g.getImageData(0,0,w,h).data,w,h,{...o,up:sc},m=>{info.textContent=m});paint();
+      T=await studioTraceImage(g.getImageData(0,0,w,h).data,w,h,{...o,up:sc},m=>{info.textContent=m});off=new Set();paintCols();paint();
       const segs=T.layers.reduce((a,L)=>a+L.paths.reduce((b,p)=>b+p.length,0),0),kb=Math.round(studioTraceSvg(T,true).length/1024);
       info.textContent=T.layers.length?`Цветов: ${T.layers.length}, кривых Безье: ${segs}, SVG ≈ ${kb} КБ, ${((performance.now()-t0)/1000).toFixed(1)} с. Больше цветов и детализации — точнее, но тяжелее.`:"Ничего не нашлось — выключите «Убрать фон» или добавьте цветов"}
     catch(e){info.textContent="Не получилось: "+(e.message||e)}busy=false;if(again){again=false;run()}};
   let tm=0;const soon=()=>{clearTimeout(tm);tm=setTimeout(run,250)};
+  const setSrc=c=>{cv=c;srcUrl=cv.toDataURL("image/png");const G=studioTraceGuess(cv);preset=G.preset;o={...STUDIO_TRACE_PRESETS[preset],dropBg:G.dropBg};$("[data-vxctl]").innerHTML=ctl();T=null;off=new Set();zoom=0;paintCols();paint();run()};
+  const loadFile=async f=>{if(!f||!/^image\//.test(f.type)){toast("Нужна картинка (PNG, JPG, WebP)",{tone:"warning"});return}const url=URL.createObjectURL(f);
+    try{const img=await studioLoadImg(url),sc=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(img.naturalWidth*sc));c.height=Math.max(1,Math.round(img.naturalHeight*sc));c.getContext("2d").drawImage(img,0,0,c.width,c.height);setSrc(c)}
+    catch(e){toast("Не удалось открыть картинку",{tone:"danger"})}finally{setTimeout(()=>URL.revokeObjectURL(url),5000)}};
+  const setZoom=(z,cx,cy)=>{const old=zoom||fitZ(),nz=Math.max(0.05,Math.min(16,z));const r=stage.getBoundingClientRect(),px=cx==null?r.width/2:cx-r.left,py=cy==null?r.height/2:cy-r.top,ax=(stage.scrollLeft+px)/old,ay=(stage.scrollTop+py)/old;
+    zoom=nz;paint();stage.scrollLeft=ax*nz-px;stage.scrollTop=ay*nz-py};
+  /* события */
+  root.addEventListener("click",e=>{const b=e.target.closest("[data-vx]");if(!b)return;const k=b.dataset.vx;
+    if(k==="close")close();else if(k==="fit"){zoom=0;paint()}else if(k==="z100")setZoom(1);else if(k==="zin")setZoom((zoom||fitZ())*1.25);else if(k==="zout")setZoom((zoom||fitZ())/1.25);
+    else if(k==="dl"){if(!T){toast("Сначала загрузите картинку",{tone:"warning"});return}studioDownload(new Blob([studioTraceSvg(Tf(),true)],{type:"image/svg+xml"}),"vector.svg")}
+    else if(k==="ins"){const R=Tf();if(!R||!R.layers.length){toast(cv?"Сначала дождитесь результата":"Сначала загрузите картинку",{tone:"warning"});return}close();studioTraceInsert(R,o0)}});
   root.addEventListener("nv-change",e=>{const el=e.target;
     if(el.matches("[data-tr]")){o[el.dataset.tr]=+e.detail.value;soon()}
     else if(el.matches("[data-trbg]")){o.dropBg=!!e.detail.value;soon()}
-    else if(el.matches("[data-trp]")){preset=e.detail.value;o={...STUDIO_TRACE_PRESETS[preset],dropBg:o.dropBg};root.querySelector("[data-trctl]").innerHTML=ctl();soon()}
-    else if(el.matches("[data-trv]")){view=e.detail.value;paint()}});
-  run()}
+    else if(el.matches("[data-trp]")){preset=e.detail.value;o={...STUDIO_TRACE_PRESETS[preset],dropBg:o.dropBg};$("[data-vxctl]").innerHTML=ctl();soon()}
+    else if(el.matches("[data-vxv]")){view=e.detail.value;if(!zoom)paint();else paint()}});
+  root.addEventListener("change",e=>{if(e.target.id==="vx-file"){const f=e.target.files[0];e.target.value="";loadFile(f)}else if(e.target.matches("[data-vxcol]")){const i=+e.target.dataset.vxcol;e.target.checked?off.delete(i):off.add(i);paint()}});
+  stage.addEventListener("wheel",e=>{if(!(e.ctrlKey||e.metaKey)||!cv)return;e.preventDefault();setZoom((zoom||fitZ())*(e.deltaY<0?1.15:1/1.15),e.clientX,e.clientY)},{passive:false});
+  /* перемещение мышью (как рукой) */
+  let pan=null;stage.addEventListener("mousedown",e=>{if(e.button!==0||e.target.closest(".vx-drop"))return;pan={x:e.clientX,y:e.clientY,l:stage.scrollLeft,t:stage.scrollTop};stage.classList.add("pan");e.preventDefault()});
+  const mm=e=>{if(!pan)return;stage.scrollLeft=pan.l-(e.clientX-pan.x);stage.scrollTop=pan.t-(e.clientY-pan.y)},mu=()=>{pan=null;stage.classList.remove("pan")};
+  /* клавиши, вставка и перетаскивание файла — только редактору: горячие клавиши и вставка Студии под ним не срабатывают */
+  const keyIn=e=>{if(e.key==="Escape"){e.preventDefault();close()}e.stopPropagation()};
+  const keyOut=e=>{if(root.contains(e.target))return;if(e.key==="Escape")close();e.stopPropagation()};
+  const onPaste=e=>{const it=[...((e.clipboardData||{}).items||[])].find(x=>x.kind==="file"&&/^image\//.test(x.type));e.stopPropagation();if(it){e.preventDefault();loadFile(it.getAsFile())}};
+  const onDrag=e=>{e.preventDefault();e.stopPropagation();root.classList.toggle("drag",e.type==="dragover")};
+  const onDrop=e=>{e.preventDefault();e.stopPropagation();root.classList.remove("drag");const f=[...((e.dataTransfer||{}).files||[])].find(x=>/^image\//.test(x.type));if(f)loadFile(f)};
+  const onResize=()=>{if(!zoom)paint()};
+  root.addEventListener("keydown",keyIn);window.addEventListener("keydown",keyOut,true);window.addEventListener("paste",onPaste,true);root.addEventListener("dragover",onDrag);root.addEventListener("dragleave",onDrag);root.addEventListener("drop",onDrop);
+  window.addEventListener("mousemove",mm);window.addEventListener("mouseup",mu);window.addEventListener("resize",onResize);
+  const close=()=>{window.removeEventListener("keydown",keyOut,true);window.removeEventListener("paste",onPaste,true);window.removeEventListener("mousemove",mm);window.removeEventListener("mouseup",mu);window.removeEventListener("resize",onResize);root.remove();if(studioVxOpen&&studioVxOpen.root===root)studioVxOpen=null};
+  studioVxOpen={close,root};root.focus();
+  $("[data-vxctl]").innerHTML=ctl();paintCols();
+  if(src&&src.canvas)setSrc(src.canvas);else{paint();info.textContent="Загрузите картинку — логотип, текст, иконку или фото"}}
 function studioTraceInsert(T,o0){const d=studioDesign(),F=studioFmtOf(d);studioBeforeChange();let box;
   if(o0&&o0.layer){const l=o0.layer;box={x:l.x,y:l.y,w:l.w,h:l.h,rotation:l.rotation||0}}
   else{const ar=T.W/T.H,fa=F.w/F.h;let w=70,h=w*fa/ar;if(h>70){h=70;w=h*ar/fa}box={x:(100-w)/2,y:(100-h)/2,w,h}}
@@ -11217,7 +11316,7 @@ function studioBrandHtml(){
   ${b.logo?`<div class="row" style="gap:6px"><nv-button size="sm" variant="secondary" icon="image" data-act="studLogoPlace">Логотип на холст</nv-button><nv-button size="sm" variant="ghost" icon="x" icon-only hint="Убрать логотип" data-act="studLogoClear"></nv-button></div>`:`<label class="nv-btn v-secondary s-sm" for="stud-logo-file" style="width:100%;justify-content:center">${ic("upload",14)}Логотип бренда</label>`}`;
 }
 /* ===================== Студия v3: панели, контекст, меню ===================== */
-const STUDIO_TABS=[["templates","layout-template","Шаблоны"],["elements","shapes","Элементы"],["favs","bookmark","Избранное"],["text","type","Текст"],["uploads","upload","Загрузки"],["photos","image","Фото"],["brand","palette","Стиль"],["ai","sparkles","ИИ"],["layers","layers","Слои"],["history","history","История"]];
+const STUDIO_TABS=[["templates","layout-template","Шаблоны"],["elements","shapes","Элементы"],["favs","bookmark","Избранное"],["text","type","Текст"],["uploads","upload","Загрузки"],["vector","spline","Вектор"],["photos","image","Фото"],["brand","palette","Стиль"],["ai","sparkles","ИИ"],["layers","layers","Слои"],["history","history","История"]];
 const STUDIO_TEXT_PRESETS=[
   {k:"headline",label:"Добавить заголовок",style:"font-size:21px;font-weight:800",l:{text:"Заголовок",fontSize:9,weight:"800",x:8,y:12,w:84,h:16,role:"headline"}},
   {k:"subheadline",label:"Добавить подзаголовок",style:"font-size:16px;font-weight:700",l:{text:"Подзаголовок",fontSize:5,weight:"700",x:8,y:32,w:84,h:10,role:"subheadline"}},
@@ -11270,6 +11369,68 @@ function studioFavsHtml(){const F=S.studio.favs||[];
     +sec("Эмодзи",em.length?`<div class="s2-emo">${em.map(x=>`<button type="button" data-act="studAddEmoji" data-e="${esc(x.v)}">${x.v}</button>`).join("")}</div>`:"")
     +sec("Фото",sk.length||up.length?`<div class="s2-grid2">${up.map(x=>`<div class="th" data-act="studUseUpload" data-id="${x.v}"><img src="${esc(x.thumb||"")}" alt=""></div>`).join("")}${sk.map(x=>`<div class="th" data-act="studUseFavStock" data-u="${esc(x.v)}" title="${esc((x.r||{}).title||"")} — ${esc((x.r||{}).creator||"")}"><img src="${esc((x.r||{}).thumb||"")}" alt="" loading="lazy" referrerpolicy="no-referrer"></div>`).join("")}</div>`:"")
     +sec("Шаблоны",tp.length?`<div class="s2-grid2">${tp.map(x=>`<div class="th" data-act="studUseTplHere" data-i="${x.v}" title="${esc(STUDIO_TEMPLATES[x.v].name)}"><img data-s2tpl="${x.v}" alt=""></div>`).join("")}</div>`:"")}
+/* ---------- Элементы: каталог (полки разделов с «Все»), общий поиск по всем разделам, раздел целиком ---------- */
+let studioElCat="",studioElQ="";
+const STUDIO_EL_CATS=[["shapes","Фигуры","shapes"],["gfx","Графика","sparkles"],["icons","Иконки","star"],["emoji","Эмодзи","smile"],["s3","3D-элементы","box"],["mock","3D-мокапы","smartphone"],["data","Таблицы, QR и графики","bar-chart-3"],["coll","Коллажи","layout-dashboard"],["comp","Компоненты дизайна","component"]];
+const STUDIO_DATA_TILES=[["table","table-2","Таблица"],["qr","qr-code","QR-код"],["bar","bar-chart-3","Столбцы"],["line","line-chart","Линия"],["pie","pie-chart","Круговая"],["donut","circle-dashed","Кольцо"]];
+const studioElShape=([sh,icn,lb])=>`<button type="button" data-act="studAdd" data-type="shape" data-shape="${sh}">${ic(icn,20)}${lb}</button>`;
+const studioElGfx=i=>{const x=STUDIO_GFX[i];return`<button type="button" data-act="studAddGfx" data-i="${i}" data-tip="${esc(x.n)}" aria-label="${esc(x.n)}">${x.s.replace("<svg ",'<svg width="34" height="34" ')}</button>`};
+const studioElIcon=n=>`<button type="button" data-act="studAddIcon" data-icon="${esc(n)}" title="${esc(n)}">${ic(n,18)}</button>`;
+const studioElEmoji=([e,k])=>`<button type="button" data-act="studAddEmoji" data-e="${esc(e)}" title="${esc(k)}" aria-label="${esc(k)}">${e}</button>`;
+const studioElMock=([k,lb,i])=>`<button type="button" data-act="stud3dMock" data-k="${k}" data-tip="Дизайн на 3D-${lb.toLowerCase()} — на новой странице">${ic(i,20)}${lb}</button>`;
+const studioElData=([k,i,t])=>`<button type="button" data-act="studAddData" data-k="${k}">${ic(i,20)}${t}</button>`;
+const studioElColl=([n,c],i)=>`<button type="button" data-act="studCollage" data-i="${i}" data-tip="${esc(n)}">${studioCollageIcon(c)}<span>${esc(n)}</span></button>`;
+function studioElIcons(q){const k=studioIconQ;studioIconQ=q||"";try{return studioIconList()}finally{studioIconQ=k}}
+function studioElShelf(k,count,body,q){const C=STUDIO_EL_CATS.find(c=>c[0]===k);const qa=q!=null?` data-elq="${esc(q)}"`:"";
+  return`<section class="el-shelf"><div class="el-sh"><button type="button" class="el-sh-t" data-elcat="${k}"${qa}>${ic(C[2],15)}<span>${esc(C[1])}</span><small>${count}</small></button><button type="button" class="el-all" data-elcat="${k}"${qa}>Все${ic("chevron-right",14)}</button></div>${body}</section>`}
+/* инструменты — компактной строкой сверху: это действия, а не элементы */
+function studioElToolsHtml(){const T=(act,tool,icn,lb,tip)=>`<button type="button" data-act="${act}"${tool?` data-tool="${tool}"`:""}${tip?` data-tip="${esc(tip)}"`:""}>${ic(icn,17)}<span>${lb}</span></button>`,
+    F=(id,icn,lb,tip)=>`<label for="${id}"${tip?` data-tip="${esc(tip)}"`:""}>${ic(icn,17)}<span>${lb}</span></label>`;
+  return`<div class="el-tools">${T("studTool","pen","pen-tool","Перо","Свои кривые: клик — угол, протянуть — плавная точка")}${T("studTool","eyedrop","pipette","Пипетка","Взять цвет с холста")}${T("studTool","draw","brush","Рисовать","Кисть от руки")}${T("studTool","note","message-square-plus","Заметка","Булавка с комментарием для согласования — в файл не попадает")}</div>
+  <div class="el-tools-l">Добавить из файла</div><div class="el-tools el-5">${F("stud-img-file","image-plus","Картинка")}${F("stud-vid-file","film","Видео")}${F("stud-imp-file","file-input","PDF / PSD","PDF — страницами, PSD — слоями")}${F("stud-svg-file","file-code-2","SVG","SVG станет редактируемыми кривыми")}${T("studVector","","spline","Вектор","Фото → SVG: логотип, текст или фото → настоящий вектор. Откроется отдельный редактор")}<input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>`}
+function studioElementsHtml(){if(studioElCat)return studioElCatHtml(studioElCat);
+  return`<h3>Элементы</h3>${studioElToolsHtml()}<input type="search" class="num el-q" data-s2elq placeholder="Найти: стрелка, скидка, торт, огонь, телефон…" value="${esc(studioElQ)}" aria-label="Поиск по всем элементам"><div class="el-res" data-elres>${studioElResHtml()}</div>`}
+function studioElResHtml(){const q=studioElQ.trim().toLowerCase(),br=((S.studio.brand&&S.studio.brand.colors)||[]).join(),d=studioDesign(),nComp=Object.keys(d.components||{}).length;
+  const emoAll=STUDIO_EMOJI.flatMap(([g,L])=>L.map(x=>[x,g])),s3=e=>studio3dLibTile(e,br);setTimeout(studio3dPaintPresets,0);
+  if(!q)return[
+    studioElShelf("shapes",STUDIO_SHAPES.length,`<div class="el-mini">${STUDIO_SHAPES.map(([sh,icn,lb])=>`<button type="button" data-act="studAdd" data-type="shape" data-shape="${sh}" data-tip="${esc(lb)}" aria-label="${esc(lb)}">${ic(icn,20)}</button>`).join("")}</div>`),
+    studioElShelf("gfx",STUDIO_GFX.length,`<div class="s2-gfx">${STUDIO_GFX.slice(0,10).map((x,i)=>studioElGfx(i)).join("")}</div>`),
+    studioElShelf("icons",studioAllIcons().length,`<div class="s2-icons">${studioElIcons("").slice(0,12).map(studioElIcon).join("")}</div>`),
+    studioElShelf("emoji",emoAll.length,`<div class="s2-emo el-emo">${emoAll.slice(0,16).map(([x])=>studioElEmoji(x)).join("")}</div>`),
+    studioElShelf("s3",S3_LIB.length,`<div class="s3-pre">${S3_LIB.slice(0,8).map(s3).join("")}</div>`),
+    studioElShelf("mock",S3_MODELS.length,`<div class="s2-tiles s3-tiles">${S3_MODELS.slice(0,4).map(studioElMock).join("")}</div>`),
+    studioElShelf("data",STUDIO_DATA_TILES.length,`<div class="s2-tiles">${STUDIO_DATA_TILES.slice(0,3).map(studioElData).join("")}</div>`),
+    studioElShelf("coll",STUDIO_COLLAGES.length,`<div class="s2-tiles s2-coll">${STUDIO_COLLAGES.slice(0,2).map(studioElColl).join("")}</div>`),
+    nComp?studioElShelf("comp",nComp,""):""].join("");
+  const has=t=>t.toLowerCase().includes(q);
+  const sh=STUDIO_SHAPES.filter(([k,i,lb])=>has(lb+" "+k)),gf=STUDIO_GFX.map((x,i)=>[x,i]).filter(([x])=>has(x.n+" "+x.t)),icn=studioElIcons(q),em=emoAll.filter(([[e,k],g])=>has(k+" "+g)||e===q),
+    s3L=S3_LIB.filter(e=>has(e.n+" "+e.c+" "+e.t)),mk=S3_MODELS.filter(([k,lb])=>has(lb)),dt=STUDIO_DATA_TILES.filter(([k,i,t])=>has(t+" "+k));
+  const out=[sh.length&&studioElShelf("shapes",sh.length,`<div class="s2-tiles">${sh.map(studioElShape).join("")}</div>`),
+    gf.length&&studioElShelf("gfx",gf.length,`<div class="s2-gfx">${gf.slice(0,10).map(([x,i])=>studioElGfx(i)).join("")}</div>`,q),
+    icn.length&&studioElShelf("icons",icn.length,`<div class="s2-icons">${icn.slice(0,12).map(studioElIcon).join("")}</div>`,q),
+    em.length&&studioElShelf("emoji",em.length,`<div class="s2-emo el-emo">${em.slice(0,16).map(([x])=>studioElEmoji(x)).join("")}</div>`,q),
+    s3L.length&&studioElShelf("s3",s3L.length,`<div class="s3-pre">${s3L.slice(0,8).map(s3).join("")}</div>`,q),
+    mk.length&&studioElShelf("mock",mk.length,`<div class="s2-tiles s3-tiles">${mk.map(studioElMock).join("")}</div>`),
+    dt.length&&studioElShelf("data",dt.length,`<div class="s2-tiles">${dt.map(studioElData).join("")}</div>`)].filter(Boolean);
+  return out.length?out.join(""):`<p class="pp-hint">По запросу «${esc(studioElQ.trim())}» ничего не нашлось. Попробуйте другое слово — например, «стрелка», «подарок», «рамка».</p>`}
+function studioElCatHtml(k){const C=STUDIO_EL_CATS.find(c=>c[0]===k)||STUDIO_EL_CATS[0];
+  const head=`<div class="el-head"><button type="button" class="el-back" data-elcat="" aria-label="Все элементы" data-tip="Все элементы">${ic("arrow-left",16)}</button><h3>${esc(C[1])}</h3></div>`;
+  const q=(attr,val,ph)=>`<input type="search" class="num" ${attr} placeholder="${ph}" value="${esc(val)}" style="width:100%;text-align:left;padding:0 10px">`;
+  const body=k==="shapes"?`<div class="s2-tiles">${STUDIO_SHAPES.map(studioElShape).join("")}</div><p class="muted" style="font-size:12px;margin:0">Сложную форму можно нарисовать «Пером» или собрать из фигур (объединение, вычитание — в панели справа).</p>`
+    :k==="gfx"?`${q("data-s2gfx",studioGfxQ,"Поиск: стрелка, бейдж, рамка…")}<div class="s2-gfx" data-s2gfxgrid>${studioGfxGridHtml()}</div>`
+    :k==="icons"?`${q("data-s2icon",studioIconQ,"Поиск: телефон, скидка, house…")}<div class="s2-icons" data-s2icons>${studioIconList().map(studioElIcon).join("")}</div>`
+    :k==="emoji"?`${q("data-s2emo",studioEmojiQ,"Поиск: огонь, подарок, телефон…")}<div class="s2-emo" data-s2emogrid>${studioEmojiGridHtml()}</div>`
+    :k==="s3"?studio3dPresetsHtml()
+    :k==="mock"?`<p class="muted" style="font-size:12px;margin:0">Текущий дизайн ляжет на 3D-предмет — на новой странице.</p><div class="s2-tiles s3-tiles">${S3_MODELS.map(studioElMock).join("")}</div>`
+    :k==="data"?`<div class="s2-tiles">${STUDIO_DATA_TILES.map(studioElData).join("")}</div>`
+    :k==="coll"?`<p class="muted" style="font-size:12px;margin:0">Рамки для фото: перетащите снимки в ячейки.</p><div class="s2-tiles s2-coll">${STUDIO_COLLAGES.map(studioElColl).join("")}</div>`
+    :studioCompPanelHtml();
+  return head+`<div class="el-full">${body}</div>`}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-elcat]");if(!b)return;e.preventDefault();const k=b.dataset.elcat,qv=b.dataset.elq;
+  if(qv!=null){if(k==="gfx")studioGfxQ=qv;else if(k==="icons")studioIconQ=qv;else if(k==="emoji")studioEmojiQ=qv;else if(k==="s3"){studio3dLibQ=qv;studio3dLibCat=""}}
+  else if(k==="s3"&&!studioElCat){studio3dLibQ="";studio3dLibCat=""}
+  studioElCat=k;studioRefreshPanel();const p=document.getElementById("s2-panel");if(p)p.scrollTop=0});
+document.addEventListener("input",e=>{if(!(e.target.matches&&e.target.matches("[data-s2elq]")))return;studioElQ=e.target.value;const r=document.querySelector("[data-elres]");if(r)r.innerHTML=studioElResHtml()});
 function studioPanelHtml(tab){
   const d=studioDesign();
   if(tab==="favs")return studioFavsHtml();
@@ -11281,19 +11442,7 @@ function studioPanelHtml(tab){
       const blk=(title,mine)=>mine.length?`<div class="sect-t">${title}</div><div class="s2-grid2">${mine.map(t=>`<div class="th" data-act="studUseUserTpl" data-id="${t.id}" title="${esc(t.name)} · ${esc(t.category||"")}"><img src="${esc(t.thumb||"")}" alt=""><button type="button" class="x" data-act="studDelUserTpl" data-id="${t.id}" aria-label="Удалить шаблон">×</button></div>`).join("")}</div>`:"";
       return Object.entries(grp).map(([id,L])=>blk("Шаблоны команды «"+esc((TEAM.list.find(t=>t.id===+id)||{}).name||"команда")+"»",L)).join("")+blk("Мои шаблоны",pers)})()}
     ${built.length?`${mine.length?'<div class="sect-t">Готовые</div>':""}<div class="s2-grid2">${built.map(([t,i])=>`<div class="th" data-act="studUseTplHere" data-i="${i}" title="${esc(t.name)}"><img data-s2tpl="${i}" alt=""></div>`).join("")}</div>`:""}`}
-  if(tab==="elements")return`<h3>Элементы</h3><div class="sect-t">Фигуры</div><div class="s2-tiles">${STUDIO_SHAPES.map(([sh,icn,lb])=>`<button type="button" data-act="studAdd" data-type="shape" data-shape="${sh}">${ic(icn,20)}${lb}</button>`).join("")}</div>
-    <div class="sect-t">3D-элементы</div>${studio3dPresetsHtml()}
-    <div class="sect-t">3D-мокапы</div><div class="s2-tiles s3-tiles">${S3_MODELS.map(([k,lb,i])=>`<button type="button" data-act="stud3dMock" data-k="${k}" data-tip="Дизайн на 3D-${lb.toLowerCase()} — на новой странице">${ic(i,20)}${lb}</button>`).join("")}</div>
-    <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><button type="button" data-act="studTool" data-tool="draw">${ic("brush",20)}Рисовать</button><label class="s2-tiles-l" for="stud-vid-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("film",20)}Видео</label><label class="s2-tiles-l" for="stud-imp-file" data-tip="PDF — страницами, PSD — слоями" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-input",20)}PDF / PSD</label><button type="button" data-act="studTool" data-tool="note" data-tip="Булавка с комментарием для согласования — в файл не попадает">${ic("message-square-plus",20)}Заметка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><label class="s2-tiles-l" for="stud-trace-file" data-tip="Логотип, текст, картинка или фото → настоящий вектор (кривые Безье по цветам)" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("spline",20)}Фото → SVG</label><input type="file" id="stud-trace-file" accept="image/*" class="sr"><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
-    <div class="sect-t">Графика</div><input type="search" class="num" data-s2gfx placeholder="Поиск: стрелка, бейдж, рамка…" value="${esc(studioGfxQ)}" style="width:100%;text-align:left;padding:0 10px">
-    <div class="s2-gfx" data-s2gfxgrid>${studioGfxGridHtml()}</div>
-    ${studioCompPanelHtml()}
-    <div class="sect-t">Эмодзи</div><input type="search" class="num" data-s2emo placeholder="Поиск: огонь, подарок, телефон…" value="${esc(studioEmojiQ)}" style="width:100%;text-align:left;padding:0 10px">
-    <div class="s2-emo" data-s2emogrid>${studioEmojiGridHtml()}</div>
-    <div class="sect-t">Данные</div><div class="s2-tiles">${[["table","table-2","Таблица"],["qr","qr-code","QR-код"],["bar","bar-chart-3","Столбцы"],["line","line-chart","Линия"],["pie","pie-chart","Круговая"],["donut","circle-dashed","Кольцо"]].map(([k,i,t])=>`<button type="button" data-act="studAddData" data-k="${k}">${ic(i,20)}${t}</button>`).join("")}</div>
-    <div class="sect-t">Коллажи</div><div class="s2-tiles s2-coll">${STUDIO_COLLAGES.map(([n,c],i)=>`<button type="button" data-act="studCollage" data-i="${i}" data-tip="${esc(n)}">${studioCollageIcon(c)}<span>${esc(n)}</span></button>`).join("")}</div>
-    <div class="sect-t">Иконки</div><input type="search" class="num" data-s2icon placeholder="Поиск: телефон, скидка, house…" value="${esc(studioIconQ)}" style="width:100%;text-align:left;padding:0 10px">
-    <div class="s2-icons" data-s2icons>${studioIconList().map(n=>`<button type="button" data-act="studAddIcon" data-icon="${esc(n)}" title="${esc(n)}">${ic(n,18)}</button>`).join("")}</div>`;
+  if(tab==="elements")return studioElementsHtml();
   if(tab==="text")return`<h3>Текст</h3><div class="s2-tpres">${STUDIO_TEXT_PRESETS.map(p=>`<button type="button" data-act="studAddTextPreset" data-k="${p.k}"><span style="${p.style}">${esc(p.label)}</span></button>`).join("")}</div>
     <div class="sect-t">Свои шрифты</div>
     <label class="nv-btn v-secondary s-sm" for="s2-font-file" style="justify-content:center">${ic("upload",14)}Загрузить шрифт (TTF, OTF, WOFF)</label><input type="file" id="s2-font-file" accept=".ttf,.otf,.woff,.woff2,font/*" multiple class="sr">
@@ -14475,7 +14624,7 @@ Object.assign(N.acts,{
     (x.pages||[{layers:x.layers}]).forEach(p=>p.layers.forEach(l=>l.id=studioUid()));
     studioResetEphemeral();studioStartDismissed=true;S.studio.editor=x;N.go("studio-editor");studioPersist({silent:true});toast("Шаблон открыт новым дизайном",{tone:"success"})}catch(err){toast(err.message,{tone:"danger"})}},
   async studDelUserTpl(a,d,e){if(e)e.stopPropagation();try{await apiDelete("/api/v1/studio/designs/"+d.id);studioUserTpls=(studioUserTpls||[]).filter(x=>String(x.id)!==String(d.id));studioRefreshPanel()}catch(err){toast(err.message,{tone:"danger"})}},
-  studTab(a,d){document.body.classList.remove("pp-open");S.studio.tab=S.studio.tab===d.tab?"":d.tab;N.refresh();NEON.save();if(S.studio.tab==="templates")setTimeout(()=>studioPaintTplThumbs(document),0)},
+  studTab(a,d){if(d.tab==="vector"){studioTraceDlg();return}document.body.classList.remove("pp-open");S.studio.tab=S.studio.tab===d.tab?"":d.tab;N.refresh();NEON.save();if(S.studio.tab==="templates")setTimeout(()=>studioPaintTplThumbs(document),0)},
   studShortcuts:studioShortcuts,
   studDownload(a){studioDownloadMenu(a)},
   studMore(a){studioMoreMenu(a)},
@@ -14549,6 +14698,7 @@ Object.assign(N.acts,{
         try{const m=await apiPatch("/api/v1/studio/designs/"+x.id,{name:nm});studioUpsertList(m);if(studioDesign().id===x.id)studioDesign().name=nm;N.refresh()}catch(e){toast(e.message,{tone:"danger"})}}}]})},
   studPalImport(){studioPalImportDlg()},
   studVectorize(){studioVectorizeDlg()},
+  studVector(){studioTraceDlg()},
   studBrandAdd(){const l=studioSelected(),c=l?(l.type==="shape"||l.type==="path"?studioFillOf(l).color:l.color):studioDesign().bg.color;
     if(!c||!/^#[0-9a-f]{6}$/i.test(c)){toast("Выберите слой с цветом",{tone:"warning"});return}
     const b=S.studio.brand=S.studio.brand||{colors:[]};b.colors=[...new Set([...(b.colors||[]),c.toLowerCase()])].slice(0,10);NEON.save();N.refresh()},
