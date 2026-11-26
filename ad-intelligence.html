@@ -1964,7 +1964,7 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 .el-tools>button,.el-tools>label{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:7px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;line-height:1.15;color:var(--ink-2);cursor:pointer;text-align:center;font-family:inherit}
 .el-tools>button:hover,.el-tools>label:hover{border-color:var(--svc-ink);color:var(--ink)}
 .el-tools.el-5{grid-template-columns:repeat(5,1fr)}
-.el-mini{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}.el-mini button{height:42px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink-2);display:grid;place-items:center;cursor:pointer}.el-mini button:hover{border-color:var(--svc-ink);color:var(--ink)}
+.el-mini{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}.el-mini button{height:42px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink-2);display:grid;place-items:center;cursor:pointer}.el-mini button:hover{border-color:var(--svc-ink);color:var(--ink)}
 .el-tools-l{font-size:11px;color:var(--ink-3);margin:2px 0 -4px}
 .el-q{width:100%;text-align:left;padding:0 10px;margin-top:4px}
 .el-res{display:flex;flex-direction:column;gap:4px}
@@ -1976,7 +1976,24 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 .el-all{display:inline-flex;align-items:center;gap:1px;border:0;background:none;padding:3px 4px 3px 8px;border-radius:999px;cursor:pointer;font:500 12px var(--font-ui,inherit);color:var(--svc-ink)}
 .el-all:hover{background:var(--svc-soft)}
 .el-emo{max-height:none!important;overflow:visible!important}
-.el-head{display:flex;align-items:center;gap:8px}.el-head h3{margin:0}
+.el-head{display:flex;align-items:center;gap:8px}.el-head h3{margin:0;flex:1;min-width:0}
+.el-x{width:30px;height:30px;border-radius:999px;border:0;background:none;display:grid;place-items:center;cursor:pointer;color:var(--ink-3);flex:none}.el-x:hover{background:var(--surface-2);color:var(--ink)}
+.el-shelf.on{background:var(--svc-soft);border-radius:12px;margin:0 -8px;padding-left:8px;padding-right:8px;border-top-color:transparent}.el-shelf.on+.el-shelf{border-top-color:transparent}
+.el-shelf.on .el-all{color:var(--ink);font-weight:600}
+/* третий уровень: второй сужается до 232px, третий — 375px (на 25% шире обычной панели в 300px) */
+.s2-panel.has-l3{width:auto;padding:0;gap:0;flex-direction:row;overflow:hidden}
+.s2-l2{width:232px;flex:none;padding:14px 12px;overflow:auto;display:flex;flex-direction:column;gap:10px;position:relative;min-height:0}
+.s2-l3{width:375px;flex:none;padding:14px;overflow:auto;display:flex;flex-direction:column;gap:10px;border-left:1px solid var(--line);background:var(--surface);min-height:0;animation:s2l3in .16s ease-out}
+@keyframes s2l3in{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+/* узкий второй уровень: превью — максимум два ряда, инструменты — только значки (подпись в подсказке) */
+.s2-l2 .s2-gfx{grid-template-columns:repeat(4,1fr)}.s2-l2 .s2-gfx>button:nth-child(n+9){display:none}
+.s2-l2 .s2-icons{grid-template-columns:repeat(5,1fr)}.s2-l2 .s2-icons>button:nth-child(n+11){display:none}
+.s2-l2 .s2-emo{grid-template-columns:repeat(6,1fr)}.s2-l2 .s2-emo>button:nth-child(n+13){display:none}
+.s2-l2 .s3-pre{grid-template-columns:repeat(3,1fr)}.s2-l2 .s3-pre>button:nth-child(n+7){display:none}
+.s2-l2 .el-tools,.s2-l2 .el-tools.el-5{grid-template-columns:repeat(5,minmax(0,1fr))}.s2-l2 .el-tools span{display:none}.s2-l2 .el-tools>button,.s2-l2 .el-tools>label{padding:8px 0}
+.s2-l2 .el-sh-t span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.s2-l2 .el-sh-t{min-width:0}
+.s2-l3 .s2-gfx{grid-template-columns:repeat(6,1fr)}.s2-l3 .s2-icons{grid-template-columns:repeat(8,1fr)}.s2-l3 .s2-emo{grid-template-columns:repeat(10,1fr)}.s2-l3 .s3-pre{grid-template-columns:repeat(5,1fr)}.s2-l3 .s2-tiles{grid-template-columns:repeat(4,1fr)}.s2-l3 .el-tpl3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:980px){.s2-panel.has-l3 .s2-l2{display:none}.s2-panel.has-l3 .s2-l3{width:auto;flex:1;border-left:0}}
 .el-back{width:30px;height:30px;border-radius:999px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--ink)}
 .el-back:hover{border-color:var(--svc-ink)}
 .el-full{display:flex;flex-direction:column;gap:10px}.el-full .s2-emo{max-height:none}
@@ -11336,7 +11353,17 @@ function studioIconList(){
   return[...new Set(en.concat(all.filter(n=>n.includes(q)||en.some(e=>n.includes(e)))))].slice(0,90);
 }
 async function studioLoadUploads(force){if(studioUploads&&!force)return;try{studioUploads=(await api("/api/v1/studio/uploads")).uploads||[]}catch(e){studioUploads=[]}studioRefreshPanel()}
-function studioRefreshPanel(){const p=document.getElementById("s2-panel");if(p&&S.studio.tab)p.innerHTML=`<button type="button" class="s2-panel-x" data-act="studTab" data-tab="${S.studio.tab}" data-tip="Скрыть панель">${ic("chevrons-left",16)}</button>`+studioPanelHtml(S.studio.tab)}
+function studioRefreshPanel(){const p=document.getElementById("s2-panel");if(!p||!S.studio.tab)return;const R=studioPanelBody(S.studio.tab);p.innerHTML=R.html;p.classList.toggle("has-l3",R.l3);
+  if(R.l3)setTimeout(()=>{studioPaintTplThumbs(document);studio3dPaintPresets()},0)}
+/* Панель как в Illustrator/Photoshop: «Все» открывает ТРЕТИЙ уровень рядом (второй сужается, третий на 25% шире обычной панели) */
+function studioPanelL3Html(tab){if(tab==="elements"&&studioElCat)return studioElCatHtml(studioElCat);if(tab==="templates"&&studioTplL3!=null)return studioTplL3Html(studioTplL3);return""}
+function studioPanelBody(tab){const x=`<button type="button" class="s2-panel-x" data-act="studTab" data-tab="${tab}" data-tip="Скрыть панель">${ic("chevrons-left",16)}</button>`,l3=studioPanelL3Html(tab);
+  return l3?{html:`<div class="s2-l2">${x}${studioPanelHtml(tab)}</div><div class="s2-l3" role="region" aria-label="Раздел">${l3}</div>`,l3:true}:{html:x+studioPanelHtml(tab),l3:false}}
+function studioL3Close(){if(S.studio.tab==="elements")studioElCat="";else if(S.studio.tab==="templates")studioTplL3=null;studioRefreshPanel()}
+document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!document.querySelector("#s2-panel.has-l3")||document.querySelector(".vx,.ov"))return;const ae=document.activeElement;if(ae&&["INPUT","TEXTAREA"].includes(ae.tagName)&&ae.value)return;e.preventDefault();e.stopPropagation();studioL3Close()},true);
+/* полка раздела: заголовок (открывает раздел), число, «Все ›», превью */
+function studioShelfHtml(attr,title,icon,count,body,on){return`<section class="el-shelf${on?" on":""}"><div class="el-sh"><button type="button" class="el-sh-t" ${attr}>${icon?ic(icon,15):""}<span>${esc(title)}</span><small>${count}</small></button><button type="button" class="el-all" ${attr}>Все${ic("chevron-right",14)}</button></div>${body}</section>`}
+const studioL3Head=(title,closeAttr)=>`<div class="el-head"><h3>${esc(title)}</h3><button type="button" class="el-x" ${closeAttr} aria-label="Закрыть раздел" data-tip="Закрыть (Esc)">${ic("x",16)}</button></div>`;
 /* v10 (26.11.2026): «Избранное» — звёздочка на иконках, графике, эмодзи, фигурах, фото, загрузках и шаблонах.
    Список в S.studio.favs (переживает перезагрузку, общий для всех дизайнов). Звёздочки дорисовываются
    в панель наблюдателем (studioFavDecorate), клик по звезде перехватывается до действия плитки. */
@@ -11381,14 +11408,13 @@ const studioElMock=([k,lb,i])=>`<button type="button" data-act="stud3dMock" data
 const studioElData=([k,i,t])=>`<button type="button" data-act="studAddData" data-k="${k}">${ic(i,20)}${t}</button>`;
 const studioElColl=([n,c],i)=>`<button type="button" data-act="studCollage" data-i="${i}" data-tip="${esc(n)}">${studioCollageIcon(c)}<span>${esc(n)}</span></button>`;
 function studioElIcons(q){const k=studioIconQ;studioIconQ=q||"";try{return studioIconList()}finally{studioIconQ=k}}
-function studioElShelf(k,count,body,q){const C=STUDIO_EL_CATS.find(c=>c[0]===k);const qa=q!=null?` data-elq="${esc(q)}"`:"";
-  return`<section class="el-shelf"><div class="el-sh"><button type="button" class="el-sh-t" data-elcat="${k}"${qa}>${ic(C[2],15)}<span>${esc(C[1])}</span><small>${count}</small></button><button type="button" class="el-all" data-elcat="${k}"${qa}>Все${ic("chevron-right",14)}</button></div>${body}</section>`}
+function studioElShelf(k,count,body,q){const C=STUDIO_EL_CATS.find(c=>c[0]===k);return studioShelfHtml(`data-elcat="${k}"${q!=null?` data-elq="${esc(q)}"`:""}`,C[1],C[2],count,body,studioElCat===k)}
 /* инструменты — компактной строкой сверху: это действия, а не элементы */
 function studioElToolsHtml(){const T=(act,tool,icn,lb,tip)=>`<button type="button" data-act="${act}"${tool?` data-tool="${tool}"`:""}${tip?` data-tip="${esc(tip)}"`:""}>${ic(icn,17)}<span>${lb}</span></button>`,
-    F=(id,icn,lb,tip)=>`<label for="${id}"${tip?` data-tip="${esc(tip)}"`:""}>${ic(icn,17)}<span>${lb}</span></label>`;
+    F=(id,icn,lb,tip)=>`<label for="${id}" data-tip="${esc(tip||lb)}">${ic(icn,17)}<span>${lb}</span></label>`;
   return`<div class="el-tools">${T("studTool","pen","pen-tool","Перо","Свои кривые: клик — угол, протянуть — плавная точка")}${T("studTool","eyedrop","pipette","Пипетка","Взять цвет с холста")}${T("studTool","draw","brush","Рисовать","Кисть от руки")}${T("studTool","note","message-square-plus","Заметка","Булавка с комментарием для согласования — в файл не попадает")}</div>
   <div class="el-tools-l">Добавить из файла</div><div class="el-tools el-5">${F("stud-img-file","image-plus","Картинка")}${F("stud-vid-file","film","Видео")}${F("stud-imp-file","file-input","PDF / PSD","PDF — страницами, PSD — слоями")}${F("stud-svg-file","file-code-2","SVG","SVG станет редактируемыми кривыми")}${T("studVector","","spline","Вектор","Фото → SVG: логотип, текст или фото → настоящий вектор. Откроется отдельный редактор")}<input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>`}
-function studioElementsHtml(){if(studioElCat)return studioElCatHtml(studioElCat);
+function studioElementsHtml(){
   return`<h3>Элементы</h3>${studioElToolsHtml()}<input type="search" class="num el-q" data-s2elq placeholder="Найти: стрелка, скидка, торт, огонь, телефон…" value="${esc(studioElQ)}" aria-label="Поиск по всем элементам"><div class="el-res" data-elres>${studioElResHtml()}</div>`}
 function studioElResHtml(){const q=studioElQ.trim().toLowerCase(),br=((S.studio.brand&&S.studio.brand.colors)||[]).join(),d=studioDesign(),nComp=Object.keys(d.components||{}).length;
   const emoAll=STUDIO_EMOJI.flatMap(([g,L])=>L.map(x=>[x,g])),s3=e=>studio3dLibTile(e,br);setTimeout(studio3dPaintPresets,0);
@@ -11414,7 +11440,7 @@ function studioElResHtml(){const q=studioElQ.trim().toLowerCase(),br=((S.studio.
     dt.length&&studioElShelf("data",dt.length,`<div class="s2-tiles">${dt.map(studioElData).join("")}</div>`)].filter(Boolean);
   return out.length?out.join(""):`<p class="pp-hint">По запросу «${esc(studioElQ.trim())}» ничего не нашлось. Попробуйте другое слово — например, «стрелка», «подарок», «рамка».</p>`}
 function studioElCatHtml(k){const C=STUDIO_EL_CATS.find(c=>c[0]===k)||STUDIO_EL_CATS[0];
-  const head=`<div class="el-head"><button type="button" class="el-back" data-elcat="" aria-label="Все элементы" data-tip="Все элементы">${ic("arrow-left",16)}</button><h3>${esc(C[1])}</h3></div>`;
+  const head=studioL3Head(C[1],'data-elcat=""');
   const q=(attr,val,ph)=>`<input type="search" class="num" ${attr} placeholder="${ph}" value="${esc(val)}" style="width:100%;text-align:left;padding:0 10px">`;
   const body=k==="shapes"?`<div class="s2-tiles">${STUDIO_SHAPES.map(studioElShape).join("")}</div><p class="muted" style="font-size:12px;margin:0">Сложную форму можно нарисовать «Пером» или собрать из фигур (объединение, вычитание — в панели справа).</p>`
     :k==="gfx"?`${q("data-s2gfx",studioGfxQ,"Поиск: стрелка, бейдж, рамка…")}<div class="s2-gfx" data-s2gfxgrid>${studioGfxGridHtml()}</div>`
@@ -11428,20 +11454,26 @@ function studioElCatHtml(k){const C=STUDIO_EL_CATS.find(c=>c[0]===k)||STUDIO_EL_
   return head+`<div class="el-full">${body}</div>`}
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-elcat]");if(!b)return;e.preventDefault();const k=b.dataset.elcat,qv=b.dataset.elq;
   if(qv!=null){if(k==="gfx")studioGfxQ=qv;else if(k==="icons")studioIconQ=qv;else if(k==="emoji")studioEmojiQ=qv;else if(k==="s3"){studio3dLibQ=qv;studio3dLibCat=""}}
-  else if(k==="s3"&&!studioElCat){studio3dLibQ="";studio3dLibCat=""}
-  studioElCat=k;studioRefreshPanel();const p=document.getElementById("s2-panel");if(p)p.scrollTop=0});
+  else if(k==="s3"&&studioElCat!=="s3"){studio3dLibQ="";studio3dLibCat=""}
+  /* повторный клик по открытой полке — закрыть третий уровень */
+  studioElCat=k&&studioElCat===k&&qv==null?"":k;studioRefreshPanel();const l3=document.querySelector("#s2-panel .s2-l3");if(l3)l3.scrollTop=0});
 document.addEventListener("input",e=>{if(!(e.target.matches&&e.target.matches("[data-s2elq]")))return;studioElQ=e.target.value;const r=document.querySelector("[data-elres]");if(r)r.innerHTML=studioElResHtml()});
+/* Шаблоны: группы (команда, мои, темы) полками; «Все» — группа целиком в третьем уровне */
+let studioTplL3=null;
+function studioTplGroups(){const mine=studioUserTpls||[],pers=mine.filter(t=>!t.team_id),grp={};mine.filter(t=>t.team_id).forEach(t=>(grp[t.team_id]=grp[t.team_id]||[]).push(t));
+  const uT=t=>`<div class="th" data-act="studUseUserTpl" data-id="${t.id}" title="${esc(t.name)} · ${esc(t.category||"")}"><img src="${esc(t.thumb||"")}" alt=""><button type="button" class="x" data-act="studDelUserTpl" data-id="${t.id}" aria-label="Удалить шаблон">×</button></div>`;
+  const bT=i=>`<div class="th" data-act="studUseTplHere" data-i="${i}" title="${esc(STUDIO_TEMPLATES[i].name)}"><img data-s2tpl="${i}" alt=""></div>`,G=[];
+  Object.entries(grp).forEach(([id,L])=>G.push({key:"team:"+id,title:"Команда «"+((TEAM.list.find(t=>t.id===+id)||{}).name||"команда")+"»",icon:"users",items:L.map(uT)}));
+  if(pers.length)G.push({key:"Мои шаблоны",title:"Мои шаблоны",icon:"user",items:pers.map(uT)});
+  [...new Set(STUDIO_TEMPLATES.map(t=>STUDIO_TPL_CAT[t.key]||"Разное"))].forEach(c=>G.push({key:c,title:c,icon:"layout-template",items:STUDIO_TEMPLATES.map((t,i)=>[t,i]).filter(([t])=>(STUDIO_TPL_CAT[t.key]||"Разное")===c).map(([t,i])=>bT(i))}));
+  return G}
+function studioTplHubHtml(d){return`<h3>Шаблоны</h3><p class="muted" style="font-size:12px;margin:0">Откроется новым дизайном в формате «${esc(STUDIO_FMT[d.format].label)}». Свой дизайн — в шаблоны через «⋯ → Сохранить как шаблон».</p>
+  <div class="el-res">${studioTplGroups().map(g=>studioShelfHtml(`data-act="studTplCat" data-c="${esc(g.key)}"`,g.title,g.icon,g.items.length,`<div class="s2-grid2">${g.items.slice(0,2).join("")}</div>`,studioTplL3===g.key)).join("")}</div>`}
+function studioTplL3Html(key){const g=studioTplGroups().find(x=>x.key===key);if(!g)return"";return studioL3Head(g.title,'data-act="studTplCat" data-c=""')+`<div class="el-full"><div class="s2-grid2 el-tpl3">${g.items.join("")}</div></div>`}
 function studioPanelHtml(tab){
   const d=studioDesign();
   if(tab==="favs")return studioFavsHtml();
-  if(tab==="templates"){if(studioUserTpls===null)studioLoadUserTpls();
-    const mine=studioTplCat===""||studioTplCat==="Мои шаблоны"?(studioUserTpls||[]):[];
-    const built=studioTplCat==="Мои шаблоны"?[]:STUDIO_TEMPLATES.map((t,i)=>[t,i]).filter(([t])=>!studioTplCat||(STUDIO_TPL_CAT[t.key]||"Разное")===studioTplCat);
-    return`<h3>Шаблоны</h3>${studioTplCatsHtml()}<p class="muted" style="font-size:12px;margin:0">Откроется новым дизайном в формате «${esc(STUDIO_FMT[d.format].label)}». Свой дизайн — в шаблоны через «⋯ → Сохранить как шаблон».</p>
-    ${(()=>{const pers=mine.filter(t=>!t.team_id),grp={};mine.filter(t=>t.team_id).forEach(t=>(grp[t.team_id]=grp[t.team_id]||[]).push(t));
-      const blk=(title,mine)=>mine.length?`<div class="sect-t">${title}</div><div class="s2-grid2">${mine.map(t=>`<div class="th" data-act="studUseUserTpl" data-id="${t.id}" title="${esc(t.name)} · ${esc(t.category||"")}"><img src="${esc(t.thumb||"")}" alt=""><button type="button" class="x" data-act="studDelUserTpl" data-id="${t.id}" aria-label="Удалить шаблон">×</button></div>`).join("")}</div>`:"";
-      return Object.entries(grp).map(([id,L])=>blk("Шаблоны команды «"+esc((TEAM.list.find(t=>t.id===+id)||{}).name||"команда")+"»",L)).join("")+blk("Мои шаблоны",pers)})()}
-    ${built.length?`${mine.length?'<div class="sect-t">Готовые</div>':""}<div class="s2-grid2">${built.map(([t,i])=>`<div class="th" data-act="studUseTplHere" data-i="${i}" title="${esc(t.name)}"><img data-s2tpl="${i}" alt=""></div>`).join("")}</div>`:""}`}
+  if(tab==="templates"){if(studioUserTpls===null)studioLoadUserTpls();return studioTplHubHtml(d)}
   if(tab==="elements")return studioElementsHtml();
   if(tab==="text")return`<h3>Текст</h3><div class="s2-tpres">${STUDIO_TEXT_PRESETS.map(p=>`<button type="button" data-act="studAddTextPreset" data-k="${p.k}"><span style="${p.style}">${esc(p.label)}</span></button>`).join("")}</div>
     <div class="sect-t">Свои шрифты</div>
@@ -12072,7 +12104,7 @@ editor(){
   actions:`${start?"":`<button type="button" class="tb-zoom" data-act="studZoomMenu" data-tip="Масштаб и вид: зоны, линейки, сетка">${ic("zoom-in",14)}<span>${Math.round(studioZoom*100)}%</span>${ic("chevron-down",12)}</button><span class="tb-view">${[["studRulers","ruler","Линейки",S.studio.rulers!==false],["studGuidesPanel","crosshair","Направляющие: настройки и положение линий",!S.studio.guidesOff&&studioGuides(d).length>0],["studNotes","message-square",(d.notes||[]).length?"Заметки для согласования: показать/скрыть":"Заметки: добавьте булавку — Элементы → Заметка",!S.studio.notesOff&&(d.notes||[]).some(n=>!n.done)],["studZones","scan","Безопасные зоны (поля 5% и интерфейс сторис)",!!S.studio.zones],["studGrid","columns-3",S.studio.grid?"Сетка: "+S.studio.grid+" кол. (клик — сменить)":"Сетка колонок (клик — 2, 3, 4, 6, 12, выкл.)",!!S.studio.grid]].map(([a,i,t,on])=>`<button type="button" class="tb-vb${on?" on":""}" data-act="${a}" data-tip="${esc(t)}" aria-label="${esc(t)}" aria-pressed="${on}">${ic(i,16)}${a==="studGrid"&&S.studio.grid?`<b>${S.studio.grid}</b>`:""}</button>`).join("")}</span>`}<span id="stud-save" class="stud-save" title="${esc(studioSaveLabel())}">${esc(studioSaveLabel())}</span><nv-button variant="ghost" size="sm" icon="presentation" icon-only hint="Презентация (Ctrl+Alt+P)" data-act="studPresent"></nv-button><nv-button variant="ghost" size="sm" icon="undo-2" icon-only hint="Отменить (Ctrl+Z)" data-act="studUndo"></nv-button><nv-button variant="ghost" size="sm" icon="redo-2" icon-only hint="Повторить (Ctrl+Shift+Z)" data-act="studRedo"></nv-button>${studioReviewChip()}<nv-button variant="ghost" size="sm" icon="more-horizontal" icon-only hint="История версий, дублировать, горячие клавиши" data-act="studMore"></nv-button><nv-button variant="secondary" icon="download" icon-end="chevron-down" data-act="studDownload">Скачать</nv-button><nv-button icon="megaphone" hint="Картинки в проект «Рекламы» и запуск" data-act="studToAds">В рекламу</nv-button>`,
   body:`<div class="s2">
     <nav class="s2-rail">${STUDIO_TABS.map(([k,i,lb])=>`<button type="button" class="${tabNow===k?"on":""}" data-act="studTab" data-tab="${k}">${ic(i,20)}<span>${lb}</span></button>`).join("")}<button type="button" data-go="studio-library" style="margin-top:auto">${ic("images",18)}<span>Дизайны</span></button><button type="button" data-act="studShortcuts">${ic("keyboard",18)}<span>Клавиши</span></button></nav>
-    <aside class="s2-panel" id="s2-panel" ${tabNow?"":"hidden"}>${tabNow?`<button type="button" class="s2-panel-x" data-act="studTab" data-tab="${tabNow}" data-tip="Скрыть панель">${ic("chevrons-left",16)}</button>`+studioPanelHtml(tabNow):""}</aside>
+    ${(()=>{const R=tabNow?studioPanelBody(tabNow):{html:"",l3:false};return`<aside class="s2-panel${R.l3?" has-l3":""}" id="s2-panel" ${tabNow?"":"hidden"}>${R.html}</aside>`})()}
     <section class="s2-main">
       <input type="file" id="stud-bg-file" accept="image/*" class="sr"><input type="file" id="stud-img-file" accept="image/*" class="sr"><input type="file" id="stud-img-replace" accept="image/*" class="sr"><input type="file" id="stud-vid-file" accept="video/mp4,video/webm,video/quicktime" class="sr"><input type="file" id="stud-aud-file" accept="audio/*" class="sr"><input type="file" id="stud-imp-file" accept=".pdf,.psd,application/pdf" class="sr">
       ${start?studioStartHtml():`<div class="stud-stage-wrap"><div class="stud-rbox${S.studio.rulers!==false?" on":""}">${S.studio.rulers!==false?'<canvas class="stud-ruler h" aria-hidden="true"></canvas><canvas class="stud-ruler v" aria-hidden="true"></canvas><span class="stud-ruler-c" aria-hidden="true">px</span>':""}<div id="stud-stage-host">${studioStageHtml()}</div></div>${studioTool==="draw"?studioDrawBarHtml():""}${studioTool==="pen"?'<p class="muted" style="font-size:11.5px">Перо: клик — точка, клик+тяни — плавная, клик по первой — замкнуть, Enter — закончить, Esc — отмена.</p>':""}</div>${S.studio.timeline?studioTimelineHtml():""}${studioPagesHtml()}`}
@@ -14618,7 +14650,7 @@ Object.assign(N.acts,{
   studRemoveBg:studioRemoveBg,
   studApplyFont(a,d,e){if(e&&e.target.closest("[data-act='studDelFont']"))return;const l=studioSelected();if(!l||l.type!=="text"){toast("Выберите текст на холсте",{tone:"warning"});return}studioBeforeChange();l.font=d.f;studioPatchLayerDom(l);studioRenderSidebar(document);NEON.save()},
   async studDelFont(a,d,e){if(e)e.stopPropagation();try{await apiDelete("/api/v1/studio/fonts/"+d.id);await studioLoadCustomFonts(true)}catch(err){toast(err.message,{tone:"danger"})}},
-  studTplCat(a,d){studioTplCat=d.c||"";studioRefreshPanel();setTimeout(()=>studioPaintTplThumbs(document),0)},
+  studTplCat(a,d){const c=d.c||"";studioTplL3=!c||studioTplL3===c?null:c;studioRefreshPanel();setTimeout(()=>studioPaintTplThumbs(document),0)},
   async studUseUserTpl(a,d,e){if(e&&e.target.closest(".x"))return;try{const r=await api("/api/v1/studio/designs/"+d.id);const x=Object.assign(studioNewDesign(),r.data||{});x.id=null;x.name=r.name;x.format=STUDIO_FMT[r.format]?r.format:"square";
     if(Array.isArray(x.pages)&&x.pages.length){x.page=0;x.bg=x.pages[0].bg;x.layers=x.pages[0].layers}
     (x.pages||[{layers:x.layers}]).forEach(p=>p.layers.forEach(l=>l.id=studioUid()));
