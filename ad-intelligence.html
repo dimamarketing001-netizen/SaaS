@@ -1812,6 +1812,9 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 .vec-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}.vec-prev{width:100%;max-height:340px;border:1px solid var(--line);border-radius:10px;background:repeating-conic-gradient(#e5e7eb 0 25%,#fff 0 50%) 0 0/16px 16px;overflow:hidden}
 @media (max-width:640px){.vec-wrap{grid-template-columns:1fr}}
 .stl-rt{display:block;width:100%}
+.tr-wrap{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}.tr-box{position:relative;width:100%;max-height:440px;border:1px solid var(--line);border-radius:10px;background:repeating-conic-gradient(#e5e7eb 0 25%,#fff 0 50%) 0 0/16px 16px;overflow:hidden}
+.tr-tabs{display:flex;gap:4px;margin-top:6px}.tr-tabs button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer;color:var(--ink-2)}.tr-tabs button.on{border-color:var(--svc-ink);color:var(--svc-ink)}
+@media (max-width:760px){.tr-wrap{grid-template-columns:1fr}}
 .stud-peers{position:absolute;inset:0;pointer-events:none;z-index:40}.pe-sel{position:absolute;outline:2px dashed var(--pc);outline-offset:2px;border-radius:2px}.pe-cur{position:absolute;transition:left .25s linear,top .25s linear}.pe-cur span{position:absolute;left:14px;top:14px;background:var(--pc);color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;white-space:nowrap}
 #stud-stage-host:has(>.stud-collab){position:relative}
 .stud-collab{position:absolute;right:10px;top:10px;z-index:6;display:flex;align-items:center;gap:4px;padding:3px 8px 3px 6px;border-radius:999px;background:var(--surface);border:1px solid var(--line-2);font-size:11.5px;color:var(--ink-2);box-shadow:0 2px 8px rgba(0,0,0,.08)}.stud-collab i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--pc);color:#fff;font-size:10px;font-weight:700;margin-left:-2px;border:2px solid var(--surface)}
@@ -8805,6 +8808,7 @@ function studioLayoutSecHtml(g,ls){const d=studioDesign(),L=(d.groupLayout||{})[
       ${bg?`<div class="pp-row"><span class="pp-l">Поля</span><div class="rng"><input type="range" min="0" max="120" step="1" value="${+L.pad||0}" style="--rng-p:${rngPct(+L.pad||0,0,120)}" data-glay="pad"><output>${+L.pad||0}</output></div></div>`:""}
       <p class="pp-hint">Порядок — по положению: перетащите элемент дальше соседа, и они поменяются местами. Текстам включите «Ширина по тексту» — фон будет расти вместе с ними.</p>`:`<p class="pp-hint">Элементы встанут в ряд или столбиком с ровными отступами, а фон-плашка обтянет их — удобно для кнопок, цен, списков с иконками.</p>`}`,on?(L.dir==="col"?"столбик":"ряд"):"")}
 function studioLayoutApply(){const d=studioDesign();studioAutoRun(d).forEach(id=>{const l=d.layers.find(x=>x.id===id);if(l)studioPatchLayerDom(l)});studioPaintGroupBox();NEON.save()}
+document.addEventListener("change",e=>{if(e.target&&e.target.id==="s2-trace-file"){const f=e.target.files[0];e.target.value="";studioTraceFromFile(f)}});
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-glact]");if(!b)return;const g=studioSelGroup();if(!g)return;const d=studioDesign(),GL=d.groupLayout=d.groupLayout||{},L=GL[g]=GL[g]||{};const[k,v]=b.dataset.glact.split(":");studioBeforeChange();
   if(k==="dir"){if(v==="none"){delete GL[g];d.layers.forEach(l=>{if(l.group===g)delete l.lyBg})}else{const was=L.dir;L.dir=v;if(L.align==null)L.align="center";
     if(!was){const F=studioFmtOf(d),kids=d.layers.filter(l=>l.group===g&&!l.hidden),cand=kids.filter(l=>["shape","image","path"].includes(l.type)).sort((a,b)=>b.w*b.h-a.w*a.h)[0];
@@ -10971,26 +10975,125 @@ function studioVecToPts(P,W,H,smooth){const loc=P.map(p=>({x:p.x/W*100,y:p.y/H*1
     const tx=(b.x-a.x)/6,ty=(b.y-a.y)/6,ka=Math.min(1,Math.hypot(ux,uy)/(Math.hypot(b.x-a.x,b.y-a.y)/2||1)),kb=Math.min(1,Math.hypot(vx,vy)/(Math.hypot(b.x-a.x,b.y-a.y)/2||1));return{x:p.x,y:p.y,type:"smooth",in:{dx:-tx*ka,dy:-ty*ka},out:{dx:tx*kb,dy:ty*kb}}})}
 function studioVecSvg(res,W,H,smooth){const seg=P=>{const L=studioVecToPts(P,W,H,smooth);let d=`M${L[0].x.toFixed(2)} ${L[0].y.toFixed(2)}`;for(let i=1;i<=L.length;i++){const a=L[i-1],b=L[i%L.length];const ao=a.out||{dx:0,dy:0},bi=b.in||{dx:0,dy:0};d+=smooth?`C${(a.x+ao.dx).toFixed(2)} ${(a.y+ao.dy).toFixed(2)} ${(b.x+bi.dx).toFixed(2)} ${(b.y+bi.dy).toFixed(2)} ${b.x.toFixed(2)} ${b.y.toFixed(2)}`:`L${b.x.toFixed(2)} ${b.y.toFixed(2)}`}return d+"Z"};
   return`<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:100%">${res.slice().reverse().map(r=>`<path d="${r.loops.map(seg).join("")}" fill="${r.color}" fill-rule="evenodd"/>`).join("")}</svg>`}
+/* ---------- v11 (26.11.2026): фото → настоящий SVG (свой трассировщик, без ИИ и сторонних библиотек) ----------
+   1) сглаживание шума (для фото), 2) k-means++ по цветам в Lab, 3) мелкие пятна растворяются в соседях,
+   4) «стопка» слоёв как у VTracer: слой i = все пиксели кластеров ранга ≥ i (крупные сзади) — между цветами нет щелей,
+   5) обход границ по рёбрам пикселей, снятие «лесенки» (середины рёбер + сглаживание 1-2-1),
+   6) углы по углу излома, 7) кривые Безье по алгоритму Шнайдера (Graphics Gems: МНК + Ньютон, деление по макс. ошибке). */
+const STUDIO_TRACE_PRESETS={logo:{label:"Логотип / иконка",colors:6,size:1000,blur:0,speckle:16,err:0.9,corner:115,smooth:2},art:{label:"Иллюстрация",colors:16,size:1000,blur:1,speckle:20,err:1.6,corner:110,smooth:1,order:"lum"},photo:{label:"Фото",colors:32,size:900,blur:2,speckle:40,err:2.2,corner:95,smooth:2,order:"lum"},poster:{label:"Постер (мало цветов)",colors:8,size:900,blur:1,speckle:30,err:1.8,corner:105,smooth:2,order:"lum"}};
+const studioTrYield=()=>new Promise(r=>setTimeout(r,0));
+function studioLab(r,g,b){const f=c=>{c/=255;return c<=0.04045?c/12.92:((c+0.055)/1.055)**2.4},R=f(r),G=f(g),B=f(b),X=(R*0.4124+G*0.3576+B*0.1805)/0.95047,Y=R*0.2126+G*0.7152+B*0.0722,Z=(R*0.0193+G*0.1192+B*0.9505)/1.08883,q=t=>t>0.008856?Math.cbrt(t):7.787*t+16/116;const fx=q(X),fy=q(Y),fz=q(Z);return[116*fy-16,500*(fx-fy),200*(fy-fz)]}
+function studioTrBlur(px,W,H,rad){if(!rad)return px;const out=new Uint8ClampedArray(px.length),tmp=new Float32Array(px.length),k=[];for(let i=-rad;i<=rad;i++)k.push(Math.exp(-(i*i)/(2*(rad*0.75+0.25)**2)));const ks=k.reduce((a,b)=>a+b,0);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)for(let c=0;c<4;c++){let v=0;for(let i=-rad;i<=rad;i++){const xx=Math.min(W-1,Math.max(0,x+i));v+=px[(y*W+xx)*4+c]*k[i+rad]}tmp[(y*W+x)*4+c]=v/ks}
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)for(let c=0;c<4;c++){let v=0;for(let i=-rad;i<=rad;i++){const yy=Math.min(H-1,Math.max(0,y+i));v+=tmp[(yy*W+x)*4+c]*k[i+rad]}out[(y*W+x)*4+c]=v/ks}return out}
+function studioTrKmeans(px,W,H,K){const n=W*H,lab=new Float32Array(n*3),ok=new Uint8Array(n);let m=0;for(let i=0;i<n;i++){if(px[i*4+3]<128)continue;ok[i]=1;m++;const L=studioLab(px[i*4],px[i*4+1],px[i*4+2]);lab[i*3]=L[0];lab[i*3+1]=L[1];lab[i*3+2]=L[2]}
+  if(!m)return null;const idx=[];for(let i=0;i<n;i++)if(ok[i])idx.push(i);const step=Math.max(1,Math.floor(idx.length/40000)),S=idx.filter((_,j)=>j%step===0);
+  /* k-means++ */let seed=12345;const rnd=()=>(seed=(seed*1103515245+12345)&0x7fffffff)/0x7fffffff;const C=[];const d2=new Float32Array(S.length).fill(1e9);let pick=S[Math.floor(rnd()*S.length)];
+  for(let k=0;k<Math.min(K,S.length);k++){C.push([lab[pick*3],lab[pick*3+1],lab[pick*3+2]]);let sum=0;for(let j=0;j<S.length;j++){const i=S[j],c=C[C.length-1],d=(lab[i*3]-c[0])**2+(lab[i*3+1]-c[1])**2+(lab[i*3+2]-c[2])**2;if(d<d2[j])d2[j]=d;sum+=d2[j]}
+    if(sum<=0)break;let r=rnd()*sum;for(let j=0;j<S.length;j++){r-=d2[j];if(r<=0){pick=S[j];break}}}
+  const near=i=>{let b=0,bd=1e18;for(let k=0;k<C.length;k++){const c=C[k],d=(lab[i*3]-c[0])**2+(lab[i*3+1]-c[1])**2+(lab[i*3+2]-c[2])**2;if(d<bd){bd=d;b=k}}return b};
+  for(let it=0;it<12;it++){const acc=C.map(()=>[0,0,0,0]);let mv=0;for(const i of S){const b=near(i),a=acc[b];a[0]+=lab[i*3];a[1]+=lab[i*3+1];a[2]+=lab[i*3+2];a[3]++}
+    C.forEach((c,k)=>{const a=acc[k];if(a[3]){const nc=[a[0]/a[3],a[1]/a[3],a[2]/a[3]];mv+=Math.abs(nc[0]-c[0])+Math.abs(nc[1]-c[1])+Math.abs(nc[2]-c[2]);C[k]=nc}});if(mv<0.5)break}
+  /* мелкие кластеры (ореолы сглаживания, шум) — не отдельный цвет: пиксели уходят к ближайшему крупному */
+  {const cnt=new Array(C.length).fill(0);for(const i of S)cnt[near(i)]++;const big=cnt.map(c=>c>=S.length*(studioTrKmeans.minShare||0.004));if(big.some(Boolean)&&big.some(b=>!b)){for(let k=C.length-1;k>=0;k--)if(!big[k])C.splice(k,1)}}
+  const lb=new Int16Array(n).fill(-1),rgb=C.map(()=>[0,0,0,0]);for(let i=0;i<n;i++){if(!ok[i])continue;const b=near(i);lb[i]=b;const r=rgb[b];r[0]+=px[i*4];r[1]+=px[i*4+1];r[2]+=px[i*4+2];r[3]++}
+  return{lb,K:C.length,col:rgb.map(r=>r[3]?studioHexN(r[0]/r[3],r[1]/r[3],r[2]/r[3]):"#000000")}}
+/* пятна меньше minA пикселей — в самый частый соседний кластер */
+function studioTrDespeckle(lb,W,H,minA){if(minA<2)return;const n=W*H,seen=new Uint8Array(n),q=new Int32Array(n);
+  for(let s0=0;s0<n;s0++){if(seen[s0]||lb[s0]<0)continue;const c=lb[s0];let h=0,t=0;q[t++]=s0;seen[s0]=1;const nb={};
+    while(h<t){const i=q[h++],x=i%W,y=(i/W)|0;for(const j of [x>0?i-1:-1,x<W-1?i+1:-1,y>0?i-W:-1,y<H-1?i+W:-1]){if(j<0)continue;if(lb[j]===c){if(!seen[j]){seen[j]=1;q[t++]=j}}else if(lb[j]>=0)nb[lb[j]]=(nb[lb[j]]||0)+1}}
+    if(t<minA){let best=-1,bc=0;for(const k in nb)if(nb[k]>bc){bc=nb[k];best=+k}if(best>=0)for(let k=0;k<t;k++)lb[q[k]]=best}}}
+/* Шнайдер: подгонка кубических Безье к точкам */
+function studioFitCurve(P,err){const out=[];if(P.length<2)return out;const sub=(a,b)=>[a[0]-b[0],a[1]-b[1]],add=(a,b)=>[a[0]+b[0],a[1]+b[1]],mul=(a,k)=>[a[0]*k,a[1]*k],dot=(a,b)=>a[0]*b[0]+a[1]*b[1],len=a=>Math.hypot(a[0],a[1]),nrm=a=>{const l=len(a)||1;return[a[0]/l,a[1]/l]};
+  const bez=(B,t)=>{const m=1-t;return[m*m*m*B[0][0]+3*m*m*t*B[1][0]+3*m*t*t*B[2][0]+t*t*t*B[3][0],m*m*m*B[0][1]+3*m*m*t*B[1][1]+3*m*t*t*B[2][1]+t*t*t*B[3][1]]};
+  const gen=(f,l,u,t1,t2)=>{const A=[];for(let i=0;i<=l-f;i++){const t=u[i],m=1-t;A.push([mul(t1,3*m*m*t),mul(t2,3*m*t*t)])}let c00=0,c01=0,c11=0,x0=0,x1=0;
+    for(let i=0;i<=l-f;i++){c00+=dot(A[i][0],A[i][0]);c01+=dot(A[i][0],A[i][1]);c11+=dot(A[i][1],A[i][1]);const t=u[i],m=1-t,tmp=sub(P[f+i],add(mul(P[f],m*m*m+3*m*m*t),mul(P[l],3*m*t*t+t*t*t)));x0+=dot(A[i][0],tmp);x1+=dot(A[i][1],tmp)}
+    const det=c00*c11-c01*c01,seg=len(sub(P[l],P[f]));let a1=det?(x0*c11-x1*c01)/det:0,a2=det?(c00*x1-c01*x0)/det:0;if(!det||a1<seg*1e-6||a2<seg*1e-6){a1=a2=seg/3}
+    return[P[f],add(P[f],mul(t1,a1)),add(P[l],mul(t2,a2)),P[l]]};
+  const param=(f,l)=>{const u=[0];for(let i=f+1;i<=l;i++)u.push(u[u.length-1]+len(sub(P[i],P[i-1])));const T=u[u.length-1]||1;return u.map(x=>x/T)};
+  const maxE=(f,l,B,u)=>{let m=0,sp=(f+l)>>1;for(let i=f+1;i<l;i++){const d=sub(bez(B,u[i-f]),P[i]),e=dot(d,d);if(e>=m){m=e;sp=i}}return[m,sp]};
+  const newton=(B,p,u)=>{const d1=[0,1,2].map(i=>mul(sub(B[i+1],B[i]),3)),d2=[0,1].map(i=>mul(sub(d1[i+1],d1[i]),2)),q=sub(bez(B,u),p),m=1-u,q1=add(add(mul(d1[0],m*m),mul(d1[1],2*m*u)),mul(d1[2],u*u)),q2=add(mul(d2[0],m),mul(d2[1],u)),num=dot(q,q1),den=dot(q1,q1)+dot(q,q2);return den?u-num/den:u};
+  const fit=(f,l,t1,t2,depth)=>{if(l-f===1){const d=len(sub(P[l],P[f]))/3;out.push([P[f],add(P[f],mul(t1,d)),add(P[l],mul(t2,d)),P[l]]);return}
+    let u=param(f,l),B=gen(f,l,u,t1,t2),[e,sp]=maxE(f,l,B,u);if(e<err){out.push(B);return}
+    if(e<err*4){for(let k=0;k<6;k++){u=u.map((x,i)=>Math.min(1,Math.max(0,newton(B,P[f+i],x))));B=gen(f,l,u,t1,t2);[e,sp]=maxE(f,l,B,u);if(e<err){out.push(B);return}}}
+    if(depth>40||sp<=f||sp>=l){out.push(B);return}const tc=nrm(sub(P[sp-1],P[sp+1]));fit(f,sp,t1,tc,depth+1);fit(sp,l,mul(tc,-1),t2,depth+1)};
+  const n=P.length-1,t1=nrm(sub(P[Math.min(n,2)],P[0])),t2=nrm(sub(P[Math.max(0,n-2)],P[n]));fit(0,n,t1,t2,0);return out}
+/* замкнутая граница (углы пикселей) → набор кубических сегментов */
+function studioTrLoop(L,o){let P=[];for(let i=0;i<L.length;i++){const a=L[i],b=L[(i+1)%L.length];P.push([(a[0]+b[0])/2,(a[1]+b[1])/2])}
+  const n=P.length;if(n<4)return null;const sm=Q=>Q.map((p,i)=>{const a=Q[(i-1+Q.length)%Q.length],b=Q[(i+1)%Q.length];return[(a[0]+2*p[0]+b[0])/4,(a[1]+2*p[1]+b[1])/4]});
+  const P1=sm(P),angAt=(Q,i,K)=>{const a=Q[(i-K+n)%n],p=Q[i],b=Q[(i+K)%n],u=[a[0]-p[0],a[1]-p[1]],v=[b[0]-p[0],b[1]-p[1]];return Math.acos(Math.max(-1,Math.min(1,(u[0]*v[0]+u[1]*v[1])/((Math.hypot(u[0],u[1])*Math.hypot(v[0],v[1]))||1))))*180/Math.PI};
+  /* угол — острый и на малом окне, и на вдвое большем (иначе это «ступенька» или шум) */
+  const K=Math.max(2,Math.min(4,Math.round(n/16))),ang=new Float32Array(n);for(let i=0;i<n;i++)ang[i]=Math.max(angAt(P1,i,K),angAt(P1,i,Math.min(2*K,(n>>2)||1))-12);
+  const C=[];for(let i=0;i<n;i++){if(ang[i]>o.corner)continue;let mn=true;for(let d=1;d<=K;d++)if(ang[(i+d)%n]<ang[i]||ang[(i-d+n)%n]<ang[i]){mn=false;break}if(mn&&(!C.length||i-C[C.length-1]>K))C.push(i)}
+  if(C.length>1&&n-C[C.length-1]+C[0]<=K)C.pop();
+  /* сглаживание без сдвига углов: несколько проходов 1-2-1 по внутренним точкам каждого участка */
+  const fixed=new Uint8Array(n);C.forEach(i=>fixed[i]=1);let Q=P;for(let s2=0;s2<o.smooth+2;s2++)Q=Q.map((p,i)=>{if(fixed[i])return P[i];const a=Q[(i-1+n)%n],b=Q[(i+1)%n];return[(a[0]+2*p[0]+b[0])/4,(a[1]+2*p[1]+b[1])/4]});
+  const segs=[],run=(i0,i1)=>{const pts=[];for(let i=i0;;i=(i+1)%n){pts.push(Q[i]);if(i===i1&&pts.length>1)break}return pts},e2=o.err*o.err;
+  if(!C.length)segs.push(...studioFitCurve(Q.concat([Q[0]]),e2));
+  else for(let k=0;k<C.length;k++){const a=C[k],b=C[(k+1)%C.length],pts=b===a?run(a,(a-1+n)%n).concat([Q[a]]):run(a,b);segs.push(...studioFitCurve(pts,e2))}
+  return segs.length?segs:null}
+async function studioTraceImage(px0,W,H,o,prog){const px=studioTrBlur(px0,W,H,o.blur);studioTrKmeans.minShare=o.minShare!=null?o.minShare:(o.colors<=10?0.012:0.003);prog&&prog("Цвета…");await studioTrYield();
+  const Q=studioTrKmeans(px,W,H,o.colors);if(!Q)return{W,H,layers:[]};studioTrDespeckle(Q.lb,W,H,o.speckle);await studioTrYield();
+  const area=new Array(Q.K).fill(0);for(let i=0;i<W*H;i++)if(Q.lb[i]>=0)area[Q.lb[i]]++;/* порядок стопки: логотип — по площади (крупное сзади); фото/иллюстрация — по яркости (тёмное сзади): под краем
+     каждой фигуры лежит соседний по тону цвет, и на сглаженных краях не проступают «чужие» швы */
+  const Lum=Q.col.map(h=>studioLab(...studioHexRgb(h))[0]),order=[...Array(Q.K).keys()].filter(k=>area[k]>0).sort(o.order==="lum"?(a,b)=>Lum[a]-Lum[b]:(a,b)=>area[b]-area[a]),rank=new Int16Array(Q.K).fill(-1);order.forEach((k,r)=>rank[k]=r);
+  let bgDrop=-1;if(o.dropBg){const cnt={};for(let x=0;x<W;x++)for(const y of [0,H-1]){const v=Q.lb[y*W+x];if(v>=0)cnt[v]=(cnt[v]||0)+1}for(let y=0;y<H;y++)for(const x of [0,W-1]){const v=Q.lb[y*W+x];if(v>=0)cnt[v]=(cnt[v]||0)+1}let m=0;for(const k in cnt)if(cnt[k]>m){m=cnt[k];bgDrop=+k}if(m<(W+H)*1.2)bgDrop=-1}
+  const layers=[],mask=new Uint8Array(W*H);
+  for(let r=0;r<order.length;r++){const k=order[r];if(k===bgDrop)continue;let any=0;for(let i=0;i<W*H;i++){const v=Q.lb[i];mask[i]=v>=0&&v!==bgDrop&&rank[v]>=r?1:0;any|=mask[i]}if(!any)continue;
+    const loops=studioVecTrace(mask,W,H).filter(L=>studioVecArea(L)>=Math.max(4,o.speckle/2)),paths=[];for(const L of loops){const sg=studioTrLoop(L,o);if(sg)paths.push(sg)}
+    if(paths.length)layers.push({color:Q.col[k],paths});prog&&prog(`Контуры: ${r+1} из ${order.length}`);await studioTrYield()}
+  return{W,H,layers}}
+const studioTrD=(segs,k=1)=>{const f=v=>(Math.round(v*k*100)/100);let d=`M${f(segs[0][0][0])} ${f(segs[0][0][1])}`;for(const B of segs)d+=`C${f(B[1][0])} ${f(B[1][1])} ${f(B[2][0])} ${f(B[2][1])} ${f(B[3][0])} ${f(B[3][1])}`;return d+"Z"};
+function studioTraceSvg(T,full){return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${T.W} ${T.H}"${full?` width="${T.W}" height="${T.H}"`:' preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%"'}>${T.layers.map(L=>`<path fill="${L.color}" fill-rule="evenodd" d="${L.paths.map(sg=>studioTrD(sg)).join("")}"/>`).join("")}</svg>`}
+/* в дизайн: каждый цвет — слой-кривая (точки в % рамки, ручки Безье), всё — группа «Вектор из фото» */
+function studioTraceToLayers(T,box){const g="g"+studioUid(),pt=(p,W,H)=>({x:p[0]/W*100,y:p[1]/H*100});
+  const toPts=segs=>segs.map((B,i)=>{const prev=segs[(i-1+segs.length)%segs.length],p=pt(B[0],T.W,T.H),o=pt(B[1],T.W,T.H),inn=pt(prev[2],T.W,T.H);return{x:p.x,y:p.y,type:"smooth",in:{dx:inn.x-p.x,dy:inn.y-p.y},out:{dx:o.x-p.x,dy:o.y-p.y}}});
+  return{g,layers:T.layers.map(L=>{const[first,...rest]=L.paths;return Object.assign(studioLayerDefaults("path"),{x:box.x,y:box.y,w:box.w,h:box.h,rotation:box.rotation||0,points:toPts(first),subs:rest.map(sg=>({points:toPts(sg),closed:true})),closed:true,fillRule:"evenodd",
+    fill:{...studioDefFill(L.color),type:"solid",color:L.color},stroke:{...studioDefStroke(false,L.color),enabled:false},name:"Цвет "+L.color,group:g})})}}
+async function studioTraceDlg(src,o0){/* src: {canvas} уже видимая часть картинки; o0: {layer} — заменить фото */
+  const cv=src.canvas,ar=cv.width/cv.height;let preset="logo",o={...STUDIO_TRACE_PRESETS.logo,dropBg:false},T=null,busy=false,again=false;
+  const transp=(()=>{const D=cv.getContext("2d").getImageData(0,0,cv.width,cv.height).data;let t=0;for(let i=3;i<D.length;i+=16)if(D[i]<128)t++;return t>D.length/16*0.05})();
+  /* похоже на фото (много разных цветов) — сразу пресет «Фото» */
+  {const D=cv.getContext("2d").getImageData(0,0,cv.width,cv.height).data,set=new Set();let m=0;for(let i=0;i<D.length;i+=4*5){if(D[i+3]<128)continue;m++;set.add((D[i]>>3)<<10|(D[i+1]>>3)<<5|(D[i+2]>>3))}
+    let nz=0,nc=0;for(let y=0;y<cv.height;y+=3)for(let x=0;x<cv.width-1;x+=2){const i=(y*cv.width+x)*4;if(D[i+3]<128||D[i+7]<128)continue;nz+=Math.abs(D[i]-D[i+4])+Math.abs(D[i+1]-D[i+5])+Math.abs(D[i+2]-D[i+6]);nc++}nz=nc?nz/nc:0;
+    if(m&&(set.size>Math.min(1500,m*0.08)||nz>9&&set.size>200)){preset="photo";o={...STUDIO_TRACE_PRESETS.photo,dropBg:false}}else o.dropBg=!transp}
+  const rng=(k,lb,mn,mx,st)=>`<div class="pp-row"><span class="pp-l">${lb}</span><div class="rng"><input type="range" min="${mn}" max="${mx}" step="${st}" value="${o[k]}" style="--rng-p:${rngPct(o[k],mn,mx)}" data-tr="${k}"><output>${o[k]}</output></div></div>`;
+  const ctl=()=>`<div class="pp-chips">${Object.entries(STUDIO_TRACE_PRESETS).map(([k,P])=>`<button type="button" class="${k===preset?"on":""}" data-trp="${k}">${esc(P.label)}</button>`).join("")}</div>
+    ${rng("colors","Цветов",2,64,1)}${rng("size","Детализация, px",300,1600,50)}${rng("err","Допуск кривых",0.5,5,0.1)}${rng("speckle","Убирать пятна до, px²",0,200,2)}${rng("corner","Острые углы до, °",60,160,5)}${rng("blur","Сглаживание шума",0,4,1)}
+    <label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-trbg ${o.dropBg?"checked":""}> Убрать фон (цвет по краям)</label>`;
+  const {root,close}=overlay("modal",{title:"Фото → SVG",subtitle:"Настоящий вектор: цвета → контуры → кривые Безье. Работает в браузере, без ИИ.",service:"studio",size:"lg",
+    body:`<div class="tr-wrap"><div class="tr-prev"><div class="tr-box" style="aspect-ratio:${ar}" data-trprev></div><div class="tr-tabs"><button type="button" class="on" data-trv="svg">SVG</button><button type="button" data-trv="src">Исходник</button><button type="button" data-trv="both">Наложение</button></div></div><div class="stack" style="gap:8px;min-width:0" data-trctl>${ctl()}</div></div><p class="pp-hint" data-trinfo>Считаю…</p>`,
+    actions:[{label:"Отмена"},{label:"Скачать SVG",icon:"download",fn:()=>{if(!T)return false;studioDownload(new Blob([studioTraceSvg(T,true)],{type:"image/svg+xml"}),"vector.svg");return false}},{label:o0&&o0.layer?"Заменить фото кривыми":"Вставить в дизайн",variant:"primary",icon:"spline",fn:()=>{if(!T||!T.layers.length){toast("Сначала дождитесь результата",{tone:"warning"});return false}studioTraceInsert(T,o0)}}]});
+  const prev=root.querySelector("[data-trprev]"),info=root.querySelector("[data-trinfo]");let view="svg";
+  const paint=()=>{if(!T)return;const svg=studioTraceSvg(T,false),img=`<img src="${cv.toDataURL("image/png")}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">`;
+    prev.innerHTML=view==="svg"?svg:view==="src"?img:img+`<div style="position:absolute;inset:0;opacity:.6">${svg}</div>`};
+  const run=async()=>{if(busy){again=true;return}busy=true;info.textContent="Считаю…";const t0=performance.now();
+    try{const sc=Math.min(1,o.size/Math.max(cv.width,cv.height)),w=Math.max(8,Math.round(cv.width*sc)),h=Math.max(8,Math.round(cv.height*sc)),k=document.createElement("canvas");k.width=w;k.height=h;const g=k.getContext("2d");g.imageSmoothingQuality="high";g.drawImage(cv,0,0,w,h);
+      T=await studioTraceImage(g.getImageData(0,0,w,h).data,w,h,o,m=>{info.textContent=m});paint();
+      const segs=T.layers.reduce((a,L)=>a+L.paths.reduce((b,p)=>b+p.length,0),0),kb=Math.round(studioTraceSvg(T,true).length/1024);
+      info.textContent=T.layers.length?`Цветов: ${T.layers.length}, кривых Безье: ${segs}, SVG ≈ ${kb} КБ, ${((performance.now()-t0)/1000).toFixed(1)} с. Больше цветов и детализации — точнее, но тяжелее.`:"Ничего не нашлось — выключите «Убрать фон» или добавьте цветов"}
+    catch(e){info.textContent="Не получилось: "+(e.message||e)}busy=false;if(again){again=false;run()}};
+  let tm=0;const soon=()=>{clearTimeout(tm);tm=setTimeout(run,250)};
+  root.addEventListener("input",e=>{const r=e.target.closest("[data-tr]");if(!r)return;o[r.dataset.tr]=+r.value;r.style.setProperty("--rng-p",rngPct(+r.value,r.min,r.max));r.closest(".rng").querySelector("output").textContent=r.value;soon()});
+  root.addEventListener("change",e=>{if(e.target.matches("[data-trbg]")){o.dropBg=e.target.checked;soon()}});
+  root.addEventListener("click",e=>{const p=e.target.closest("[data-trp]");if(p){preset=p.dataset.trp;o={...STUDIO_TRACE_PRESETS[preset],dropBg:o.dropBg};root.querySelector("[data-trctl]").innerHTML=ctl();soon()}
+    const v=e.target.closest("[data-trv]");if(v){view=v.dataset.trv;root.querySelectorAll("[data-trv]").forEach(x=>x.classList.toggle("on",x===v));paint()}});
+  run()}
+function studioTraceInsert(T,o0){const d=studioDesign(),F=studioFmtOf(d);studioBeforeChange();let box;
+  if(o0&&o0.layer){const l=o0.layer;box={x:l.x,y:l.y,w:l.w,h:l.h,rotation:l.rotation||0}}
+  else{const ar=T.W/T.H,fa=F.w/F.h;let w=70,h=w*fa/ar;if(h>70){h=70;w=h*ar/fa}box={x:(100-w)/2,y:(100-h)/2,w,h}}
+  const R=studioTraceToLayers(T,box);d.groupNames=d.groupNames||{};d.groupNames[R.g]="Вектор из фото";
+  if(o0&&o0.layer){const l=o0.layer,i=d.layers.indexOf(l);if(l.group)studioGP(d)[R.g]=l.group;l.hidden=true;d.layers.splice(i+1,0,...R.layers)}else d.layers.push(...R.layers);
+  studioNormGroups(d);studioMultiSel=R.layers.map(x=>x.id);d.selectedId=R.layers[R.layers.length-1].id;NEON.save();N.refresh();
+  toast(`Готово: ${R.layers.length} ${studioPlural(R.layers.length,["кривая","кривые","кривых"])} в группе «Вектор из фото»${o0&&o0.layer?" (фото скрыто — его можно вернуть в «Слоях»)":""}`,{tone:"success",timeout:6000})}
+async function studioTraceFromFile(f){if(!f||!/^image\//.test(f.type)){toast("Нужна картинка (PNG, JPG, WebP)",{tone:"warning"});return}
+  const url=URL.createObjectURL(f);try{const img=await studioLoadImg(url),sc=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(img.naturalWidth*sc));c.height=Math.max(1,Math.round(img.naturalHeight*sc));c.getContext("2d").drawImage(img,0,0,c.width,c.height);studioTraceDlg({canvas:c})}
+  catch(e){toast("Не удалось открыть картинку",{tone:"danger"})}finally{setTimeout(()=>URL.revokeObjectURL(url),5000)}}
 async function studioVectorizeDlg(){const l=studioSelected();if(!l||l.type!=="image"||!l.src){toast("Выберите картинку",{tone:"warning"});return}
-  const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,bw=l.w/100*F.w,bh=l.h/100*F.h,side=640,sc=side/Math.max(bw,bh);
+  const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,bw=l.w/100*F.w,bh=l.h/100*F.h,sc=Math.min(3,1600/Math.max(bw,bh));
   const full=await studioRenderCanvas({...d,bg:{type:"none"},layers:[{...l,rotation:0,flipH:false,flipV:false,anim:undefined,opacity:100}],pages:undefined},sc);
   const cv=document.createElement("canvas");cv.width=Math.max(4,Math.round(bw*sc));cv.height=Math.max(4,Math.round(bh*sc));cv.getContext("2d").drawImage(full,-Math.round(l.x/100*full.width),-Math.round(l.y/100*full.height));
-  const transp=(()=>{const D=cv.getContext("2d").getImageData(0,0,cv.width,cv.height).data;let t=0;for(let i=3;i<D.length;i+=16)if(D[i]<128)t++;return t>D.length/16*0.05})();
-  const o={colors:4,dropBg:!transp,smooth:true,eps:1.2,minArea:12};let res=[];
-  const {root}=overlay("modal",{title:"Картинка → вектор",subtitle:"Без ИИ: цвета, контуры, сглаживание. Лучше всего для логотипов, иконок, плоских рисунков.",service:"studio",size:"md",
-    body:`<div class="vec-wrap"><div class="vec-prev" style="aspect-ratio:${cv.width}/${cv.height}" data-vecprev></div><div class="stack" style="gap:8px;min-width:0">
-      <div class="pp-row"><span class="pp-l">Цветов</span><div class="rng"><input type="range" min="2" max="10" step="1" value="${o.colors}" style="--rng-p:${rngPct(o.colors,2,10)}" data-veck><output>${o.colors}</output></div></div>
-      <div class="pp-row"><span class="pp-l">Точность</span><div class="rng"><input type="range" min="0.4" max="3" step="0.1" value="${o.eps}" style="--rng-p:${rngPct(o.eps,0.4,3)}" data-veceps><output>${o.eps}</output></div></div>
-      <label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-vecsm checked> Плавные кривые</label>
-      <label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-vecbg ${o.dropBg?"checked":""}> Убрать фон (цвет по краям)</label>
-      <p class="pp-hint" data-vecinfo></p></div></div>`,
-    actions:[{label:"Отмена"},{label:"Заменить фото кривыми",variant:"primary",icon:"spline",fn:()=>studioVecApply(l,res,cv.width,cv.height,o.smooth)}]});
-  const prev=root.querySelector("[data-vecprev]"),info=root.querySelector("[data-vecinfo]");
-  const run=()=>{res=studioVectorize(cv,o);prev.innerHTML=studioVecSvg(res,cv.width,cv.height,o.smooth);const np=res.reduce((a,r)=>a+r.loops.reduce((b,L)=>b+L.length,0),0);info.textContent=res.length?`Кривых: ${res.length} (по цветам), точек: ${np}. Фото останется скрытым слоем — его можно вернуть.`:"Ничего не нашлось — уменьшите точность или выключите «Убрать фон»"};
-  let t=0;const soon=()=>{clearTimeout(t);t=setTimeout(run,60)};
-  root.addEventListener("input",e=>{const r=e.target;if(r.matches("[data-veck]"))o.colors=+r.value;else if(r.matches("[data-veceps]"))o.eps=+r.value;else return;r.style.setProperty("--rng-p",rngPct(+r.value,r.min,r.max));r.closest(".rng").querySelector("output").textContent=r.value;soon()});
-  root.addEventListener("change",e=>{if(e.target.matches("[data-vecsm]")){o.smooth=e.target.checked;soon()}if(e.target.matches("[data-vecbg]")){o.dropBg=e.target.checked;soon()}});
-  run()}
+  studioTraceDlg({canvas:cv},{layer:l})}
 function studioVecApply(l,res,W,H,smooth){if(!res.length){toast("Нет кривых",{tone:"warning"});return false}const d=studioDesign();studioBeforeChange();
   const g="g"+studioUid(),i=d.layers.indexOf(l),add=res.slice().reverse().map((r,k)=>{const[first,...rest]=r.loops;
     return Object.assign(studioLayerDefaults("path"),{x:l.x,y:l.y,w:l.w,h:l.h,rotation:l.rotation||0,points:studioVecToPts(first,W,H,smooth),subs:rest.map(P=>({points:studioVecToPts(P,W,H,smooth),closed:true})),closed:true,fillRule:"evenodd",
@@ -11090,6 +11193,7 @@ function studioPanelHtml(tab){
     <div class="sect-t">Сочетания шрифтов</div><div class="s2-tpres">${STUDIO_FONT_PAIRS.map(([a,b,lb],i)=>{studioEnsureFont(a);studioEnsureFont(b);return`<button type="button" data-act="studAddFontPair" data-i="${i}"><div style="font-family:'${a}';font-weight:800;font-size:17px">${esc(lb)}</div><div style="font-family:'${b}';font-size:12px;color:var(--ink-3)">${a} + ${b}</div></button>`}).join("")}</div>`;
   if(tab==="uploads"){if(studioUploads===null)studioLoadUploads();
     return`<h3>Загрузки</h3><label class="nv-btn v-primary s-sm" for="s2-up-file" style="justify-content:center">${ic("upload",14)}Загрузить картинки</label><input type="file" id="s2-up-file" accept="image/*" multiple class="sr">
+    <label class="nv-btn v-secondary s-sm" for="s2-trace-file" style="justify-content:center" data-tip="Логотип, иконка, рисунок или фото → настоящий SVG (кривые Безье по цветам)">${ic("spline",14)}Фото → SVG (вектор)</label><input type="file" id="s2-trace-file" accept="image/*" class="sr">
     <p class="muted" style="font-size:12px;margin:0">Хранятся на сервере и доступны в любом дизайне. Клик — на холст (или в выбранную рамку фото).</p>
     ${studioUploads===null?'<p class="muted">Загружаю…</p>':studioUploads.length?`<div class="s2-grid2">${studioUploads.map(u=>`<div class="th" data-act="studUseUpload" data-id="${u.id}" title="${esc(u.name)}"><img src="${esc(u.thumb)}" alt=""><button type="button" class="x" data-act="studDelUpload" data-id="${u.id}" aria-label="Удалить">×</button></div>`).join("")}</div>`:'<p class="muted" style="font-size:12.5px">Пока пусто.</p>'}`}
   if(tab==="photos"){const st=studioStock;
