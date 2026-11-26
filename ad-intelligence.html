@@ -1809,6 +1809,8 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 .h5-sizes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.h5-sizes button{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:64px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink-2);font:11px var(--font-mono,monospace);cursor:pointer;padding:4px}
 .h5-sizes button i{display:block;max-width:44px;max-height:36px;border:1.5px solid currentColor;border-radius:2px}.h5-sizes button.on{border-color:var(--svc-ink);color:var(--svc-ink);background:var(--svc-soft,transparent)}
 .h5-res{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;padding:8px 10px;border-radius:10px;border:1px solid var(--line)}.h5-res.ok{color:var(--ok,#15803d)}.h5-res.bad{color:var(--danger,#e11d48)}
+.vec-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}.vec-prev{width:100%;max-height:340px;border:1px solid var(--line);border-radius:10px;background:repeating-conic-gradient(#e5e7eb 0 25%,#fff 0 50%) 0 0/16px 16px;overflow:hidden}
+@media (max-width:640px){.vec-wrap{grid-template-columns:1fr}}
 .s2-favable{position:relative}.s2-fav{position:absolute;left:2px;top:2px;width:18px;height:18px;display:grid;place-items:center;border-radius:5px;font-size:13px;line-height:1;color:#f59e0b;background:color-mix(in srgb,var(--surface) 88%,transparent);opacity:0;transition:opacity .12s;cursor:pointer;z-index:2;font-style:normal;text-indent:0}
 .s2-favable:hover>.s2-fav,.s2-fav.on{opacity:1}.s2-fav:hover{transform:scale(1.15)}
 .s2-fav-empty{text-align:center;color:var(--ink-3);padding:24px 8px;font-size:12.5px;line-height:1.45}.s2-fav-empty p{margin:8px 0 0}
@@ -8825,7 +8827,7 @@ function studioPropsHtml0(){
     return studioPropsHeadHtml("image",l.src?"Фото":"Место под фото",grp&&"в группе «"+grp+"»")
     +ppSec("img","Изображение",`${l.src?"":'<p class="pp-hint"><b>Рамка-заглушка.</b> Загрузите фото — оно займёт рамку.</p>'}
       <div class="pp-ibs wide"><label class="pp-btn${l.src?"":" pri"}" for="stud-img-replace">${ic("upload",14)}${l.src?"Заменить":"Загрузить фото"}</label><button type="button" class="pp-btn" data-act-imgurl>${ic("link",14)}По ссылке</button></div>
-      ${l.src?`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studRemoveBg">${ic("scissors",14)}Удалить фон</button><button type="button" class="pp-btn${st?" on":""}" data-act-sticker="${st?"":"1"}">${ic("sticker",14)}Стикер</button></div>
+      ${l.src?`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studRemoveBg">${ic("scissors",14)}Удалить фон</button><button type="button" class="pp-btn" data-act="studVectorize" data-tip="Логотип, иконка, рисунок → кривые по цветам">${ic("spline",14)}В вектор</button><button type="button" class="pp-btn${st?" on":""}" data-act-sticker="${st?"":"1"}">${ic("sticker",14)}Стикер</button></div>
       ${st?ppColor("Цвет обводки","sticker.color",l.sticker.color||"#ffffff")+ppRng("Толщина","sticker.width",l.sticker.width||5,1,16,1):""}`:""}
       ${l.src?`<label class="pp-l" style="display:block;margin:8px 0 4px" for="stud-alt-${l.id}">Альтернативный текст</label><input type="text" id="stud-alt-${l.id}" class="num pp-alt" data-prop="alt" value="${esc(l.alt||"")}" maxlength="250" placeholder="Что на фото: «юрист консультирует клиента»" style="width:100%;text-align:left;padding:0 10px"><p class="pp-hint" style="margin-top:4px">Для незрячих (экранные дикторы), SVG и HTML5-баннеров.</p>`:""}`)
     +ppSec("crop","Кадрирование",`${l.src?ppCap("Пропорции рамки")+ppSeg([["Фото","orig"],["1:1","1"],["4:5","0.8"],["16:9","1.7778"],["3:4","0.75"]].map(([lb,v])=>[lb,`data-act-ratio="${v}"`,false,lb==="Фото"?"Как у исходного фото":"Пропорции "+lb])):""}
@@ -10690,6 +10692,69 @@ function studioPalImportDlg(){let cur=[];
     actions:[{label:"Отмена"},{label:"Добавить к бренду",fn:()=>studioPalApply(cur,false)},{label:"Заменить цвета бренда",variant:"primary",fn:()=>studioPalApply(cur,true)}]})}
 function studioPalApply(L,replace){if(!L.length){toast("Нет цветов для импорта",{tone:"warning"});return false}const b=S.studio.brand=S.studio.brand||{colors:[]};
   b.colors=[...new Set([...(replace?[]:(b.colors||[])),...L])].slice(0,10);NEON.save();N.refresh();toast(`В бренд-ките цветов: ${b.colors.length}`,{tone:"success"})}
+/* ---------- v10 (26.11.2026): векторизация картинки без ИИ (как Vectorizer у Kittl) ----------
+   Видимая часть фото (с маской/фильтрами, без поворота) → k-means по цветам → для каждого цвета границы
+   пикселей собираются в контуры (обход по рёбрам, внутренняя область справа) → упрощение RDP → по желанию
+   сглаживание (касательные Catmull-Rom). Каждый цвет — кривая с evenodd (дырки), всё — группа на месте фото. */
+function studioVecQuant(px,n,k){const pts=[];for(let i=0;i<n;i++)if(px[i*4+3]>128)pts.push(i);if(!pts.length)return null;
+  let C=[];const step=Math.max(1,Math.floor(pts.length/k));for(let j=0;j<k;j++){const i=pts[Math.min(pts.length-1,j*step+(step>>1))];C.push([px[i*4],px[i*4+1],px[i*4+2]])}
+  const lab=new Int16Array(n).fill(-1);
+  for(let it=0;it<10;it++){const S=C.map(()=>[0,0,0,0]);for(const i of pts){let b=0,bd=1e12;for(let j=0;j<C.length;j++){const c=C[j],dr=px[i*4]-c[0],dg=px[i*4+1]-c[1],db=px[i*4+2]-c[2],dd=dr*dr*0.3+dg*dg*0.59+db*db*0.11;if(dd<bd){bd=dd;b=j}}lab[i]=b;const s=S[b];s[0]+=px[i*4];s[1]+=px[i*4+1];s[2]+=px[i*4+2];s[3]++}
+    C=C.map((c,j)=>S[j][3]?[S[j][0]/S[j][3],S[j][1]/S[j][3],S[j][2]/S[j][3]]:c)}
+  /* мелкие кластеры (сглаживание краёв, шум) — в ближайший крупный; затем 3×3 «большинство» по меткам */
+  const cnt=new Array(C.length).fill(0);for(const i of pts)cnt[lab[i]]++;const big=C.map((_,j)=>cnt[j]>=pts.length*0.015);
+  if(big.some(Boolean))for(const i of pts)if(!big[lab[i]]){const c0=C[lab[i]];let b=-1,bd=1e12;C.forEach((c,j)=>{if(!big[j])return;const dd=(c[0]-c0[0])**2+(c[1]-c0[1])**2+(c[2]-c0[2])**2;if(dd<bd){bd=dd;b=j}});lab[i]=b}
+  const W=studioVecQuant.W;if(W){const H=n/W,L2=lab.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=y*W+x;if(L2[i]<0)continue;const h={};let bm=L2[i],bc=0;
+    for(let yy=-1;yy<=1;yy++)for(let xx=-1;xx<=1;xx++){const v=L2[i+yy*W+xx];if(v<0)continue;h[v]=(h[v]||0)+1;if(h[v]>bc){bc=h[v];bm=v}}if(bc>=5)lab[i]=bm}}
+  return{C,lab}}
+function studioVecTrace(mask,W,H){const out=new Map(),key=(x,y)=>y*(W+1)+x,add=(x0,y0,x1,y1)=>{const k=key(x0,y0);let a=out.get(k);if(!a)out.set(k,a=[]);a.push([x1,y1])};
+  const at=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&mask[y*W+x];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!mask[y*W+x])continue;if(!at(x,y-1))add(x,y,x+1,y);if(!at(x+1,y))add(x+1,y,x+1,y+1);if(!at(x,y+1))add(x+1,y+1,x,y+1);if(!at(x-1,y))add(x,y+1,x,y)}
+  const loops=[];for(const[k0,arr]of out){while(arr.length){const[x1,y1]=arr.pop();let px=k0%(W+1),py=Math.floor(k0/(W+1)),cx=x1,cy=y1;const L=[[px,py]];let dx=cx-px,dy=cy-py,g=0;
+    while(g++<1e6){L.push([cx,cy]);const A=out.get(key(cx,cy));if(!A||!A.length)break;let pick=0;
+      if(A.length>1){/* в «седле» поворачиваем направо — соседние по диагонали области не склеиваются */const rx=-dy,ry=dx;pick=A.findIndex(([nx,ny])=>nx-cx===rx&&ny-cy===ry);if(pick<0)pick=0}
+      const[nx,ny]=A.splice(pick,1)[0];dx=nx-cx;dy=ny-cy;cx=nx;cy=ny;if(cx===L[0][0]&&cy===L[0][1])break}
+    if(L.length>=4)loops.push(L)}}return loops}
+function studioVecArea(L){let a=0;for(let i=0;i<L.length;i++){const p=L[i],q=L[(i+1)%L.length];a+=p[0]*q[1]-q[0]*p[1]}return Math.abs(a)/2}
+function studioVectorize(cv,o){const W=cv.width,H=cv.height,px=cv.getContext("2d").getImageData(0,0,W,H).data,n=W*H;studioVecQuant.W=W;const Q=studioVecQuant(px,n,o.colors);if(!Q)return[];
+  let drop=-1;if(o.dropBg){const cnt=new Array(Q.C.length).fill(0);for(let x=0;x<W;x++){cnt[Q.lab[x]]++;cnt[Q.lab[(H-1)*W+x]]++}for(let y=0;y<H;y++){cnt[Q.lab[y*W]]++;cnt[Q.lab[y*W+W-1]]++}let m=0;cnt.forEach((c,j)=>{if(c>m){m=c;drop=j}});if(m<(W+H)*0.8)drop=-1}
+  const res=[];Q.C.forEach((c,j)=>{if(j===drop)return;const mask=new Uint8Array(n);let any=0;for(let i=0;i<n;i++)if(Q.lab[i]===j){mask[i]=1;any++}if(any<o.minArea)return;
+    const loops=studioVecTrace(mask,W,H).filter(L=>studioVecArea(L)>=o.minArea).map(L=>{const Q=L.map(([x,y])=>({x,y}));if(Q.length>1&&Q[0].x===Q[Q.length-1].x&&Q[0].y===Q[Q.length-1].y)Q.pop();let f=0,fd=-1;Q.forEach((q,i)=>{const dd=(q.x-Q[0].x)**2+(q.y-Q[0].y)**2;if(dd>fd){fd=dd;f=i}});
+      const A=studioDrawRdp(Q.slice(0,f+1),o.eps),B=studioDrawRdp(Q.slice(f).concat([Q[0]]),o.eps);return A.concat(B.slice(1,-1))}).filter(P=>P.length>=3);
+    if(loops.length)res.push({color:studioHexN(c[0],c[1],c[2]),loops,area:any})});
+  return res.sort((a,b)=>b.area-a.area)}
+function studioVecToPts(P,W,H,smooth){const loc=P.map(p=>({x:p.x/W*100,y:p.y/H*100})),n=loc.length;
+  return loc.map((p,i)=>{if(!smooth)return{x:p.x,y:p.y,type:"corner",in:null,out:null};const a=loc[(i-1+n)%n],b=loc[(i+1)%n],ux=p.x-a.x,uy=p.y-a.y,vx=b.x-p.x,vy=b.y-p.y,cos=(ux*vx+uy*vy)/((Math.hypot(ux,uy)*Math.hypot(vx,vy))||1);
+    if(cos<0.55)return{x:p.x,y:p.y,type:"corner",in:null,out:null};/* угол острее ~57° — оставляем острым */
+    const tx=(b.x-a.x)/6,ty=(b.y-a.y)/6,ka=Math.min(1,Math.hypot(ux,uy)/(Math.hypot(b.x-a.x,b.y-a.y)/2||1)),kb=Math.min(1,Math.hypot(vx,vy)/(Math.hypot(b.x-a.x,b.y-a.y)/2||1));return{x:p.x,y:p.y,type:"smooth",in:{dx:-tx*ka,dy:-ty*ka},out:{dx:tx*kb,dy:ty*kb}}})}
+function studioVecSvg(res,W,H,smooth){const seg=P=>{const L=studioVecToPts(P,W,H,smooth);let d=`M${L[0].x.toFixed(2)} ${L[0].y.toFixed(2)}`;for(let i=1;i<=L.length;i++){const a=L[i-1],b=L[i%L.length];const ao=a.out||{dx:0,dy:0},bi=b.in||{dx:0,dy:0};d+=smooth?`C${(a.x+ao.dx).toFixed(2)} ${(a.y+ao.dy).toFixed(2)} ${(b.x+bi.dx).toFixed(2)} ${(b.y+bi.dy).toFixed(2)} ${b.x.toFixed(2)} ${b.y.toFixed(2)}`:`L${b.x.toFixed(2)} ${b.y.toFixed(2)}`}return d+"Z"};
+  return`<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:100%">${res.slice().reverse().map(r=>`<path d="${r.loops.map(seg).join("")}" fill="${r.color}" fill-rule="evenodd"/>`).join("")}</svg>`}
+async function studioVectorizeDlg(){const l=studioSelected();if(!l||l.type!=="image"||!l.src){toast("Выберите картинку",{tone:"warning"});return}
+  const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,bw=l.w/100*F.w,bh=l.h/100*F.h,side=640,sc=side/Math.max(bw,bh);
+  const full=await studioRenderCanvas({...d,bg:{type:"none"},layers:[{...l,rotation:0,flipH:false,flipV:false,anim:undefined,opacity:100}],pages:undefined},sc);
+  const cv=document.createElement("canvas");cv.width=Math.max(4,Math.round(bw*sc));cv.height=Math.max(4,Math.round(bh*sc));cv.getContext("2d").drawImage(full,-Math.round(l.x/100*full.width),-Math.round(l.y/100*full.height));
+  const transp=(()=>{const D=cv.getContext("2d").getImageData(0,0,cv.width,cv.height).data;let t=0;for(let i=3;i<D.length;i+=16)if(D[i]<128)t++;return t>D.length/16*0.05})();
+  const o={colors:4,dropBg:!transp,smooth:true,eps:1.2,minArea:12};let res=[];
+  const {root}=overlay("modal",{title:"Картинка → вектор",subtitle:"Без ИИ: цвета, контуры, сглаживание. Лучше всего для логотипов, иконок, плоских рисунков.",service:"studio",size:"md",
+    body:`<div class="vec-wrap"><div class="vec-prev" style="aspect-ratio:${cv.width}/${cv.height}" data-vecprev></div><div class="stack" style="gap:8px;min-width:0">
+      <div class="pp-row"><span class="pp-l">Цветов</span><div class="rng"><input type="range" min="2" max="10" step="1" value="${o.colors}" style="--rng-p:${rngPct(o.colors,2,10)}" data-veck><output>${o.colors}</output></div></div>
+      <div class="pp-row"><span class="pp-l">Точность</span><div class="rng"><input type="range" min="0.4" max="3" step="0.1" value="${o.eps}" style="--rng-p:${rngPct(o.eps,0.4,3)}" data-veceps><output>${o.eps}</output></div></div>
+      <label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-vecsm checked> Плавные кривые</label>
+      <label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-vecbg ${o.dropBg?"checked":""}> Убрать фон (цвет по краям)</label>
+      <p class="pp-hint" data-vecinfo></p></div></div>`,
+    actions:[{label:"Отмена"},{label:"Заменить фото кривыми",variant:"primary",icon:"spline",fn:()=>studioVecApply(l,res,cv.width,cv.height,o.smooth)}]});
+  const prev=root.querySelector("[data-vecprev]"),info=root.querySelector("[data-vecinfo]");
+  const run=()=>{res=studioVectorize(cv,o);prev.innerHTML=studioVecSvg(res,cv.width,cv.height,o.smooth);const np=res.reduce((a,r)=>a+r.loops.reduce((b,L)=>b+L.length,0),0);info.textContent=res.length?`Кривых: ${res.length} (по цветам), точек: ${np}. Фото останется скрытым слоем — его можно вернуть.`:"Ничего не нашлось — уменьшите точность или выключите «Убрать фон»"};
+  let t=0;const soon=()=>{clearTimeout(t);t=setTimeout(run,60)};
+  root.addEventListener("input",e=>{const r=e.target;if(r.matches("[data-veck]"))o.colors=+r.value;else if(r.matches("[data-veceps]"))o.eps=+r.value;else return;r.style.setProperty("--rng-p",rngPct(+r.value,r.min,r.max));r.closest(".rng").querySelector("output").textContent=r.value;soon()});
+  root.addEventListener("change",e=>{if(e.target.matches("[data-vecsm]")){o.smooth=e.target.checked;soon()}if(e.target.matches("[data-vecbg]")){o.dropBg=e.target.checked;soon()}});
+  run()}
+function studioVecApply(l,res,W,H,smooth){if(!res.length){toast("Нет кривых",{tone:"warning"});return false}const d=studioDesign();studioBeforeChange();
+  const g="g"+studioUid(),i=d.layers.indexOf(l),add=res.slice().reverse().map((r,k)=>{const[first,...rest]=r.loops;
+    return Object.assign(studioLayerDefaults("path"),{x:l.x,y:l.y,w:l.w,h:l.h,rotation:l.rotation||0,points:studioVecToPts(first,W,H,smooth),subs:rest.map(P=>({points:studioVecToPts(P,W,H,smooth),closed:true})),closed:true,fillRule:"evenodd",
+      fill:{...studioDefFill(r.color),type:"solid",color:r.color},stroke:{...studioDefStroke(false,r.color),enabled:false},name:"Цвет "+r.color,group:g})});
+  if(l.group)studioGP(d)[g]=l.group;d.groupNames=d.groupNames||{};d.groupNames[g]="Вектор из фото";l.hidden=true;
+  d.layers.splice(i+1,0,...add);d.selectedId=add[add.length-1].id;studioMultiSel=[];NEON.save();N.refresh();toast(`Готово: ${add.length} кривых в группе «Вектор из фото». Фото скрыто — включите его в «Слоях», если нужно`,{tone:"success",timeout:6000})}
 function studioBrandHtml(){
   const b=S.studio.brand||{colors:[]},tm=b._team&&TEAM.list.find(t=>t.id===b._team);
   return`<div class="sect-t" style="margin-top:6px">${tm?"Бренд команды «"+esc(tm.name)+"»":"Бренд"}</div>${tm&&!["owner","admin"].includes(tm.role)?'<p class="pp-hint">Общий бренд-кит команды: пользоваться может каждый, менять — админы.</p>':tm?'<p class="pp-hint">Изменения видят все участники команды.</p>':""}
@@ -13877,6 +13942,7 @@ Object.assign(N.acts,{
       actions:[{label:"Отмена"},{label:"Сохранить",variant:"primary",fn:async()=>{const inp=document.querySelector(".ov [data-nm]");const nm=((inp&&(inp.value||inp.getAttribute("value")))||"").trim();if(!nm)return;
         try{const m=await apiPatch("/api/v1/studio/designs/"+x.id,{name:nm});studioUpsertList(m);if(studioDesign().id===x.id)studioDesign().name=nm;N.refresh()}catch(e){toast(e.message,{tone:"danger"})}}}]})},
   studPalImport(){studioPalImportDlg()},
+  studVectorize(){studioVectorizeDlg()},
   studBrandAdd(){const l=studioSelected(),c=l?(l.type==="shape"||l.type==="path"?studioFillOf(l).color:l.color):studioDesign().bg.color;
     if(!c||!/^#[0-9a-f]{6}$/i.test(c)){toast("Выберите слой с цветом",{tone:"warning"});return}
     const b=S.studio.brand=S.studio.brand||{colors:[]};b.colors=[...new Set([...(b.colors||[]),c.toLowerCase()])].slice(0,10);NEON.save();N.refresh()},
