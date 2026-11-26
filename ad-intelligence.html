@@ -12128,6 +12128,20 @@ function studioAnimIn(R,ty,p,e,t,dl,du){
   else if(a.type==="pulse"){R.op=Math.min(1,p*2);if(p>=1)R.s*=1+0.05*Math.sin(2*Math.PI*(t-dl-du)/0.9)}
   R.op*=op0;return R;
 }
+/* v10 (26.11.2026): порядок появления — задержки анимации расставляются по слоям, сверху вниз, слева направо
+   или все сразу, с шагом d.animStep (топ-запрос Adobe Express «Control order of animation»). */
+const STUDIO_ANIM_ORDERS=[["layers","layers","По слоям"],["tb","arrow-down-wide-narrow","Сверху вниз"],["lr","arrow-right-left","Слева направо"],["together","equal","Все сразу"]];
+function studioAnimOrderHtml(d){const o=d.animOrder||"",st=d.animStep==null?0.2:+d.animStep;
+  return`<div class="pp-l" style="margin:8px 0 4px">Порядок появления</div>${ppSeg(STUDIO_ANIM_ORDERS.map(([k,i,t])=>[ic(i,14),`data-animord="${k}"`,o===k,t]))}
+    <div class="pp-row"><span class="pp-l">Шаг</span><div class="rng"><input type="range" min="0" max="1.5" step="0.05" value="${st}" style="--rng-p:${rngPct(st,0,1.5)}" data-animstep><output>${String(st).replace(".",",")} с</output></div></div>`}
+function studioAnimOrder(d,order){const L=d.layers.filter(l=>l.anim&&l.anim.type&&l.anim.type!=="none"&&!l.hidden);if(!L.length)return 0;
+  const st=d.animStep==null?0.2:+d.animStep,t0=Math.min(...L.map(l=>+l.anim.delay||0)),start=Math.max(0,Math.min(0.2,t0)),idx=new Map(d.layers.map((l,i)=>[l,i]));
+  const S2=L.slice();if(order==="tb")S2.sort((a,b)=>a.y-b.y||a.x-b.x);else if(order==="lr")S2.sort((a,b)=>a.x-b.x||a.y-b.y);else S2.sort((a,b)=>idx.get(a)-idx.get(b));
+  S2.forEach((l,i)=>{l.anim.delay=Math.round((start+(order==="together"?0:i*st))*100)/100});
+  const end=Math.max(...S2.map(l=>(+l.anim.delay||0)+(+l.anim.dur||0.6)));if(!d.vidPages)d.animLen=Math.max(d.animLen||5,Math.ceil(end+1.5));d.animOrder=order;return S2.length}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-animord]");if(!b)return;const d=studioDesign();studioBeforeChange();const n=studioAnimOrder(d,b.dataset.animord);NEON.save();N.refresh();toast(n?`Порядок появления: ${n} элементов`:"Сначала добавьте анимацию элементам",{tone:n?"success":"warning"})});
+document.addEventListener("input",e=>{if(!(e.target.matches&&e.target.matches("[data-animstep]")))return;const d=studioDesign(),v=+e.target.value;d.animStep=v;e.target.style.setProperty("--rng-p",rngPct(v,0,1.5));e.target.closest(".rng").querySelector("output").textContent=String(v).replace(".",",")+" с";
+  if(d.animOrder&&d.animOrder!=="together"){studioAnimOrder(d,d.animOrder);if(S.studio.timeline){clearTimeout(studioAnimOrder.t);studioAnimOrder.t=setTimeout(()=>N.refresh(),250)}}NEON.save()});
 function studioAutoAnimate(){
   const d=studioDesign();studioBeforeChange();let i=0;
   d.layers.forEach(l=>{const full=l.x<=1&&l.y<=1&&l.x+l.w>=99&&l.y+l.h>=99;if(full||l.hidden){delete l.anim;return}
@@ -12416,6 +12430,7 @@ function studioDesignAnimHtml(){
     :`<div class="pp-row"><span class="pp-l">Длина ролика</span><div class="rng"><input type="range" min="2" max="20" step="1" value="${d.animLen||5}" style="--rng-p:${rngPct(d.animLen||5,2,20)}" data-danimlen><output>${d.animLen||5} с</output></div></div>`}
     ${studioMusicHtml(d)}
     <div class="pp-ibs wide"><button type="button" class="pp-btn${S.studio.timeline?" on":""}" data-act="studTimeline">${ic("gantt-chart",14)}${S.studio.timeline?"Скрыть таймлайн":"Таймлайн"}</button></div>
+    ${can?studioAnimOrderHtml(d):""}
     <div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studAnimAuto">${ic("wand-2",14)}Анимировать всё</button>${can?`<button type="button" class="pp-btn" data-act="studAnimPlay">${ic("play",14)}Просмотр</button>`:""}</div>
     ${can?`<div class="pp-ibs wide"><button type="button" class="pp-btn pri" data-act="studVideo">${ic("film",14)}Видео MP4</button><button type="button" class="pp-btn" data-act="studGif">${ic("clapperboard",14)}GIF</button></div><div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studVideoSet">${ic("layout-grid",14)}Во всех форматах…</button></div>${n?`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studAnimClear">${ic("x",14)}Убрать анимацию</button></div>`:""}`:""}`);
 }
