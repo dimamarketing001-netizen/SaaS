@@ -8120,7 +8120,7 @@ function studioPathD(l){return[studioContourD(l.points,l.closed),...(l.subs||[])
 function studioLayerInner(l){
   if(l.type==="3d")return studio3dInner(l);
   if(l.type==="text"&&studioCanvText(l)){studioEnsureFont(studioFontOf(l));return`<canvas class="stud-curve" style="position:absolute;left:-50%;top:-100%;width:200%;height:300%;display:block;pointer-events:none"></canvas>`}
-  if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}${studioTfxCss(l)}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent${studioListOf(l)?";display:block;width:100%":""}">${studioListHtml(l)||esc(l.text)}</span>`:studioListHtml(l)||esc(l.text)}</div>`}
+  if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}${studioTfxCss(l)}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent${studioListOf(l)||studioParaGap(l)?";display:block;width:100%":""}">${studioListHtml(l)||studioParaHtml(l)||esc(l.text)}</span>`:studioListHtml(l)||studioParaHtml(l)||esc(l.text)}</div>`}
   if(l.type==="video"){const v=l.video||{};return`<div class="stud-layer-image" style="${studioMaskCss(l)}"><video src="${esc(studioVideoSrc(v))}" muted loop autoplay playsinline preload="auto" data-t0="${+v.trim0||0}" data-t1="${+v.trim1||0}" style="width:100%;height:100%;object-fit:cover;object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1})"></video><span class="vid-badge">${ic("film",12)}</span></div>`}
   if(l.type==="image"){const bd=l.border&&l.border.enabled?`box-shadow:inset 0 0 0 ${l.border.width||4}px ${esc(l.border.color||"#fff")};`:"";
     return l.src?`<div style="width:100%;height:100%;filter:${studioDropCss(l,true)};${studioFadeCss(l)}"><div class="stud-layer-image" style="${studioMaskCss(l)};position:relative">${studioPhotoDefs(l)}<img src="${esc(l.src)}" alt="" draggable="false" style="object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1});filter:${studioPhotoFilter(l)}">${studioPhotoOverlays(l)}${bd?`<span style="position:absolute;inset:0;${bd};border-radius:inherit"></span>`:""}</div></div>`:`<div class="stud-layer-image stud-layer-empty" style="${studioMaskCss(l)}">${ic("image",22)}</div>`}
@@ -8736,7 +8736,7 @@ function studioPropsHtml0(){
       <div class="pp-ibs wide"><button type="button" class="pp-btn" data-act-fit="1" data-tip="Подобрать кегль, чтобы текст точно влез в рамку">${ic("scaling",14)}Вписать в рамку</button>${ppIb("maximize-2",'data-act-fit="grow"',false,"Максимальный кегль, который влезает")}</div>
       <div class="pp-row"><span class="pp-l">Роль для ИИ</span><nv-select options=":—|headline:Заголовок|subheadline:Подзаголовок|cta:Кнопка|badge:Плашка|disclaimer:Мелкий текст" value="${esc(l.role||"")}" data-prop="role"></nv-select></div>`)
     +studioTsSecHtml(l)
-    +ppSec("spacing","Интервалы и изгиб",`${ppRng("Межстрочный","lineHeight",+l.lineHeight||1.18,0.8,2,0.05)}${ppRng("Межбуквенный","letterSpacing",+l.letterSpacing||0,-5,30,1)}${ppRng("Изгиб по дуге","curve",+l.curve||0,-100,100,5)}<div class="pp-l" style="margin:8px 0 4px">Форма текста</div><div class="stud-warps">${[["none","Нет"]].concat(STUDIO_WARPS).map(([v,t])=>`<button type="button" class="${(l.warp||"none")===v&&!+l.curve||(v==="none"&&!studioWarpOn(l))?"on":""}" data-prop-set="warp" data-val="${v}">${studioWarpIcon(v)}<span>${t}</span></button>`).join("")}</div>${studioWarpOn(l)?ppRng("Сила","warpAmt",l.warpAmt==null?50:+l.warpAmt,-100,100,5):""}`)
+    +ppSec("spacing","Интервалы и изгиб",`${ppRng("Межстрочный","lineHeight",+l.lineHeight||1.18,0.8,2,0.05)}${ppRng("Межбуквенный","letterSpacing",+l.letterSpacing||0,-5,30,1)}${ppRng("Между абзацами","paraGap",+l.paraGap||0,0,2,0.05)}${ppRng("Изгиб по дуге","curve",+l.curve||0,-100,100,5)}<div class="pp-l" style="margin:8px 0 4px">Форма текста</div><div class="stud-warps">${[["none","Нет"]].concat(STUDIO_WARPS).map(([v,t])=>`<button type="button" class="${(l.warp||"none")===v&&!+l.curve||(v==="none"&&!studioWarpOn(l))?"on":""}" data-prop-set="warp" data-val="${v}">${studioWarpIcon(v)}<span>${t}</span></button>`).join("")}</div>${studioWarpOn(l)?ppRng("Сила","warpAmt",l.warpAmt==null?50:+l.warpAmt,-100,100,5):""}`)
     +ppSec("tcolor","Цвет",`${ppSeg([["Цвет",'data-act-tgrad=""',!g],["Градиент",'data-act-tgrad="1"',g]])}
       ${ppColor(g?"Цвет 1":"Цвет","color",l.color)}
       ${g?ppColor("Цвет 2","grad.color2",l.grad.color2||"#0ea5e9")+ppRng("Угол","grad.angle",+l.grad.angle||90,0,360,5):""}`)
@@ -9141,8 +9141,9 @@ async function studioRenderCanvas(design,scale,anim){
       if("letterSpacing" in ctx)ctx.letterSpacing=((+l.letterSpacing||0)/100*fs)+"px";
       ctx.textBaseline="middle";ctx.textAlign=l.align==="center"?"center":l.align==="right"?"right":"left";
       const tx=l.align==="center"?x2+w2/2:l.align==="right"?x2+w2-pad:x2+pad,maxW=w2-pad*2;
-      const raw=String(l.text||"");const txt=l.upper?raw.toUpperCase():raw;const lines=[],LI=studioListOf(l);
+      const raw=String(l.text||"");const txt=l.upper?raw.toUpperCase():raw;const lines=[],LI=studioListOf(l),PG=studioParaGap(l)*fs,brk=[];
       for(const[pi,para]of txt.split("\n").entries()){
+        if(pi)brk.push(lines.length);
         const words=para.split(/\s+/).filter(Boolean);let cur="";
         if(!words.length){lines.push("");continue}
         const mk=LI&&LI.marks[pi],dx=mk?LI.em*fs:0,mw=maxW-dx;let first=true;const push=t=>{lines.push(mk?{t,dx,m:first?mk:""}:t);first=false};
@@ -9150,7 +9151,8 @@ async function studioRenderCanvas(design,scale,anim){
         if(cur)push(cur);
       }
       const U=A&&A.units;let uN=0;if(U)lines.forEach(ln=>{const t=typeof ln==="string"?ln:ln.t;uN+=U.kind==="words"?(t.match(/\S+/g)||[]).length:[...t.replace(/\s/g,"")].length});
-      const drawL=fn=>{let ui=0;const ga=ctx.globalAlpha;lines.forEach((ln,i)=>{const yy=startY+i*lh;if(typeof ln==="string"&&!U){fn(ln,tx,yy);return}
+      const gOf=i=>{let n=0;for(const b of brk)if(b<=i)n++;return n*PG};
+      const drawL=fn=>{let ui=0;const ga=ctx.globalAlpha;lines.forEach((ln,i)=>{const yy=startY+i*lh+gOf(i);if(typeof ln==="string"&&!U){fn(ln,tx,yy);return}
         const t=typeof ln==="string"?ln:ln.t,ldx=typeof ln==="string"?0:ln.dx,m=typeof ln==="string"?"":ln.m;
         const al=ctx.textAlign;ctx.textAlign="left";const wT=ctx.measureText(t).width,st=l.align==="center"?tx-(ldx+wT)/2:l.align==="right"?tx-(ldx+wT):tx;
         if(m){if(U)ctx.globalAlpha=ga*U.f(ui,uN);fn(m,st,yy);ctx.globalAlpha=ga}
@@ -9158,7 +9160,7 @@ async function studioRenderCanvas(design,scale,anim){
         else{let pre="";for(const tk of t.match(/\S+|\s+/g)||[]){if(/\S/.test(tk)){if(U.kind==="words"){const a=U.f(ui++,uN);if(a>0.003){ctx.globalAlpha=ga*a;fn(tk,st+ldx+ctx.measureText(pre).width,yy)}}
           else{let p2=pre;for(const ch of tk){const a=U.f(ui++,uN);if(a>0.003){ctx.globalAlpha=ga*a;fn(ch,st+ldx+ctx.measureText(p2).width,yy)}p2+=ch}}}pre+=tk}ctx.globalAlpha=ga}
         ctx.textAlign=al})};
-      const lh=fs*(+l.lineHeight||1.18),totalH=lh*lines.length,startY=y2+h2/2-totalH/2+lh/2;
+      const lh=fs*(+l.lineHeight||1.18),totalH=lh*lines.length+brk.length*PG,startY=y2+h2/2-totalH/2+lh/2;
       if(l.grad&&l.grad.enabled){const g=studioGradLine(x2,y2,w2,h2,+l.grad.angle||90),gr=ctx.createLinearGradient(g.x0,g.y0,g.x1,g.y1);gr.addColorStop(0,l.color);gr.addColorStop(1,l.grad.color2||"#0ea5e9");ctx.fillStyle=gr}
       if(l.shadow){const sh=studioShadowOf(l),k=W/560;ctx.shadowColor=studioShadowRgba(sh);ctx.shadowBlur=sh.blur*k;ctx.shadowOffsetX=sh.x*k;ctx.shadowOffsetY=sh.y*k}
       if(l.neon){ctx.shadowColor=l.color;ctx.shadowBlur=fs*0.45;ctx.shadowOffsetY=0;drawL((t,a,b)=>ctx.fillText(t,a,b))}
@@ -10128,8 +10130,13 @@ function studioMarkDirty(){
 /* Списки в тексте: l.list = "bullet" | "number"; маркер на каждый непустой абзац, висячий отступ (в em). */
 function studioListOf(l){if(!l.list||l.vertical||studioCanvText(l))return null;const paras=String(l.text||"").split("\n");let n=0;
   const marks=paras.map(p=>p.trim()?(l.list==="number"?(++n)+".":"•"):"");return{em:l.list==="number"?String(n).length*0.6+0.75:1.05,marks,paras}}
-function studioListHtml(l,inner){const L=studioListOf(l);if(!L)return null;
-  return`<div class="stl-wrap">${L.paras.map((p,i)=>L.marks[i]?`<div class="stl-p" style="padding-left:${L.em}em;text-indent:-${L.em}em"><span class="stl-m" style="width:${L.em}em">${L.marks[i]}</span>${esc(p)}</div>`:`<div class="stl-p">${esc(p)||"&nbsp;"}</div>`).join("")}</div>`}
+/* v10: отступ между абзацами l.paraGap (в долях кегля) — на холсте абзацы блоками с margin-top,
+   в экспорте и в подборе размера тот же сдвиг перед каждым следующим абзацем. */
+const studioParaGap=l=>l.vertical||studioCanvText(l)?0:Math.max(0,+l.paraGap||0);
+function studioParaHtml(l){const g=studioParaGap(l);if(!g)return null;const t=String(l.text||"");if(!t.includes("\n"))return null;
+  return`<div class="stl-wrap">${t.split("\n").map((p,i)=>`<div class="stl-p"${i?` style="margin-top:${g}em"`:""}>${esc(p)||"&nbsp;"}</div>`).join("")}</div>`}
+function studioListHtml(l,inner){const L=studioListOf(l);if(!L)return null;const G=studioParaGap(l),mt=i=>i&&G?`margin-top:${G}em;`:"";
+  return`<div class="stl-wrap">${L.paras.map((p,i)=>L.marks[i]?`<div class="stl-p" style="${mt(i)}padding-left:${L.em}em;text-indent:-${L.em}em"><span class="stl-m" style="width:${L.em}em">${L.marks[i]}</span>${esc(p)}</div>`:`<div class="stl-p" style="${mt(i)}">${esc(p)||"&nbsp;"}</div>`).join("")}</div>`}
 function studioFitText(l,design,grow){
   if(l.type!=="text"||!l.text)return false;
   const f=STUDIO_FMT[design.format]||STUDIO_FMT.square,ctx=(studioFitText.c||(studioFitText.c=document.createElement("canvas"))).getContext("2d");
@@ -10137,7 +10144,7 @@ function studioFitText(l,design,grow){
   const fits=fsPct=>{const fs=f.h*fsPct/100;ctx.font=`${l.weight||"700"} ${fs}px "${studioFontOf(l)}","Onest",Arial,sans-serif`;if("letterSpacing" in ctx)ctx.letterSpacing=((+l.letterSpacing||0)/100*fs)+"px";
     const LI=studioListOf(l);let lines=0;for(const[pi,para]of txt.split("\n").entries()){const ws=para.split(/\s+/).filter(Boolean);if(!ws.length){lines++;continue}let cur="";const bw=boxW-(LI&&LI.marks[pi]?LI.em*fs:0);
       for(const w of ws){if(ctx.measureText(w).width>bw)return false;const t=cur?cur+" "+w:w;if(ctx.measureText(t).width>bw&&cur){lines++;cur=w}else cur=t}if(cur)lines++}
-    return lines*fs*(+l.lineHeight||1.18)<=boxH*1.02};
+    return lines*fs*(+l.lineHeight||1.18)+(txt.split("\n").length-1)*studioParaGap(l)*fs<=boxH*1.02};
   let fs=+l.fontSize||6,changed=false;
   while(fs>1.5&&!fits(fs)){fs=Math.round(fs*0.94*100)/100;changed=true}
   if(grow&&!changed){while(fs<20&&fits(Math.round(fs*1.05*100)/100)){fs=Math.round(fs*1.05*100)/100;changed=true}}
@@ -11380,7 +11387,7 @@ editor(){
         if(e.target.type==="range")e.target.style.setProperty("--rng-p",rngPct(v,e.target.min,e.target.max));
         const out=e.target.closest(".rng");if(out)out.querySelector("output").textContent=studioOutFmt(k,v);
         if(k==="curve"&&v)delete l.warp;
-        if(k==="bgRadius"||k==="lineHeight"||k==="letterSpacing"||k==="curve"||k==="warpAmt")studioLayoutStage(document,[l.id]);
+        if(k==="bgRadius"||k==="lineHeight"||k==="letterSpacing"||k==="curve"||k==="warpAmt"||k==="paraGap")studioLayoutStage(document,[l.id]);
         studioPatchLayerDom(l);studioSyncProps(e.target);NEON.save();
       });
       /* nv-textarea/nv-color-picker (FieldEl-like) stop their native events from
