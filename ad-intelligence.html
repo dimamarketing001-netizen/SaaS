@@ -1798,6 +1798,11 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s2-tpres button{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px;text-align:left;cursor:pointer;color:var(--ink)}
 .s2-tpres button:hover{border-color:var(--svc-ink)}
 .s2-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.sp-list{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow:auto}.sp-it{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.sp-ctx{font-size:13px;line-height:1.45;cursor:pointer;color:var(--ink-2)}.sp-ctx .sp-bad{background:none;color:var(--danger,#e11d48);text-decoration:underline wavy;text-underline-offset:3px;font-weight:600}
+.sp-pg{font:11px var(--font-mono,monospace);color:var(--ink-3);margin-right:6px}.sp-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.sp-why{font-size:11.5px;color:var(--ink-3)}
+.sp-s{border:1px solid var(--svc-ink);color:var(--svc-ink);background:var(--svc-soft,transparent);border-radius:999px;padding:2px 10px;font-size:12.5px;cursor:pointer}.sp-a{border:0;background:none;color:var(--ink-3);font-size:12px;cursor:pointer;padding:2px 4px}.sp-a:hover{color:var(--ink)}
+.sp-ok{text-align:center;color:var(--ink-2);padding:18px 6px}.sp-ok p{margin:6px 0 0}
 .s2-favable{position:relative}.s2-fav{position:absolute;left:2px;top:2px;width:18px;height:18px;display:grid;place-items:center;border-radius:5px;font-size:13px;line-height:1;color:#f59e0b;background:color-mix(in srgb,var(--surface) 88%,transparent);opacity:0;transition:opacity .12s;cursor:pointer;z-index:2;font-style:normal;text-indent:0}
 .s2-favable:hover>.s2-fav,.s2-fav.on{opacity:1}.s2-fav:hover{transform:scale(1.15)}
 .s2-fav-empty{text-align:center;color:var(--ink-3);padding:24px 8px;font-size:12.5px;line-height:1.45}.s2-fav-empty p{margin:8px 0 0}
@@ -10851,7 +10856,7 @@ function studioDownloadMenu(btn){
 }
 function studioMoreMenu(btn){
   const r=btn.getBoundingClientRect();
-  studioMenu(r.left,r.bottom+4,[["Быстрый старт…","бренд-кит и набор креативов",studioQuickStart],["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Матрица A/B…","все сочетания вариантов",studioAbMatrix],["Маркировка рекламы…","«Реклама», рекламодатель, erid",studioAdMark],["Мокапы…","телефон, ноутбук, печать",studioMockups],["Найти и заменить…","Ctrl+F",studioFindReplace],"-",["В планировщик…","пост в Telegram и др.",studioToPlanner],["Ссылка на просмотр…","клиенту без входа",studioShareDlg],["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
+  studioMenu(r.left,r.bottom+4,[["Быстрый старт…","бренд-кит и набор креативов",studioQuickStart],["Волшебный ресайз…","под все площадки",studioMagicResize],["Массовое создание…","из таблицы",studioBulkCreate],["Матрица A/B…","все сочетания вариантов",studioAbMatrix],["Маркировка рекламы…","«Реклама», рекламодатель, erid",studioAdMark],["Мокапы…","телефон, ноутбук, печать",studioMockups],["Найти и заменить…","Ctrl+F",studioFindReplace],["Проверить орфографию…","F7",studioSpellCheck],"-",["В планировщик…","пост в Telegram и др.",studioToPlanner],["Ссылка на просмотр…","клиенту без входа",studioShareDlg],["История версий","откатить",studioVersionsDlg],["Сохранить как шаблон","в «Мои шаблоны»",studioSaveAsTemplate],["Дублировать дизайн","",()=>{const d=studioDesign();if(!d.id){toast("Сначала сохраните дизайн",{tone:"warning"});return}N.acts.studDup(null,{id:d.id})}],["Новый дизайн","",()=>N.acts.studNew()],"-",["Горячие клавиши","?",studioShortcuts]]);
 }
 async function studioSaveAsTemplate(){
   const d=studioDesign();if(!d.layers.length){toast("Пустой дизайн",{tone:"warning"});return}
@@ -10900,6 +10905,39 @@ async function studioVersionsDlg(){
         studioResetEphemeral();S.studio.editor=nd;studioSave.state="saved";studioSave.at=Date.now();close();N.refresh();toast("Версия восстановлена (текущая сохранена в истории)",{tone:"success"})}
       catch(err){toast(err.message,{tone:"danger"})}})}});
 }
+/* ---------- v10 (26.11.2026): проверка орфографии всех текстов дизайна (все страницы, ячейки таблиц) ----------
+   Яндекс.Спеллер (speller.yandex.net, CORS открыт, без ключа): русский + английский, повторы слов.
+   Исправление — клик по варианту (Ctrl+Z отменяет), «Пропустить», «В словарь» (localStorage). */
+const studioSpellDict=()=>{try{return new Set(JSON.parse(localStorage.getItem("neon-studio-spell-dict")||"[]"))}catch(e){return new Set()}};
+async function studioSpellRun(d){const src=[];studioPagesOf(d).forEach((pg,pi)=>pg.layers.forEach(l=>{
+    if(l.type==="text"&&String(l.text||"").trim())src.push({pi,l,txt:String(l.text)});
+    if(l.type==="table")studioTableRows(l).forEach((r,ri)=>r.forEach((c,ci)=>{if(String(c||"").trim())src.push({pi,l,txt:String(c),cell:[ri,ci]})}))}));
+  if(!src.length)return{src,hits:[]};
+  const body=new URLSearchParams();src.forEach(x=>body.append("text",x.txt.slice(0,2000)));body.append("lang","ru,en");body.append("options","526");
+  const r=await fetch("https://speller.yandex.net/services/spellservice.json/checkTexts",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body});
+  if(!r.ok)throw new Error("сервис проверки ответил "+r.status);const res=await r.json(),dict=studioSpellDict(),hits=[];
+  res.forEach((errs,i)=>(errs||[]).forEach(e=>{if(dict.has(String(e.word).toLowerCase()))return;hits.push({...src[i],word:e.word,pos:e.pos,len:e.len,code:e.code,s:(e.s||[]).slice(0,5)})}));
+  return{src,hits}}
+function studioSpellFix(d,h,to){const fixStr=t=>{if(t.substr(h.pos,h.len)===h.word)return t.slice(0,h.pos)+to+t.slice(h.pos+h.len);const i=t.indexOf(h.word);return i<0?t:t.slice(0,i)+to+t.slice(i+h.word.length)};
+  if(h.cell){const R=studioTableRows(h.l);R[h.cell[0]][h.cell[1]]=fixStr(R[h.cell[0]][h.cell[1]]);h.l.rows=R}
+  else{h.l.text=fixStr(String(h.l.text||""));const pg=studioPagesOf(d)[h.pi];if(pg)studioFitText(h.l,{...d,bg:pg.bg,layers:pg.layers})}}
+function studioSpellCheck(){const d=studioDesign();studioPagesSync(d);let hits=[],skip=new Set(),busy=true,err="";
+  const CODE={1:"нет в словаре",2:"повтор слова",3:"регистр",4:"слишком много ошибок"},multi=studioPagesOf(d).length>1;
+  const ctx=h=>{const t=h.cell?studioTableRows(h.l)[h.cell[0]][h.cell[1]]:String(h.l.text||""),a=Math.max(0,h.pos-28),b=Math.min(t.length,h.pos+h.len+28);
+    return(a?"…":"")+esc(t.slice(a,h.pos))+`<mark class="sp-bad">${esc(t.substr(h.pos,h.len))}</mark>`+esc(t.slice(h.pos+h.len,b))+(b<t.length?"…":"")};
+  const list=()=>{if(busy)return'<p class="muted">Проверяю тексты…</p>';if(err)return`<p class="pp-hint" style="color:var(--danger,#e11d48)">Не удалось проверить: ${esc(err)}. Проверьте интернет и попробуйте ещё раз.</p>`;
+    const H=hits.filter((h,i)=>!skip.has(i));if(!H.length)return`<div class="sp-ok">${ic("check-circle-2",26)}<p>Ошибок не найдено — тексты на всех страницах проверены.</p></div>`;
+    return`<div class="fr-sum">Возможных ошибок: <b>${H.length}</b></div><div class="sp-list">${hits.map((h,i)=>skip.has(i)?"":`<div class="sp-it"><div class="sp-ctx" data-spgo="${i}" title="Показать на холсте">${multi?`<span class="sp-pg">стр. ${h.pi+1}</span>`:""}${ctx(h)}</div><div class="sp-row"><span class="sp-why">${CODE[h.code]||""}</span>${h.code===2?`<button type="button" class="sp-s" data-spfix="${i}" data-to="">убрать повтор</button>`:h.s.map(x=>`<button type="button" class="sp-s" data-spfix="${i}" data-to="${esc(x)}">${esc(x)}</button>`).join("")}${!h.s.length&&h.code!==2?'<span class="sp-why">вариантов нет — поправьте вручную</span>':""}<span style="flex:1"></span><button type="button" class="sp-a" data-spskip="${i}">Пропустить</button><button type="button" class="sp-a" data-spdict="${i}" title="Больше не считать ошибкой">В словарь</button></div></div>`).join("")}</div>`};
+  const {root}=overlay("modal",{title:"Проверка орфографии",subtitle:"Все тексты дизайна: страницы, плашки, таблицы. Сервис — Яндекс.Спеллер.",service:"studio",size:"md",body:`<div data-spout>${list()}</div>`,actions:[{label:"Закрыть"},{label:"Проверить ещё раз",icon:"refresh-cw",fn:()=>{run();return false}}]});
+  const out=root.querySelector("[data-spout]"),paint=()=>{out.innerHTML=list()};
+  const run=async()=>{busy=true;err="";paint();try{const r=await studioSpellRun(d);hits=r.hits;skip=new Set()}catch(e){err=e.message||String(e)}busy=false;paint()};
+  out.addEventListener("click",async e=>{const f=e.target.closest("[data-spfix]"),sk=e.target.closest("[data-spskip]"),dc=e.target.closest("[data-spdict]"),go=e.target.closest("[data-spgo]");
+    if(f){const h=hits[+f.dataset.spfix];if(!h)return;studioBeforeChange();let to=f.dataset.to;if(h.code===2&&!to){const t=h.cell?studioTableRows(h.l)[h.cell[0]][h.cell[1]]:String(h.l.text||"");const pre=t.slice(0,h.pos).match(/\s+$/);if(pre){h.pos-=pre[0].length;h.len+=pre[0].length;h.word=t.substr(h.pos,h.len)}}
+      studioSpellFix(d,h,to);studioGoPage(d.page||0,true);N.refresh();NEON.save();toast("Исправлено. Отменить — Ctrl+Z",{tone:"success"});await run();return}
+    if(sk){skip.add(+sk.dataset.spskip);paint();return}
+    if(dc){const h=hits[+dc.dataset.spdict];const D=studioSpellDict();D.add(String(h.word).toLowerCase());localStorage.setItem("neon-studio-spell-dict",JSON.stringify([...D].slice(-500)));hits.forEach((x,i)=>{if(String(x.word).toLowerCase()===String(h.word).toLowerCase())skip.add(i)});paint();toast(`«${h.word}» добавлено в словарь`);return}
+    if(go){const h=hits[+go.dataset.spgo];if(!h)return;if((d.page||0)!==h.pi&&Array.isArray(d.pages))studioGoPage(h.pi);d.selectedId=h.l.id;studioMultiSel=[];N.refresh()}});
+  run()}
 /* ---------- Найти и заменить: тексты и ячейки таблиц на всех страницах ---------- */
 function studioFindReplace(){
   const d=studioDesign();studioPagesSync(d);let q="",rp="",cs=false,ww=false,hits=[];
@@ -11028,7 +11066,7 @@ async function studioMockups(){
 }
 function studioShortcuts(){
   const K=[["Ctrl+Z / Ctrl+Shift+Z","Отменить / повторить"],["Ctrl+S","Сохранить"],["Ctrl+Alt+T","Привести в порядок: ряд, столбец или сетка"],["Ctrl+C / Ctrl+X / Ctrl+V","Копировать / вырезать / вставить (в т.ч. в другой дизайн, скриншоты, текст, SVG)"],["Ctrl+Alt+C / Ctrl+Alt+V","Копировать / вставить стиль"],["Ctrl+D","Дублировать"],["Alt + тянуть","Копия при перетаскивании"],["Ctrl + тянуть","Без прилипания"],["Alt (наведение)","Расстояния до соседей и краёв"],
-    ["Ctrl+G / Ctrl+Shift+G","Сгруппировать / разгруппировать"],["Ctrl+F / Ctrl+H","Найти и заменить текст (все страницы)"],["Ctrl+Alt+P","Презентация: ← → пробел, Esc — выход"],["Двойной клик","Внутрь группы · править текст · кадрировать фото"],["Ctrl + клик","Элемент внутри группы"],["Esc","На уровень выше / выйти из режима"],["Ctrl+A","Выделить всё"],["Delete","Удалить"],["Стрелки / Shift + стрелки","Сдвиг на 1 / 10 px"],
+    ["Ctrl+G / Ctrl+Shift+G","Сгруппировать / разгруппировать"],["Ctrl+F / Ctrl+H","Найти и заменить текст (все страницы)"],["F7","Проверить орфографию (все страницы)"],["Ctrl+Alt+P","Презентация: ← → пробел, Esc — выход"],["Двойной клик","Внутрь группы · править текст · кадрировать фото"],["Ctrl + клик","Элемент внутри группы"],["Esc","На уровень выше / выйти из режима"],["Ctrl+A","Выделить всё"],["Delete","Удалить"],["Стрелки / Shift + стрелки","Сдвиг на 1 / 10 px"],
     ["Ctrl + / Ctrl − / Ctrl 0","Масштаб / вписать"],["Ctrl + колесо, щипок","Масштаб к курсору"],["Пробел + тянуть","Двигать холст"],["Shift + тянуть уголок","Пропорционально"],["Shift + поворот","Шаг 15°"],["Линейка → тянуть","Направляющая"],["Двойной клик по точке","Угол ↔ плавная (правка узлов)"],["Alt + ручка","Разорвать симметрию ручек"],["Клик по контуру","Добавить точку (правка узлов)"],["Правый клик","Меню действий"],["?","Эта справка"]];
   overlay("modal",{title:"Горячие клавиши",service:"studio",body:`<div class="s2-kbd">${K.map(([k,v])=>`<span>${k.split(" / ").map(x=>`<kbd>${esc(x)}</kbd>`).join(" / ")}</span><span>${esc(v)}</span>`).join("")}</div>`,actions:[{label:"Понятно"}]});
 }
@@ -13571,6 +13609,7 @@ document.addEventListener("keydown",e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){e.preventDefault();studioSaveDesign();return}
   if((e.ctrlKey||e.metaKey)&&e.altKey&&e.code==="KeyP"&&!document.querySelector(".pres")){e.preventDefault();studioPresent();return}
   if((e.ctrlKey||e.metaKey)&&!e.altKey&&(e.key.toLowerCase()==="f"||e.key.toLowerCase()==="h")&&!editing&&!document.querySelector(".ov")){e.preventDefault();studioFindReplace();return}
+  if(e.key==="F7"&&!editing&&!document.querySelector(".ov")){e.preventDefault();studioSpellCheck();return}
   if(!editing){
     const d=studioDesign(),ids=studioSelIds(),sel=d.layers.filter(x=>ids.includes(x.id)&&!x.locked);
     if(e.key.startsWith("Arrow")&&sel.length){
