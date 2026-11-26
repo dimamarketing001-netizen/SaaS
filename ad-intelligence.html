@@ -13035,7 +13035,7 @@ function studioBulkCreate(prefill){
   if(prefill)setTimeout(()=>{const t=ta();if(t){t.value=prefill;reparse(prefill)}},80);
   root.querySelector("[data-bk-feedgo]").addEventListener("click",async()=>{let u=(root.querySelector("[data-bk-feed]").value||"").trim();if(!/^https?:\/\//i.test(u)){toast("Вставьте ссылку http(s)",{tone:"warning"});return}
     const gs=u.match(/docs\.google\.com\/spreadsheets\/d\/([\w-]+)/);if(gs){const gid=(u.match(/[#&?]gid=(\d+)/)||[])[1];u=`https://docs.google.com/spreadsheets/d/${gs[1]}/export?format=csv${gid?"&gid="+gid:""}`}
-    toast("Скачиваю фид…");try{const r=await apiPost("/api/v1/studio/fetch-feed",{url:u});feedIn(r.text||"")}catch(err){toast(err.message||"Фид не скачался",{tone:"danger"})}});
+    toast("Скачиваю фид…");try{const r=await apiPost("/api/v1/studio/fetch-feed",{url:u});feedIn(r.text||"")}catch(err){const m=String(err.message||"");toast(/not found|404/i.test(m)?"Загрузка фида по ссылке включится после обновления сервера — пока скачайте фид и загрузите файлом (кнопка «CSV / YML-файл»)":m||"Фид не скачался",{tone:/not found|404/i.test(m)?"warning":"danger",timeout:8000})}});
   root.querySelector("[data-bk-demo]").addEventListener("click",()=>{
     const ex=[["Диван «Лофт»","Скидка до 30%","Купить","29 990 ₽","Москва"],["Кресло «Сканди»","Доставка за 1 день","Заказать","12 490 ₽","Казань"],["Стол «Дуб»","Массив, 10 лет гарантии","Смотреть","18 700 ₽","Сочи"]];
     const cols=[];/* [заголовок колонки, (r)=>значение] */
