@@ -10507,11 +10507,11 @@ async function studioCollabPull(d){if(document.activeElement&&document.activeEle
   studioCollab.base={id:d.id,data:JSON.parse(JSON.stringify(r.data))};NEON.save();N.refresh();
   const who=(studioCollab.peers.find(p=>p.user_id===r.updated_by)||{}).email||"соавтор";toast(dirty?`Правки ${who.split("@")[0]} объединены с вашими`:`Обновлено: правки ${who.split("@")[0]}`,{timeout:2500});
   if(dirty)studioPersist({silent:true})}
-async function studioCollabTick(){if(studioCollab.busy||!studioCollabOn()){if(!studioCollabOn()&&studioCollab.peers.length){studioCollab.peers=[];studioCollabPaint()}return}studioCollab.busy=true;const d=studioDesign();
+async function studioCollabTick(){if(studioCollab.pause&&Date.now()<studioCollab.pause)return;if(studioCollab.busy||!studioCollabOn()){if(!studioCollabOn()&&studioCollab.peers.length){studioCollab.peers=[];studioCollabPaint()}return}studioCollab.busy=true;const d=studioDesign();
   try{const r=await apiPost(`/api/v1/studio/designs/${d.id}/presence`,{page:d.page||0,x:studioCollab.x,y:studioCollab.y,sel:studioSelIds().slice(0,50),editing:!!(document.activeElement&&document.activeElement.isContentEditable)});
     if(studioDesign()!==d)return;studioCollab.me=r.me;studioCollab.peers=r.peers||[];studioCollabPaint();
     if(r.updated_at&&d.serverAt&&r.updated_at>d.serverAt+0.0005&&r.updated_by!==r.me&&!studioSaving)await studioCollabPull(d)}
-  catch(e){}finally{studioCollab.busy=false}}
+  catch(e){studioCollab.pause=Date.now()+60000}finally{studioCollab.busy=false}}
 setInterval(studioCollabTick,2000);
 window.NEON_COLLAB={state:studioCollab,dbg:()=>({save:studioSave.state,err:studioSave.err,serverAt:studioDesign().serverAt,base:!!studioCollab.base,saving:!!studioSaving})};
 document.addEventListener("pointermove",e=>{const st=e.target.closest&&e.target.closest(".stud-stage");if(!st){return}const r=st.getBoundingClientRect();studioCollab.x=Math.round((e.clientX-r.left)/r.width*1000)/10;studioCollab.y=Math.round((e.clientY-r.top)/r.height*1000)/10},{passive:true});
