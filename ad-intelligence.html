@@ -9586,7 +9586,7 @@ function studioPerspSecHtml(l){const p=l.persp||{},on=studioPerspOn(l);
 const studio3dImgs=new Map(),studio3dLast=new Map(),studio3dQ=new Map();let studio3dBusy=false;
 window.NEON_3D={canvas:(...a)=>studio3dCanvas(...a),parts:studio3dParts,lib:studio3dLib};
 function studio3dStageSize(l){const st=document.querySelector(".stud-stage"),F=STUDIO_FMT[studioDesign().format]||STUDIO_FMT.square,sw=st?st.getBoundingClientRect().width:560,dpr=Math.min(2,window.devicePixelRatio||1);
-  const pw=Math.max(64,Math.min(1600,Math.ceil(l.w/100*sw*dpr/48)*48)),ph=Math.max(16,Math.round(pw*(l.h/100*F.h)/Math.max(0.01,l.w/100*F.w)));return[pw,ph]}
+  const pw=Math.max(96,Math.min(2048,Math.ceil(l.w/100*sw*Math.max(1.5,dpr*1.25)/64)*64)),ph=Math.max(16,Math.round(pw*(l.h/100*F.h)/Math.max(0.01,l.w/100*F.w)));return[pw,ph]}
 function studio3dStageSrc(l){const[pw,ph]=studio3dStageSize(l),key=studio3dKey(l.s3)+(l.s3&&l.s3.kind==="mockup"?studio3dTexVer(l.s3):"")+"|"+pw+"x"+ph,u=studio3dImgs.get(key);
   if(u){studio3dLast.set(l.id,u);return u}
   studio3dQ.set(l.id,{s3:JSON.parse(JSON.stringify(l.s3||{})),key,pw,ph});setTimeout(studio3dPump,0);return studio3dLast.get(l.id)||""}
@@ -9950,8 +9950,8 @@ const S3_GEN={
   rainbow:(T,H)=>[...["#ef4444","#f59e0b","#facc15","#22c55e","#3b82f6","#8b5cf6"].map((c,i)=>H.P(H.tor(1.2-i*0.15,0.075,H.PI,16,96),c,[0,-0.5,0])),H.P(H.sph(0.3),"#f8fafc",[-0.9,-0.55,0.1]),H.P(H.sph(0.24),"#f8fafc",[-0.6,-0.6,0.15]),H.P(H.sph(0.3),"#f8fafc",[0.9,-0.55,0.1]),H.P(H.sph(0.24),"#f8fafc",[0.6,-0.6,0.15])],
   mountains:(T,H)=>[H.P(H.flat(H.cone(0.9,1.6,7)),"main",[-0.4,0,0]),H.P(H.flat(H.cone(0.36,0.6,7)),"#f8fafc",[-0.4,0.5,0]),H.P(H.flat(H.cone(0.7,1.2,7)),"accent",[0.55,-0.2,-0.2]),H.P(H.flat(H.cone(0.27,0.45,7)),"#f8fafc",[0.55,0.2,-0.2])],
   /* ---- Спорт и игры ---- */
-  basketball:(T,H)=>[H.P(H.sph(1),"main"),H.P(H.tor(1.003,0.025,undefined,12,128),"#1f2937",null,[H.PI/2,0,0]),H.P(H.tor(1.003,0.025,undefined,12,128),"#1f2937"),H.P(H.tor(0.71,0.025,undefined,12,96),"#1f2937",[0.71,0,0],[0,H.PI/2,0]),H.P(H.tor(0.71,0.025,undefined,12,96),"#1f2937",[-0.71,0,0],[0,H.PI/2,0])],
-  tennis:(T,H)=>[H.P(H.sph(1),"main"),H.P(H.tube(t=>{const a=t*2*H.PI,A=0.75,B=0.25,x=A*Math.cos(a)+B*Math.cos(3*a),y=A*Math.sin(a)-B*Math.sin(3*a),z=2*Math.sqrt(A*B)*Math.sin(2*a),k=1.005/Math.hypot(x,y,z);return[x*k,y*k,z*k]},0.035,300,true),"#f8fafc")],
+  basketball:(T,H)=>[H.P(H.sph(1),"main"),H.P(H.tor(0.985,0.024,undefined,12,160),"#1f2937",null,[H.PI/2,0,0]),H.P(H.tor(0.985,0.024,undefined,12,160),"#1f2937"),H.P(H.tor(0.6965,0.024,undefined,12,120),"#1f2937",[0.6965,0,0],[0,H.PI/2,0]),H.P(H.tor(0.6965,0.024,undefined,12,120),"#1f2937",[-0.6965,0,0],[0,H.PI/2,0])],
+  tennis:(T,H)=>[H.P(H.sph(1),"main"),H.P(H.tube(t=>{const a=t*2*H.PI,A=0.75,B=0.25,x=A*Math.cos(a)+B*Math.cos(3*a),y=A*Math.sin(a)-B*Math.sin(3*a),z=2*Math.sqrt(A*B)*Math.sin(2*a),k=0.975/Math.hypot(x,y,z);return[x*k,y*k,z*k]},0.032,360,true),"#f8fafc")],
   dumbbell:(T,H)=>[H.P(H.cyl(0.08,0.08,2.4,24),"chrome",null,[0,0,H.PI/2]),...[-1,1].flatMap(s=>[H.P(H.cyl(0.55,0.55,0.18,48),"main",[s*0.75,0,0],[0,0,H.PI/2]),H.P(H.cyl(0.45,0.45,0.16,48),"main",[s*0.93,0,0],[0,0,H.PI/2]),H.P(H.cyl(0.15,0.15,0.1,24),"chrome",[s*1.08,0,0],[0,0,H.PI/2])])],
   dice:(T,H)=>{const o=[H.P(H.box(1.6,1.6,1.6,0.25),"#f8fafc")],pip=(x,y,z,s)=>o.push(H.P(H.sph(0.14,20,14),"main",[x,y,z],null,s));pip(0,0,0.8,[1,1,0.35]);
     [[-0.4,-0.4],[0,0],[0.4,0.4]].forEach(([a,b])=>pip(a,0.8,b,[1,0.35,1]));[[-0.4,0.4],[0.4,-0.4]].forEach(([a,b])=>pip(0.8,a,b,[0.35,1,1]));return o},
@@ -12012,6 +12012,8 @@ editor(){
     }
     const pp=root.querySelector(".s2"),ctxHost=document.getElementById("stud-ctx"),ppOn=(t,f,c)=>{pp.addEventListener(t,f,c);if(ctxHost)ctxHost.addEventListener(t,f,c)},rootOn=(t,f)=>{root.addEventListener(t,f);if(ctxHost)ctxHost.addEventListener(t,f)};
     studioPaintTplThumbs(root);studioPaintPageThumbs();try{studioCollabPaint()}catch(e){}
+    /* 3D: размер рендера считаем уже по смонтированному холсту (при первой отрисовке его ещё нет — картинка выходила мельче и растягивалась) */
+    setTimeout(()=>{try{const d=studioDesign();(d.layers||[]).forEach(l=>{if(l.type==="3d"&&!l.hidden){const u=studio3dStageSrc(l);if(u)document.querySelectorAll(`img.s3img[data-s3="${CSS.escape(l.id)}"]`).forEach(im=>{if(im.getAttribute("src")!==u){im.src=u;im.style.opacity=1}})}})}catch(e){}},0);
     const pgs=root.querySelector("#s2-pages");
     if(pgs){pgs.addEventListener("click",e=>{const g=e.target.closest("[data-pg]");if(g)studioGoPage(+g.dataset.pg)});
       pgs.addEventListener("contextmenu",e=>{const g=e.target.closest("[data-pg]");if(!g)return;e.preventDefault();const i=+g.dataset.pg;
