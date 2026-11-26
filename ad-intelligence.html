@@ -10511,7 +10511,7 @@ async function studioCollabTick(){if(studioCollab.pause&&Date.now()<studioCollab
   try{const r=await apiPost(`/api/v1/studio/designs/${d.id}/presence`,{page:d.page||0,x:studioCollab.x,y:studioCollab.y,sel:studioSelIds().slice(0,50),editing:!!(document.activeElement&&document.activeElement.isContentEditable)});
     if(studioDesign()!==d)return;studioCollab.me=r.me;studioCollab.peers=r.peers||[];studioCollabPaint();
     if(r.updated_at&&d.serverAt&&r.updated_at>d.serverAt+0.0005&&r.updated_by!==r.me&&!studioSaving)await studioCollabPull(d)}
-  catch(e){studioCollab.pause=Date.now()+60000}finally{studioCollab.busy=false}}
+  catch(e){studioCollab.lastErr=String(e&&e.message||e);if(/404|not found|405/i.test(studioCollab.lastErr))studioCollab.pause=Date.now()+60000}finally{studioCollab.busy=false}}
 setInterval(studioCollabTick,2000);
 window.NEON_COLLAB={state:studioCollab,dbg:()=>({save:studioSave.state,err:studioSave.err,serverAt:studioDesign().serverAt,base:!!studioCollab.base,saving:!!studioSaving})};
 document.addEventListener("pointermove",e=>{const st=e.target.closest&&e.target.closest(".stud-stage");if(!st){return}const r=st.getBoundingClientRect();studioCollab.x=Math.round((e.clientX-r.left)/r.width*1000)/10;studioCollab.y=Math.round((e.clientY-r.top)/r.height*1000)/10},{passive:true});
