@@ -10647,10 +10647,42 @@ function studioBrandPush(){const st=S.studio,b=st&&st.brand;if(!b||!b._team)retu
   if(!tm||!["owner","admin"].includes(tm.role)){st.brand={...JSON.parse(TEAM_BRAND.pushed[id]||"{}"),_team:id};toast("Бренд-кит команды меняют админы и владелец",{tone:"warning"});setTimeout(()=>N.refresh(),0);return}
   clearTimeout(TEAM_BRAND.t);TEAM_BRAND.t=setTimeout(async()=>{try{await apiPut("/api/v1/teams/"+id+"/brand",{brand:JSON.parse(j)});TEAM_BRAND.pushed[id]=j}catch(e){toast("Бренд-кит команды не сохранился: "+e.message,{tone:"danger"})}},900)}
 {const _save=NEON.save;NEON.save=(...a)=>{const r=_save(...a);try{studioBrandPush()}catch(e){}return r}}
+/* v10 (26.11.2026): импорт палитры в бренд-кит — список HEX/rgb(), ссылка coolors.co, файлы Adobe .ase
+   (бинарный формат Swatch Exchange), GIMP/Inkscape .gpl, CSS/JSON/TXT. Всё разбирается в браузере. */
+function studioHexN(r,g,b){return"#"+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,"0")).join("")}
+function studioParsePalette(text){const out=[];
+  if(/^GIMP Palette/m.test(text)){for(const ln of text.split(/\r?\n/)){const m=ln.match(/^\s*(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})(\s|$)/);if(m)out.push(studioHexN(+m[1],+m[2],+m[3]))}return out}
+  for(const m of text.matchAll(/rgba?\(\s*(\d{1,3})\s*[, ]\s*(\d{1,3})\s*[, ]\s*(\d{1,3})/gi))out.push(studioHexN(+m[1],+m[2],+m[3]));
+  for(const m of text.matchAll(/(?:^|[^0-9a-z])#?([0-9a-f]{6}|[0-9a-f]{3})(?![0-9a-z])/gi)){let h=m[1].toLowerCase();if(h.length===3)h=h.split("").map(c=>c+c).join("");
+    if(m[1].length===3&&!m[0].includes("#"))continue;out.push("#"+h)}
+  return out}
+function studioParseAse(buf){const v=new DataView(buf),out=[];if(v.byteLength<12||String.fromCharCode(v.getUint8(0),v.getUint8(1),v.getUint8(2),v.getUint8(3))!=="ASEF")return out;
+  let o=12;const n=v.getUint32(8);for(let i=0;i<n&&o+6<=v.byteLength;i++){const type=v.getUint16(o),len=v.getUint32(o+2);let q=o+6;
+    if(type===1){const nl=v.getUint16(q);q+=2+nl*2;const mdl=String.fromCharCode(v.getUint8(q),v.getUint8(q+1),v.getUint8(q+2),v.getUint8(q+3)).trim();q+=4;const f=k=>v.getFloat32(q+k*4);
+      if(mdl==="RGB")out.push(studioHexN(f(0)*255,f(1)*255,f(2)*255));
+      else if(mdl==="CMYK"){const c=f(0),m=f(1),y=f(2),k=f(3);out.push(studioHexN(255*(1-c)*(1-k),255*(1-m)*(1-k),255*(1-y)*(1-k)))}
+      else if(mdl==="Gray")out.push(studioHexN(f(0)*255,f(0)*255,f(0)*255));
+      else if(mdl==="LAB"){const L=f(0)*100,A=f(1),B=f(2);let y=(L+16)/116,x=A/500+y,z=y-B/200;const fi=t=>t**3>0.008856?t**3:(t-16/116)/7.787;x=0.95047*fi(x);y=fi(y);z=1.08883*fi(z);
+        const g=c=>255*(c>0.0031308?1.055*c**(1/2.4)-0.055:12.92*c);out.push(studioHexN(g(3.2406*x-1.5372*y-0.4986*z),g(-0.9689*x+1.8758*y+0.0415*z),g(0.0557*x-0.204*y+1.057*z)))}}
+    o+=6+len}return out}
+function studioPalImportDlg(){let cur=[];
+  const prev=root=>{const box=root.querySelector("[data-palprev]");box.innerHTML=cur.length?`<div class="stud-swatches">${cur.map(c=>`<span style="background:${c};width:30px;height:30px;border-radius:8px;display:inline-block;border:1px solid var(--line)" title="${c}"></span>`).join("")}</div><p class="pp-hint">Найдено цветов: ${cur.length}${cur.length>10?" — в бренд-кит войдут первые 10":""}</p>`:'<p class="pp-hint">Вставьте цвета или выберите файл — здесь появится предпросмотр.</p>'};
+  const set=L=>{cur=[...new Set(L.map(c=>c.toLowerCase()))]};
+  overlay("modal",{title:"Импорт палитры",subtitle:"HEX-коды, rgb(), ссылка coolors.co, файл .ase (Adobe), .gpl (GIMP), CSS или JSON",size:"md",service:"studio",
+    body:`<div class="stack" style="gap:10px"><textarea class="pal-ta" data-palta rows="4" placeholder="#264653, #2a9d8f, e9c46a&#10;https://coolors.co/palette/264653-2a9d8f-e9c46a-f4a261-e76f51" style="width:100%;font:13px/1.4 var(--font-mono,monospace);padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);resize:vertical"></textarea>
+      <label class="nv-btn v-secondary s-sm" for="pal-file" style="justify-content:center">${ic("upload",14)}Выбрать файл палитры</label><input type="file" id="pal-file" accept=".ase,.gpl,.txt,.css,.json,.scss,.less,.svg" class="sr"><div data-palprev></div></div>`,
+    mount(root){prev(root);const ta=root.querySelector("[data-palta]");ta.addEventListener("input",()=>{set(studioParsePalette(ta.value));prev(root)});
+      root.querySelector("#pal-file").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{
+        if(/\.ase$/i.test(f.name))set(studioParseAse(await f.arrayBuffer()));else set(studioParsePalette(await f.text()));
+        if(!cur.length)toast("В файле не нашлось цветов",{tone:"warning"});prev(root)}catch(err){toast("Не удалось прочитать файл: "+err.message,{tone:"danger"})}})},
+    actions:[{label:"Отмена"},{label:"Добавить к бренду",fn:()=>studioPalApply(cur,false)},{label:"Заменить цвета бренда",variant:"primary",fn:()=>studioPalApply(cur,true)}]})}
+function studioPalApply(L,replace){if(!L.length){toast("Нет цветов для импорта",{tone:"warning"});return false}const b=S.studio.brand=S.studio.brand||{colors:[]};
+  b.colors=[...new Set([...(replace?[]:(b.colors||[])),...L])].slice(0,10);NEON.save();N.refresh();toast(`В бренд-ките цветов: ${b.colors.length}`,{tone:"success"})}
 function studioBrandHtml(){
   const b=S.studio.brand||{colors:[]},tm=b._team&&TEAM.list.find(t=>t.id===b._team);
   return`<div class="sect-t" style="margin-top:6px">${tm?"Бренд команды «"+esc(tm.name)+"»":"Бренд"}</div>${tm&&!["owner","admin"].includes(tm.role)?'<p class="pp-hint">Общий бренд-кит команды: пользоваться может каждый, менять — админы.</p>':tm?'<p class="pp-hint">Изменения видят все участники команды.</p>':""}
   <div class="stud-swatches">${(b.colors||[]).map((c,i)=>`<button type="button" style="background:${esc(c)}" data-act="studBrandApply" data-i="${i}" data-tip="Применить ${esc(c)} к слою (Shift+клик — убрать из бренда)"></button>`).join("")}<button type="button" class="add" data-act="studBrandAdd" data-tip="Добавить цвет выбранного слоя">${ic("plus",13)}</button></div>
+  <button type="button" class="pp-btn" data-act="studPalImport" style="width:100%;margin:2px 0 6px">${ic("palette",14)}Импорт палитры (HEX, coolors, .ase, .gpl)</button>
   <input type="file" id="stud-logo-file" accept="image/*" class="sr">
   ${b.logo?`<div class="row" style="gap:6px"><nv-button size="sm" variant="secondary" icon="image" data-act="studLogoPlace">Логотип на холст</nv-button><nv-button size="sm" variant="ghost" icon="x" icon-only hint="Убрать логотип" data-act="studLogoClear"></nv-button></div>`:`<label class="nv-btn v-secondary s-sm" for="stud-logo-file" style="width:100%;justify-content:center">${ic("upload",14)}Логотип бренда</label>`}`;
 }
@@ -13669,6 +13701,7 @@ Object.assign(N.acts,{
     overlay("modal",{title:"Переименовать дизайн",service:"studio",body:`<nv-input label="Название" data-nm value="${esc(x.name)}"></nv-input>`,
       actions:[{label:"Отмена"},{label:"Сохранить",variant:"primary",fn:async()=>{const inp=document.querySelector(".ov [data-nm]");const nm=((inp&&(inp.value||inp.getAttribute("value")))||"").trim();if(!nm)return;
         try{const m=await apiPatch("/api/v1/studio/designs/"+x.id,{name:nm});studioUpsertList(m);if(studioDesign().id===x.id)studioDesign().name=nm;N.refresh()}catch(e){toast(e.message,{tone:"danger"})}}}]})},
+  studPalImport(){studioPalImportDlg()},
   studBrandAdd(){const l=studioSelected(),c=l?(l.type==="shape"||l.type==="path"?studioFillOf(l).color:l.color):studioDesign().bg.color;
     if(!c||!/^#[0-9a-f]{6}$/i.test(c)){toast("Выберите слой с цветом",{tone:"warning"});return}
     const b=S.studio.brand=S.studio.brand||{colors:[]};b.colors=[...new Set([...(b.colors||[]),c.toLowerCase()])].slice(0,10);NEON.save();N.refresh()},
