@@ -8567,8 +8567,16 @@ function studioPosHtml(l){
     <div class="pp-grid2">${inp("X","x",F.w,"X, px")}${inp("Y","y",F.h,"Y, px")}${inp("Ш","w",F.w,"Ширина, px")}${inp("В","h",F.h,"Высота, px")}</div>
     <div class="pp-grid2"><label class="pp-in" data-tip="Угол поворота"><span>${ic("rotate-cw",12)}</span><input type="number" step="1" value="${Math.round(l.rotation||0)}" data-pxprop="rotation" data-base="0"></label>
       <div class="pp-ibs">${ppIb(l.lockRatio?"link":"unlink",`data-prop-set="lockRatio" data-val="${l.lockRatio?"":"1"}"`,l.lockRatio,"Сохранять пропорции")}${ppIb("flip-horizontal-2",'data-act-flip="flipH"',l.flipH,"Отразить по горизонтали")}${ppIb("flip-vertical-2",'data-act-flip="flipV"',l.flipV,"Отразить по вертикали")}</div></div>
-    <div class="pp-row"><span class="pp-l">На холсте</span><div class="pp-ibs">${ppIb("align-horizontal-justify-center",'data-act-center="h"',false,"По центру по горизонтали")}${ppIb("align-vertical-justify-center",'data-act-center="v"',false,"По центру по вертикали")}${ppIb("copy","data-act-dup",false,"Дублировать")}</div></div>`);
+    <div class="pp-row"><span class="pp-l">На холсте</span><div class="pp-ibs">${ppIb("align-horizontal-justify-center",'data-act-center="h"',false,"По центру по горизонтали")}${ppIb("align-vertical-justify-center",'data-act-center="v"',false,"По центру по вертикали")}${ppIb("copy","data-act-dup",false,"Дублировать")}</div></div>
+    ${studioPinHtml(l)}`);
 }
+/* v10 (26.11.2026): привязка к краям при ресайзе (constraints как в Figma): l.pin={h,v}.
+   «Авто» — прежние правила studioRefit; иначе элемент держит отступ от края (в масштабе), центр или тянется. */
+function studioPinHtml(l){const P=l.pin||{},h=P.h||"auto",v=P.v||"auto";
+  const H=[["auto","wand","Авто"],["left","align-start-vertical","К левому краю"],["center","align-center-vertical","По центру"],["right","align-end-vertical","К правому краю"],["stretch","move-horizontal","Тянуть по ширине"]];
+  const V=[["auto","wand","Авто"],["top","align-start-horizontal","К верху"],["center","align-center-horizontal","По центру"],["bottom","align-end-horizontal","К низу"],["stretch","move-vertical","Тянуть по высоте"]];
+  return`<div class="pp-l" style="margin:8px 0 4px">При смене формата</div><div class="pp-row"><span class="pp-l">По гор.</span>${ppSeg(H.map(([k,i,t])=>[ic(i,14),`data-prop-set="pin.h" data-val="${k}"`,h===k,t]))}</div>
+    <div class="pp-row"><span class="pp-l">По верт.</span>${ppSeg(V.map(([k,i,t])=>[ic(i,14),`data-prop-set="pin.v" data-val="${k}"`,v===k,t]))}</div>`}
 /* Закреплённые элементы шаблона (v8-4): l.lockTpl — у редакторов и наблюдателей команды не двигаются и не открепляются. */
 function studioTplAdmin(){const d=studioDesign(),id=d.teamId||(teamCur()&&teamCur().id);if(!id)return true;const t=TEAM.list.find(x=>x.id===id);return!t||["owner","admin"].includes(t.role)}
 function studioCanUnlock(l){if(!l.lockTpl||!l.locked||studioTplAdmin())return true;toast("Элемент закреплён в шаблоне команды — открепить может админ",{tone:"warning"});return false}
@@ -10361,6 +10369,10 @@ function studioRefit(design,fmt){
       if(T&&Bt){l.y=oy;l.h=oh}else if(T)l.y=oy;else if(Bt)l.y=100-l.h-(100-oy-oh);
     }
     if(l.type==="text")l.fontSize=Math.round(l.fontSize*A.h*k/B.h*100)/100;
+    const P=l.pin;if(P&&(P.h&&P.h!=="auto"||P.v&&P.v!=="auto")){
+      const ax=(m,pos,sz,FA,FB,sB)=>{const a=pos*k,b=(FA-pos-sz)*k;if(m==="left"||m==="top")return[a,sB];if(m==="right"||m==="bottom")return[FB-b-sB,sB];if(m==="center")return[(pos+sz/2)/FA*FB-sB/2,sB];if(m==="stretch")return[a,Math.max(1,FB-a-b)];return null};
+      const X=P.h&&P.h!=="auto"?ax(P.h,xA,wA,A.w,B.w,wpx):null,Y=P.v&&P.v!=="auto"?ax(P.v,yA,hA,A.h,B.h,hpx):null;
+      if(X){l.x=X[0]/B.w*100;l.w=X[1]/B.w*100}if(Y){l.y=Y[0]/B.h*100;l.h=Y[1]/B.h*100}}
   });
   return out;
 }
