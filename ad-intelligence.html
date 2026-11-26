@@ -1771,7 +1771,7 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .s2-rail{display:flex;flex-direction:column;gap:2px;padding:8px 6px;background:var(--surface-2);border-right:1px solid var(--line);align-self:stretch;overflow-y:auto;scrollbar-width:none;min-height:0}
 .s2-rail button{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;border-radius:10px;padding:8px 2px;font-size:10.5px;color:var(--ink-2);cursor:pointer}
 .s2-rail button:hover{background:var(--surface-3);color:var(--ink)}
-.s2-rail button.on{background:var(--svc-soft);color:var(--svc-ink);font-weight:700}
+.s2-rail button.on{background:var(--svc);color:#0d1211;font-weight:700}/* как пункт раздела в меню (.rail-item.on) — один фиолетовый */
 .s2-panel{width:300px;border-right:1px solid var(--line);padding:14px;align-self:stretch;max-height:calc(100vh - 150px);overflow:auto;display:flex;flex-direction:column;gap:10px}
 .s2-panel[hidden]{display:none}
 .s2-panel h3{margin:0;font-size:15px}
@@ -1830,9 +1830,9 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 .stud-rtbar .sep{width:1px;height:20px;background:var(--line);margin:0 3px}.stud-rtbar .sw{min-width:20px;width:20px;height:20px;border-radius:50%;border:1px solid var(--line-2);padding:0;position:relative}
 .stud-rtbar label.pick{display:grid;place-items:center;cursor:pointer;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);color:#fff}.stud-rtbar label.pick input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .s2-favable{position:relative}
-/* как закладка на карточках Разведки (.cr-save), но в цвете раздела: белая плашка, в избранном — фиолетовая Студии */
+/* как закладка на карточках Разведки (.cr-save), но в цвете раздела: белая плашка, в избранном — заливка как у пункта «Студия» в меню (.rail-item.on) */
 .s2-fav{position:absolute;right:3px;top:3px;z-index:2;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.94);color:#111;box-shadow:0 1px 3px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;cursor:pointer;line-height:1}
-.s2-fav svg{width:12px;height:12px}.s2-fav:hover{background:#fff}.s2-fav.on{background:var(--svc-d,#6a3fd4);color:#fff;opacity:1}.s2-fav.on svg{fill:currentColor}
+.s2-fav svg{width:12px;height:12px}.s2-fav:hover{background:#fff}.s2-fav.on{background:var(--svc,#c4a7ff);color:#0d1211;opacity:1}.s2-fav.on svg{fill:currentColor}
 .s2-favable:hover>.s2-fav{opacity:1}.s2-grid2 .th.s2-favable .x{right:auto;left:4px}.s2-grid2 .th>.s2-fav{width:26px;height:26px;right:6px;top:6px}.s2-grid2 .th>.s2-fav svg{width:14px;height:14px}
 .s2-fav-empty{text-align:center;color:var(--ink-3);padding:24px 8px;font-size:12.5px;line-height:1.45}.s2-fav-empty p{margin:8px 0 0}
 .s2-grid2>*{min-width:0}
@@ -8810,7 +8810,7 @@ function studioLayoutSecHtml(g,ls){const d=studioDesign(),L=(d.groupLayout||{})[
       ${bg?`<div class="pp-row"><span class="pp-l">Поля</span><div class="rng"><input type="range" min="0" max="120" step="1" value="${+L.pad||0}" style="--rng-p:${rngPct(+L.pad||0,0,120)}" data-glay="pad"><output>${+L.pad||0}</output></div></div>`:""}
       <p class="pp-hint">Порядок — по положению: перетащите элемент дальше соседа, и они поменяются местами. Текстам включите «Ширина по тексту» — фон будет расти вместе с ними.</p>`:`<p class="pp-hint">Элементы встанут в ряд или столбиком с ровными отступами, а фон-плашка обтянет их — удобно для кнопок, цен, списков с иконками.</p>`}`,on?(L.dir==="col"?"столбик":"ряд"):"")}
 function studioLayoutApply(){const d=studioDesign();studioAutoRun(d).forEach(id=>{const l=d.layers.find(x=>x.id===id);if(l)studioPatchLayerDom(l)});studioPaintGroupBox();NEON.save()}
-document.addEventListener("change",e=>{if(e.target&&e.target.id==="s2-trace-file"){const f=e.target.files[0];e.target.value="";studioTraceFromFile(f)}});
+document.addEventListener("change",e=>{if(e.target&&(e.target.id==="s2-trace-file"||e.target.id==="stud-trace-file")){const f=e.target.files[0];e.target.value="";studioTraceFromFile(f)}});
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-glact]");if(!b)return;const g=studioSelGroup();if(!g)return;const d=studioDesign(),GL=d.groupLayout=d.groupLayout||{},L=GL[g]=GL[g]||{};const[k,v]=b.dataset.glact.split(":");studioBeforeChange();
   if(k==="dir"){if(v==="none"){delete GL[g];d.layers.forEach(l=>{if(l.group===g)delete l.lyBg})}else{const was=L.dir;L.dir=v;if(L.align==null)L.align="center";
     if(!was){const F=studioFmtOf(d),kids=d.layers.filter(l=>l.group===g&&!l.hidden),cand=kids.filter(l=>["shape","image","path"].includes(l.type)).sort((a,b)=>b.w*b.h-a.w*a.h)[0];
@@ -10982,9 +10982,127 @@ function studioVecSvg(res,W,H,smooth){const seg=P=>{const L=studioVecToPts(P,W,H
    4) «стопка» слоёв как у VTracer: слой i = все пиксели кластеров ранга ≥ i (крупные сзади) — между цветами нет щелей,
    5) обход границ по рёбрам пикселей, снятие «лесенки» (середины рёбер + сглаживание 1-2-1),
    6) углы по углу излома, 7) кривые Безье по алгоритму Шнайдера (Graphics Gems: МНК + Ньютон, деление по макс. ошибке). */
-const STUDIO_TRACE_PRESETS={logo:{label:"Логотип / иконка",colors:6,size:1000,blur:0,speckle:16,err:0.9,corner:115,smooth:2},art:{label:"Иллюстрация",colors:16,size:1000,blur:1,speckle:20,err:1.6,corner:110,smooth:1,order:"lum"},photo:{label:"Фото",colors:32,size:900,blur:2,speckle:40,err:2.2,corner:95,smooth:2,order:"lum"},poster:{label:"Постер (мало цветов)",colors:8,size:900,blur:1,speckle:30,err:1.8,corner:105,smooth:2,order:"lum"}};
+const STUDIO_TRACE_PRESETS={logo:{label:"Графика и текст",colors:12,size:2000,blur:1,sharp:1,speckle:16,err:0.55,corner:135,smooth:1,merge:15},art:{label:"Иллюстрация",colors:24,size:1800,sharp:0.6,blur:1,speckle:16,err:0.8,corner:125,smooth:1,merge:6,order:"lum"},photo:{label:"Фото",colors:32,size:1200,blur:2,speckle:40,err:1.4,corner:100,smooth:2,merge:4,order:"lum"},poster:{label:"Постер (мало цветов)",colors:6,size:2000,sharp:1,blur:1,speckle:20,err:0.7,corner:130,smooth:1,merge:14}};
 const studioTrYield=()=>new Promise(r=>setTimeout(r,0));
 function studioLab(r,g,b){const f=c=>{c/=255;return c<=0.04045?c/12.92:((c+0.055)/1.055)**2.4},R=f(r),G=f(g),B=f(b),X=(R*0.4124+G*0.3576+B*0.1805)/0.95047,Y=R*0.2126+G*0.7152+B*0.0722,Z=(R*0.0193+G*0.1192+B*0.9505)/1.08883,q=t=>t>0.008856?Math.cbrt(t):7.787*t+16/116;const fx=q(X),fy=q(Y),fz=q(Z);return[116*fy-16,500*(fx-fy),200*(fy-fz)]}
+/* медиана 3×3 по каналам: убирает шум и «звон» JPEG, но не размывает края (в отличие от гауссова размытия) */
+function studioTrMedian(px,W,H,passes){let src=px;const v=new Int32Array(9),s=(a,b)=>{if(v[a]>v[b]){const t=v[a];v[a]=v[b];v[b]=t}};
+  for(let p=0;p<passes;p++){const out=new Uint8ClampedArray(src);
+    for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=(y*W+x)*4;for(let c=0;c<3;c++){const j=i+c;v[0]=src[j-W*4-4];v[1]=src[j-W*4];v[2]=src[j-W*4+4];v[3]=src[j-4];v[4]=src[j];v[5]=src[j+4];v[6]=src[j+W*4-4];v[7]=src[j+W*4];v[8]=src[j+W*4+4];
+      s(1,2);s(4,5);s(7,8);s(0,1);s(3,4);s(6,7);s(1,2);s(4,5);s(7,8);s(0,3);s(5,8);s(4,7);s(3,6);s(1,4);s(2,5);s(4,7);s(4,2);s(6,4);s(4,2);out[j]=v[4]}}
+    src=out}return src}
+/* изолинии поля f (значения в центрах пикселей) на уровне 0.5 — замкнутые контуры с точностью до долей пикселя */
+/* за краем картинки поле продолжается на 1 пиксель (иначе фон отступает от края на полпикселя), дальше — 0, чтобы контуры замкнулись */
+function studioTrMarch(f,W,H){const G=W+5,val=(x,y)=>x<-1||y<-1||x>W||y>H?0:f[Math.min(H-1,Math.max(0,y))*W+Math.min(W-1,Math.max(0,x))],pts=new Map(),adj=new Map();
+  const hk=(x,y)=>((y+2)*G+(x+2))*2,vk=(x,y)=>((y+2)*G+(x+2))*2+1;
+  const pH=(x,y)=>{const k=hk(x,y);if(!pts.has(k)){const a=val(x,y),b=val(x+1,y),t=Math.min(1,Math.max(0,(0.5-a)/((b-a)||1e-9)));pts.set(k,[x+t+0.5,y+0.5])}return k};
+  const pV=(x,y)=>{const k=vk(x,y);if(!pts.has(k)){const a=val(x,y),b=val(x,y+1),t=Math.min(1,Math.max(0,(0.5-a)/((b-a)||1e-9)));pts.set(k,[x+0.5,y+t+0.5])}return k};
+  const link=(a,b)=>{let l=adj.get(a);if(!l)adj.set(a,l=[]);l.push(b);l=adj.get(b);if(!l)adj.set(b,l=[]);l.push(a)};
+  for(let y=-2;y<=H;y++)for(let x=-2;x<=W;x++){const a=val(x,y),b=val(x+1,y),c=val(x+1,y+1),d=val(x,y+1),m=(a>=0.5?1:0)|(b>=0.5?2:0)|(c>=0.5?4:0)|(d>=0.5?8:0);if(m===0||m===15)continue;
+    const T=()=>pH(x,y),B=()=>pH(x,y+1),L=()=>pV(x,y),R=()=>pV(x+1,y),ctr=(a+b+c+d)/4>=0.5;
+    switch(m){case 1:case 14:link(L(),T());break;case 2:case 13:link(T(),R());break;case 3:case 12:link(L(),R());break;case 4:case 11:link(R(),B());break;case 6:case 9:link(T(),B());break;case 7:case 8:link(L(),B());break;
+      case 5:if(ctr){link(T(),R());link(B(),L())}else{link(L(),T());link(R(),B())}break;
+      case 10:if(ctr){link(L(),T());link(R(),B())}else{link(T(),R());link(B(),L())}break}}
+  const seen=new Set(),loops=[];
+  for(const k0 of adj.keys()){if(seen.has(k0))continue;const L=[];let prev=-1,cur=k0;
+    for(let g=0;g<1e7;g++){seen.add(cur);L.push(pts.get(cur));const nb=adj.get(cur);let nx=nb[0]===prev?nb[1]:nb[0];if(nb.length>2){nx=nb.find(z=>z!==prev&&!seen.has(z));if(nx==null)nx=k0}if(nx==null||nx===k0)break;prev=cur;cur=nx;if(seen.has(cur))break}
+    if(L.length>=3)loops.push(L)}
+  return loops}
+const studioTrArea=L=>{let a=0;for(let i=0;i<L.length;i++){const p=L[i],q=L[(i+1)%L.length];a+=p[0]*q[1]-q[0]*p[1]}return Math.abs(a)/2};
+/* контур с долями пикселя → углы (по длине дуги, на двух масштабах) → сглаживание между углами → кривые Безье */
+function studioTrFitLoop(P0,o,D){let P=P0.filter((p,i)=>{const q=P0[(i+1)%P0.length];return Math.abs(p[0]-q[0])+Math.abs(p[1]-q[1])>1e-3});const n=P.length;if(n<4)return null;
+  const S=new Float64Array(n+1);for(let i=0;i<n;i++){const a=P[i],b=P[(i+1)%n];S[i+1]=S[i]+Math.hypot(b[0]-a[0],b[1]-a[1])}const tot=S[n];if(tot<3)return null;
+  const at=(i,dist)=>{/* точка на расстоянии dist по контуру от i (dist<0 — назад) */let j=i,acc=0;const st=dist>0?1:-1,lim=Math.abs(dist);for(let g=0;g<n;g++){const k=(j+st+n)%n,seg=Math.hypot(P[k][0]-P[j][0],P[k][1]-P[j][1]);if(acc+seg>=lim){const t=(lim-acc)/(seg||1);return[P[j][0]+(P[k][0]-P[j][0])*t,P[j][1]+(P[k][1]-P[j][1])*t]}acc+=seg;j=k}return P[j]};
+  const ang=(i,d)=>{const a=at(i,-d),b=at(i,d),p=P[i],u=[a[0]-p[0],a[1]-p[1]],v=[b[0]-p[0],b[1]-p[1]];return Math.acos(Math.max(-1,Math.min(1,(u[0]*v[0]+u[1]*v[1])/((Math.hypot(u[0],u[1])*Math.hypot(v[0],v[1]))||1))))*180/Math.PI};
+  const d1=Math.min(D,tot/8),A=new Float32Array(n);for(let i=0;i<n;i++)A[i]=ang(i,d1);
+  const C=[];for(let i=0;i<n;i++){if(A[i]>o.corner)continue;if(ang(i,Math.min(2*d1,tot/5))>o.corner+20)continue;
+    let mn=true;for(let k=1;k<n;k++){const j=(i+k)%n;if(S[i+k<=n?i+k:i+k-n]-S[i]>d1&&k>2)break;if(A[j]<A[i]){mn=false;break}}
+    if(mn)for(let k=1;k<n;k++){const j=(i-k+n)%n;if(k>2&&Math.abs(S[i]-S[j])>d1&&Math.abs(S[i]-S[j])<tot-d1)break;if(A[j]<=A[i]&&j!==i){mn=false;break}}
+    if(mn&&(!C.length||S[i]-S[C[C.length-1]]>d1*0.8))C.push(i)}
+  if(C.length>1&&tot-S[C[C.length-1]]+S[C[0]]<=d1*0.8)C.pop();
+  const fixed=new Uint8Array(n);C.forEach(i=>fixed[i]=1);let Q=P;for(let s2=0;s2<o.smooth;s2++)Q=Q.map((p,i)=>{if(fixed[i])return P[i];const a=Q[(i-1+n)%n],b=Q[(i+1)%n];return[(a[0]+2*p[0]+b[0])/4,(a[1]+2*p[1]+b[1])/4]});
+  const segs=[],run=(i0,i1)=>{const pts=[];for(let i=i0;;i=(i+1)%n){pts.push(Q[i]);if(i===i1&&pts.length>1)break}return pts},e2=o.err*o.err;
+  if(!C.length)segs.push(...studioFitCurve(Q.concat([Q[0]]),e2));
+  else for(let k=0;k<C.length;k++){const a=C[k],b=C[(k+1)%C.length],pts=b===a?run(a,(a-1+n)%n).concat([Q[a]]):run(a,b);
+    /* почти прямой участок — ровная линия (Шнайдер иначе слегка «волнит» длинные прямые) */
+    const p0=pts[0],p1=pts[pts.length-1],L=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]);let dev=0;if(L>0)for(const p of pts)dev=Math.max(dev,Math.abs((p1[0]-p0[0])*(p0[1]-p[1])-(p0[0]-p[0])*(p1[1]-p0[1]))/L);
+    if(L>2&&dev<Math.max(0.35,o.err*0.6))segs.push([p0,[p0[0]+(p1[0]-p0[0])/3,p0[1]+(p1[1]-p0[1])/3],[p0[0]+(p1[0]-p0[0])*2/3,p0[1]+(p1[1]-p0[1])*2/3],p1]);else segs.push(...studioFitCurve(pts,e2))}
+  return segs.length?segs:null}
+/* что за картинка: графика (много ровных заливок) или фото; и есть ли однотонный светлый фон, который стоит убрать */
+function studioTraceGuess(cv){const sc=Math.min(1,400/Math.max(cv.width,cv.height)),w=Math.max(4,Math.round(cv.width*sc)),h=Math.max(4,Math.round(cv.height*sc)),k=document.createElement("canvas");k.width=w;k.height=h;const g=k.getContext("2d");g.drawImage(cv,0,0,w,h);
+  const D=g.getImageData(0,0,w,h).data;let fl=0,m=0,tr=0;const bins=new Map();
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const i=(y*w+x)*4;if(D[i+3]<128){tr++;continue}m++;let gm=0;for(const j of [i-4,i+4,i-w*4,i+w*4]){const d=Math.abs(D[i]-D[j])+Math.abs(D[i+1]-D[j+1])+Math.abs(D[i+2]-D[j+2]);if(d>gm)gm=d}
+    if(gm<=30){fl++;const b=(D[i]>>4)<<8|(D[i+1]>>4)<<4|(D[i+2]>>4);bins.set(b,(bins.get(b)||0)+1)}}
+  const share=m?fl/m:0,big=[...bins.values()].filter(c=>c>fl*0.004).length;
+  const preset=share>0.55?(big<=18?"logo":"art"):share>0.35?"art":"photo";
+  /* фон убираем, только если картинка без прозрачности и по краю почти сплошь светлый однотонный цвет (логотип на белом) */
+  let light=0,edge=0;for(let x=0;x<w;x++)for(const y of [0,h-1]){const i=(y*w+x)*4;edge++;if(D[i+3]>=128&&D[i]>235&&D[i+1]>235&&D[i+2]>235)light++}
+  for(let y=0;y<h;y++)for(const x of [0,w-1]){const i=(y*w+x)*4;edge++;if(D[i+3]>=128&&D[i]>235&&D[i+1]>235&&D[i+2]>235)light++}
+  return{preset,dropBg:!tr&&preset!=="photo"&&light>edge*0.85,transp:tr>(w*h)*0.05}}
+/* пятна: мелкое и близкое по цвету к соседу (шум сжатия) — в соседа; контрастное мелкое (просвет буквы, дефис, точка) оставляем, если оно не совсем крошечное */
+function studioTrDespeckleC(lb,W,H,minA,tiny,PL){if(minA<2)return;const n=W*H,seen=new Uint8Array(n),q=new Int32Array(n);
+  for(let s0=0;s0<n;s0++){if(seen[s0]||lb[s0]<0)continue;const c=lb[s0];let h=0,t=0;q[t++]=s0;seen[s0]=1;const nb={};
+    while(h<t){const i=q[h++],x=i%W,y=(i/W)|0;for(const j of [x>0?i-1:-1,x<W-1?i+1:-1,y>0?i-W:-1,y<H-1?i+W:-1]){if(j<0)continue;if(lb[j]===c){if(!seen[j]){seen[j]=1;q[t++]=j}}else if(lb[j]>=0)nb[lb[j]]=(nb[lb[j]]||0)+1}}
+    if(t>=minA)continue;let best=-1,bc=0;for(const k in nb)if(nb[k]>bc){bc=nb[k];best=+k}if(best<0)continue;
+    const A=PL[c],B=PL[best],dE=Math.hypot(A[0]-B[0],A[1]-B[1],A[2]-B[2]);if(t<tiny||dE<28)for(let k=0;k<t;k++)lb[q[k]]=best}}
+async function studioTraceImage(px0,W,H,o0,prog){const n=W*H,up=Math.max(1,o0.up||1);
+  /* картинку увеличили (маленький исходник) — допуск, сглаживание и пятна считаем в пикселях ИСХОДНИКА, иначе кривые повторяют шум JPEG */
+  const o={...o0,err:o0.err*Math.sqrt(up),speckle:o0.speckle*up*up,smooth:o0.smooth||0,fpass:1};prog&&prog("Убираю шум…");await studioTrYield();
+  const pxM=o.blur?studioTrMedian(px0,W,H,o.blur):px0;let px=pxM;
+  /* резкость (unsharp mask): у тонких штрихов мелкого текста середина размыта и не доходит до полного цвета — без этого буквы «худеют».
+     Фильтр симметричный, поэтому граница крупных фигур не сдвигается */
+  if(o.sharp>0){const rad=Math.max(1,Math.round(up)),bl=studioTrBlur(px,W,H,rad),sh=new Uint8ClampedArray(px.length);for(let i=0;i<px.length;i++)sh[i]=(i&3)===3?px[i]:px[i]+o.sharp*(px[i]-bl[i]);px=sh}
+  /* ровные пиксели (внутри заливок) и краевые — по картинке ДО резкости (у резкости «перелёт» у краёв дал бы лишние тёмные оттенки) */
+  const flat=new Uint8Array(n);let nf=0,na=0;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,j=i*4;if(pxM[j+3]<128)continue;na++;let gm=0;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const k=(yy*W+xx)*4;const d=Math.abs(pxM[j]-pxM[k])+Math.abs(pxM[j+1]-pxM[k+1])+Math.abs(pxM[j+2]-pxM[k+2]);if(d>gm)gm=d}
+    if(gm<=(o.flatT||36)){flat[i]=1;nf++}}
+  prog&&prog("Цвета…");await studioTrYield();
+  /* палитра — только по ровным участкам: промежуточные цвета краёв не становятся отдельными слоями (ореолы вокруг букв) */
+  const useFlat=nf>na*0.08,pf=useFlat?new Uint8ClampedArray(pxM):pxM;if(useFlat)for(let i=0;i<n;i++)if(!flat[i])pf[i*4+3]=0;
+  studioTrKmeans.minShare=o.minShare!=null?o.minShare:(o.colors<=12?0.0015:0.001);const Q0=studioTrKmeans(pf,W,H,o.colors);if(!Q0)return{W,H,layers:[]};
+  const cnt0=new Array(Q0.K).fill(0),core=new Array(Q0.K).fill(0);for(let i=0;i<n;i++)if(Q0.lb[i]>=0)cnt0[Q0.lb[i]]++;
+  /* «ядро» цвета — пиксели, у которых весь квадрат 5×5 ровный и того же цвета. У настоящих заливок и букв оно есть,
+     у «звона» JPEG и ореолов вдоль краёв (тонкие полосы) — нет: такие цвета в палитру не берём */
+  if(useFlat)for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++){const i=y*W+x,c=Q0.lb[i];if(c<0||!flat[i])continue;let ok=1;for(let dy=-2;dy<=2&&ok;dy++)for(let dx=-2;dx<=2;dx++){const j=i+dy*W+dx;if(!flat[j]||Q0.lb[j]!==c){ok=0;break}}if(ok)core[c]++}
+  const minCore=useFlat?Math.max(12,n*0.00008):0;
+  const ord0=[...Array(Q0.K).keys()].filter(k=>cnt0[k]>0&&(!useFlat||core[k]>=minCore||core[k]>=cnt0[k]*0.5)).sort((a,b)=>cnt0[b]-cnt0[a]),PL=[],PH=[];
+  for(const k of ord0){const L=studioLab(...studioHexRgb(Q0.col[k]));if(PL.some(q=>Math.hypot(q[0]-L[0],q[1]-L[1],q[2]-L[2])<(o.merge||8)))continue;PL.push(L);PH.push(Q0.col[k])}
+  const K=PL.length,near=(L,cand)=>{let b=-1,bd=1e18;for(const k of cand||PL.keys()){const q=PL[k],d=(q[0]-L[0])**2+(q[1]-L[1])**2+(q[2]-L[2])**2;if(d<bd){bd=d;b=k}}return b};
+  const cache=new Int16Array(1<<18).fill(-1),nearRgb=(r,g,b)=>{const key=(r>>2)<<12|(g>>2)<<6|(b>>2);let v=cache[key];if(v<0)v=cache[key]=near(studioLab(r,g,b));return v};
+  const lb=new Int16Array(n).fill(-1);for(let i=0;i<n;i++)if(flat[i]||(!useFlat&&px[i*4+3]>=128))lb[i]=nearRgb(pxM[i*4],pxM[i*4+1],pxM[i*4+2]);
+  /* краевые пиксели: кандидаты — цвета ровных соседей в радиусе 3; сам пиксель — к ближайшему из них */
+  const R=Math.ceil(2*up)+1,nbL=new Int16Array(n*3).fill(-1),labE=new Map();
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(flat[i]||px[i*4+3]<128)continue;const c={};
+    for(let dy=-R;dy<=R;dy++){const yy=y+dy;if(yy<0||yy>=H)continue;for(let dx=-R;dx<=R;dx++){const xx=x+dx;if(xx<0||xx>=W)continue;const j=yy*W+xx;if(flat[j]&&lb[j]>=0)c[lb[j]]=(c[lb[j]]||0)+1}}
+    const ks=Object.keys(c).map(Number).sort((a,b)=>c[b]-c[a]).slice(0,3);ks.forEach((k,t)=>nbL[i*3+t]=k);
+    const L=studioLab(px[i*4],px[i*4+1],px[i*4+2]);labE.set(i,L);let v=ks.length?near(L,ks):nearRgb(px[i*4],px[i*4+1],px[i*4+2]);
+    /* мелкая деталь (тонкий штрих, просвет в букве) без ровных пикселей своего цвета рядом: если пиксель близок к цвету палитры (ΔE<20) и ближе, чем к соседям, — это его цвет. Смеси на краях далеки от любого цвета палитры, ореолов не будет */
+    if(ks.length){const g=near(L),dv=(PL[v][0]-L[0])**2+(PL[v][1]-L[1])**2+(PL[v][2]-L[2])**2,dg=(PL[g][0]-L[0])**2+(PL[g][1]-L[1])**2+(PL[g][2]-L[2])**2;if(g!==v&&dg<400&&dg<dv){v=g;if(ks.length<3)nbL[i*3+ks.length]=g;else nbL[i*3+2]=g}}
+    lb[i]=v}
+  studioTrDespeckleC(lb,W,H,o.speckle,Math.max(3,1.5*up*up),PL);await studioTrYield();
+  let area=new Array(K).fill(0);for(let i=0;i<n;i++)if(lb[i]>=0)area[lb[i]]++;
+  /* редкий оттенок, близкий к крупному (тёмно-синий №2 от сжатия) — сливаем с крупным */
+  {const map=[...Array(K).keys()];for(let k=0;k<K;k++){if(area[k]>=n*0.004||!area[k])continue;let b=-1,bd=1e9;for(let j=0;j<K;j++){if(j===k||area[j]<=area[k])continue;const d=Math.hypot(PL[j][0]-PL[k][0],PL[j][1]-PL[k][1],PL[j][2]-PL[k][2]);if(d<bd){bd=d;b=j}}if(b>=0&&bd<22)map[k]=b}
+    if(map.some((v,k)=>v!==k)){for(let i=0;i<n;i++)if(lb[i]>=0)lb[i]=map[lb[i]];area=new Array(K).fill(0);for(let i=0;i<n;i++)if(lb[i]>=0)area[lb[i]]++}}
+  /* порядок стопки: графика — по площади (крупное сзади), фото/иллюстрация — по яркости */
+  const Lum=PL.map(q=>q[0]),order=[...Array(K).keys()].filter(k=>area[k]>0).sort(o.order==="lum"?(a,b)=>Lum[a]-Lum[b]:(a,b)=>area[b]-area[a]),rank=new Int16Array(K).fill(-1);order.forEach((k,r)=>rank[k]=r);
+  let bgDrop=-1;if(o.dropBg){const cnt={};for(let x=0;x<W;x++)for(const y of [0,H-1]){const v=lb[y*W+x];if(v>=0)cnt[v]=(cnt[v]||0)+1}for(let y=0;y<H;y++)for(const x of [0,W-1]){const v=lb[y*W+x];if(v>=0)cnt[v]=(cnt[v]||0)+1}let m=0;for(const k in cnt)if(cnt[k]>m){m=cnt[k];bgDrop=+k}if(m<(W+H)*1.2)bgDrop=-1}
+  const layers=[],f=new Float32Array(n),D=Math.max(2,2.2*Math.max(W,H)/1000);
+  for(let r=0;r<order.length;r++){const k=order[r];if(k===bgDrop)continue;const inS=v=>v>=0&&v!==bgDrop&&rank[v]>=r;let any=0;
+    for(let i=0;i<n;i++){const v=lb[i];let val=inS(v)?1:0;
+      /* мягкая маска: на краю — доля «внутреннего» цвета по сглаживанию исходника (граница проходит между пикселями, а не по ступенькам) */
+      const L=labE.get(i);if(L){let a=-1,b=-1;for(let t=0;t<3;t++){const c=nbL[i*3+t];if(c<0)break;if(inS(c)){if(a<0)a=c}else if(b<0)b=c}
+        if(a>=0&&b>=0){const A=PL[a],B=PL[b],ab=[A[0]-B[0],A[1]-B[1],A[2]-B[2]],q=ab[0]*ab[0]+ab[1]*ab[1]+ab[2]*ab[2];if(q>1){const t=((L[0]-B[0])*ab[0]+(L[1]-B[1])*ab[1]+(L[2]-B[2])*ab[2])/q;val=Math.min(1,Math.max(0,t))}}}
+      f[i]=val;any|=val>=0.5}
+    if(!any)continue;
+    /* лёгкое сглаживание маски 1-2-1: убирает дрожание края от шума JPEG, границу сдвигает меньше чем на треть пикселя */
+    for(let fp=0;fp<o.fpass;fp++){const g=new Float32Array(n);for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;g[i]=(2*f[i]+(x>0?f[i-1]:f[i])+(x<W-1?f[i+1]:f[i]))/4}
+      for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;f[i]=(2*g[i]+(y>0?g[i-W]:g[i])+(y<H-1?g[i+W]:g[i]))/4}}
+    const loops=studioTrMarch(f,W,H).filter(L=>studioTrArea(L)>=Math.max(4,o.speckle)),paths=[];for(const L of loops){const sg=studioTrFitLoop(L,o,D);if(sg)paths.push(sg)}
+    if(paths.length)layers.push({color:PH[k],paths});prog&&prog(`Контуры: ${r+1} из ${order.length}`);await studioTrYield()}
+  window.NEON_TRACE_DBG={pal:PH,area:order.map(k=>area[k]),flat:+(nf/Math.max(1,na)).toFixed(3),up};
+  return{W,H,layers}}
 function studioTrBlur(px,W,H,rad){if(!rad)return px;const out=new Uint8ClampedArray(px.length),tmp=new Float32Array(px.length),k=[];for(let i=-rad;i<=rad;i++)k.push(Math.exp(-(i*i)/(2*(rad*0.75+0.25)**2)));const ks=k.reduce((a,b)=>a+b,0);
   for(let y=0;y<H;y++)for(let x=0;x<W;x++)for(let c=0;c<4;c++){let v=0;for(let i=-rad;i<=rad;i++){const xx=Math.min(W-1,Math.max(0,x+i));v+=px[(y*W+xx)*4+c]*k[i+rad]}tmp[(y*W+x)*4+c]=v/ks}
   for(let y=0;y<H;y++)for(let x=0;x<W;x++)for(let c=0;c<4;c++){let v=0;for(let i=-rad;i<=rad;i++){const yy=Math.min(H-1,Math.max(0,y+i));v+=tmp[(yy*W+x)*4+c]*k[i+rad]}out[(y*W+x)*4+c]=v/ks}return out}
@@ -11034,19 +11152,9 @@ function studioTrLoop(L,o){let P=[];for(let i=0;i<L.length;i++){const a=L[i],b=L
   if(!C.length)segs.push(...studioFitCurve(Q.concat([Q[0]]),e2));
   else for(let k=0;k<C.length;k++){const a=C[k],b=C[(k+1)%C.length],pts=b===a?run(a,(a-1+n)%n).concat([Q[a]]):run(a,b);segs.push(...studioFitCurve(pts,e2))}
   return segs.length?segs:null}
-async function studioTraceImage(px0,W,H,o,prog){const px=studioTrBlur(px0,W,H,o.blur);studioTrKmeans.minShare=o.minShare!=null?o.minShare:(o.colors<=10?0.012:0.003);prog&&prog("Цвета…");await studioTrYield();
-  const Q=studioTrKmeans(px,W,H,o.colors);if(!Q)return{W,H,layers:[]};studioTrDespeckle(Q.lb,W,H,o.speckle);await studioTrYield();
-  const area=new Array(Q.K).fill(0);for(let i=0;i<W*H;i++)if(Q.lb[i]>=0)area[Q.lb[i]]++;/* порядок стопки: логотип — по площади (крупное сзади); фото/иллюстрация — по яркости (тёмное сзади): под краем
-     каждой фигуры лежит соседний по тону цвет, и на сглаженных краях не проступают «чужие» швы */
-  const Lum=Q.col.map(h=>studioLab(...studioHexRgb(h))[0]),order=[...Array(Q.K).keys()].filter(k=>area[k]>0).sort(o.order==="lum"?(a,b)=>Lum[a]-Lum[b]:(a,b)=>area[b]-area[a]),rank=new Int16Array(Q.K).fill(-1);order.forEach((k,r)=>rank[k]=r);
-  let bgDrop=-1;if(o.dropBg){const cnt={};for(let x=0;x<W;x++)for(const y of [0,H-1]){const v=Q.lb[y*W+x];if(v>=0)cnt[v]=(cnt[v]||0)+1}for(let y=0;y<H;y++)for(const x of [0,W-1]){const v=Q.lb[y*W+x];if(v>=0)cnt[v]=(cnt[v]||0)+1}let m=0;for(const k in cnt)if(cnt[k]>m){m=cnt[k];bgDrop=+k}if(m<(W+H)*1.2)bgDrop=-1}
-  const layers=[],mask=new Uint8Array(W*H);
-  for(let r=0;r<order.length;r++){const k=order[r];if(k===bgDrop)continue;let any=0;for(let i=0;i<W*H;i++){const v=Q.lb[i];mask[i]=v>=0&&v!==bgDrop&&rank[v]>=r?1:0;any|=mask[i]}if(!any)continue;
-    const loops=studioVecTrace(mask,W,H).filter(L=>studioVecArea(L)>=Math.max(4,o.speckle/2)),paths=[];for(const L of loops){const sg=studioTrLoop(L,o);if(sg)paths.push(sg)}
-    if(paths.length)layers.push({color:Q.col[k],paths});prog&&prog(`Контуры: ${r+1} из ${order.length}`);await studioTrYield()}
-  return{W,H,layers}}
 const studioTrD=(segs,k=1)=>{const f=v=>(Math.round(v*k*100)/100);let d=`M${f(segs[0][0][0])} ${f(segs[0][0][1])}`;for(const B of segs)d+=`C${f(B[1][0])} ${f(B[1][1])} ${f(B[2][0])} ${f(B[2][1])} ${f(B[3][0])} ${f(B[3][1])}`;return d+"Z"};
 function studioTraceSvg(T,full){return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${T.W} ${T.H}"${full?` width="${T.W}" height="${T.H}"`:' preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%"'}>${T.layers.map(L=>`<path fill="${L.color}" fill-rule="evenodd" d="${L.paths.map(sg=>studioTrD(sg)).join("")}"/>`).join("")}</svg>`}
+window.NEON_TRACE={image:(...a)=>studioTraceImage(...a),svg:(...a)=>studioTraceSvg(...a),guess:(...a)=>studioTraceGuess(...a),presets:STUDIO_TRACE_PRESETS};
 /* в дизайн: каждый цвет — слой-кривая (точки в % рамки, ручки Безье), всё — группа «Вектор из фото» */
 function studioTraceToLayers(T,box){const g="g"+studioUid(),pt=(p,W,H)=>({x:p[0]/W*100,y:p[1]/H*100});
   const toPts=segs=>segs.map((B,i)=>{const prev=segs[(i-1+segs.length)%segs.length],p=pt(B[0],T.W,T.H),o=pt(B[1],T.W,T.H),inn=pt(prev[2],T.W,T.H);return{x:p.x,y:p.y,type:"smooth",in:{dx:inn.x-p.x,dy:inn.y-p.y},out:{dx:o.x-p.x,dy:o.y-p.y}}});
@@ -11054,15 +11162,11 @@ function studioTraceToLayers(T,box){const g="g"+studioUid(),pt=(p,W,H)=>({x:p[0]
     fill:{...studioDefFill(L.color),type:"solid",color:L.color},stroke:{...studioDefStroke(false,L.color),enabled:false},name:"Цвет "+L.color,group:g})})}}
 async function studioTraceDlg(src,o0){/* src: {canvas} уже видимая часть картинки; o0: {layer} — заменить фото */
   const cv=src.canvas,ar=cv.width/cv.height;let preset="logo",o={...STUDIO_TRACE_PRESETS.logo,dropBg:false},T=null,busy=false,again=false;
-  const transp=(()=>{const D=cv.getContext("2d").getImageData(0,0,cv.width,cv.height).data;let t=0;for(let i=3;i<D.length;i+=16)if(D[i]<128)t++;return t>D.length/16*0.05})();
-  /* похоже на фото (много разных цветов) — сразу пресет «Фото» */
-  {const D=cv.getContext("2d").getImageData(0,0,cv.width,cv.height).data,set=new Set();let m=0;for(let i=0;i<D.length;i+=4*5){if(D[i+3]<128)continue;m++;set.add((D[i]>>3)<<10|(D[i+1]>>3)<<5|(D[i+2]>>3))}
-    let nz=0,nc=0;for(let y=0;y<cv.height;y+=3)for(let x=0;x<cv.width-1;x+=2){const i=(y*cv.width+x)*4;if(D[i+3]<128||D[i+7]<128)continue;nz+=Math.abs(D[i]-D[i+4])+Math.abs(D[i+1]-D[i+5])+Math.abs(D[i+2]-D[i+6]);nc++}nz=nc?nz/nc:0;
-    if(m&&(set.size>Math.min(1500,m*0.08)||nz>9&&set.size>200)){preset="photo";o={...STUDIO_TRACE_PRESETS.photo,dropBg:false}}else o.dropBg=!transp}
+  {const G=studioTraceGuess(cv);preset=G.preset;o={...STUDIO_TRACE_PRESETS[preset],dropBg:G.dropBg}}
   const rng=(k,lb,mn,mx,st,u)=>`<nv-range data-tr="${k}" label="${lb}" min="${mn}" max="${mx}" step="${st}" value="${o[k]}" unit="${u||""}"></nv-range>`;
   const PI_={logo:"badge",art:"palette",photo:"image",poster:"layers"};
   const ctl=()=>`<nv-choice-bar data-trp label="Что трассируем" value="${preset}" options="${esc(JSON.stringify(Object.entries(STUDIO_TRACE_PRESETS).map(([k,P])=>({value:k,label:P.label,icon:PI_[k]}))))}"></nv-choice-bar>
-    ${rng("colors","Цветов",2,64,1)}${rng("size","Детализация",300,1600,50,"px")}${rng("err","Допуск кривых",0.5,5,0.1,"px")}${rng("speckle","Убирать пятна до",0,200,2,"px²")}${rng("corner","Острые углы до",60,160,5,"°")}${rng("blur","Сглаживание шума",0,4,1)}
+    ${rng("colors","Цветов",2,64,1)}${rng("size","Детализация",400,2400,50,"px")}${rng("err","Допуск кривых",0.3,4,0.05,"px")}${rng("speckle","Убирать пятна до",0,200,2,"px²")}${rng("corner","Острые углы до",60,160,5,"°")}${rng("blur","Убрать шум JPEG",0,3,1)}
     <nv-switch data-trbg label="Убрать фон" description="Цвет, который по краям картинки" ${o.dropBg?"checked":""}></nv-switch>`;
   const {root,close}=overlay("modal",{title:"Фото → SVG",subtitle:"Настоящий вектор: цвета → контуры → кривые Безье. Работает в браузере, без ИИ.",service:"studio",size:"lg",
     body:`<div class="tr-wrap"><div class="tr-prev"><div class="tr-box" style="aspect-ratio:${ar}" data-trprev></div><div style="margin-top:8px"><nv-segmented data-trv value="svg" options="svg:SVG|src:Исходник|both:Наложение"></nv-segmented></div></div><div class="stack" style="gap:8px;min-width:0" data-trctl>${ctl()}</div></div><p class="pp-hint" data-trinfo>Считаю…</p>`,
@@ -11071,8 +11175,8 @@ async function studioTraceDlg(src,o0){/* src: {canvas} уже видимая ч�
   const paint=()=>{if(!T)return;const svg=studioTraceSvg(T,false),img=`<img src="${cv.toDataURL("image/png")}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">`;
     prev.innerHTML=view==="svg"?svg:view==="src"?img:img+`<div style="position:absolute;inset:0;opacity:.6">${svg}</div>`};
   const run=async()=>{if(busy){again=true;return}busy=true;info.textContent="Считаю…";const t0=performance.now();
-    try{const sc=Math.min(1,o.size/Math.max(cv.width,cv.height)),w=Math.max(8,Math.round(cv.width*sc)),h=Math.max(8,Math.round(cv.height*sc)),k=document.createElement("canvas");k.width=w;k.height=h;const g=k.getContext("2d");g.imageSmoothingQuality="high";g.drawImage(cv,0,0,w,h);
-      T=await studioTraceImage(g.getImageData(0,0,w,h).data,w,h,o,m=>{info.textContent=m});paint();
+    try{const sc=Math.min(3,o.size/Math.max(cv.width,cv.height)),w=Math.max(8,Math.round(cv.width*sc)),h=Math.max(8,Math.round(cv.height*sc)),k=document.createElement("canvas");k.width=w;k.height=h;const g=k.getContext("2d");g.imageSmoothingQuality="high";g.drawImage(cv,0,0,w,h);
+      T=await studioTraceImage(g.getImageData(0,0,w,h).data,w,h,{...o,up:sc},m=>{info.textContent=m});paint();
       const segs=T.layers.reduce((a,L)=>a+L.paths.reduce((b,p)=>b+p.length,0),0),kb=Math.round(studioTraceSvg(T,true).length/1024);
       info.textContent=T.layers.length?`Цветов: ${T.layers.length}, кривых Безье: ${segs}, SVG ≈ ${kb} КБ, ${((performance.now()-t0)/1000).toFixed(1)} с. Больше цветов и детализации — точнее, но тяжелее.`:"Ничего не нашлось — выключите «Убрать фон» или добавьте цветов"}
     catch(e){info.textContent="Не получилось: "+(e.message||e)}busy=false;if(again){again=false;run()}};
@@ -11180,7 +11284,7 @@ function studioPanelHtml(tab){
   if(tab==="elements")return`<h3>Элементы</h3><div class="sect-t">Фигуры</div><div class="s2-tiles">${STUDIO_SHAPES.map(([sh,icn,lb])=>`<button type="button" data-act="studAdd" data-type="shape" data-shape="${sh}">${ic(icn,20)}${lb}</button>`).join("")}</div>
     <div class="sect-t">3D-элементы</div>${studio3dPresetsHtml()}
     <div class="sect-t">3D-мокапы</div><div class="s2-tiles s3-tiles">${S3_MODELS.map(([k,lb,i])=>`<button type="button" data-act="stud3dMock" data-k="${k}" data-tip="Дизайн на 3D-${lb.toLowerCase()} — на новой странице">${ic(i,20)}${lb}</button>`).join("")}</div>
-    <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><button type="button" data-act="studTool" data-tool="draw">${ic("brush",20)}Рисовать</button><label class="s2-tiles-l" for="stud-vid-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("film",20)}Видео</label><label class="s2-tiles-l" for="stud-imp-file" data-tip="PDF — страницами, PSD — слоями" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-input",20)}PDF / PSD</label><button type="button" data-act="studTool" data-tool="note" data-tip="Булавка с комментарием для согласования — в файл не попадает">${ic("message-square-plus",20)}Заметка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
+    <div class="sect-t">Инструменты</div><div class="s2-tiles"><button type="button" data-act="studTool" data-tool="pen">${ic("pen-tool",20)}Перо</button><button type="button" data-act="studTool" data-tool="eyedrop">${ic("pipette",20)}Пипетка</button><button type="button" data-act="studTool" data-tool="draw">${ic("brush",20)}Рисовать</button><label class="s2-tiles-l" for="stud-vid-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("film",20)}Видео</label><label class="s2-tiles-l" for="stud-imp-file" data-tip="PDF — страницами, PSD — слоями" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-input",20)}PDF / PSD</label><button type="button" data-act="studTool" data-tool="note" data-tip="Булавка с комментарием для согласования — в файл не попадает">${ic("message-square-plus",20)}Заметка</button><label class="s2-tiles-l" for="stud-img-file" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("image-plus",20)}Картинка</label><label class="s2-tiles-l" for="stud-svg-file" data-tip="SVG станет редактируемыми кривыми" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("file-code-2",20)}Импорт SVG</label><label class="s2-tiles-l" for="stud-trace-file" data-tip="Логотип, текст, картинка или фото → настоящий вектор (кривые Безье по цветам)" style="border:1px solid var(--line);border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink-2);cursor:pointer">${ic("spline",20)}Фото → SVG</label><input type="file" id="stud-trace-file" accept="image/*" class="sr"><input type="file" id="stud-svg-file" accept=".svg,image/svg+xml" class="sr"></div>
     <div class="sect-t">Графика</div><input type="search" class="num" data-s2gfx placeholder="Поиск: стрелка, бейдж, рамка…" value="${esc(studioGfxQ)}" style="width:100%;text-align:left;padding:0 10px">
     <div class="s2-gfx" data-s2gfxgrid>${studioGfxGridHtml()}</div>
     ${studioCompPanelHtml()}
