@@ -2022,6 +2022,8 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 .vx-colh{display:flex;flex-direction:column;gap:2px;margin-top:6px}.vx-colh small{font-size:12px;color:var(--ink-3)}
 .vx-cols{display:flex;flex-direction:column;gap:4px}
 .vx-col{display:flex;align-items:center;gap:8px;padding:5px 8px;border:1px solid var(--line);border-radius:9px;cursor:pointer;font-size:12.5px}
+.vx-tnd{display:flex;flex-wrap:wrap;gap:4px}.vx-tnd button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--ink-2)}.vx-tnd button.on{background:var(--svc);border-color:var(--svc);color:#0d1211;font-weight:600}
+.vx-tnv{display:grid;grid-template-columns:1fr 1fr;gap:5px}.vx-tnv button{display:flex;flex-direction:column;align-items:flex-start;gap:5px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 8px;font:inherit;font-size:12px;line-height:1.25;text-align:left;cursor:pointer;color:var(--ink)}.vx-tnv button:hover{border-color:var(--svc-ink)}.vx-tnv button.on{border-color:var(--svc);box-shadow:inset 0 0 0 1px var(--svc);background:var(--svc-soft)}.vx-tnv b{display:flex;gap:2px}.vx-tnv i{width:14px;height:10px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
 .vx-tnh{font-size:12.5px;color:var(--ink-2);margin-bottom:-4px}.vx-tns{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.vx-tns button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 4px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--ink)}.vx-tns button:hover{border-color:var(--svc-ink)}.vx-tns button.on{background:var(--svc);border-color:var(--svc);color:#0d1211;font-weight:600}
 .vx-sty{display:flex;flex-wrap:wrap;gap:4px}.vx-sty button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--ink-2)}.vx-sty button:hover{border-color:var(--svc-ink)}.vx-sty button.on{background:var(--svc);border-color:var(--svc);color:#0d1211;font-weight:600}
 .vx-sw{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.vx-swc{width:28px;height:28px;border-radius:8px;background:var(--c);box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);cursor:pointer;position:relative;overflow:hidden}.vx-swc input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
@@ -11370,8 +11372,27 @@ const STUDIO_TOON_P={comic:{it:3,sr:9,K:10,sig:1.4,thr:0.3,inkMin:30,speckle:80,
   sketch:{it:2,sr:8,K:8,sig:0.7,thr:0.15,inkMin:14,speckle:40,ink:"#2b2b2b"}};
 /* кожа по цвету (Lab): тёплый, умеренно насыщенный, «краснее», чем русые/светлые волосы */
 /* губы: красноватый пиксель средней яркости (по самому пикселю — даже если группа общая с кожей или тенью) */
-const studioIsLip=(L,a,b)=>L>22&&L<66&&a>19&&a>b*1.35;
-const studioIsSkin=(L,a,b)=>L>35&&a>6&&b>6&&a<40&&b<46&&b<a*2.3&&b>a*0.45;
+const studioIsLip=(L,a,b)=>L>22&&L<66&&a>20&&a>b*1.6;
+const studioIsSkin=(L,a,b)=>L>16&&a>6&&b>6&&a<40&&b<46&&b<a*(L<50?1.75:2.3)&&b>a*0.45&&a*a+b*b>100;
+/* тон кожи самого человека: цвета кожи стиля (подобраны по светлокожим образцам) сдвигаются к нему — человек остаётся собой */
+let studioToonSkinRef=null;
+/* Светлота кожи — всегда от самого человека: свет (75-й процентиль), тень (30-й), ровная заливка (60-й); оттенок — смесь стиля и человека */
+function studioSkinAdapt(hex,role){const R=studioToonSkinRef;if(!R)return hex;const q=studioLab(...studioHexRgb(hex)),L=role==="shade"?R.p30-2:role==="lit"?R.p75+3:R.p60;
+  return studioDtHex(...studioDtLab2Rgb(Math.max(8,Math.min(96,L)),q[1]*0.6+R.a*0.4,q[2]*0.6+R.b*0.4))}
+const studioSkinMemo=new WeakMap();
+function studioSkinCol(hex,c,role){let m=studioSkinMemo.get(c);if(!m)studioSkinMemo.set(c,m={});const k=hex+role;if(m[k])return m[k];const q=studioLab(...studioHexRgb(hex)),L=c[0]+(role==="lit"?11:role==="shade"?-2:7);
+  return m[k]=studioDtHex(...studioDtLab2Rgb(Math.max(8,Math.min(96,L)),q[1]*0.5+c[1]*0.5,q[2]*0.5+c[2]*0.5))}
+const studioSkinPair=(arr,flat)=>flat||arr[0]===arr[1]?[studioSkinAdapt(arr[0],"flat"),studioSkinAdapt(arr[1],"flat")]:[studioSkinAdapt(arr[0],"shade"),studioSkinAdapt(arr[1],"lit")];
+const studioToonDarkL=v=>v;
+const studioDarkOf=(v,c)=>Math.min(v,c[0]*0.55);
+/* группы, что лежат в основном у краёв кадра, — фон: даже если цвет «телесный», в кожу не считаем (центр группы делаем нейтральным) */
+function studioToonBgFix(Q,cen,W,H){const m=Math.max(2,Math.round(Math.min(W,H)*0.05)),tot=new Float64Array(cen.length),edge=new Float64Array(cen.length);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const k=Q.lb[y*W+x];if(k<0)continue;tot[k]++;if(x<m||y<m||x>=W-m||y>=H-m)edge[k]++}
+  return cen.map((c,k)=>tot[k]&&edge[k]/tot[k]>0.42&&studioIsSkin(...c)?[c[0],c[1]*0.25,c[2]*0.25]:c)}
+/* средний тон кожи по цветовым группам (вес — число пикселей); нет кожи — null */
+function studioToonSkinOf(Q,cen,n,sm){const isk=cen.map(c=>studioIsSkin(...c)),h=new Float64Array(101);let m=0,a=0,b=0;
+  for(let i=0;i<n;i++){const k=Q.lb[i];if(k<0||!isk[k])continue;h[Math.max(0,Math.min(100,Math.round(sm[i*3])))]++;a+=sm[i*3+1];b+=sm[i*3+2];m++}
+  if(m<n*0.02)return null;const pc=q=>{let acc=0;for(let L=0;L<=100;L++){acc+=h[L];if(acc>=q*m)return L}return 100};return{p30:pc(0.3),p60:pc(0.6),p75:pc(0.75),a:a/m,b:b/m}}
 /* «персонажные» цвета: тёплые волосы — в золото (светлые) или каштан (тёмные), нейтральное — в крем/белый/серо-лиловый */
 function studioToonHair(c,L,lit){const C=Math.hypot(c[1],c[2]),h=Math.atan2(c[2],c[1])*180/Math.PI;
   const neutral=C<9||(c[0]>62&&C<24);
@@ -11381,19 +11402,24 @@ function studioToonHair(c,L,lit){const C=Math.hypot(c[1],c[2]),h=Math.atan2(c[2]
    Возвращает функцию (L,a,b,c)→[hex,cls]; c — центр цветовой группы в Lab */
 const STUDIO_TOON_RULES={
   comic:()=>{/* Marvel: 3 ступени, сочно, «пятна чёрного» в глубоких тенях, штриховка в полутени */
-    return(L,a,b,c)=>{if(L<26)return["#0d0d0d",""];if(studioIsLip(L,a,b)&&studioIsSkin(...c)===false&&!studioToonHair(c,L,true)||studioIsLip(L,a,b)&&a>16)return[L<c[0]-4?"#a1232f":"#d8343f",""];const lv=L>=c[0]+4?2:L>=c[0]-8?1:0;if(studioIsSkin(...c)){const sl=L>=c[0]-8?1:0;return[["#c8734f","#f0a983"][sl],sl===0?"hc":""]}
-      const hr=studioToonHair(c,L,lv>0);if(hr&&Math.hypot(c[1],c[2])>=7)return[lv===2?hr:hr,lv===0?"hc":""];const LL=[38,58,80][lv];return[studioDtHex(...studioDtLab2Rgb(LL,c[1]*2.1,c[2]*2.1)),lv===0?"hc":""]}},
+    const SK=["#c8734f","#f0a983"],DL=26;
+    return(L,a,b,c)=>{if(L<studioDarkOf(DL,c))return["#0d0d0d",""];if(studioIsLip(L,a,b)&&studioIsSkin(...c)===false&&!studioToonHair(c,L,true)||studioIsLip(L,a,b)&&a>16)return[L<c[0]-4?"#a1232f":"#d8343f",""];const lv=L>=c[0]+4?2:L>=c[0]-8?1:0;if(studioIsSkin(...c)){const sl=L>=c[0]-8?1:0;return[studioSkinCol(SK[sl],c,sl?"lit":"shade"),sl===0?"hc":""]}
+      const hr=studioToonHair(c,L,lv>0);if(hr&&Math.hypot(c[1],c[2])>=7)return[lv===2?hr:hr,lv===0?"hc":""];const LL=Math.max(10,Math.min(94,c[0]+[-12,0,12][lv]));return[studioDtHex(...studioDtLab2Rgb(LL,c[1]*2.1,c[2]*2.1)),lv===0?"hc":""]}},
   cartoon:()=>{/* 2D-мультфильм: крупные формы, светло и тепло, тень — тот же цвет темнее, без чёрного */
-    return(L,a,b,c)=>{const lv=L>=c[0]-3?1:0,sk=studioIsSkin(...c);if(studioIsLip(L,a,b)&&a>16)return[lv?"#e06a7a":"#b8475a",""];if(L<26)return[studioDtHex(...studioDtLab2Rgb(20,c[1]*1.2,c[2]*1.2)),""];
-      if(sk)return[lv?"#ffd3bd":"#f0a98e",""];const hr=studioToonHair(c,L,lv);if(hr)return[hr,""];return[studioDtHex(...studioDtLab2Rgb(Math.min(94,lv?c[0]*0.7+30:c[0]*0.7+14),c[1]*1.7,c[2]*1.8)),""]}},
+    const SK=["#f0a98e","#ffd3bd"],DL=26;
+    return(L,a,b,c)=>{const lv=L>=c[0]-3?1:0,sk=studioIsSkin(...c);if(studioIsLip(L,a,b)&&a>16)return[lv?"#e06a7a":"#b8475a",""];if(L<studioDarkOf(DL,c))return[studioDtHex(...studioDtLab2Rgb(20,c[1]*1.2,c[2]*1.2)),""];
+      if(sk)return[studioSkinCol(SK[lv],c,lv?"lit":"shade"),""];const hr=studioToonHair(c,L,lv);if(hr)return[hr,""];return[studioDtHex(...studioDtLab2Rgb(Math.min(94,lv?c[0]+8:c[0]-6),c[1]*1.7,c[2]*1.8)),""]}},
   anime:()=>{/* аниме 90-х: кожа — светлый тон и одна резкая тень; остальное насыщенно, блики почти белые */
-    return(L,a,b,c)=>{if(L<20)return["#241a22",""];const sk=studioIsSkin(...c),lit=L>=c[0]-4;if(studioIsLip(L,a,b)&&a>16)return[lit?"#f08a98":"#d4606f",""];if(sk)return[lit?"#ffe4d6":"#f5b9a6",""];
+    const SK=["#f5b9a6","#ffe4d6"],DL=20;
+    return(L,a,b,c)=>{if(L<studioDarkOf(DL,c))return["#241a22",""];const sk=studioIsSkin(...c),lit=L>=c[0]-4;if(studioIsLip(L,a,b)&&a>16)return[lit?"#f08a98":"#d4606f",""];if(sk)return[lit?studioSkinCol(SK[1],c,"lit"):studioSkinCol(SK[0],c,"shade"),""];
       if(L>86)return[studioDtHex(...studioDtLab2Rgb(96,c[1]*0.35,c[2]*0.35)),""];const hr=studioToonHair(c,L,lit);if(hr)return[hr,""];return[studioDtHex(...studioDtLab2Rgb(lit?Math.min(90,c[0]+10):Math.max(18,c[0]-14),c[1]*1.6,c[2]*1.6)),""]}},
   manga:()=>(L)=>L<22?["#111111",""]:L<34?["#d0d0d0","ht3"]:L<47?["#dcdcdc","ht2"]:L<61?["#e8e8e8","ht1"]:["#ffffff",""],
   clear:()=>{/* ligne claire: плоские цвета группы без теней, светло и чисто */
-    return(L,a,b,c)=>{if(L<18)return["#141414",""];if(studioIsLip(L,a,b)&&a>16)return["#d9465a",""];const sk=studioIsSkin(...c);if(sk)return["#f9cdb4",""];const hr=studioToonHair(c,L,true);if(hr)return[hr,""];return[studioDtHex(...studioDtLab2Rgb(Math.min(92,c[0]*0.75+24),c[1]*1.4,c[2]*1.4)),""]}},
+    const DL=18;
+    return(L,a,b,c)=>{if(L<studioDarkOf(DL,c))return["#141414",""];if(studioIsLip(L,a,b)&&a>16)return["#d9465a",""];const sk=studioIsSkin(...c);if(sk)return[studioSkinCol("#f9cdb4",c,"flat"),""];const hr=studioToonHair(c,L,true);if(hr)return[hr,""];return[studioDtHex(...studioDtLab2Rgb(Math.min(92,c[0]+6),c[1]*1.4,c[2]*1.4)),""]}},
   popart:()=>{/* Лихтенштейн: кожа белая в красных точках, волосы и прочее — основные цвета, тёмное — чёрное */
-    return(L,a,b,c)=>{if(L<28)return["#111111",""];if(studioIsLip(L,a,b))return["#e3242b",""];if(studioIsSkin(...c))return[L<c[0]-6?"#f6d4c8":"#fff6ef","bd"];if(L>82)return["#ffffff",""];
+    const DL=28;
+    return(L,a,b,c)=>{if(L<studioDarkOf(DL,c))return["#111111",""];if(studioIsLip(L,a,b))return["#e3242b",""];if(studioIsSkin(...c))return[L<c[0]-6?studioSkinCol("#f6d4c8",c,"shade"):studioSkinCol("#fff6ef",c,"lit"),"bd"];if(L>82)return["#ffffff",""];
       const C=Math.hypot(c[1],c[2]),h=Math.atan2(c[2],c[1])*180/Math.PI;if(C>16&&h<45&&h>-40&&c[1]>c[2]*0.9)return["#e3242b",""];if(C>=12&&h>=35&&h<115)return[L<55?"#e0a800":"#ffd400",""];return[L<50?"#14408f":"#1f5fbf",""]}},
   sketch:()=>(L)=>L<20?["#c4c4c4","hx2"]:L<32?["#d4d4d4","hx1"]:L<46?["#e2e2e2","hh1"]:["#f6f1e6",""]};
 /* двусторонний фильтр в Lab (5×5, несколько проходов): кожа и фон ровнее, края черт остаются резкими */
@@ -11403,11 +11429,101 @@ function studioBilateralLab(lab,W,H,it,sr){const n=W*H;let a=lab;const R=2,DX=[]
       for(let k=0;k<m;k++){let q;if(fast)q=o+(dy[k]*W+dx[k])*3;else{const xx=x+dx[k],yy=y+dy[k];if(xx<0||yy<0||xx>=W||yy>=H)continue;q=(yy*W+xx)*3}
         const l=a[q],aa=a[q+1],bb=a[q+2],dl=l-L0,da=aa-A0,db=bb-B0,d2=(dl*dl+da*da+db*db)*8;if(d2>=4096)continue;const w=ws[k]*lut[d2|0];sw+=w;sL+=l*w;sA+=aa*w;sB+=bb*w}
       b[o]=sL/sw;b[o+1]=sA/sw;b[o+2]=sB/sw}}a=b}return a}
-async function studioToonTrace(px0,W,H,o,prog){const style=o.style||"comic",P={...STUDIO_TOON_P[style],...(o.over||{})},n=W*H,k=Math.max(1,W/900);prog&&prog("Сглаживаю…");await studioTrYield();
+/* ===== Варианты «Рисунка по фото»: в каждом направлении — разные манеры. Цвета взяты из образцов (палитры извлечены из картинок-примеров).
+   fam:"rule" — настроенный базовый стиль; "post" — яркость → уровни палитры (плакаты, нуар, гравюры); "sem" — кожа/волосы/губы/фон/прочее своими цветами.
+   Фактуры (tx): {t:"dot"|"line"|"cross"|"grain", c, r — толщина/радиус (доля шага), s — шаг (множитель), a — угол} ===== */
+const STUDIO_TOON_DIRS=[["pop","Поп-арт"],["com","Комикс"],["ani","Аниме"],["car","Мультфильм"],["man","Манга"],["cl","Чистая линия"],["sk","Графика"]];
+const STUDIO_TOON_V=[
+  /* ---- Поп-арт ---- */
+  {id:"popart",dir:"pop",name:"Лихтенштейн: точки Бен-Дэя",fam:"rule",rule:"popart"},
+  {id:"pop-drown",dir:"pop",name:"Лихтенштейн: синие волосы",fam:"sem",it:5,K:8,dark:"#0b0b12",darkL:26,lips:"#d8262d",skin:["#f2cdbd","#fbf3ee"],hair:["#16245e","#2f55b8"],bg:["#dfe6ea","#b9c4cc"],pal:["#2f55b8","#d8262d","#dfe6ea"],flat:false,tx:{skin:{t:"dot",c:"#d8262d",r:0.28,s:1.4},skinShade:{t:"dot",c:"#d8262d",r:0.36,s:1.4}},ink:{c:"#0b0b12",sig:1.6,thr:0.33},ol:[1.2,"#0b0b12",1]},
+  {id:"pop-whaam",dir:"pop",name:"Лихтенштейн: Whaam!",fam:"sem",it:5,K:8,dark:"#1d1a1a",darkL:26,lips:"#c0261f",skin:["#e9b8a2","#fbe7da"],hair:["#c0261f","#e8432f"],bg:["#f3d35b","#e9c13a"],pal:["#f3d35b","#c0261f","#a9a6c2"],tx:{bg:{t:"dot",c:"#c0261f",r:0.22,s:1.3},skin:{t:"dot",c:"#e0605a",r:0.2,s:1.3}},ink:{c:"#111",sig:1.7,thr:0.33},ol:[1.3,"#111",1]},
+  {id:"pop-marilyn",dir:"pop",name:"Уорхол: Мэрилин",fam:"sem",it:6,K:7,flat:true,dark:"#1a1a1a",darkL:30,lips:"#e0262b",skin:["#f29fb8","#f29fb8"],hair:["#f4c430","#f4c430"],bg:["#f39c33","#f39c33"],pal:["#3fb6c0","#f39c33","#f4c430"],ink:{c:"#1a1a1a",sig:1.3,thr:0.45},ol:null},
+  {id:"pop-shot-teal",dir:"pop",name:"Уорхол: бирюзовый фон",fam:"sem",it:6,K:7,flat:true,dark:"#231c1a",darkL:30,lips:"#d4261e",skin:["#f6a59f","#f6a59f"],hair:["#f7c94b","#f7c94b"],bg:["#46b0c0","#46b0c0"],pal:["#46b0c0","#ff7f5c","#f7c94b"],ink:{c:"#231c1a",sig:1.3,thr:0.45},ol:null},
+  {id:"pop-shot-red",dir:"pop",name:"Уорхол: красный фон",fam:"sem",it:6,K:7,flat:true,dark:"#231c1a",darkL:30,lips:"#b9261c",skin:["#f2b6a6","#f2b6a6"],hair:["#f7c94b","#f7c94b"],bg:["#c8261e","#c8261e"],pal:["#c8261e","#46b0c0","#f7c94b"],ink:{c:"#231c1a",sig:1.3,thr:0.45},ol:null},
+  {id:"pop-mao",dir:"pop",name:"Уорхол: синий и зелёный",fam:"sem",it:6,K:7,flat:true,dark:"#1f2224",darkL:30,lips:"#c8452f",skin:["#e8856a","#e8856a"],hair:["#1f2224","#1f2224"],bg:["#0b4f7c","#0b4f7c"],pal:["#1f9e4a","#0b4f7c","#7a8b45"],ink:{c:"#1f2224",sig:1.4,thr:0.4},ol:null},
+  {id:"pop-elvis",dir:"pop",name:"Уорхол: серебро",fam:"post",it:4,lv:[{c:"#151515"},{c:"#5c5c5c"},{c:"#a9a9a9",p:{t:"grain",c:"#7d7d7d",r:0.18,s:0.7}},{c:"#dedede"}],cut:[0.15,0.35,0.6],lips:null,ink:{c:"#151515",sig:1.2,thr:0.4},paper:"#e4e4e4"},
+  {id:"pop-hope",dir:"pop",name:"Фейри: плакат «Hope»",fam:"post",qSkin:true,it:5,lv:[{c:"#0f2d4a"},{c:"#d7262b"},{c:"#6e93a6",p:{t:"line",c:"#0f2d4a",r:0.22,s:0.9,a:0}},{c:"#f4e3a7"}],cut:[0.22,0.5,0.8],lips:null,ink:null,paper:"#f4e3a7"},
+  {id:"pop-haring",dir:"pop",name:"Харинг: жирный контур",fam:"sem",it:7,K:6,flat:true,dark:"#141414",darkL:22,lips:"#e8508f",skin:["#f5d33f","#f5d33f"],hair:["#e88fb5","#e88fb5"],bg:["#a9a7d9","#a9a7d9"],pal:["#7cc576","#e88fb5","#a9a7d9","#f5d33f"],cyc:true,ink:{c:"#141414",sig:2.2,thr:0.4},ol:[3.2,"#141414",1]},
+  {id:"pop-psy",dir:"pop",name:"Психоделика 60-х",fam:"sem",it:5,K:9,flat:true,dark:"#2a0f3a",darkL:24,lips:"#ff1f6b",skin:["#ff9a5c","#ffb37a"],hair:["#c2185b","#ff4fa3"],bg:["#7b2ff7","#00c2a8"],pal:["#7b2ff7","#00c2a8","#ffd400","#ff5a1f"],cyc:true,ink:{c:"#2b1d1a",sig:1.1,thr:0.35},ol:[1,"#2b1d1a",0.8]},
+  /* ---- Комикс ---- */
+  {id:"comic",dir:"com",name:"Marvel: современный",fam:"rule",rule:"comic"},
+  {id:"com-golden",dir:"com",name:"Золотой век (1930-е)",fam:"sem",it:5,K:7,flat:true,dark:"#211813",darkL:24,lips:"#b5162a",skin:["#f2c98a","#f2c98a"],hair:["#1b2a4a","#2c4a8a"],bg:["#f6e93f","#f6e93f"],pal:["#f6e93f","#b5162a","#2f6b3e"],tx:{skin:{t:"dot",c:"#e8826a",r:0.24,s:1.2},bg:{t:"dot",c:"#d9a42a",r:0.2,s:1.2}},ink:{c:"#211813",sig:1.6,thr:0.33},ol:[1.2,"#211813",1],paper:"#f3e7b5"},
+  {id:"com-sincity",dir:"com",name:"Нуар: «Город грехов»",fam:"post",qSkin:true,it:4,lv:[{c:"#050505"},{c:"#fbfbfb"}],cut:[0.35],lips:"#e01e1e",ink:{c:"#050505",sig:1.6,thr:0.3}},
+  {id:"com-hellboy",dir:"com",name:"Миньола: большие тени",fam:"sem",it:6,K:7,flat:true,dark:"#141012",darkL:44,lips:"#8e3b35",skin:["#c99880","#c99880"],hair:["#3a2c2c","#3a2c2c"],bg:["#9b9aa3","#9b9aa3"],pal:["#a8463c","#6d6670","#9b9aa3"],ink:{c:"#141012",sig:1.5,thr:0.35},ol:null},
+  {id:"com-watchmen",dir:"com",name:"«Хранители»: вторичные цвета",fam:"sem",it:5,K:8,dark:"#1c0f1a",darkL:24,lips:"#c41e1e",skin:["#c56a2a","#e8a070"],hair:["#4b1f43","#6b2d5c"],bg:["#a8d82f","#8fbf24"],pal:["#a8d82f","#6b2d5c","#c56a2a","#c41e1e"],tx:{skinShade:{t:"dot",c:"#6b2d5c",r:0.22,s:1.1}},ink:{c:"#1c0f1a",sig:1.2,thr:0.3},ol:[0.9,"#1c0f1a",1]},
+  {id:"com-moebius",dir:"com",name:"Мёбиус: пастель и штрих",fam:"sem",it:5,K:8,dark:"#3b2a1f",darkL:18,lips:"#d9775a",skin:["#e8b896","#f6dcc2"],hair:["#c46a3c","#e8945a"],bg:["#f2d04a","#f2d04a"],pal:["#f2d04a","#e8945a","#9fb8d6","#d9775a"],tx:{skinShade:{t:"line",c:"#7e5236",r:0.16,s:0.7,a:40},hair:{t:"line",c:"#5a3a26",r:0.14,s:0.7,a:-30}},ink:{c:"#3b2a1f",sig:0.8,thr:0.22},ol:[0.8,"#3b2a1f",1]},
+  {id:"com-dkr",dir:"com",name:"«Тёмный рыцарь»: синий",fam:"post",qSkin:true,it:5,lv:[{c:"#0f1626"},{c:"#2c4669"},{c:"#6e8bab"},{c:"#dfe8f0"}],cut:[0.15,0.4,0.72],lips:null,ink:{c:"#0f1626",sig:1.6,thr:0.33}},
+  {id:"com-archie",dir:"com",name:"«Арчи»: классика",fam:"sem",it:6,K:7,dark:"#2a1d18",darkL:22,lips:"#c9473a",skin:["#eab796","#f7d4b5"],hair:["#b94d22","#d4612f"],bg:["#f3ead6","#f3ead6"],pal:["#2f6f7f","#d4612f","#d8c49c"],ink:{c:"#2a1d18",sig:1.0,thr:0.3},ol:[1.1,"#2a1d18",1]},
+  /* ---- Аниме ---- */
+  {id:"anime",dir:"ani",name:"Аниме 90-х (базовый)",fam:"rule",rule:"anime"},
+  {id:"ani-sailor",dir:"ani",name:"Махо-сёдзё 90-х",fam:"sem",it:5,K:9,dark:"#2a1a2e",darkL:20,lips:"#f08a98",skin:["#f3b8a6","#fde3d3"],hair:["#e9c12f","#f9e34b"],bg:["#fff6c9","#fff6c9"],pal:["#9b3d7a","#f4f6c9","#f9e34b"],ink:{c:"#2a1a2e",sig:0.8,thr:0.18},ol:[0.9,"#5a2e4a",0.9]},
+  {id:"ani-ghibli",dir:"ani",name:"Мягкий природный (как Ghibli)",fam:"sem",it:5,K:10,dark:"#2b201c",darkL:18,lips:"#c9786e",skin:["#e3b39d","#f6d7c3"],hair:["#3b2b26","#5a443b"],bg:["#d9cbb5","#efe6d6"],sat:1.05,ink:{c:"#4a3a32",sig:0.7,thr:0.2},ol:[0.7,"#4a3a32",0.7]},
+  {id:"ani-shinkai",dir:"ani",name:"Яркий свет (как Синкай)",fam:"sem",it:5,K:10,dark:"#1b2340",darkL:20,lips:"#e2788a",skin:["#e8b4b0","#ffe6d8"],hair:["#2a2f45","#4a4f70"],bg:["#6aaee0","#dff2ff"],shadeTint:"#3e5fa8",ink:{c:"#1b2340",sig:0.7,thr:0.2},ol:[0.7,"#2a3a6a",0.6]},
+  {id:"ani-eva",dir:"ani",name:"Меха 90-х: фиолетовый и оранжевый",fam:"sem",it:5,K:8,dark:"#1a0f24",darkL:22,lips:"#d8434d",skin:["#d9a48f","#f7d9c4"],hair:["#c25812","#f07d26"],bg:["#2b1b3d","#3b2756"],pal:["#6a3fa0","#7bd34b","#f07d26"],ink:{c:"#120a18",sig:0.9,thr:0.2},ol:[0.9,"#120a18",1]},
+  {id:"ani-akira",dir:"ani",name:"Киберпанк 80-х (как «Акира»)",fam:"sem",it:5,K:8,dark:"#1e1a1d",darkL:28,lips:"#c1272d",skin:["#b87a66","#e8b39a"],hair:["#1e1a1d","#3a2f36"],bg:["#f2efe4","#d9d5c6"],pal:["#c1272d","#7d2a26","#d9d5c6"],ink:{c:"#1e1a1d",sig:1.1,thr:0.28},ol:[1.1,"#1e1a1d",1]},
+  {id:"ani-dbz",dir:"ani",name:"Сёнэн: оранжевый и синий",fam:"sem",it:5,K:8,dark:"#121212",darkL:24,lips:"#d6604a",skin:["#e9a585","#fbd8bb"],hair:["#121212","#2b3f6b"],bg:["#7cc3ea","#c9e6f5"],pal:["#f29c38","#2d5fa8","#7cc3ea"],ink:{c:"#121212",sig:1.2,thr:0.28},ol:[1.2,"#121212",1]},
+  {id:"ani-jojo",dir:"ani",name:"Драматичный (как «ДжоДжо»)",fam:"sem",it:4,K:9,dark:"#1b1530",darkL:30,lips:"#8a2f6e",skin:["#9c6a8e","#f0c8b5"],hair:["#2b2b5c","#3a7fb7"],bg:["#c86fa5","#e9b7d4"],pal:["#5b3d8f","#c86fa5","#3a7fb7"],tx:{skinShade:{t:"line",c:"#1b1530",r:0.2,s:0.8,a:35}},ink:{c:"#1b1530",sig:1.3,thr:0.24},ol:[1.2,"#1b1530",1]},
+  {id:"ani-bebop",dir:"ani",name:"Джазовый нуар (как «Бибоп»)",fam:"sem",it:5,K:8,dark:"#141a2c",darkL:30,lips:"#9b2232",skin:["#a5706b","#e8b99d"],hair:["#1d1b2a","#3b3f66"],bg:["#141a2c","#2a2f4d"],pal:["#7a1825","#3b3f66","#a8a9c9"],ink:{c:"#0b0d16",sig:1.2,thr:0.26},ol:[1.1,"#0b0d16",1]},
+  {id:"ani-kny",dir:"ani",name:"Современный сёнэн (алый и бирюза)",fam:"sem",it:5,K:9,dark:"#1a1414",darkL:22,lips:"#b8343c",skin:["#d9a389","#f8dcc9"],hair:["#2a1d1d","#4a2a2a"],bg:["#f7e8d0","#e8d3b2"],pal:["#9b1b30","#3d6f82","#c5c9a5"],ink:{c:"#1a1414",sig:1.0,thr:0.22},ol:[1.0,"#1a1414",1]},
+  /* ---- Мультфильм ---- */
+  {id:"cartoon",dir:"car",name:"Сказочный (как Disney)",fam:"rule",rule:"cartoon"},
+  {id:"car-simpsons",dir:"car",name:"Жёлтая кожа (как «Симпсоны»)",fam:"sem",it:6,K:7,dark:"#2b2622",darkL:22,lips:"#d1b271",skin:["#e5b400","#fed90f"],hair:["#2b3a8f","#3b52c2"],bg:["#70d1fe","#70d1fe"],pal:["#ffffff","#70d1fe","#a4c08a"],ink:{c:"#1d1a18",sig:1.0,thr:0.3},ol:[1.2,"#1d1a18",1]},
+  {id:"car-southpark",dir:"car",name:"Аппликация из бумаги",fam:"sem",it:8,K:6,flat:true,dark:"#2a2422",darkL:22,lips:"#c9584e",skin:["#fbe3c7","#fbe3c7"],hair:["#6a5a54","#6a5a54"],bg:["#8fc0a9","#8fc0a9"],pal:["#d6203e","#f7d64a","#8fc0a9"],ink:{c:"#2a2422",sig:1.1,thr:0.45},ol:[1.4,"#2a2422",1]},
+  {id:"car-adventure",dir:"car",name:"Пастель и тонкая линия",fam:"sem",it:7,K:7,flat:true,dark:"#1b1b1b",darkL:20,lips:"#e27a8a",skin:["#fde1d3","#fde1d3"],hair:["#f2d79a","#f2d79a"],bg:["#bfe7f0","#bfe7f0"],pal:["#13a0c8","#8bc34a","#fff4c9"],ink:{c:"#1b1b1b",sig:0.9,thr:0.32},ol:[1.1,"#1b1b1b",1]},
+  {id:"car-rick",dir:"car",name:"Бледный «взрослый» (как «Рик и Морти»)",fam:"sem",it:6,K:8,dark:"#2a2a2a",darkL:20,lips:"#c9a19a",skin:["#c9c4b2","#ece9dc"],hair:["#86b8c2","#b9dce3"],bg:["#e9f0ef","#d3dedd"],pal:["#6b5d47","#b9dce3","#94a6a4"],sat:0.6,ink:{c:"#2a2a2a",sig:0.9,thr:0.28},ol:[1,"#2a2a2a",1]},
+  {id:"car-gravity",dir:"car",name:"Современный ТВ-мульт",fam:"sem",it:6,K:8,dark:"#1e2b3a",darkL:20,lips:"#d9705e",skin:["#e7a985","#f9c9a8"],hair:["#5a3426","#7a4b37"],bg:["#f6f2e9","#e9e2d2"],pal:["#1e2b3a","#e5604c","#a59e86"],ink:{c:"#1e2b3a",sig:0.9,thr:0.3},ol:[1,"#1e2b3a",1]},
+  {id:"car-betty",dir:"car",name:"Ретро 1930-х (ч/б)",fam:"post",it:6,lv:[{c:"#0c0c0c"},{c:"#8a8a8a"},{c:"#fbfbfb"}],cut:[0.32,0.6],lips:"#0c0c0c",ink:{c:"#0c0c0c",sig:1.4,thr:0.35},paper:"#fbfbfb"},
+  {id:"car-sponge",dir:"car",name:"Яркий детский (жёлтый)",fam:"sem",it:6,K:7,dark:"#3b2a1c",darkL:22,lips:"#e2483b",skin:["#d9c62b","#fff35a"],hair:["#6b4a2b","#8a6436"],bg:["#69c9e8","#a6e1f2"],pal:["#ffffff","#8a6436","#e2483b"],ink:{c:"#2a1e14",sig:1.1,thr:0.3},ol:[1.2,"#2a1e14",1]},
+  {id:"car-arcane",dir:"car",name:"Живописный (как «Аркейн»)",fam:"sem",it:4,K:10,dark:"#1a1424",darkL:20,lips:"#c2476f",skin:["#a87d8a","#f0c9b8"],hair:["#3f6fb6","#5f8fd6"],bg:["#2d2540","#463a5e"],pal:["#e0499d","#5f8fd6","#2d2540"],shadeTint:"#5a3d7a",tx:{skin:{t:"grain",c:"#c48f84",r:0.12,s:0.6},bg:{t:"grain",c:"#5a4a78",r:0.14,s:0.6}},ink:{c:"#1a1424",sig:0.8,thr:0.24},ol:[0.6,"#1a1424",0.6]},
+  /* ---- Манга ---- */
+  {id:"manga",dir:"man",name:"Классика: скринтон",fam:"rule",rule:"manga"},
+  {id:"man-onepiece",dir:"man",name:"Цветная обложка: приключения",fam:"sem",it:5,K:9,dark:"#1c1c1c",darkL:24,lips:"#c9564e",skin:["#e9b48a","#fbd3ae"],hair:["#1c1c1c","#2e2e2e"],bg:["#a8d8f0","#d4eefa"],pal:["#14427a","#8a4a4a","#4a7aa0"],ink:{c:"#141414",sig:1.0,thr:0.24},ol:[1,"#141414",1]},
+  {id:"man-naruto",dir:"man",name:"Цветная обложка: оранжевый",fam:"sem",it:5,K:9,dark:"#2b3550",darkL:22,lips:"#c9644a",skin:["#e0a37e","#f8d4b4"],hair:["#e0a92c","#f7d23e"],bg:["#ffffff","#efe9dc"],pal:["#ef8e2a","#2b3550","#6b8a8a"],ink:{c:"#1c1f2a",sig:1.0,thr:0.24},ol:[1,"#1c1f2a",1]},
+  {id:"man-berserk",dir:"man",name:"Сэйнэн: штриховка",fam:"post",it:3,lv:[{c:"#0a0a0a"},{c:"#bdbdbd",f:"#f4f1ea",p:{t:"cross",c:"#0a0a0a",r:0.22,s:0.8,a:45}},{c:"#d6d6d6",f:"#f4f1ea",p:{t:"line",c:"#0a0a0a",r:0.18,s:0.8,a:45}},{c:"#f4f1ea"}],cut:[0.22,0.45,0.68],lips:null,ink:{c:"#0a0a0a",sig:0.9,thr:0.15},paper:"#f4f1ea"},
+  {id:"man-ito",dir:"man",name:"Хоррор: тонкие линии",fam:"post",it:3,lv:[{c:"#111111"},{c:"#c3c3c3",f:"#f7f3ea",p:{t:"line",c:"#111111",r:0.26,s:0.55,a:0}},{c:"#dadada",f:"#f7f3ea",p:{t:"line",c:"#111111",r:0.12,s:0.55,a:0}},{c:"#f7f3ea"}],cut:[0.18,0.4,0.62],lips:null,ink:{c:"#111111",sig:0.7,thr:0.12},paper:"#f7f3ea"},
+  {id:"man-deathnote",dir:"man",name:"Реалистичный (как «Тетрадь смерти»)",fam:"sem",it:4,K:10,dark:"#2b1f22",darkL:18,lips:"#c08a86",skin:["#c9a8a6","#f6e8e4"],hair:["#7d4223","#b56a3a"],bg:["#ece9f2","#d6d1e4"],pal:["#a59cc9","#6e5a6a","#d6d1e4"],ink:{c:"#2b1f22",sig:0.7,thr:0.18},ol:[0.7,"#2b1f22",0.8]},
+  {id:"man-aot",dir:"man",name:"Мрачный (как «Атака титанов»)",fam:"post",it:4,lv:[{c:"#2b1b16"},{c:"#8e2b1f",p:{t:"cross",c:"#2b1b16",r:0.16,s:0.8,a:45}},{c:"#c9a585"},{c:"#ece2cc"}],cut:[0.25,0.5,0.78],lips:null,ink:{c:"#2b1b16",sig:1.0,thr:0.2},paper:"#ece2cc"},
+  /* ---- Чистая линия ---- */
+  {id:"clear",dir:"cl",name:"Эрже (как Тинтин)",fam:"rule",rule:"clear"},
+  {id:"cl-blake",dir:"cl",name:"Приглушённая (как «Блейк и Мортимер»)",fam:"sem",it:5,K:7,flat:true,dark:"#1d1a16",darkL:18,lips:"#a5382f",skin:["#f3c9a2","#f3c9a2"],hair:["#4a3b2f","#4a3b2f"],bg:["#e6d9b8","#e6d9b8"],pal:["#3f6b8c","#a5382f","#c9b98f"],ink:{c:"#1d1a16",sig:0.9,thr:0.3},ol:[1.3,"#1d1a16",1]},
+  {id:"cl-spirou",dir:"cl",name:"Яркая (как «Спиру»)",fam:"sem",it:5,K:7,flat:true,dark:"#1a1414",darkL:18,lips:"#d8312d",skin:["#f7c9a4","#f7c9a4"],hair:["#e2702b","#e2702b"],bg:["#fbe9a0","#fbe9a0"],pal:["#d8312d","#2f6fb3","#3a8a4a"],ink:{c:"#1a1414",sig:0.9,thr:0.3},ol:[1.3,"#1a1414",1]},
+  {id:"cl-asterix",dir:"cl",name:"Комедия (как «Астерикс»)",fam:"sem",it:5,K:7,flat:true,dark:"#141414",darkL:18,lips:"#c8402e",skin:["#f6c79e","#f6c79e"],hair:["#f2c419","#f2c419"],bg:["#ffffff","#ffffff"],pal:["#d22f27","#2a64b3","#5aa04a"],ink:{c:"#141414",sig:1.0,thr:0.3},ol:[1.4,"#141414",1]},
+  {id:"cl-lucky",dir:"cl",name:"Вестерн (как «Счастливчик Люк»)",fam:"sem",it:5,K:7,flat:true,dark:"#1a1a1a",darkL:20,lips:"#c8302b",skin:["#f5c9a0","#f5c9a0"],hair:["#1a1a1a","#1a1a1a"],bg:["#f2c46b","#f2c46b"],pal:["#c8302b","#2c5aa0","#f2c46b"],ink:{c:"#1a1a1a",sig:1.0,thr:0.3},ol:[1.4,"#1a1a1a",1]},
+  /* ---- Графика (линия от руки) ---- */
+  {id:"sketch",dir:"sk",name:"Карандаш",fam:"rule",rule:"sketch"},
+  {id:"sk-leonardo",dir:"sk",name:"Сангина и сепия (Леонардо)",fam:"post",it:3,lv:[{c:"#3a2416"},{c:"#7a5032",p:{t:"line",c:"#3a2416",r:0.22,s:0.7,a:35}},{c:"#b98a5a",p:{t:"line",c:"#7a5032",r:0.14,s:0.7,a:35}},{c:"#e6cba0"}],cut:[0.15,0.38,0.66],lips:null,ink:{c:"#3a2416",sig:0.7,thr:0.15},paper:"#e6cba0"},
+  {id:"sk-durer",dir:"sk",name:"Белый мел на синей бумаге (Дюрер)",fam:"post",it:3,lv:[{c:"#1f3a4a"},{c:"#5d8fae",p:{t:"line",c:"#1f3a4a",r:0.16,s:0.7,a:-35}},{c:"#7fb0c9"},{c:"#f4f8fb",p:{t:"line",c:"#ffffff",r:0.3,s:0.6,a:30}}],cut:[0.12,0.45,0.82],lips:null,ink:{c:"#1f3a4a",sig:0.7,thr:0.15},paper:"#7fb0c9"},
+  {id:"sk-engraving",dir:"sk",name:"Гравюра (как на купюрах)",fam:"post",it:3,lv:[{c:"#bcbcbc",f:"#fdfcf8",p:{t:"line",c:"#141414",r:0.62,s:0.55,a:30}},{c:"#cbcbcb",f:"#fdfcf8",p:{t:"line",c:"#141414",r:0.42,s:0.55,a:30}},{c:"#dadada",f:"#fdfcf8",p:{t:"line",c:"#141414",r:0.24,s:0.55,a:30}},{c:"#e8e8e8",f:"#fdfcf8",p:{t:"line",c:"#141414",r:0.1,s:0.55,a:30}},{c:"#fdfcf8"}],cut:[0.18,0.36,0.56,0.8],lips:null,ink:{c:"#141414",sig:0.7,thr:0.18},paper:"#fdfcf8"},
+  {id:"sk-stipple",dir:"sk",name:"Пуантилизм (точками)",fam:"post",it:3,lv:[{c:"#bdbdbd",f:"#ffffff",p:{t:"dot",c:"#111111",r:0.46,s:0.6}},{c:"#cdcdcd",f:"#ffffff",p:{t:"dot",c:"#111111",r:0.32,s:0.6}},{c:"#dcdcdc",f:"#ffffff",p:{t:"dot",c:"#111111",r:0.2,s:0.6}},{c:"#ebebeb",f:"#ffffff",p:{t:"dot",c:"#111111",r:0.1,s:0.6}},{c:"#ffffff"}],cut:[0.2,0.4,0.6,0.82],lips:null,ink:null,paper:"#ffffff"},
+  {id:"sk-woodcut",dir:"sk",name:"Ксилография",fam:"post",it:4,lv:[{c:"#1b1712"},{c:"#9a8c74",f:"#ead8b5",p:{t:"line",c:"#1b1712",r:0.45,s:0.9,a:-20}},{c:"#ead8b5"}],cut:[0.35,0.62],lips:null,ink:{c:"#1b1712",sig:1.5,thr:0.3},paper:"#ead8b5"}];
+const studioToonVOf=id=>STUDIO_TOON_V.find(v=>v.id===id)||STUDIO_TOON_V[0];
+/* правило варианта: (L,a,b,c,gi)→[цвет трассировки, ключ фактуры, цвет показа] */
+function studioToonVRule(V,ctx){const mk=(hx,tx,f)=>[hx,tx||"",f||hx],dk=(hx,d)=>{const q=studioLab(...studioHexRgb(hx));return studioDtHex(...studioDtLab2Rgb(Math.max(4,q[0]-d),q[1]*1.05,q[2]*1.05))};
+  const tint=(hx)=>{if(!V.shadeTint)return dk(hx,14);const a=studioHexRgb(hx),b=studioHexRgb(V.shadeTint);return studioDtHex(...a.map((v,i)=>Math.round(v*0.72+b[i]*0.28)))};
+  if(V.fam==="post"){const cut=ctx.cutL;return(L,a,b)=>{if(V.lips&&studioIsLip(L,a,b))return mk(V.lips);let k=0;while(k<cut.length&&L>=cut[k])k++;const lv=V.lv[k];return mk(lv.c,lv.p?"L"+k:"",lv.f)}}
+  const SK=V.skin,DL=V.darkL||0;
+  return(L,a,b,c,gi)=>{if(V.dark&&L<studioDarkOf(DL,c))return mk(V.dark,V.tx&&V.tx.dark?"dark":"");if(V.lips&&studioIsLip(L,a,b)&&a>16)return mk(V.lips);
+    const lit=V.flat?true:L>=c[0]-4,C=Math.hypot(c[1],c[2]),h=Math.atan2(c[2],c[1])*180/Math.PI;
+    if(SK&&studioIsSkin(...c)){const fl=V.flat||SK[0]===SK[1];return lit?mk(studioSkinCol(SK[1],c,fl?"flat":"lit"),V.tx&&V.tx.skin?"skin":""):mk(studioSkinCol(SK[0],c,fl?"flat":"shade"),V.tx&&V.tx.skinShade?"skinShade":"")}
+    const neutral=C<9||(c[0]>62&&C<24),hair=!neutral&&((C>=7&&h>=40&&h<115)||c[0]<34);
+    if(hair&&V.hair)return lit?mk(V.hair[1],V.tx&&V.tx.hair?"hair":""):mk(V.hair[0],V.tx&&V.tx.hair?"hair":"");
+    if(neutral&&V.bg)return mk(c[0]>=55||V.flat?V.bg[V.bg.length>1&&!lit?1:0]:V.bg[1],V.tx&&V.tx.bg?"bg":"");
+    if(V.pal){let col;if(V.cyc)col=V.pal[gi%V.pal.length];else{let best=V.pal[0],bd=1e9;for(const p of V.pal){const q=studioLab(...studioHexRgb(p)),d=Math.hypot(q[1]-c[1]*1.3,q[2]-c[2]*1.3)+Math.abs(q[0]-c[0])*0.4;if(d<bd){bd=d;best=p}}col=best}return mk(lit?col:tint(col))}
+    const s=V.sat||1.5;return mk(studioDtHex(...studioDtLab2Rgb(Math.max(8,Math.min(94,lit?c[0]+6:c[0]-8)),c[1]*s,c[2]*s)))}}
+/* фактура варианта → <pattern> */
+function studioToonPat(id,p,base){const q=base*(p.s||1),r=v=>v.toFixed(2),a=p.a||0;
+  if(p.t==="dot")return`<pattern id="${id}" width="${r(q)}" height="${r(q)}" patternUnits="userSpaceOnUse" patternTransform="rotate(${45+a})"><circle cx="${r(q/2)}" cy="${r(q/2)}" r="${r(q*(p.r||0.25))}" fill="${p.c}"/></pattern>`;
+  if(p.t==="line")return`<pattern id="${id}" width="${r(q)}" height="${r(q)}" patternUnits="userSpaceOnUse" patternTransform="rotate(${a})"><rect width="${r(q)}" height="${r(q*(p.r||0.2))}" fill="${p.c}"/></pattern>`;
+  if(p.t==="cross")return`<pattern id="${id}" width="${r(q)}" height="${r(q)}" patternUnits="userSpaceOnUse" patternTransform="rotate(${a})"><rect width="${r(q)}" height="${r(q*(p.r||0.2))}" fill="${p.c}"/><rect width="${r(q*(p.r||0.2))}" height="${r(q)}" fill="${p.c}"/></pattern>`;
+  /* зерно: несколько точек разного размера в клетке */
+  return`<pattern id="${id}" width="${r(q*3)}" height="${r(q*3)}" patternUnits="userSpaceOnUse">${[[0.3,0.4,1],[1.7,0.9,0.7],[2.4,2.2,1.1],[0.9,2.6,0.6],[2.1,1.3,0.5],[1.2,1.6,0.8]].map(([x,y,k])=>`<circle cx="${r(x*q)}" cy="${r(y*q)}" r="${r(q*(p.r||0.15)*k)}" fill="${p.c}"/>`).join("")}</pattern>`}
+async function studioToonTrace(px0,W,H,o,prog){const V0=studioToonVOf(o.style||"comic");if(V0.fam!=="rule")return studioToonTraceV(px0,W,H,V0,o,prog);
+  const style=V0.rule,P={...STUDIO_TOON_P[style],...(o.over||{})},n=W*H,k=Math.max(1,W/900);prog&&prog("Сглаживаю…");await studioTrYield();
   const lab=studioDtLabArr(studioTrMedian(px0,W,H,1),n),sm=studioBilateralLab(lab,W,H,P.it,P.sr);
   /* цветовые группы (по сглаженной картинке) — чтобы правила стиля знали «чей» это цвет: кожа, волосы, фон */
   const pS=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){const r=studioDtLab2Rgb(sm[i*3],sm[i*3+1],sm[i*3+2]);pS[i*4]=r[0];pS[i*4+1]=r[1];pS[i*4+2]=r[2];pS[i*4+3]=255}
-  studioTrKmeans.minShare=0.004;const Q=studioTrKmeans(pS,W,H,P.K),cen=Q.col.map(h=>studioLab(...studioHexRgb(h)));
+  studioTrKmeans.minShare=0.004;const Q=studioTrKmeans(pS,W,H,Math.max(P.K,13)),cen=studioToonBgFix(Q,Q.col.map(h=>studioLab(...studioHexRgb(h))),W,H);studioToonSkinRef=studioToonSkinOf(Q,cen,n,sm);
   prog&&prog("Рисую в стиле…");await studioTrYield();
   const rule=STUDIO_TOON_RULES[style](),px=new Uint8ClampedArray(n*4),pal=new Map();
   for(let i=0;i<n;i++){const c=cen[Q.lb[i]]||[sm[i*3],sm[i*3+1],sm[i*3+2]],[hx,cls]=rule(sm[i*3],sm[i*3+1],sm[i*3+2],c);if(!pal.has(hx))pal.set(hx,cls);const v=parseInt(hx.slice(1),16);px[i*4]=v>>16;px[i*4+1]=(v>>8)&255;px[i*4+2]=v&255;px[i*4+3]=255}
@@ -11416,9 +11532,30 @@ async function studioToonTrace(px0,W,H,o,prog){const style=o.style||"comic",P={.
   /* класс слоя — по ближайшему цвету стиля */
   const PL=[...pal].map(([h,c])=>[studioHexRgb(h),c,h]);T.cls=T.layers.map(Ly=>{const q=studioHexRgb(Ly.color);let b=PL[0],bd=1e9;for(const e of PL){const d=(e[0][0]-q[0])**2+(e[0][1]-q[1])**2+(e[0][2]-q[2])**2;if(d<bd){bd=d;b=e}}Ly.color=b[2];return b[1]});
   prog&&prog("Линии…");await studioTrYield();
-  T.ink=studioToonInk(sm,W,H,{sig:P.sig*k,thr:P.thr,minA:P.inkMin*k*k,err:0.6*k});T.toon=true;T.P=P;T.style=style;return T}
+  T.ink=studioToonInk(sm,W,H,{sig:P.sig*k,thr:P.thr,minA:P.inkMin*k*k,err:0.6*k});T.toon=true;T.P=P;T.style=style;T.vid=V0.id;return T}
+/* движок вариантов: сглаживание → цветовые группы → правило варианта → трассировка → фактуры и цвета показа по слоям */
+async function studioToonTraceV(px0,W,H,V,o,prog){const ov=o.over||{},n=W*H,k=Math.max(1,W/900);prog&&prog("Сглаживаю…");await studioTrYield();
+  const lab=studioDtLabArr(studioTrMedian(px0,W,H,1),n),sm=studioBilateralLab(lab,W,H,ov.it||V.it||5,10);
+  const pS=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){const r=studioDtLab2Rgb(sm[i*3],sm[i*3+1],sm[i*3+2]);pS[i*4]=r[0];pS[i*4+1]=r[1];pS[i*4+2]=r[2];pS[i*4+3]=255}
+  studioTrKmeans.minShare=0.004;const Q=studioTrKmeans(pS,W,H,Math.max(ov.K||V.K||8,V.cyc?0:13)),cen=studioToonBgFix(Q,Q.col.map(h=>studioLab(...studioHexRgb(h))),W,H);studioToonSkinRef=studioToonSkinOf(Q,cen,n,sm);
+  /* пороги яркости по долям картинки (каждый цвет палитры займёт свою часть) */
+  const ctx={cutL:[]};if(V.fam==="post"){const cut=V.cut||V.lv.slice(1).map((_,j)=>(j+1)/V.lv.length);
+    /* пороги яркости по долям; для «по лицу» — среднее порогов по коже и по всей картинке (устойчиво, даже если кожа найдена частично) */
+    const qs=mask=>{const h=new Float64Array(101);let m=0;for(let i=0;i<n;i++){if(mask&&!mask[i])continue;h[Math.max(0,Math.min(100,Math.round(sm[i*3])))]++;m++}if(!m)return null;const out=[];let acc=0,j=0;for(let L=0;L<=100&&j<cut.length;L++){acc+=h[L]/m;while(j<cut.length&&acc>=cut[j]){out.push(L+0.5);j++}}while(out.length<cut.length)out.push(100);return out};
+    const g=qs(null);let sk=null;if(V.qSkin){const msk=new Uint8Array(n);let m=0;for(let i=0;i<n;i++){const c=cen[Q.lb[i]];if(c&&studioIsSkin(...c)){msk[i]=1;m++}}if(m>=n*0.04)sk=qs(msk)}
+    ctx.cutL=sk?g.map((v,k)=>(v+sk[k])/2):g}
+  prog&&prog("Рисую в стиле…");await studioTrYield();const rule=studioToonVRule(V,ctx),px=new Uint8ClampedArray(n*4),pal=new Map();
+  for(let i=0;i<n;i++){const gi=Q.lb[i],c=cen[gi]||[sm[i*3],sm[i*3+1],sm[i*3+2]],[hx,tx,f]=rule(sm[i*3],sm[i*3+1],sm[i*3+2],c,gi<0?0:gi);if(!pal.has(hx))pal.set(hx,[tx,f]);const v=parseInt(hx.slice(1),16);px[i*4]=v>>16;px[i*4+1]=(v>>8)&255;px[i*4+2]=v&255;px[i*4+3]=255}
+  prog&&prog("Контуры…");await studioTrYield();
+  const T=await studioTraceImage(px,W,H,{colors:Math.min(64,pal.size+2),size:W,blur:0,sharp:0,speckle:(V.speckle||100)*k*k,err:0.8*k,corner:125,smooth:2,merge:2.2,order:"lum",up:1,minShare:0.0004},prog);
+  const PL=[...pal].map(([h,m])=>[studioHexRgb(h),m,h]);T.cls=[];T.fillV=[];T.layers.forEach(Ly=>{const q=studioHexRgb(Ly.color);let b=PL[0],bd=1e9;for(const e of PL){const d=(e[0][0]-q[0])**2+(e[0][1]-q[1])**2+(e[0][2]-q[2])**2;if(d<bd){bd=d;b=e}}Ly.color=b[2];T.cls.push(b[1][0]);T.fillV.push(b[1][1])});
+  prog&&prog("Линии…");await studioTrYield();const I=V.ink;
+  T.ink=I?studioToonInk(sm,W,H,{sig:(ov.sig||I.sig)*k,thr:ov.thr!=null?ov.thr:I.thr,minA:(I.min||26)*k*k,err:0.6*k}):"";T.toon=true;T.V=V;T.vid=V.id;T.style=V.id;T.P={ink:I?I.c:"#111111",ol:V.ol||null};return T}
 /* раскраска стиля по слоям палитры: заливка, растр/штриховка поверх, фон, линии */
-function studioToonColors(T,st){const style=T.style||st.style,edit=st.palEdit||{},P=T.P||{};const out={fill:[],ovl:[],bg:"#ffffff",ink:P.ink||"#111111",pat:""};
+function studioToonColors(T,st){if(T.V){const V=T.V,edit=st.palEdit||{},base=Math.max(4,T.W/170),out={fill:[],ovl:[],bg:V.paper||"#ffffff",ink:st.inkColor||(V.ink?V.ink.c:"#111111"),pat:""},used=new Set();
+    T.layers.forEach((Ly,i)=>{out.fill.push(edit[i]||T.fillV[i]||Ly.color);const c=T.cls[i];out.ovl.push(c?"vt_"+c:null);if(c)used.add(c)});
+    used.forEach(c=>{const p=V.fam==="post"?(V.lv[+c.slice(1)]||{}).p:(V.tx||{})[c];if(p)out.pat+=studioToonPat("vt_"+c,p,base)});return out}
+  const style=T.style||st.style,edit=st.palEdit||{},P=T.P||{};const out={fill:[],ovl:[],bg:"#ffffff",ink:P.ink||"#111111",pat:""};
   T.layers.forEach((Ly,i)=>{const cls=(T.cls||[])[i]||"";let f=edit[i]||Ly.color;if(!edit[i]&&(style==="manga"&&cls))f="#ffffff";if(!edit[i]&&style==="sketch")f="#f6f1e6";out.fill.push(f);out.ovl.push(cls||null)});
   const s=Math.max(4,T.W/170);
   const dots=(id,rr,c,sp)=>{const q=s*(sp||1);return`<pattern id="${id}" width="${q.toFixed(2)}" height="${q.toFixed(2)}" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><circle cx="${(q/2).toFixed(2)}" cy="${(q/2).toFixed(2)}" r="${(q*rr).toFixed(2)}" fill="${c}"/></pattern>`};
@@ -11435,7 +11572,7 @@ function studioToonSvg(T,C,full,o){let body="";
   return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${T.W} ${T.H}"${full?` width="${T.W}" height="${T.H}"`:' preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%"'}><defs>${C.pat}</defs><rect width="${T.W}" height="${T.H}" fill="${C.bg}"/><g fill-rule="evenodd" stroke-linejoin="round">${body}</g>${ol}${o&&o.noInk?"":`<path fill="${C.ink}" fill-rule="evenodd" d="${T.ink}"/>`}</svg>`}
 const studioTrD=(segs,k=1)=>{const f=v=>(Math.round(v*k*100)/100);let d=`M${f(segs[0][0][0])} ${f(segs[0][0][1])}`;for(const B of segs)d+=`C${f(B[1][0])} ${f(B[1][1])} ${f(B[2][0])} ${f(B[2][1])} ${f(B[3][0])} ${f(B[3][1])}`;return d+"Z"};
 function studioTraceSvg(T,full){return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${T.W} ${T.H}"${full?` width="${T.W}" height="${T.H}"`:' preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%"'}>${T.layers.map(L=>`<path fill="${L.color}" fill-rule="evenodd" d="${L.paths.map(sg=>studioTrD(sg)).join("")}"/>`).join("")}</svg>`}
-window.NEON_TRACE={image:(...a)=>studioTraceImage(...a),svg:(...a)=>studioTraceSvg(...a),guess:(...a)=>studioTraceGuess(...a),presets:STUDIO_TRACE_PRESETS,detail:(...a)=>studioDetailTrace(...a),detailSvg:(...a)=>studioDetailSvg(...a),colors:(...a)=>studioDtColors(...a),palette:(...a)=>studioDtPalette(...a),toon:(...a)=>studioToonTrace(...a),toonColors:(...a)=>studioToonColors(...a),toonSvg:(...a)=>studioToonSvg(...a),ink:(...a)=>studioToonInk(...a),labArr:(...a)=>studioDtLabArr(...a),median:(...a)=>studioTrMedian(...a),bilat:(...a)=>studioBilateralLab(...a)};
+window.NEON_TRACE={image:(...a)=>studioTraceImage(...a),svg:(...a)=>studioTraceSvg(...a),guess:(...a)=>studioTraceGuess(...a),presets:STUDIO_TRACE_PRESETS,detail:(...a)=>studioDetailTrace(...a),detailSvg:(...a)=>studioDetailSvg(...a),colors:(...a)=>studioDtColors(...a),palette:(...a)=>studioDtPalette(...a),toon:(...a)=>studioToonTrace(...a),toonColors:(...a)=>studioToonColors(...a),toonSvg:(...a)=>studioToonSvg(...a),ink:(...a)=>studioToonInk(...a),labArr:(...a)=>studioDtLabArr(...a),median:(...a)=>studioTrMedian(...a),bilat:(...a)=>studioBilateralLab(...a),skinRef:()=>studioToonSkinRef};
 /* в дизайн: каждый цвет — слой-кривая (точки в % рамки, ручки Безье), всё — группа «Вектор из фото» */
 function studioTraceToLayers(T,box){const g="g"+studioUid(),pt=(p,W,H)=>({x:p[0]/W*100,y:p[1]/H*100});
   const toPts=segs=>segs.map((B,i)=>{const prev=segs[(i-1+segs.length)%segs.length],p=pt(B[0],T.W,T.H),o=pt(B[1],T.W,T.H),inn=pt(prev[2],T.W,T.H);return{x:p.x,y:p.y,type:"smooth",in:{dx:inn.x-p.x,dy:inn.y-p.y},out:{dx:o.x-p.x,dy:o.y-p.y}}});
@@ -11459,8 +11596,10 @@ async function studioTraceDlg(src,o0){if(studioVxOpen)studioVxOpen.close();
   const PI_={logo:"badge",art:"palette",toon:"brush",detail:"scan-face",photo:"image",poster:"layers"};
   const rng=(k,lb,mn,mx,st,u)=>`<nv-range data-tr="${k}" label="${lb}" min="${mn}" max="${mx}" step="${st}" value="${o[k]}" unit="${u||""}"></nv-range>`;
   const ctl=()=>`<nv-choice-bar data-trp label="Что на картинке" value="${preset}" options="${esc(JSON.stringify(Object.entries(STUDIO_TRACE_PRESETS).map(([k,P])=>({value:k,label:P.label,icon:PI_[k]}))))}"></nv-choice-bar>
-    ${preset==="toon"?`<div class="vx-tnh">Стиль рисунка</div><div class="vx-tns">${STUDIO_TOON_STYLES.map(([k,lb])=>`<button type="button" data-tst="${k}" class="${o.style===k?"on":""}">${lb}</button>`).join("")}</div>
-      ${(()=>{const P={...STUDIO_TOON_P[o.style],...tnOver()},r=(k,lb,mn,mx,st,u)=>`<nv-range data-tn="${k}" label="${lb}" min="${mn}" max="${mx}" step="${st}" value="${P[k]}" unit="${u||""}"></nv-range>`;
+    ${preset==="toon"?`${(()=>{const cur=studioToonVOf(o.style),sw=V=>{const L=V.fam==="post"?V.lv.map(x=>x.f||x.c):[...(V.skin||[]).slice(1),...(V.hair||[]).slice(1),...(V.bg||[]).slice(0,1),...(V.pal||[])];return(V.fam==="rule"?[]:L).slice(0,5).map(c=>`<i style="background:${c}"></i>`).join("")};
+        return`<div class="vx-tnh">Направление</div><div class="vx-tnd">${STUDIO_TOON_DIRS.map(([k,lb])=>`<button type="button" data-tdir="${k}" class="${cur.dir===k?"on":""}">${lb}</button>`).join("")}</div>
+        <div class="vx-tnh">Вариант · ${STUDIO_TOON_V.filter(v=>v.dir===cur.dir).length}</div><div class="vx-tnv">${STUDIO_TOON_V.filter(v=>v.dir===cur.dir).map(V=>`<button type="button" data-tst="${V.id}" class="${V.id===cur.id?"on":""}"><span>${esc(V.name)}</span><b>${sw(V)}</b></button>`).join("")}</div>`})()}
+      ${(()=>{const V_=studioToonVOf(o.style),P={...(V_.fam==="rule"?STUDIO_TOON_P[V_.rule]:{sig:(V_.ink||{}).sig||1,thr:(V_.ink||{}).thr||0.3,it:V_.it||5,K:V_.K||8}),...tnOver()},r=(k,lb,mn,mx,st,u)=>`<nv-range data-tn="${k}" label="${lb}" min="${mn}" max="${mx}" step="${st}" value="${P[k]}" unit="${u||""}"></nv-range>`;
         return r("sig","Толщина линий",0.4,3,0.05)+r("thr","Порог линий (меньше — больше линий)",0.05,1.5,0.05)+r("it","Упрощение (сглаживание)",1,8,1)+r("K","Цветовых групп",3,16,1)})()}
       <p class="muted" style="font-size:12px;margin:0">Рисунок строится из самого фото — лицо узнаётся. Это стилизация, а не перерисовка в персонажа.</p>`
     :preset==="detail"?`${rng("regions","Детализация, областей до",3000,150000,1000)}${rng("merge","Склейка похожих",0.5,8,0.5,"ΔE")}${rng("minA","Мельче не делить",1,40,1,"px²")}${rng("err","Точность контуров",0.2,2,0.05,"px")}${rng("compact","Форма: по краям ↔ ровно",2,20,1)}${rng("size","Разрешение",600,2400,100,"px")}
@@ -11513,7 +11652,7 @@ async function studioTraceDlg(src,o0){if(studioVxOpen)studioVxOpen.close();
   const run=async()=>{if(!cv)return;if(busy){again=true;return}busy=true;info.textContent="Считаю…";const t0=performance.now();
     try{const sc=Math.min(3,o.size/Math.max(cv.width,cv.height)),w=Math.max(8,Math.round(cv.width*sc)),h=Math.max(8,Math.round(cv.height*sc)),k=document.createElement("canvas");k.width=w;k.height=h;const g=k.getContext("2d");g.imageSmoothingQuality="high";g.drawImage(cv,0,0,w,h);
       if(preset==="toon"){const key=JSON.stringify([o.style,tnOver(),w,h]);T=tcache.get(key);if(!T){T=await studioToonTrace(g.getImageData(0,0,w,h).data,w,h,{style:o.style,over:tnOver(),up:sc},m=>{info.textContent=m});tcache.set(key,T)}ts.palEdit={};paintCols();paint();
-        info.textContent=`Рисунок «${(STUDIO_TOON_STYLES.find(x=>x[0]===o.style)||[,""])[1]}»: ${T.layers.length} цветов + линии, SVG ≈ ${Math.round(svgOf(true).length/1024)} КБ, ${((performance.now()-t0)/1000).toFixed(1)} с. Другие стили — сверху справа.`}
+        info.textContent=`Рисунок «${studioToonVOf(o.style).name}»: ${T.layers.length} цветов + линии, SVG ≈ ${Math.round(svgOf(true).length/1024)} КБ, ${((performance.now()-t0)/1000).toFixed(1)} с. Другие стили — сверху справа.`}
       else if(preset==="detail"){T=await studioDetailTrace(g.getImageData(0,0,w,h).data,w,h,{...o,up:sc},m=>{info.textContent=m});pal=null;paintCols();paint();
         const mb=svgOf(true).length/1048576;info.textContent=`Областей: ${T.regions.length} — каждая отдельным контуром. SVG ≈ ${mb>=1?mb.toFixed(1)+" МБ":Math.round(mb*1024)+" КБ"}, ${((performance.now()-t0)/1000).toFixed(1)} с. Цвет и стиль справа меняются сразу.`}
       else{T=await studioTraceImage(g.getImageData(0,0,w,h).data,w,h,{...o,up:sc},m=>{info.textContent=m});off=new Set();paintCols();paint();
@@ -11544,6 +11683,7 @@ async function studioTraceDlg(src,o0){if(studioVxOpen)studioVxOpen.close();
     let groups=new Map();T.regions.forEach((r,i)=>{const c=C[i].c;if(!groups.has(c))groups.set(c,[]);groups.get(c).push(i)});
     if(groups.size>48){const P=studioDtPalette(T.regions.map((r,i)=>({...r,lab:studioLab(...studioHexRgb(C[i].c))})),48);groups=new Map();T.regions.forEach((r,i)=>{const c=P.cent[P.asg[i]];if(!groups.has(c))groups.set(c,[]);groups.get(c).push(i)})}
     const T2={W:T.W,H:T.H,seam:true,layers:[...groups].sort((a,b)=>b[1].length-a[1].length).map(([color,ids])=>({color,paths:ids.flatMap(i=>T.regions[i].loops)}))};close();studioTraceInsert(T2,o0)};
+  root.addEventListener("click",e=>{const d=e.target.closest("[data-tdir]");if(!d)return;const v=STUDIO_TOON_V.find(x=>x.dir===d.dataset.tdir);if(!v)return;o.style=v.id;tnKeys.forEach(k=>delete o["tn_"+k]);$("[data-vxctl]").innerHTML=ctl();run()});
   root.addEventListener("click",e=>{const b=e.target.closest("[data-tst]");if(!b)return;o.style=b.dataset.tst;tnKeys.forEach(k=>delete o["tn_"+k]);$("[data-vxctl]").innerHTML=ctl();run()});
   root.addEventListener("click",e=>{const b=e.target.closest("[data-dtst]");if(!b)return;ds.style=b.dataset.dtst;paintCols();recolor()});
   root.addEventListener("input",e=>{const t=e.target,set=(arr,k)=>{arr[k]=t.value;t.parentElement.style.setProperty("--c",t.value);recolor()};
