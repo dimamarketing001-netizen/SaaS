@@ -1803,6 +1803,9 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 .sp-pg{font:11px var(--font-mono,monospace);color:var(--ink-3);margin-right:6px}.sp-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.sp-why{font-size:11.5px;color:var(--ink-3)}
 .sp-s{border:1px solid var(--svc-ink);color:var(--svc-ink);background:var(--svc-soft,transparent);border-radius:999px;padding:2px 10px;font-size:12.5px;cursor:pointer}.sp-a{border:0;background:none;color:var(--ink-3);font-size:12px;cursor:pointer;padding:2px 4px}.sp-a:hover{color:var(--ink)}
 .sp-ok{text-align:center;color:var(--ink-2);padding:18px 6px}.sp-ok p{margin:6px 0 0}
+body[data-cb="prot"] .stud-stage{filter:url(#neon-cb-prot)}body[data-cb="deut"] .stud-stage{filter:url(#neon-cb-deut)}body[data-cb="trit"] .stud-stage{filter:url(#neon-cb-trit)}body[data-cb="gray"] .stud-stage{filter:url(#neon-cb-gray)}
+body[data-cb] #stud-stage-host{position:relative}body[data-cb] #stud-stage-host::before{position:absolute;left:10px;top:10px;z-index:5;padding:3px 10px;border-radius:999px;background:var(--ink);color:var(--surface);font-size:11.5px;pointer-events:none}
+body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}body[data-cb="deut"] #stud-stage-host::before{content:"Дейтеранопия"}body[data-cb="trit"] #stud-stage-host::before{content:"Тританопия"}body[data-cb="gray"] #stud-stage-host::before{content:"Оттенки серого"}
 .s2-favable{position:relative}.s2-fav{position:absolute;left:2px;top:2px;width:18px;height:18px;display:grid;place-items:center;border-radius:5px;font-size:13px;line-height:1;color:#f59e0b;background:color-mix(in srgb,var(--surface) 88%,transparent);opacity:0;transition:opacity .12s;cursor:pointer;z-index:2;font-style:normal;text-indent:0}
 .s2-favable:hover>.s2-fav,.s2-fav.on{opacity:1}.s2-fav:hover{transform:scale(1.15)}
 .s2-fav-empty{text-align:center;color:var(--ink-3);padding:24px 8px;font-size:12.5px;line-height:1.45}.s2-fav-empty p{margin:8px 0 0}
@@ -8820,7 +8823,8 @@ function studioPropsHtml0(){
     +ppSec("img","Изображение",`${l.src?"":'<p class="pp-hint"><b>Рамка-заглушка.</b> Загрузите фото — оно займёт рамку.</p>'}
       <div class="pp-ibs wide"><label class="pp-btn${l.src?"":" pri"}" for="stud-img-replace">${ic("upload",14)}${l.src?"Заменить":"Загрузить фото"}</label><button type="button" class="pp-btn" data-act-imgurl>${ic("link",14)}По ссылке</button></div>
       ${l.src?`<div class="pp-ibs wide"><button type="button" class="pp-btn" data-act="studRemoveBg">${ic("scissors",14)}Удалить фон</button><button type="button" class="pp-btn${st?" on":""}" data-act-sticker="${st?"":"1"}">${ic("sticker",14)}Стикер</button></div>
-      ${st?ppColor("Цвет обводки","sticker.color",l.sticker.color||"#ffffff")+ppRng("Толщина","sticker.width",l.sticker.width||5,1,16,1):""}`:""}`)
+      ${st?ppColor("Цвет обводки","sticker.color",l.sticker.color||"#ffffff")+ppRng("Толщина","sticker.width",l.sticker.width||5,1,16,1):""}`:""}
+      ${l.src?`<label class="pp-l" style="display:block;margin:8px 0 4px" for="stud-alt-${l.id}">Альтернативный текст</label><input type="text" id="stud-alt-${l.id}" class="num pp-alt" data-prop="alt" value="${esc(l.alt||"")}" maxlength="250" placeholder="Что на фото: «юрист консультирует клиента»" style="width:100%;text-align:left;padding:0 10px"><p class="pp-hint" style="margin-top:4px">Для незрячих (экранные дикторы), SVG и HTML5-баннеров.</p>`:""}`)
     +ppSec("crop","Кадрирование",`${l.src?ppCap("Пропорции рамки")+ppSeg([["Фото","orig"],["1:1","1"],["4:5","0.8"],["16:9","1.7778"],["3:4","0.75"]].map(([lb,v])=>[lb,`data-act-ratio="${v}"`,false,lb==="Фото"?"Как у исходного фото":"Пропорции "+lb])):""}
       ${ppRng("Смещение X","fx",l.fx==null?50:l.fx,0,100,1)}${ppRng("Смещение Y","fy",l.fy==null?50:l.fy,0,100,1)}${ppRng("Масштаб","zoom",l.zoom||1,1,3,0.05)}`)
     +ppSec("mask","Форма и рамка",`${ppCap("Форма фото")+ppSeg([["Прямоугольник","none"],["Круг","circle"],["Арка","arch"],["Соты","hexagon"],["Звезда","star"]].map(([lb,v])=>[ppSvg(PP_MASK[v]),`data-prop-set="mask" data-val="${v}"`,mask===v,lb]),"pp-seg-ic")}
@@ -11850,7 +11854,7 @@ async function studioToSvg(d,ids){
   if(!ids){if(d.bg.type==="image"&&d.bg.image)body+=`<image href="${studioSvgEsc(d.bg.image)}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/>`;else if(["gradient","pattern","mesh"].includes(d.bg.type)){const c=document.createElement("canvas");c.width=W;c.height=H;await studioPaintBg(c.getContext("2d"),d.bg,W,H);body+=`<image href="${c.toDataURL("image/png")}" x="0" y="0" width="${W}" height="${H}"/>`}else if(d.bg.type!=="none")body+=`<rect width="${W}" height="${H}" fill="${d.bg.color||"#fff"}"/>`}
   const mc=document.createElement("canvas").getContext("2d");
   for(const l of ls){
-    if(studioPerspOn(l)||l.type==="3d"){try{const c=await studioRenderCanvas({...d,bg:{type:"none"},layers:[l],pages:undefined},1);body+=`<image href="${c.toDataURL("image/png")}" x="0" y="0" width="${W}" height="${H}"/>`}catch(e){}continue}
+    if(studioPerspOn(l)||l.type==="3d"||(l.type==="text"&&(studioCanvText(l)||studioParaGap(l)||(l.tfx&&["block","long","sticker"].includes(l.tfx.type))))||(l.type==="image"&&l.src&&(studioFadeOn(l)||studioCCOn(studioPhotoOf(l))))){try{const c=await studioRenderCanvas({...d,bg:{type:"none"},layers:[l],pages:undefined},1);body+=`<image href="${c.toDataURL("image/png")}" x="0" y="0" width="${W}" height="${H}"/>`}catch(e){}continue}
     const x=l.x/100*W,y=l.y/100*H,w=l.w/100*W,h=l.h/100*H,cx=x+w/2,cy=y+h/2;
     const tf=`translate(${cx} ${cy}) rotate(${l.rotation||0}) scale(${l.flipH?-1:1} ${l.flipV?-1:1}) skewX(${l.skewX||0}) skewY(${l.skewY||0}) translate(${-cx} ${-cy})`;
     let el="";
@@ -11870,7 +11874,7 @@ async function studioToSvg(d,ids){
     else if(l.type==="icon"){const inner=(iconSvg(l.icon||"star").match(/<svg[^>]*>([\s\S]*)<\/svg>/)||[])[1]||"";el=`<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 24 24" fill="none" stroke="${l.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`}
     else if(l.type==="image"&&l.src){const cid="c"+(++n),m=l.mask||"none";
       defs.push(`<clipPath id="${cid}">${m==="circle"?`<ellipse cx="${cx}" cy="${cy}" rx="${w/2}" ry="${h/2}"/>`:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min((l.radius||0)*k,w/2,h/2)}"/>`}</clipPath>`);
-      el=`<g clip-path="url(#${cid})"><image href="${studioSvgEsc(l.src)}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice"/></g>`}
+      el=`<g clip-path="url(#${cid})"${l.alt?` role="img" aria-label="${studioSvgEsc(l.alt)}"`:""}>${l.alt?`<title>${studioSvgEsc(l.alt)}</title>`:""}<image href="${studioSvgEsc(l.src)}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice"/></g>`}
     else if(l.type==="text"){const fs=H*l.fontSize/100,font=studioFontOf(l);mc.font=`${l.weight||700} ${fs}px "${font}"`;
       const raw=(l.upper?String(l.text||"").toUpperCase():String(l.text||"")),pad=l.bgColor?w*0.04:0,maxW=w-pad*2,lines=[];
       raw.split("\n").forEach(par=>{let cur="";par.split(/\s+/).filter(Boolean).forEach(wd=>{const t=cur?cur+" "+wd:wd;if(mc.measureText(t).width>maxW&&cur){lines.push(cur);cur=wd}else cur=t});lines.push(cur)});
@@ -12142,6 +12146,13 @@ function studioAnimOrder(d,order){const L=d.layers.filter(l=>l.anim&&l.anim.type
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-animord]");if(!b)return;const d=studioDesign();studioBeforeChange();const n=studioAnimOrder(d,b.dataset.animord);NEON.save();N.refresh();toast(n?`Порядок появления: ${n} элементов`:"Сначала добавьте анимацию элементам",{tone:n?"success":"warning"})});
 document.addEventListener("input",e=>{if(!(e.target.matches&&e.target.matches("[data-animstep]")))return;const d=studioDesign(),v=+e.target.value;d.animStep=v;e.target.style.setProperty("--rng-p",rngPct(v,0,1.5));e.target.closest(".rng").querySelector("output").textContent=String(v).replace(".",",")+" с";
   if(d.animOrder&&d.animOrder!=="together"){studioAnimOrder(d,d.animOrder);if(S.studio.timeline){clearTimeout(studioAnimOrder.t);studioAnimOrder.t=setTimeout(()=>N.refresh(),250)}}NEON.save()});
+/* v10 (26.11.2026): просмотр макета глазами людей с нарушением цветового зрения (симуляция Viénot/Brettel,
+   матрицы как в Coblis) и в оттенках серого — фильтр на холст, сам дизайн не меняется. */
+const STUDIO_CB=[["prot","Протанопия","нет красного, ~1% мужчин"],["deut","Дейтеранопия","нет зелёного, ~6% мужчин"],["trit","Тританопия","нет синего, редко"],["gray","Оттенки серого","проверка контраста"]];
+function studioCbSet(v){if(!document.getElementById("neon-cb-defs")){const M={prot:".567 .433 0 0 0 .558 .442 0 0 0 0 .242 .758 0 0 0 0 0 1 0",deut:".625 .375 0 0 0 .7 .3 0 0 0 0 .3 .7 0 0 0 0 0 1 0",trit:".95 .05 0 0 0 0 .433 .567 0 0 0 .475 .525 0 0 0 0 0 1 0",gray:".2126 .7152 .0722 0 0 .2126 .7152 .0722 0 0 .2126 .7152 .0722 0 0 0 0 0 1 0"};
+    const sv=document.createElementNS("http://www.w3.org/2000/svg","svg");sv.id="neon-cb-defs";sv.setAttribute("width","0");sv.setAttribute("height","0");sv.style.position="absolute";sv.setAttribute("aria-hidden","true");
+    sv.innerHTML=Object.entries(M).map(([k,m])=>`<filter id="neon-cb-${k}" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="${m}"/></filter>`).join("");document.body.append(sv)}
+  if(v)document.body.dataset.cb=v;else delete document.body.dataset.cb;const t=STUDIO_CB.find(x=>x[0]===v);toast(t?`Просмотр: ${t[1].toLowerCase()} — так макет видят люди с этой особенностью. Выключить — меню масштаба`:"Обычное зрение")}
 function studioAutoAnimate(){
   const d=studioDesign();studioBeforeChange();let i=0;
   d.layers.forEach(l=>{const full=l.x<=1&&l.y<=1&&l.x+l.w>=99&&l.y+l.h>=99;if(full||l.hidden){delete l.anim;return}
@@ -12758,7 +12769,7 @@ async function studioVectorPdf(){
         const fx=studioFillOf(l),sk=studioStrokeOf(l),eff=(l.effect&&l.effect.shadow)||(l.blendMode&&l.blendMode!=="normal")||l.skewX||l.skewY;
         const vecShape=l.type==="shape"&&!eff&&["solid","none"].includes(fx.type)&&(!sk.enabled||sk.dash==="solid"||!sk.dash);
         const vecPath=l.type==="path"&&!eff&&["solid","none"].includes(fx.type)&&(!sk.enabled||!sk.dash||sk.dash==="solid");
-        const vecText=l.type==="text"&&!eff&&!l.shadow&&!l.neon&&!(l.outline&&l.outline.enabled)&&!l.tfx&&!(l.grad&&l.grad.enabled)&&!studioCanvText(l)&&!l.vertical&&!studioListOf(l);
+        const vecText=l.type==="text"&&!eff&&!l.shadow&&!l.neon&&!(l.outline&&l.outline.enabled)&&!l.tfx&&!(l.grad&&l.grad.enabled)&&!studioCanvText(l)&&!l.vertical&&!studioListOf(l)&&!studioParaGap(l);
         if(studioPerspOn(l)||!vecShape&&!vecPath&&!vecText){const r=studioRotBox?studioRotBox(l):null,mg=Math.max(24,0.15*Math.max(W,H)),bx=r?{x:r.x1/100*F.w-mg,y:r.y1/100*F.h-mg,w:(r.x2-r.x1)/100*F.w+2*mg,h:(r.y2-r.y1)/100*F.h+2*mg}:{x:X-W*0.3,y:Y-H*0.3,w:W*1.6,h:H*1.6};
           await placeRaster({...pd,bg:{type:"color",color:"transparent"},layers:[l]},bx);rasterized.push(studioLayerLabel(l));continue}
         let pre="q ";if(op<1){const g="G"+Object.keys(gs).length;gs[g]=op;pre+=`/${g} gs `}
@@ -13728,7 +13739,8 @@ Object.assign(N.acts,{
     STUDIO_PLATFORMS.filter(P=>P.k!=="popular").forEach(P=>{items.push("#"+P.n);P.f.forEach(([k,lb])=>items.push([lb,STUDIO_FMT[k].w+"×"+STUDIO_FMT[k].h,()=>NEON.chg.studFormat(k,{}),k===cur]))});
     studioMenu(r.left,r.bottom+4,items)},
   studZoomMenu(a){const r=a.getBoundingClientRect(),z=v=>()=>studioSetZoom(v);
-    studioMenu(r.left,r.bottom+4,[["Вписать в экран","Ctrl 0",z(1),studioZoom===1],["Увеличить","Ctrl +",()=>N.acts.studZoom(null,{z:"+"}),false],["Уменьшить","Ctrl −",()=>N.acts.studZoom(null,{z:"-"}),false],["50%","",z(0.5),studioZoom===0.5],["150%","",z(1.5),studioZoom===1.5],["200%","",z(2),studioZoom===2]])},
+    const cb=document.body.dataset.cb||"",C=v=>()=>studioCbSet(v);
+    studioMenu(r.left,r.bottom+4,[["Вписать в экран","Ctrl 0",z(1),studioZoom===1],["Увеличить","Ctrl +",()=>N.acts.studZoom(null,{z:"+"}),false],["Уменьшить","Ctrl −",()=>N.acts.studZoom(null,{z:"-"}),false],["50%","",z(0.5),studioZoom===0.5],["150%","",z(1.5),studioZoom===1.5],["200%","",z(2),studioZoom===2],"-",["Обычное зрение","",C(""),!cb],...STUDIO_CB.map(([k,t,h])=>[t,h,C(k),cb===k])])},
   studGuidesPanel(a){studioGuidesPanel(a)},
   studCollage(a,d){studioAddCollage(+d.i)},
   studAddData(a,d){studioAddData(d.k)},
