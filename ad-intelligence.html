@@ -304,7 +304,7 @@ nv-choice-bar{display:block;min-width:0}
 /* Цвет сервиса: --svc для заливок, --svc-d для текста на светлом фоне */
 [data-svc]{--svc:#39ff88;--svc-d:#0c7a42;--svc-ink:var(--svc-d);--svc-soft:color-mix(in srgb,var(--svc) 20%,transparent)}
 [data-svc="launch"]{--svc:#ffb224;--svc-d:#8f5a06}
-/* Студия — часть NEON: общий неоновый зелёный, как у Разведки (своего цвета нет) */
+[data-svc="studio"]{--svc:#c4a7ff;--svc-d:#6a3fd4}
 [data-svc="connect"]{--svc:#5fd4ff;--svc-d:#0a6a90}
 [data-svc="sites"]{--svc:#ff9a76;--svc-d:#b3411a}
 [data-svc="crm"]{--svc:#ff8fcb;--svc-d:#ad226b}
@@ -340,7 +340,7 @@ nv-icon svg{width:1em;height:1em;stroke-width:2}
 ::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--ink) 20%,transparent);border-radius:999px;border:3px solid transparent;background-clip:content-box}
 ::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb,var(--ink) 35%,transparent);background-clip:content-box}
 ::-webkit-scrollbar-corner{background:transparent}
-::selection{background:color-mix(in srgb,var(--svc,#39ff88) 55%,transparent);color:inherit}
+::selection{background:color-mix(in srgb,var(--svc,#c4a7ff) 55%,transparent);color:inherit}
 /* ---------- Оболочка ---------- */
 #app{height:100%}
 .shell{display:grid;grid-template-columns:78px 228px minmax(0,1fr);height:100%;transition:grid-template-columns .15s ease}
@@ -1830,9 +1830,9 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 .stud-rtbar .sep{width:1px;height:20px;background:var(--line);margin:0 3px}.stud-rtbar .sw{min-width:20px;width:20px;height:20px;border-radius:50%;border:1px solid var(--line-2);padding:0;position:relative}
 .stud-rtbar label.pick{display:grid;place-items:center;cursor:pointer;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);color:#fff}.stud-rtbar label.pick input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .s2-favable{position:relative}
-/* как закладка на карточках Разведки (.cr-save): белая плашка, в избранном — чёрная с неоновой заливкой */
+/* как закладка на карточках Разведки (.cr-save), но в цвете раздела: белая плашка, в избранном — фиолетовая Студии */
 .s2-fav{position:absolute;right:3px;top:3px;z-index:2;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.94);color:#111;box-shadow:0 1px 3px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;cursor:pointer;line-height:1}
-.s2-fav svg{width:12px;height:12px}.s2-fav:hover{background:#fff}.s2-fav.on{background:#111;color:#39ff88;opacity:1}.s2-fav.on svg{fill:currentColor}
+.s2-fav svg{width:12px;height:12px}.s2-fav:hover{background:#fff}.s2-fav.on{background:var(--svc-d,#6a3fd4);color:#fff;opacity:1}.s2-fav.on svg{fill:currentColor}
 .s2-favable:hover>.s2-fav{opacity:1}.s2-grid2 .th.s2-favable .x{right:auto;left:4px}.s2-grid2 .th>.s2-fav{width:26px;height:26px;right:6px;top:6px}.s2-grid2 .th>.s2-fav svg{width:14px;height:14px}
 .s2-fav-empty{text-align:center;color:var(--ink-3);padding:24px 8px;font-size:12.5px;line-height:1.45}.s2-fav-empty p{margin:8px 0 0}
 .s2-grid2>*{min-width:0}
@@ -8304,7 +8304,7 @@ function studioPenPreviewHtml(){
   let rubber="";
   if(cur&&pts.length){const last=pts[pts.length-1],cx=last.out?last.x+last.out.dx:last.x,cy=last.out?last.y+last.out.dy:last.y;rubber=`<path d="M ${last.x} ${last.y} C ${cx} ${cy} ${cur.x} ${cur.y} ${cur.x} ${cur.y}" fill="none" stroke="#16c784" stroke-width="0.4" stroke-dasharray="1.2,1" vector-effect="non-scaling-stroke"/>`}
   const dots=pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="0.9" fill="#fff" stroke="#16c784" stroke-width="0.4"/>`).join("");
-  return`<svg class="stud-pen-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">${d?`<path d="${d}" fill="none" stroke="#16c784" stroke-width="0.4" vector-effect="non-scaling-stroke"/>`:""}${rubber}${dots}</svg>`;
+  return`<svg class="stud-pen-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">${d?`<path d="${d}" fill="none" stroke="var(--svc-ink,#6a3fd4)" stroke-width="0.4" vector-effect="non-scaling-stroke"/>`:""}${rubber}${dots}</svg>`;
 }
 function studioEditOverlayHtml(){
   if(!studioEditingPathId)return"";
