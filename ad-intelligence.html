@@ -304,7 +304,7 @@ nv-choice-bar{display:block;min-width:0}
 /* Цвет сервиса: --svc для заливок, --svc-d для текста на светлом фоне */
 [data-svc]{--svc:#39ff88;--svc-d:#0c7a42;--svc-ink:var(--svc-d);--svc-soft:color-mix(in srgb,var(--svc) 20%,transparent)}
 [data-svc="launch"]{--svc:#ffb224;--svc-d:#8f5a06}
-[data-svc="studio"]{--svc:#c4a7ff;--svc-d:#6a3fd4}
+/* Студия — часть NEON: общий неоновый зелёный, как у Разведки (своего цвета нет) */
 [data-svc="connect"]{--svc:#5fd4ff;--svc-d:#0a6a90}
 [data-svc="sites"]{--svc:#ff9a76;--svc-d:#b3411a}
 [data-svc="crm"]{--svc:#ff8fcb;--svc-d:#ad226b}
@@ -340,7 +340,7 @@ nv-icon svg{width:1em;height:1em;stroke-width:2}
 ::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--ink) 20%,transparent);border-radius:999px;border:3px solid transparent;background-clip:content-box}
 ::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb,var(--ink) 35%,transparent);background-clip:content-box}
 ::-webkit-scrollbar-corner{background:transparent}
-::selection{background:color-mix(in srgb,var(--svc,#c4a7ff) 55%,transparent);color:inherit}
+::selection{background:color-mix(in srgb,var(--svc,#39ff88) 55%,transparent);color:inherit}
 /* ---------- Оболочка ---------- */
 #app{height:100%}
 .shell{display:grid;grid-template-columns:78px 228px minmax(0,1fr);height:100%;transition:grid-template-columns .15s ease}
