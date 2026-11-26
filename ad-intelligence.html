@@ -1819,7 +1819,7 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 #stud-stage-host:has(>.stud-collab){position:relative}
 .stud-collab{position:absolute;right:10px;top:10px;z-index:6;display:flex;align-items:center;gap:4px;padding:3px 8px 3px 6px;border-radius:999px;background:var(--surface);border:1px solid var(--line-2);font-size:11.5px;color:var(--ink-2);box-shadow:0 2px 8px rgba(0,0,0,.08)}.stud-collab i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--pc);color:#fff;font-size:10px;font-weight:700;margin-left:-2px;border:2px solid var(--surface)}
 .cmyk-cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px}.cmyk-cmp figure{margin:0}.cmyk-cmp figcaption{font-size:12px;color:var(--ink-3);margin-bottom:4px}
-.stud-rv{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--rv) 45%,transparent);background:color-mix(in srgb,var(--rv) 12%,transparent);color:var(--rv);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.stud-rv{display:inline-flex;align-items:center;gap:4px;border:0;background:none;padding:0 2px;cursor:pointer;color:var(--ink-3)}.stud-rv:hover nv-status .nv-badge{filter:brightness(.97)}
 .rv-log{display:flex;flex-direction:column;gap:10px}.rv-it{display:flex;gap:10px;align-items:flex-start;font-size:13px}.rv-dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:var(--rv);background:color-mix(in srgb,var(--rv) 14%,transparent);flex:none}.rv-note{margin-top:4px;padding:6px 8px;border-radius:8px;background:var(--surface-2);font-size:12.5px}
 .stn-mention{position:absolute;left:8px;right:8px;top:calc(100% - 4px);z-index:5;background:var(--surface);border:1px solid var(--line-2);border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,.15);padding:4px;display:flex;flex-direction:column}.stn-mention button{display:flex;flex-direction:column;align-items:flex-start;border:0;background:none;padding:5px 8px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--ink)}.stn-mention button:hover{background:var(--surface-2)}.stn-mention small{color:var(--ink-3);font-size:11px}
 .bk-feed{display:flex;gap:8px;align-items:center;margin:8px 0 4px;flex-wrap:wrap}.bk-feed-l{display:flex;gap:6px;align-items:center;font-size:13px;font-weight:600;white-space:nowrap}
@@ -1829,8 +1829,11 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 .stud-rtbar button{min-width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--ink);cursor:pointer;font:14px/1 var(--font-display,inherit);display:grid;place-items:center;padding:0 4px}.stud-rtbar button:hover{background:var(--surface-2)}
 .stud-rtbar .sep{width:1px;height:20px;background:var(--line);margin:0 3px}.stud-rtbar .sw{min-width:20px;width:20px;height:20px;border-radius:50%;border:1px solid var(--line-2);padding:0;position:relative}
 .stud-rtbar label.pick{display:grid;place-items:center;cursor:pointer;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);color:#fff}.stud-rtbar label.pick input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.s2-favable{position:relative}.s2-fav{position:absolute;left:2px;top:2px;width:18px;height:18px;display:grid;place-items:center;border-radius:5px;font-size:13px;line-height:1;color:#f59e0b;background:color-mix(in srgb,var(--surface) 88%,transparent);opacity:0;transition:opacity .12s;cursor:pointer;z-index:2;font-style:normal;text-indent:0}
-.s2-favable:hover>.s2-fav,.s2-fav.on{opacity:1}.s2-fav:hover{transform:scale(1.15)}
+.s2-favable{position:relative}
+/* как закладка на карточках Разведки (.cr-save): белая плашка, в избранном — чёрная с неоновой заливкой */
+.s2-fav{position:absolute;right:3px;top:3px;z-index:2;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.94);color:#111;box-shadow:0 1px 3px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;cursor:pointer;line-height:1}
+.s2-fav svg{width:12px;height:12px}.s2-fav:hover{background:#fff}.s2-fav.on{background:#111;color:#39ff88;opacity:1}.s2-fav.on svg{fill:currentColor}
+.s2-favable:hover>.s2-fav{opacity:1}.s2-grid2 .th.s2-favable .x{right:auto;left:4px}.s2-grid2 .th>.s2-fav{width:26px;height:26px;right:6px;top:6px}.s2-grid2 .th>.s2-fav svg{width:14px;height:14px}
 .s2-fav-empty{text-align:center;color:var(--ink-3);padding:24px 8px;font-size:12.5px;line-height:1.45}.s2-fav-empty p{margin:8px 0 0}
 .s2-grid2>*{min-width:0}
 .s2-panel input[type=search]{width:100%;height:32px;border:1px solid var(--line-2);border-radius:8px;padding:0 10px;font-size:13px;background:var(--surface)}
@@ -8349,7 +8352,7 @@ const STUDIO_REVIEW={draft:["Черновик","#94a3b8","pencil-line"],review:[
 const studioReviewOf=d=>(d&&d.review&&STUDIO_REVIEW[d.review.st])?d.review:{st:"draft",log:[]};
 const studioTeamInfoC={};async function studioTeamInfo(id){if(!id)return null;if(studioTeamInfoC[id])return studioTeamInfoC[id];try{studioTeamInfoC[id]=await api("/api/v1/teams/"+id)}catch(e){return null}return studioTeamInfoC[id]}
 function studioReviewChip(){const d=studioDesign();if(!d||!d.layers)return"";const R=studioReviewOf(d),[t,c,i]=STUDIO_REVIEW[R.st];
-  return`<button type="button" class="stud-rv" data-act="studReview" style="--rv:${c}" data-tip="Согласование: ${esc(t)}${R.by?" · "+esc(R.by):""}">${ic(i,13)}<span>${esc(t)}</span></button>`}
+  return`<button type="button" class="stud-rv" data-act="studReview" data-tip="Согласование${R.by?": "+esc(R.by):""} — нажмите, чтобы сменить статус"><nv-status value="${{draft:"draft",review:"review",changes:"partial",approved:"done"}[R.st]}" label="${esc(t)}"></nv-status>${ic("chevron-down",12)}</button>`}
 async function studioReviewSet(st,note){const d=studioDesign(),R=studioReviewOf(d),me=(typeof session!=="undefined"&&session&&session.email)||"";studioBeforeChange();
   const log=(R.log||[]).concat([{st,by:me,at:Date.now(),note:note||""}]).slice(-50);d.review={st,by:me,at:Date.now(),log};NEON.save();N.refresh();
   try{await studioSaveDesign()}catch(e){}
@@ -8364,10 +8367,10 @@ async function studioReviewMenu(btn){const d=studioDesign(),R=studioReviewOf(d),
   if(R.st!=="draft")items.push(["Вернуть в черновик","",()=>studioReviewSet("draft")]);
   if(!canApprove&&R.st==="review")items.push(["Ждёт решения админа","утверждают владелец и админы команды",()=>{}]);
   items.push("-",["История согласования",(R.log||[]).length+" шаг.",studioReviewLog]);studioMenu(r.left,r.bottom+4,items)}
-function studioReviewChangesDlg(){overlay("modal",{title:"Нужны правки",service:"studio",body:`<textarea data-rvnote rows="4" placeholder="Что поправить? Например: логотип крупнее, убрать второй телефон" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;resize:vertical"></textarea>`,
-  actions:[{label:"Отмена"},{label:"Вернуть на правки",variant:"primary",fn:()=>{const t=(document.querySelector(".ov [data-rvnote]")||{}).value||"";studioReviewSet("changes",t.trim())}}]})}
+function studioReviewChangesDlg(){overlay("modal",{title:"Нужны правки",service:"studio",body:`<nv-textarea data-rvnote rows="4" label="Что поправить" placeholder="Например: логотип крупнее, убрать второй телефон"></nv-textarea>`,
+  actions:[{label:"Отмена"},{label:"Вернуть на правки",variant:"primary",fn:()=>{const t=String((document.querySelector(".ov [data-rvnote]")||{}).value||"");studioReviewSet("changes",t.trim())}}]})}
 function studioReviewLog(){const R=studioReviewOf(studioDesign()),L=(R.log||[]).slice().reverse();
-  overlay("modal",{title:"История согласования",service:"studio",body:L.length?`<div class="rv-log">${L.map(x=>{const[t,c,i]=STUDIO_REVIEW[x.st]||STUDIO_REVIEW.draft;return`<div class="rv-it"><span class="rv-dot" style="--rv:${c}">${ic(i,13)}</span><div><b>${esc(t)}</b> · ${esc(x.by||"")}<div class="muted" style="font-size:12px">${new Date(x.at).toLocaleString("ru",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div>${x.note?`<div class="rv-note">${esc(x.note)}</div>`:""}</div></div>`}).join("")}</div>`:'<p class="muted">Статус ещё не меняли.</p>',actions:[{label:"Закрыть"}]})}
+  overlay("modal",{title:"История согласования",service:"studio",body:L.length?`<nv-timeline items="${esc(JSON.stringify(L.map(x=>{const[t,,i]=STUDIO_REVIEW[x.st]||STUDIO_REVIEW.draft;return{title:t+(x.by?" · "+x.by:""),text:x.note||"",time:new Date(x.at).toLocaleString("ru",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}),icon:i,tone:{approved:"success",changes:"warning",review:"info"}[x.st]||""}})))}"></nv-timeline>`:'<nv-empty icon="history" heading="История пуста" text="Статус согласования ещё не меняли."></nv-empty>',actions:[{label:"Закрыть"}]})}
 /* @-упоминания в заметках: подсказка участников команды дизайна, уведомление упомянутым при закрытии заметки */
 async function studioMentionHook(ta,n){const d=studioDesign();if(!d.teamId)return;const T=await studioTeamInfo(d.teamId);if(!T||!T.members)return;
   const me=(typeof session!=="undefined"&&session&&session.email)||"",M=T.members.filter(m=>m.email!==me),nm=m=>(m.name||m.email.split("@")[0]).replace(/\s+/g,"_");let box=null;
@@ -8403,17 +8406,16 @@ document.addEventListener("pointerdown",e=>{
 function studioLGridHtml(d){const GC=S.studio.gridOff?null:studioLGridCells(d);return GC&&(GC.c.length||GC.r.length)?`<div class="stud-zones stud-lgrid">${GC.c.map(([a,b])=>`<div class="lg-c" style="left:${a}%;width:${b-a}%"></div>`).join("")}${GC.r.map(([a,b])=>`<div class="lg-r" style="top:${a}%;height:${b-a}%"></div>`).join("")}</div>`:""}
 function studioGridDlg(){const d=studioDesign(),F=studioFmtOf(d),G0=studioLGrid(d)||{},G={cols:+G0.cols||0,gutter:+G0.gutter||Math.round(F.w*0.02),margin:G0.mpct!=null?Math.round(F.w*G0.mpct/100):+G0.margin||Math.round(F.w*0.05),rows:+G0.rows||0,rgutter:+G0.rgutter||Math.round(F.h*0.02),rmargin:+G0.rmargin||Math.round(F.h*0.05)};
   const PRE=[["Нет",0,0],["2 колонки",2,0],["3 колонки",3,0],["4 колонки",4,0],["6 колонок",6,0],["12 колонок",12,0],["Модули 2×2",2,2],["Модули 3×3",3,3],["Модули 4×4",4,4],["Модули 6×6",6,6]];
-  const num=(k,lb,max)=>`<label class="pp-in" style="flex:1"><span style="width:auto;padding:0 6px">${lb}</span><input type="number" min="0" max="${max}" step="1" value="${G[k]}" data-lg="${k}"></label>`;
+  const num=(k,lb,suf)=>`<nv-input type="number" label="${lb}" value="${G[k]}" ${suf?`suffix="${suf}"`:""} data-lg="${k}" style="flex:1;min-width:0"></nv-input>`;
   const {root}=overlay("modal",{title:"Сетка макета",subtitle:`Колонки и модули с полями и промежутками (в px макета ${F.w}×${F.h}). Элементы прилипают к краям колонок.`,service:"studio",size:"md",
-    body:`<div class="stack" style="gap:10px"><div class="pp-chips">${PRE.map(([t,c,r])=>`<button type="button" data-lgp="${c}x${r}">${esc(t)}</button>`).join("")}</div>
-      <div class="pp-l">Колонки</div><div class="row" style="gap:6px">${num("cols","Кол-во",24)}${num("gutter","Промежуток",400)}${num("margin","Поля",600)}</div>
-      <div class="pp-l">Строки (модульная сетка)</div><div class="row" style="gap:6px">${num("rows","Кол-во",24)}${num("rgutter","Промежуток",400)}${num("rmargin","Поля",600)}</div>
-      <label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-lgshow ${S.studio.gridOff?"":"checked"}> Показывать сетку на холсте</label></div>`,
+    body:`<div class="stack" style="gap:12px"><div class="row" style="gap:6px;flex-wrap:wrap">${PRE.map(([t,c,r])=>`<nv-chip data-lgp="${c}x${r}" ${G.cols===c&&G.rows===r?"selected":""}>${esc(t)}</nv-chip>`).join("")}</div>
+      <div class="row" style="gap:8px">${num("cols","Колонки","")}${num("gutter","Промежуток","px")}${num("margin","Поля","px")}</div>
+      <div class="row" style="gap:8px">${num("rows","Строки (модули)","")}${num("rgutter","Промежуток","px")}${num("rmargin","Поля","px")}</div>
+      <nv-switch data-lgshow label="Показывать сетку на холсте" description="Прилипание к колонкам работает и со скрытой сеткой" ${S.studio.gridOff?"":"checked"}></nv-switch></div>`,
     actions:[{label:"Закрыть"}]});
   const put=()=>{studioBeforeChange();if(!G.cols&&!G.rows)delete d.lgrid;else d.lgrid={...G};S.studio.grid=0;NEON.save();const host=document.querySelector(".stud-stage");if(host){const z=host.querySelector(".stud-lgrid");if(z)z.remove();host.insertAdjacentHTML("beforeend",studioLGridHtml(d))}const b=document.querySelector('[data-act="studGrid"]');if(b){b.classList.toggle("on",!!studioLGrid()&&!S.studio.gridOff)}};
-  root.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.lg;if(!k)return;G[k]=Math.max(0,+e.target.value||0);put()});
-  root.addEventListener("click",e=>{const b=e.target.closest("[data-lgp]");if(!b)return;const[c,r]=b.dataset.lgp.split("x").map(Number);G.cols=c;G.rows=r;root.querySelectorAll("[data-lg]").forEach(i=>i.value=G[i.dataset.lg]);put()});
-  root.addEventListener("change",e=>{if(e.target.matches("[data-lgshow]")){S.studio.gridOff=!e.target.checked;NEON.save();put()}});
+  root.addEventListener("nv-change",e=>{const el=e.target;if(el.matches("[data-lg]")){G[el.dataset.lg]=Math.max(0,Math.min(600,+e.detail.value||0));put()}else if(el.matches("[data-lgshow]")){S.studio.gridOff=!e.detail.value;NEON.save();put()}});
+  root.addEventListener("click",e=>{const b=e.target.closest("[data-lgp]");if(!b)return;const[c,r]=b.dataset.lgp.split("x").map(Number);G.cols=c;G.rows=r;root.querySelectorAll("[data-lg]").forEach(i=>i.value=G[i.dataset.lg]);root.querySelectorAll("[data-lgp]").forEach(x=>x.toggleAttribute("selected",x===b));put()});
   const close0=root.querySelector("[data-x]");if(close0)close0.addEventListener("click",()=>setTimeout(()=>N.refresh(),0))}
 function studioZonesHtml(d){
   const grid=studioLGridHtml(d);
@@ -10406,11 +10408,11 @@ async function studioCmykProof(c,mark){const L=await studioCmykLut(),g=c.getCont
   const k=document.createElement("canvas");k.width=c.width;k.height=c.height;k.getContext("2d").putImageData(o,0,0);return{canvas:k,bad:bad/(src.length/4)}}
 async function studioCmykProofDlg(){const d=studioDesign();studioPagesSync(d);const pg=studioPagesOf(d)[d.page||0]||studioPagesOf(d)[0],F=studioFmtOf(d),sc=Math.min(1,640/Math.max(F.w,F.h));
   const {root}=overlay("modal",{title:"Как будет в печати (CMYK)",subtitle:"Профиль ISO Coated v2 (FOGRA39) — мелованная бумага, офсет. Слева экран, справа печать.",service:"studio",size:"lg",
-    body:`<div class="cmyk-cmp"><figure><figcaption>Экран (RGB)</figcaption><div data-cm="a"></div></figure><figure><figcaption>Печать (CMYK)</figcaption><div data-cm="b"></div></figure></div><label class="row" style="gap:6px;font-size:13px;margin-top:8px"><input type="checkbox" data-cmbad> Подсветить цвета, которые заметно изменятся</label><p class="pp-hint" data-cminfo>Считаю…</p>`,actions:[{label:"Закрыть"}]});
+    body:`<div class="cmyk-cmp"><figure><figcaption>Экран (RGB)</figcaption><div data-cm="a"></div></figure><figure><figcaption>Печать (CMYK)</figcaption><div data-cm="b"></div></figure></div><div style="margin-top:10px"><nv-switch data-cmbad label="Подсветить цвета, которые заметно изменятся"></nv-switch></div><p class="pp-hint" data-cminfo>Считаю…</p>`,actions:[{label:"Закрыть"}]});
   const c=await studioRenderCanvas(studioPageDesign(d,pg),sc);c.style.cssText="width:100%;height:auto;border-radius:8px";root.querySelector('[data-cm="a"]').append(c);
   const show=async mark=>{const r=await studioCmykProof(c,mark),box=root.querySelector('[data-cm="b"]');box.innerHTML="";r.canvas.style.cssText="width:100%;height:auto;border-radius:8px";box.append(r.canvas);
     const pc=Math.round(r.bad*1000)/10;root.querySelector("[data-cminfo]").textContent=pc>0.5?`Заметно изменится ${String(pc).replace(".",",")}% площади — обычно это яркие неоновые, кислотные и насыщенные синие/зелёные. Если цвет важен (бренд), подберите более спокойный оттенок.`:"Цвета печатаются близко к экрану."};
-  await show(false);root.querySelector("[data-cmbad]").addEventListener("change",e=>show(e.target.checked))}
+  await show(false);root.querySelector("[data-cmbad]").addEventListener("nv-change",e=>show(!!e.detail.value))}
 function studioPdf(pages){
   /* pages: [{jpeg:Uint8Array,w,h}] — каждая страница = одна JPEG-картинка на весь лист. */
   const enc=new TextEncoder(),chunks=[],offs=[];let pos=0;
@@ -10521,7 +10523,7 @@ function studioCollabPaint(){const st=document.querySelector(".stud-stage");docu
     (p.sel||[]).forEach(id=>{const l=by.get(id);if(l)h+=`<div class="pe-sel" style="--pc:${c};left:${l.x}%;top:${l.y}%;width:${l.w}%;height:${l.h}%;transform:rotate(${l.rotation||0}deg)"></div>`});
     if(p.x!=null&&p.y!=null)h+=`<div class="pe-cur" style="--pc:${c};left:${p.x}%;top:${p.y}%"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M3 2l7 19 2.5-8.5L21 10z" fill="${c}" stroke="#fff" stroke-width="1.5"/></svg><span>${esc(nm(p))}${p.editing?" ✎":""}</span></div>`});
   st.insertAdjacentHTML("beforeend",`<div class="stud-peers">${h}</div>`);
-  const host=document.getElementById("stud-stage-host")||st.parentElement;if(host)host.insertAdjacentHTML("beforeend",`<div class="stud-collab">${ic("users",13)}<span>Сейчас здесь:</span>${studioCollab.peers.map(p=>`<i style="--pc:${studioPeerColor(p.user_id)}" data-tip="${esc(p.email)}${p.page!==pg?" · стр. "+(p.page+1):""}">${esc(nm(p).slice(0,2).toUpperCase())}</i>`).join("")}</div>`)}
+  const host=document.getElementById("stud-stage-host")||st.parentElement;if(host)host.insertAdjacentHTML("beforeend",`<div class="stud-collab"><span class="muted">Сейчас здесь</span><nv-avatar-group names="${esc(studioCollab.peers.map(p=>nm(p)+(p.page!==pg?" (стр. "+(p.page+1)+")":"")).join(","))}" max="4" size="24"></nv-avatar-group></div>`)}
 /* Общие дизайны команды: имена участников (кто менял), конфликт правок, перенос в команду */
 const TEAM_NAMES={};
 async function teamNames(id){if(TEAM_NAMES[id])return TEAM_NAMES[id];try{const t=await api("/api/v1/teams/"+id);TEAM_NAMES[id]=Object.fromEntries(t.members.map(m=>[m.user_id,m.name||m.email.split("@")[0]]))}catch(e){TEAM_NAMES[id]={}}return TEAM_NAMES[id]}
@@ -10929,9 +10931,9 @@ function studioPalImportDlg(){let cur=[];
   const prev=root=>{const box=root.querySelector("[data-palprev]");box.innerHTML=cur.length?`<div class="stud-swatches">${cur.map(c=>`<span style="background:${c};width:30px;height:30px;border-radius:8px;display:inline-block;border:1px solid var(--line)" title="${c}"></span>`).join("")}</div><p class="pp-hint">Найдено цветов: ${cur.length}${cur.length>10?" — в бренд-кит войдут первые 10":""}</p>`:'<p class="pp-hint">Вставьте цвета или выберите файл — здесь появится предпросмотр.</p>'};
   const set=L=>{cur=[...new Set(L.map(c=>c.toLowerCase()))]};
   overlay("modal",{title:"Импорт палитры",subtitle:"HEX-коды, rgb(), ссылка coolors.co, файл .ase (Adobe), .gpl (GIMP), CSS или JSON",size:"md",service:"studio",
-    body:`<div class="stack" style="gap:10px"><textarea class="pal-ta" data-palta rows="4" placeholder="#264653, #2a9d8f, e9c46a&#10;https://coolors.co/palette/264653-2a9d8f-e9c46a-f4a261-e76f51" style="width:100%;font:13px/1.4 var(--font-mono,monospace);padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);resize:vertical"></textarea>
+    body:`<div class="stack" style="gap:10px"><nv-textarea data-palta rows="4" label="Цвета" placeholder="#264653, #2a9d8f, e9c46a  или  https://coolors.co/palette/264653-2a9d8f-e9c46a"></nv-textarea>
       <label class="nv-btn v-secondary s-sm" for="pal-file" style="justify-content:center">${ic("upload",14)}Выбрать файл палитры</label><input type="file" id="pal-file" accept=".ase,.gpl,.txt,.css,.json,.scss,.less,.svg" class="sr"><div data-palprev></div></div>`,
-    mount(root){prev(root);const ta=root.querySelector("[data-palta]");ta.addEventListener("input",()=>{set(studioParsePalette(ta.value));prev(root)});
+    mount(root){prev(root);const ta=root.querySelector("[data-palta]");ta.addEventListener("nv-change",e=>{set(studioParsePalette(e.detail.value||""));prev(root)});
       root.querySelector("#pal-file").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;try{
         if(/\.ase$/i.test(f.name))set(studioParseAse(await f.arrayBuffer()));else set(studioParsePalette(await f.text()));
         if(!cur.length)toast("В файле не нашлось цветов",{tone:"warning"});prev(root)}catch(err){toast("Не удалось прочитать файл: "+err.message,{tone:"danger"})}})},
@@ -11057,12 +11059,13 @@ async function studioTraceDlg(src,o0){/* src: {canvas} уже видимая ч�
   {const D=cv.getContext("2d").getImageData(0,0,cv.width,cv.height).data,set=new Set();let m=0;for(let i=0;i<D.length;i+=4*5){if(D[i+3]<128)continue;m++;set.add((D[i]>>3)<<10|(D[i+1]>>3)<<5|(D[i+2]>>3))}
     let nz=0,nc=0;for(let y=0;y<cv.height;y+=3)for(let x=0;x<cv.width-1;x+=2){const i=(y*cv.width+x)*4;if(D[i+3]<128||D[i+7]<128)continue;nz+=Math.abs(D[i]-D[i+4])+Math.abs(D[i+1]-D[i+5])+Math.abs(D[i+2]-D[i+6]);nc++}nz=nc?nz/nc:0;
     if(m&&(set.size>Math.min(1500,m*0.08)||nz>9&&set.size>200)){preset="photo";o={...STUDIO_TRACE_PRESETS.photo,dropBg:false}}else o.dropBg=!transp}
-  const rng=(k,lb,mn,mx,st)=>`<div class="pp-row"><span class="pp-l">${lb}</span><div class="rng"><input type="range" min="${mn}" max="${mx}" step="${st}" value="${o[k]}" style="--rng-p:${rngPct(o[k],mn,mx)}" data-tr="${k}"><output>${o[k]}</output></div></div>`;
-  const ctl=()=>`<div class="pp-chips">${Object.entries(STUDIO_TRACE_PRESETS).map(([k,P])=>`<button type="button" class="${k===preset?"on":""}" data-trp="${k}">${esc(P.label)}</button>`).join("")}</div>
-    ${rng("colors","Цветов",2,64,1)}${rng("size","Детализация, px",300,1600,50)}${rng("err","Допуск кривых",0.5,5,0.1)}${rng("speckle","Убирать пятна до, px²",0,200,2)}${rng("corner","Острые углы до, °",60,160,5)}${rng("blur","Сглаживание шума",0,4,1)}
-    <label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-trbg ${o.dropBg?"checked":""}> Убрать фон (цвет по краям)</label>`;
+  const rng=(k,lb,mn,mx,st,u)=>`<nv-range data-tr="${k}" label="${lb}" min="${mn}" max="${mx}" step="${st}" value="${o[k]}" unit="${u||""}"></nv-range>`;
+  const PI_={logo:"badge",art:"palette",photo:"image",poster:"layers"};
+  const ctl=()=>`<nv-choice-bar data-trp label="Что трассируем" value="${preset}" options="${esc(JSON.stringify(Object.entries(STUDIO_TRACE_PRESETS).map(([k,P])=>({value:k,label:P.label,icon:PI_[k]}))))}"></nv-choice-bar>
+    ${rng("colors","Цветов",2,64,1)}${rng("size","Детализация",300,1600,50,"px")}${rng("err","Допуск кривых",0.5,5,0.1,"px")}${rng("speckle","Убирать пятна до",0,200,2,"px²")}${rng("corner","Острые углы до",60,160,5,"°")}${rng("blur","Сглаживание шума",0,4,1)}
+    <nv-switch data-trbg label="Убрать фон" description="Цвет, который по краям картинки" ${o.dropBg?"checked":""}></nv-switch>`;
   const {root,close}=overlay("modal",{title:"Фото → SVG",subtitle:"Настоящий вектор: цвета → контуры → кривые Безье. Работает в браузере, без ИИ.",service:"studio",size:"lg",
-    body:`<div class="tr-wrap"><div class="tr-prev"><div class="tr-box" style="aspect-ratio:${ar}" data-trprev></div><div class="tr-tabs"><button type="button" class="on" data-trv="svg">SVG</button><button type="button" data-trv="src">Исходник</button><button type="button" data-trv="both">Наложение</button></div></div><div class="stack" style="gap:8px;min-width:0" data-trctl>${ctl()}</div></div><p class="pp-hint" data-trinfo>Считаю…</p>`,
+    body:`<div class="tr-wrap"><div class="tr-prev"><div class="tr-box" style="aspect-ratio:${ar}" data-trprev></div><div style="margin-top:8px"><nv-segmented data-trv value="svg" options="svg:SVG|src:Исходник|both:Наложение"></nv-segmented></div></div><div class="stack" style="gap:8px;min-width:0" data-trctl>${ctl()}</div></div><p class="pp-hint" data-trinfo>Считаю…</p>`,
     actions:[{label:"Отмена"},{label:"Скачать SVG",icon:"download",fn:()=>{if(!T)return false;studioDownload(new Blob([studioTraceSvg(T,true)],{type:"image/svg+xml"}),"vector.svg");return false}},{label:o0&&o0.layer?"Заменить фото кривыми":"Вставить в дизайн",variant:"primary",icon:"spline",fn:()=>{if(!T||!T.layers.length){toast("Сначала дождитесь результата",{tone:"warning"});return false}studioTraceInsert(T,o0)}}]});
   const prev=root.querySelector("[data-trprev]"),info=root.querySelector("[data-trinfo]");let view="svg";
   const paint=()=>{if(!T)return;const svg=studioTraceSvg(T,false),img=`<img src="${cv.toDataURL("image/png")}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">`;
@@ -11074,10 +11077,11 @@ async function studioTraceDlg(src,o0){/* src: {canvas} уже видимая ч�
       info.textContent=T.layers.length?`Цветов: ${T.layers.length}, кривых Безье: ${segs}, SVG ≈ ${kb} КБ, ${((performance.now()-t0)/1000).toFixed(1)} с. Больше цветов и детализации — точнее, но тяжелее.`:"Ничего не нашлось — выключите «Убрать фон» или добавьте цветов"}
     catch(e){info.textContent="Не получилось: "+(e.message||e)}busy=false;if(again){again=false;run()}};
   let tm=0;const soon=()=>{clearTimeout(tm);tm=setTimeout(run,250)};
-  root.addEventListener("input",e=>{const r=e.target.closest("[data-tr]");if(!r)return;o[r.dataset.tr]=+r.value;r.style.setProperty("--rng-p",rngPct(+r.value,r.min,r.max));r.closest(".rng").querySelector("output").textContent=r.value;soon()});
-  root.addEventListener("change",e=>{if(e.target.matches("[data-trbg]")){o.dropBg=e.target.checked;soon()}});
-  root.addEventListener("click",e=>{const p=e.target.closest("[data-trp]");if(p){preset=p.dataset.trp;o={...STUDIO_TRACE_PRESETS[preset],dropBg:o.dropBg};root.querySelector("[data-trctl]").innerHTML=ctl();soon()}
-    const v=e.target.closest("[data-trv]");if(v){view=v.dataset.trv;root.querySelectorAll("[data-trv]").forEach(x=>x.classList.toggle("on",x===v));paint()}});
+  root.addEventListener("nv-change",e=>{const el=e.target;
+    if(el.matches("[data-tr]")){o[el.dataset.tr]=+e.detail.value;soon()}
+    else if(el.matches("[data-trbg]")){o.dropBg=!!e.detail.value;soon()}
+    else if(el.matches("[data-trp]")){preset=e.detail.value;o={...STUDIO_TRACE_PRESETS[preset],dropBg:o.dropBg};root.querySelector("[data-trctl]").innerHTML=ctl();soon()}
+    else if(el.matches("[data-trv]")){view=e.detail.value;paint()}});
   run()}
 function studioTraceInsert(T,o0){const d=studioDesign(),F=studioFmtOf(d);studioBeforeChange();let box;
   if(o0&&o0.layer){const l=o0.layer;box={x:l.x,y:l.y,w:l.w,h:l.h,rotation:l.rotation||0}}
@@ -11109,7 +11113,7 @@ function studioBrandHtml(){
   ${b.logo?`<div class="row" style="gap:6px"><nv-button size="sm" variant="secondary" icon="image" data-act="studLogoPlace">Логотип на холст</nv-button><nv-button size="sm" variant="ghost" icon="x" icon-only hint="Убрать логотип" data-act="studLogoClear"></nv-button></div>`:`<label class="nv-btn v-secondary s-sm" for="stud-logo-file" style="width:100%;justify-content:center">${ic("upload",14)}Логотип бренда</label>`}`;
 }
 /* ===================== Студия v3: панели, контекст, меню ===================== */
-const STUDIO_TABS=[["templates","layout-template","Шаблоны"],["elements","shapes","Элементы"],["favs","star","Избранное"],["text","type","Текст"],["uploads","upload","Загрузки"],["photos","image","Фото"],["brand","palette","Стиль"],["ai","sparkles","ИИ"],["layers","layers","Слои"],["history","history","История"]];
+const STUDIO_TABS=[["templates","layout-template","Шаблоны"],["elements","shapes","Элементы"],["favs","bookmark","Избранное"],["text","type","Текст"],["uploads","upload","Загрузки"],["photos","image","Фото"],["brand","palette","Стиль"],["ai","sparkles","ИИ"],["layers","layers","Слои"],["history","history","История"]];
 const STUDIO_TEXT_PRESETS=[
   {k:"headline",label:"Добавить заголовок",style:"font-size:21px;font-weight:800",l:{text:"Заголовок",fontSize:9,weight:"800",x:8,y:12,w:84,h:16,role:"headline"}},
   {k:"subheadline",label:"Добавить подзаголовок",style:"font-size:16px;font-weight:700",l:{text:"Подзаголовок",fontSize:5,weight:"700",x:8,y:32,w:84,h:10,role:"subheadline"}},
@@ -11144,15 +11148,15 @@ const studioFavIdx=f=>(S.studio.favs||[]).findIndex(x=>x.k===f.k&&x.v===f.v);
 function studioFavDecorate(){const P=document.getElementById("s2-panel");if(!P)return;
   for(const el of P.querySelectorAll(STUDIO_FAV_SEL)){const f=studioFavKey(el);if(!f)continue;const on=studioFavIdx(f)>=0;let st=el.querySelector(":scope>.s2-fav");
     if(!st){st=document.createElement("span");st.className="s2-fav";st.setAttribute("role","button");st.setAttribute("aria-label","В избранное");el.classList.add("s2-favable");el.appendChild(st)}
-    if(st.classList.contains("on")!==on){st.classList.toggle("on",on);st.innerHTML=on?"★":"☆";st.dataset.tip=on?"Убрать из избранного":"В избранное"}else if(!st.innerHTML){st.innerHTML="☆";st.dataset.tip="В избранное"}}}
+    if(!st.innerHTML)st.innerHTML=ic("bookmark",12);if(st.classList.contains("on")!==on||!st.dataset.tip){st.classList.toggle("on",on);st.setAttribute("aria-pressed",on);st.dataset.tip=on?"Убрать из избранного":"Сохранить в избранное"}}}
 new MutationObserver(()=>{if(document.getElementById("s2-panel"))studioFavDecorate()}).observe(document.documentElement,{childList:true,subtree:true});
 document.addEventListener("click",e=>{const st=e.target.closest&&e.target.closest(".s2-fav");if(!st)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
   const el=st.parentElement,f=studioFavKey(el);if(!f)return;const L=S.studio.favs=S.studio.favs||[],i=studioFavIdx(f);
   if(i>=0)L.splice(i,1);else{L.unshift(f);if(L.length>200)L.length=200}NEON.save();
   if(S.studio.tab==="favs"){studioRefreshPanel();setTimeout(()=>studioPaintTplThumbs(document),0)}else studioFavDecorate();
-  toast(i>=0?"Убрано из избранного":"Добавлено в «Избранное»",{tone:i>=0?undefined:"success"})},true);
+  toast(i>=0?"Убрано из избранного":"Сохранено в избранное",{tone:i>=0?undefined:"success"})},true);
 function studioFavsHtml(){const F=S.studio.favs||[];
-  if(!F.length)return`<h3>Избранное</h3><div class="s2-fav-empty">${ic("star",28)}<p>Наведите на иконку, графику, эмодзи, фигуру, фото, загрузку или шаблон и нажмите <b>☆</b> в углу — они появятся здесь и будут под рукой в любом дизайне.</p></div>`;
+  if(!F.length)return`<h3>Избранное</h3><nv-empty icon="bookmark" heading="Пока ничего не сохранено" text="Наведите на иконку, графику, эмодзи, фигуру, фото или шаблон и нажмите закладку в правом верхнем углу — элемент появится здесь, в любом дизайне."></nv-empty>`;
   const by=k=>F.filter(x=>x.k===k),sec=(t,h)=>h?`<div class="sect-t">${t}</div>${h}`:"";
   const sh=by("shape"),ic_=by("icon"),gf=by("gfx").filter(x=>STUDIO_GFX[x.v]),em=by("emoji"),tp=by("tpl").filter(x=>STUDIO_TEMPLATES[x.v]),up=by("upload"),sk=by("stock");
   return`<h3>Избранное</h3>`
@@ -11310,22 +11314,22 @@ function studioHtml5Dlg(){const d=studioDesign();studioPagesSync(d);const F=STUD
   const best=STUDIO_H5_SIZES.slice().sort((a,b)=>Math.abs(Math.log(a[0]/a[1]/r0))-Math.abs(Math.log(b[0]/b[1]/r0)))[0];let cur=best.join("x");
   const anim=d.layers.some(l=>l.anim&&l.anim.type&&l.anim.type!=="none");
   const {root}=overlay("modal",{title:"HTML5-баннер",subtitle:"ZIP по требованиям Яндекс Директа (РСЯ, медийка) и Google Ads: index.html, картинки, анимация CSS",service:"studio",size:"md",
-    body:`<div class="stack" style="gap:10px"><div class="pp-l">Размер баннера</div><div class="h5-sizes">${STUDIO_H5_SIZES.map(([w,h])=>{const k=w+"x"+h,rr=w/h;return`<button type="button" data-h5s="${k}" class="${k===cur?"on":""}"><i style="aspect-ratio:${w}/${h};${rr>=1?"width:34px":"height:34px"}"></i><span>${w}×${h}</span></button>`}).join("")}</div>
+    body:`<div class="stack" style="gap:12px"><nv-choice-bar data-h5s label="Размер" value="${cur}" options="${esc(JSON.stringify(STUDIO_H5_SIZES.map(([w,h])=>({value:w+"x"+h,label:w+"×"+h,icon:w/h>1.6?"rectangle-horizontal":w/h<0.7?"rectangle-vertical":"square",hint:w===best[0]&&h===best[1]?"Ближе всего к пропорциям дизайна":""}))))}"></nv-choice-bar>
       <p class="pp-hint">Ближе всего к пропорциям дизайна — ${best[0]}×${best[1]}. Для сильно отличающихся размеров элементы переставятся автоматически — проверьте результат.</p>
       <nv-input label="Ссылка на сайт (для Google — clickTag; Яндекс подставит свою)" data-h5url placeholder="https://"></nv-input>
-      <label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-h5hd checked> Чёткость ×2 для экранов Retina (файлы тяжелее)</label>
-      ${anim?"":'<p class="pp-hint" style="color:var(--warn,#b45309)">В дизайне нет анимации — баннер будет статичным. Добавьте её во вкладке «Анимация» или кнопкой «Анимировать всё».</p>'}<div data-h5out></div></div>`,
+      <nv-checkbox data-h5hd label="Чёткость ×2 для экранов Retina" description="Файлы тяжелее; если не влезет в 512 КБ — соберу в обычной" checked></nv-checkbox>
+      ${anim?"":'<nv-callout tone="warning" heading="В дизайне нет анимации">Баннер будет статичным. Добавьте анимацию во вкладке «Анимация» или кнопкой «Анимировать всё».</nv-callout>'}<div data-h5out></div></div>`,
     actions:[{label:"Закрыть"},{label:"Скачать ZIP",variant:"primary",icon:"download",fn:()=>{go();return false}}]});
-  root.addEventListener("click",e=>{const b=e.target.closest("[data-h5s]");if(!b)return;cur=b.dataset.h5s;root.querySelectorAll("[data-h5s]").forEach(x=>x.classList.toggle("on",x===b))});
+  root.addEventListener("nv-change",e=>{if(e.target.matches("[data-h5s]"))cur=e.detail.value});
   const out=root.querySelector("[data-h5out]");
   const go=async()=>{const[w,h]=cur.split("x").map(Number),ui=root.querySelector("[data-h5url] input"),url=(ui&&ui.value||"").trim(),hd=root.querySelector("[data-h5hd]").checked;
-    out.innerHTML='<p class="muted">Собираю баннер…</p>';
+    out.innerHTML='<nv-skeleton count="2"></nv-skeleton>';
     try{let r=await studioHtml5Build(d,w,h,url,hd?2:1),sz=r.zip.size,note="";
       if(hd&&sz>512*1024){r=await studioHtml5Build(d,w,h,url,1);sz=r.zip.size;note=" Чёткость ×2 не влезла в 512 КБ — собрано в обычной."}
       const hs=r.files[0].data.length,ok=sz<=512*1024&&hs<150*1024&&r.files.length<=20;
       studioDownload(r.zip,(d.name||"banner").replace(/[^A-Za-z0-9._~-]+/g,"_").replace(/^_+|_+$/g,"").slice(0,40)+`_${w}x${h}_html5.zip`);
-      out.innerHTML=`<div class="h5-res ${ok?"ok":"bad"}">${ic(ok?"check-circle-2":"alert-triangle",16)}<span>Архив ${Math.round(sz/1024)} КБ (лимит 512), index.html ${Math.round(hs/1024)} КБ (лимит 150), файлов ${r.files.length} (лимит 20).${note}${ok?" Подходит для загрузки в Директ.":" Превышен лимит — упростите дизайн или уберите тяжёлые фото."}</span></div>`}
-    catch(err){out.innerHTML=`<p class="pp-hint" style="color:var(--danger,#e11d48)">Не получилось: ${esc(err.message||String(err))}</p>`}}}
+      out.innerHTML=`<nv-callout tone="${ok?"success":"danger"}" heading="${ok?"Подходит для загрузки в Директ":"Превышен лимит Директа"}">Архив ${Math.round(sz/1024)} КБ (лимит 512), index.html ${Math.round(hs/1024)} КБ (лимит 150), файлов ${r.files.length} (лимит 20).${esc(note)}${ok?"":" Упростите дизайн или уберите тяжёлые фото."}</nv-callout>`}
+    catch(err){out.innerHTML=`<nv-callout tone="danger" heading="Не получилось">${esc(err.message||String(err))}</nv-callout>`}}}
 /* ---------- v10 (26.11.2026): экспорт PowerPoint (PPTX) — страница = слайд ----------
    Фон, фото, фигуры, эффекты — картинкой слайда; простые тексты (без эффектов, сверху стопки или ни с чем
    не перекрываются) — настоящими текстовыми блоками PowerPoint: шрифт, кегль, цвет, жирность, выравнивание,
@@ -11453,9 +11457,9 @@ function studioSpellCheck(){const d=studioDesign();studioPagesSync(d);let hits=[
   const CODE={1:"нет в словаре",2:"повтор слова",3:"регистр",4:"слишком много ошибок"},multi=studioPagesOf(d).length>1;
   const ctx=h=>{const t=h.cell?studioTableRows(h.l)[h.cell[0]][h.cell[1]]:String(h.l.text||""),a=Math.max(0,h.pos-28),b=Math.min(t.length,h.pos+h.len+28);
     return(a?"…":"")+esc(t.slice(a,h.pos))+`<mark class="sp-bad">${esc(t.substr(h.pos,h.len))}</mark>`+esc(t.slice(h.pos+h.len,b))+(b<t.length?"…":"")};
-  const list=()=>{if(busy)return'<p class="muted">Проверяю тексты…</p>';if(err)return`<p class="pp-hint" style="color:var(--danger,#e11d48)">Не удалось проверить: ${esc(err)}. Проверьте интернет и попробуйте ещё раз.</p>`;
-    const H=hits.filter((h,i)=>!skip.has(i));if(!H.length)return`<div class="sp-ok">${ic("check-circle-2",26)}<p>Ошибок не найдено — тексты на всех страницах проверены.</p></div>`;
-    return`<div class="fr-sum">Возможных ошибок: <b>${H.length}</b></div><div class="sp-list">${hits.map((h,i)=>skip.has(i)?"":`<div class="sp-it"><div class="sp-ctx" data-spgo="${i}" title="Показать на холсте">${multi?`<span class="sp-pg">стр. ${h.pi+1}</span>`:""}${ctx(h)}</div><div class="sp-row"><span class="sp-why">${CODE[h.code]||""}</span>${h.code===2?`<button type="button" class="sp-s" data-spfix="${i}" data-to="">убрать повтор</button>`:h.s.map(x=>`<button type="button" class="sp-s" data-spfix="${i}" data-to="${esc(x)}">${esc(x)}</button>`).join("")}${!h.s.length&&h.code!==2?'<span class="sp-why">вариантов нет — поправьте вручную</span>':""}<span style="flex:1"></span><button type="button" class="sp-a" data-spskip="${i}">Пропустить</button><button type="button" class="sp-a" data-spdict="${i}" title="Больше не считать ошибкой">В словарь</button></div></div>`).join("")}</div>`};
+  const list=()=>{if(busy)return'<nv-skeleton count="3"></nv-skeleton>';if(err)return`<nv-callout tone="danger" heading="Не удалось проверить">${esc(err)}. Проверьте интернет и попробуйте ещё раз.</nv-callout>`;
+    const H=hits.filter((h,i)=>!skip.has(i));if(!H.length)return`<nv-empty icon="check-circle-2" heading="Ошибок не найдено" text="Тексты на всех страницах, в плашках и таблицах проверены."></nv-empty>`;
+    return`<div class="fr-sum">Возможных ошибок: <b>${H.length}</b></div><div class="sp-list">${hits.map((h,i)=>skip.has(i)?"":`<div class="sp-it"><div class="sp-ctx" data-spgo="${i}" title="Показать на холсте">${multi?`<span class="sp-pg">стр. ${h.pi+1}</span>`:""}${ctx(h)}</div><div class="sp-row"><span class="sp-why">${CODE[h.code]||""}</span>${h.code===2?`<nv-chip icon="wand-2" data-spfix="${i}" data-to="">убрать повтор</nv-chip>`:h.s.map(x=>`<nv-chip icon="check" data-spfix="${i}" data-to="${esc(x)}">${esc(x)}</nv-chip>`).join("")}${!h.s.length&&h.code!==2?'<span class="sp-why">вариантов нет — поправьте вручную</span>':""}<span style="flex:1"></span><nv-button variant="ghost" size="sm" data-spskip="${i}">Пропустить</nv-button><nv-button variant="ghost" size="sm" icon="book-plus" hint="Больше не считать ошибкой" data-spdict="${i}">В словарь</nv-button></div></div>`).join("")}</div>`};
   const {root}=overlay("modal",{title:"Проверка орфографии",subtitle:"Все тексты дизайна: страницы, плашки, таблицы. Сервис — Яндекс.Спеллер.",service:"studio",size:"md",body:`<div data-spout>${list()}</div>`,actions:[{label:"Закрыть"},{label:"Проверить ещё раз",icon:"refresh-cw",fn:()=>{run();return false}}]});
   const out=root.querySelector("[data-spout]"),paint=()=>{out.innerHTML=list()};
   const run=async()=>{busy=true;err="";paint();try{const r=await studioSpellRun(d);hits=r.hits;skip=new Set()}catch(e){err=e.message||String(e)}busy=false;paint()};
@@ -12908,7 +12912,7 @@ async function studioLottieBuild(d0,withBg){const F=studioFmtOf(d0),sc=Math.min(
   return{v:"5.7.4",fr:fps,ip:0,op:N,w:W,h:H,nm:d0.name||"NEON",ddd:0,assets,layers,markers:[]}}
 function studioLottieDlg(){const d=studioDesign();studioPagesSync(d);const anim=d.layers.some(l=>l.anim&&l.anim.type&&l.anim.type!=="none");
   overlay("modal",{title:"Lottie (JSON)",subtitle:"Анимация для сайтов, приложений и Telegram-ботов: один лёгкий JSON, играет lottie-web / LottieFiles / Android / iOS.",service:"studio",
-    body:`<div class="stack" style="gap:8px"><label class="pl-chk" style="border-radius:10px"><input type="checkbox" data-lt-bg checked><span>С фоном дизайна (снимите — будет прозрачная анимация поверх сайта)</span></label>${anim?"":'<p class="pp-hint" style="color:var(--warn,#b45309)">В дизайне нет анимации — получится статичная картинка в Lottie.</p>'}<p class="pp-hint">Картинки встроены в файл. Тексты — картинками, поэтому шрифты на стороне сайта не нужны.</p></div>`,
+    body:`<div class="stack" style="gap:10px"><nv-checkbox data-lt-bg label="С фоном дизайна" description="Снимите — будет прозрачная анимация поверх сайта" checked></nv-checkbox>${anim?"":'<nv-callout tone="warning" heading="В дизайне нет анимации">Получится статичная картинка в Lottie.</nv-callout>'}<p class="muted" style="font-size:12.5px;margin:0">Картинки встроены в файл. Тексты — картинками, поэтому шрифты на стороне сайта не нужны.</p></div>`,
     actions:[{label:"Отмена"},{label:"Скачать JSON",variant:"primary",icon:"download",fn:async r=>{try{const J=await studioLottieBuild(d,r.querySelector("[data-lt-bg]").checked),txt=JSON.stringify(J);studioDownload(new Blob([txt],{type:"application/json"}),(d.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+"_lottie.json");toast(`Lottie: ${Math.round(txt.length/1024)} КБ, ${J.layers.length} слоёв, ${Math.round(J.op/J.fr*10)/10} с`,{tone:"success"})}catch(e){toast("Lottie не собрался: "+(e.message||e),{tone:"danger"})}}}]})}
 /* ---------- GIF из анимации: свой кодировщик (палитра median cut, дизеринг Байера, LZW, дельта-кадры) ---------- */
 function studioGifPalette(samples){
@@ -13282,7 +13286,7 @@ function studioBulkCreate(prefill){
   const {root,close}=overlay("modal",{title:"Массовое создание",subtitle:"Один макет → десятки креативов из таблицы: товары, цены, города, офферы.",size:"lg",service:"studio",
     body:`<div class="bk"><div class="row" style="gap:8px;align-items:flex-start"><nv-textarea data-bk-ta rows="5" placeholder="Заголовок&#9;Цена&#9;Фото&#10;Диван «Лофт»&#9;29 990 ₽&#9;https://…" aria-label="Таблица" style="flex:1"></nv-textarea>
       <div class="stack" style="gap:6px"><label class="nv-btn v-secondary s-sm" for="bk-file">${ic("file-spreadsheet",15)}CSV / YML-файл</label><input type="file" id="bk-file" accept=".csv,.tsv,.txt,.xml,.yml,text/csv,text/xml,application/xml" class="sr"><nv-button size="sm" variant="ghost" icon="wand-2" data-bk-demo>Пример</nv-button></div></div>
-      <div class="bk-feed"><span class="bk-feed-l">${ic("shopping-bag",15)}Товарный фид</span><input type="url" class="num" data-bk-feed placeholder="Ссылка на YML (Яндекс Маркет), CSV или Google Таблицу" style="flex:1;text-align:left;padding:0 10px"><label class="row" style="gap:5px;font-size:12.5px;white-space:nowrap"><input type="checkbox" data-bk-sale> только со скидкой</label><nv-button size="sm" variant="secondary" icon="download" data-bk-feedgo>Загрузить</nv-button><nv-button size="sm" variant="ghost" icon="layout-template" data-bk-prodtpl hint="Добавить на страницу фото и тексты {{Название}}, {{Цена}}, {{Старая цена}}, {{Скидка}}">Поля товара на макет</nv-button></div>
+      <div class="bk-feed"><nv-input type="url" icon="shopping-bag" data-bk-feed placeholder="Товарный фид: ссылка на YML (Яндекс Маркет), CSV или Google Таблицу" style="flex:1;min-width:240px"></nv-input><nv-checkbox data-bk-sale label="Только со скидкой"></nv-checkbox><nv-button size="sm" variant="secondary" icon="download" data-bk-feedgo>Загрузить</nv-button><nv-button size="sm" variant="ghost" icon="layout-template" data-bk-prodtpl hint="Добавить на страницу фото и тексты {{Название}}, {{Цена}}, {{Старая цена}}, {{Скидка}}">Поля товара на макет</nv-button></div>
       <div id="bk-out">${out()}</div></div>`,
     actions:[{label:"Отмена"},{label:"Создать",variant:"primary",icon:"layers",fn:()=>{if(busy)return false;if(!rows.length){toast("Вставьте таблицу",{tone:"warning"});return false}
       const mapped=slots.filter(l=>map[l.id]&&map[l.id]!=="-");if(!mapped.length){toast("Привяжите хотя бы один слой к колонке",{tone:"warning"});return false}
@@ -13523,10 +13527,10 @@ async function studioPrintPdf(o){o=o||{};const d=studioDesign();studioPagesSync(
   catch(e){prog.done("");toast("PDF не собрался: "+(e.message||e),{tone:"danger"})}finally{studioImgCache=null}}
 function studioPrintDlg(){const d=studioDesign(),mm=STUDIO_PRINT_MM[d.format];
   overlay("modal",{title:"PDF для типографии",subtitle:mm?`${(STUDIO_FMT[d.format]||{}).label} · ${mm[0]}×${mm[1]} мм`:"Формат не печатный — размер посчитаем из пикселей при 300 dpi. Для печати удобнее «Размер → Печать».",service:"studio",
-    body:`<div class="stack" style="gap:8px"><label class="pl-chk" style="border-radius:10px"><input type="checkbox" data-pr="bleed" checked><span>Вылеты 3 мм — фон продолжается за край, чтобы при резке не осталось белой полосы</span></label>
-      <label class="pl-chk" style="border-radius:10px"><input type="checkbox" data-pr="marks" checked><span>Метки реза по углам</span></label>
-      <label class="pl-chk" style="border-radius:10px"><input type="checkbox" data-pr="cmyk" checked><span>Цвета в CMYK — профиль ISO Coated v2 (FOGRA39), мелованная бумага. Снимите, если типография просит RGB</span></label>
-      <button type="button" class="pp-btn" data-prproof style="align-self:flex-start">${ic("eye",14)}Как будет в печати…</button>
+    body:`<div class="stack" style="gap:10px"><nv-checkbox data-pr="bleed" label="Вылеты 3 мм" description="Фон продолжается за край, чтобы при резке не осталось белой полосы" checked></nv-checkbox>
+      <nv-checkbox data-pr="marks" label="Метки реза по углам" checked></nv-checkbox>
+      <nv-checkbox data-pr="cmyk" label="Цвета в CMYK" description="Профиль ISO Coated v2 (FOGRA39), мелованная бумага. Снимите, если типография просит RGB" checked></nv-checkbox>
+      <nv-button variant="secondary" size="sm" icon="eye" data-prproof style="align-self:flex-start">Как будет в печати…</nv-button>
       <p class="muted" style="font-size:12.5px;margin:0">Важный текст держите не ближе 4–5 мм к краю. Для другой бумаги (немелованная, газетная) уточните профиль у типографии.</p></div>`,
     mount(r){r.querySelector("[data-prproof]").addEventListener("click",()=>studioCmykProofDlg())},
     actions:[{label:"Отмена"},{label:"Скачать PDF",variant:"primary",icon:"printer",fn:r=>{studioPrintPdf({bleed:r.querySelector('[data-pr="bleed"]').checked,marks:r.querySelector('[data-pr="marks"]').checked,cmyk:r.querySelector('[data-pr="cmyk"]').checked})}}]})}
