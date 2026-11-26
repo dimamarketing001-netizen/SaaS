@@ -1811,6 +1811,11 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 .h5-res{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;padding:8px 10px;border-radius:10px;border:1px solid var(--line)}.h5-res.ok{color:var(--ok,#15803d)}.h5-res.bad{color:var(--danger,#e11d48)}
 .vec-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}.vec-prev{width:100%;max-height:340px;border:1px solid var(--line);border-radius:10px;background:repeating-conic-gradient(#e5e7eb 0 25%,#fff 0 50%) 0 0/16px 16px;overflow:hidden}
 @media (max-width:640px){.vec-wrap{grid-template-columns:1fr}}
+.stl-rt{display:block;width:100%}
+.stud-rtbar{position:fixed;z-index:60;display:flex;align-items:center;gap:3px;padding:4px;border-radius:12px;background:var(--surface);border:1px solid var(--line-2);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.stud-rtbar button{min-width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--ink);cursor:pointer;font:14px/1 var(--font-display,inherit);display:grid;place-items:center;padding:0 4px}.stud-rtbar button:hover{background:var(--surface-2)}
+.stud-rtbar .sep{width:1px;height:20px;background:var(--line);margin:0 3px}.stud-rtbar .sw{min-width:20px;width:20px;height:20px;border-radius:50%;border:1px solid var(--line-2);padding:0;position:relative}
+.stud-rtbar label.pick{display:grid;place-items:center;cursor:pointer;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);color:#fff}.stud-rtbar label.pick input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .s2-favable{position:relative}.s2-fav{position:absolute;left:2px;top:2px;width:18px;height:18px;display:grid;place-items:center;border-radius:5px;font-size:13px;line-height:1;color:#f59e0b;background:color-mix(in srgb,var(--surface) 88%,transparent);opacity:0;transition:opacity .12s;cursor:pointer;z-index:2;font-style:normal;text-indent:0}
 .s2-favable:hover>.s2-fav,.s2-fav.on{opacity:1}.s2-fav:hover{transform:scale(1.15)}
 .s2-fav-empty{text-align:center;color:var(--ink-3);padding:24px 8px;font-size:12.5px;line-height:1.45}.s2-fav-empty p{margin:8px 0 0}
@@ -8137,7 +8142,7 @@ function studioPathD(l){return[studioContourD(l.points,l.closed),...(l.subs||[])
 function studioLayerInner(l){
   if(l.type==="3d")return studio3dInner(l);
   if(l.type==="text"&&studioCanvText(l)){studioEnsureFont(studioFontOf(l));return`<canvas class="stud-curve" style="position:absolute;left:-50%;top:-100%;width:200%;height:300%;display:block;pointer-events:none"></canvas>`}
-  if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}${studioTfxCss(l)}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent${studioListOf(l)||studioParaGap(l)?";display:block;width:100%":""}">${studioListHtml(l)||studioParaHtml(l)||esc(l.text)}</span>`:studioListHtml(l)||studioParaHtml(l)||esc(l.text)}</div>`}
+  if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}${studioTfxCss(l)}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent${studioListOf(l)||studioParaGap(l)?";display:block;width:100%":""}">${studioListHtml(l)||studioParaHtml(l)||studioRunsBlock(l)}</span>`:studioListHtml(l)||studioParaHtml(l)||studioRunsBlock(l)}</div>`}
   if(l.type==="video"){const v=l.video||{};return`<div class="stud-layer-image" style="${studioMaskCss(l)}"><video src="${esc(studioVideoSrc(v))}" muted loop autoplay playsinline preload="auto" data-t0="${+v.trim0||0}" data-t1="${+v.trim1||0}" style="width:100%;height:100%;object-fit:cover;object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1})"></video><span class="vid-badge">${ic("film",12)}</span></div>`}
   if(l.type==="image"){const bd=l.border&&l.border.enabled?`box-shadow:inset 0 0 0 ${l.border.width||4}px ${esc(l.border.color||"#fff")};`:"";
     return l.src?`<div style="width:100%;height:100%;filter:${studioDropCss(l,true)};${studioFadeCss(l)}"><div class="stud-layer-image" style="${studioMaskCss(l)};position:relative">${studioPhotoDefs(l)}<img src="${esc(l.src)}" alt="" draggable="false" style="object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1});filter:${studioPhotoFilter(l)}">${studioPhotoOverlays(l)}${bd?`<span style="position:absolute;inset:0;${bd};border-radius:inherit"></span>`:""}</div></div>`:`<div class="stud-layer-image stud-layer-empty" style="${studioMaskCss(l)}">${ic("image",22)}</div>`}
@@ -8761,6 +8766,7 @@ function studioPropsHtml0(){
       <div class="pp-ibs wide"><button type="button" class="pp-btn" data-act-fit="1" data-tip="Подобрать кегль, чтобы текст точно влез в рамку">${ic("scaling",14)}Вписать в рамку</button>${ppIb("maximize-2",'data-act-fit="grow"',false,"Максимальный кегль, который влезает")}</div>
       <div class="pp-row"><span class="pp-l">Роль для ИИ</span><nv-select options=":—|headline:Заголовок|subheadline:Подзаголовок|cta:Кнопка|badge:Плашка|disclaimer:Мелкий текст" value="${esc(l.role||"")}" data-prop="role"></nv-select></div>`)
     +studioTsSecHtml(l)
+    +(studioRunsOf(l)?`<div class="pp-row" style="margin:4px 0"><span class="pp-hint" style="flex:1;margin:0">В тексте есть фрагменты с другим стилем</span><button type="button" class="pp-btn" data-act-runsreset>${ic("eraser",14)}Сбросить</button></div>`:`<p class="pp-hint" style="margin:4px 0">Двойной клик по тексту → выделите слово — появится панель: жирный, курсив, цвет фрагмента.</p>`)
     +ppSec("spacing","Интервалы и изгиб",`${ppRng("Межстрочный","lineHeight",+l.lineHeight||1.18,0.8,2,0.05)}${ppRng("Межбуквенный","letterSpacing",+l.letterSpacing||0,-5,30,1)}${ppRng("Между абзацами","paraGap",+l.paraGap||0,0,2,0.05)}${ppRng("Изгиб по дуге","curve",+l.curve||0,-100,100,5)}<div class="pp-l" style="margin:8px 0 4px">Форма текста</div><div class="stud-warps">${[["none","Нет"]].concat(STUDIO_WARPS).map(([v,t])=>`<button type="button" class="${(l.warp||"none")===v&&!+l.curve||(v==="none"&&!studioWarpOn(l))?"on":""}" data-prop-set="warp" data-val="${v}">${studioWarpIcon(v)}<span>${t}</span></button>`).join("")}</div>${studioWarpOn(l)?ppRng("Сила","warpAmt",l.warpAmt==null?50:+l.warpAmt,-100,100,5):""}`)
     +ppSec("tcolor","Цвет",`${ppSeg([["Цвет",'data-act-tgrad=""',!g],["Градиент",'data-act-tgrad="1"',g]])}
       ${ppColor(g?"Цвет 1":"Цвет","color",l.color)}
@@ -9176,9 +9182,19 @@ async function studioRenderCanvas(design,scale,anim){
         for(const word of words){const test=cur?cur+" "+word:word;if(ctx.measureText(test).width>mw&&cur){push(cur);cur=word}else cur=test}
         if(cur)push(cur);
       }
+      const RU=!(A&&A.units)&&studioRunsOf(l),fontOf=st=>`${st.i?"italic ":""}${esc(String(st.w||l.weight||"700"))} ${fs}px "${studioFontOf(l)}","Onest",Arial,sans-serif`,font0=ctx.font;
+      if(RU){/* переносим заново с учётом позиций символов и ширины жирных/курсивных кусков */lines.length=0;brk.length=0;let po=0;
+        const segW=(a,b)=>{let w=0;for(const g of studioRunSegs(RU,a,b)){ctx.font=fontOf(g.st);w+=ctx.measureText(txt.slice(g.a,g.b)).width}ctx.font=font0;return w};
+        for(const[pi,para]of txt.split("\n").entries()){if(pi)brk.push(lines.length);const ws=[...para.matchAll(/\S+/g)].map(m=>[po+m.index,po+m.index+m[0].length]);
+          const mk=LI&&LI.marks[pi],dx=mk?LI.em*fs:0,mw=maxW-dx;let first=true;const push=(a,b)=>{lines.push({t:txt.slice(a,b),off:a,dx,m:first&&mk?mk:""});first=false};
+          if(!ws.length)lines.push({t:"",off:po,dx:0,m:""});else{let a=ws[0][0],b=ws[0][1];for(const[s0,e0]of ws.slice(1)){if(segW(a,e0)>mw){push(a,b);a=s0}b=e0}push(a,b)}po+=para.length+1}}
       const U=A&&A.units;let uN=0;if(U)lines.forEach(ln=>{const t=typeof ln==="string"?ln:ln.t;uN+=U.kind==="words"?(t.match(/\S+/g)||[]).length:[...t.replace(/\s/g,"")].length});
       const gOf=i=>{let n=0;for(const b of brk)if(b<=i)n++;return n*PG};
-      const drawL=fn=>{let ui=0;const ga=ctx.globalAlpha;lines.forEach((ln,i)=>{const yy=startY+i*lh+gOf(i);if(typeof ln==="string"&&!U){fn(ln,tx,yy);return}
+      const drawL=RU?fn=>{const al=ctx.textAlign;ctx.textAlign="left";lines.forEach((ln,i)=>{const yy=startY+i*lh+gOf(i),G=studioRunSegs(RU,ln.off,ln.off+ln.t.length);
+          const ws=G.map(g=>{ctx.font=fontOf(g.st);return ctx.measureText(txt.slice(g.a,g.b)).width}),tot=ws.reduce((a,b)=>a+b,0);ctx.font=font0;
+          const st=l.align==="center"?tx-(ln.dx+tot)/2:l.align==="right"?tx-(ln.dx+tot):tx;if(ln.m)fn(ln.m,st,yy,null);let xx=st+ln.dx;
+          G.forEach((g,k)=>{ctx.font=fontOf(g.st);fn(txt.slice(g.a,g.b),xx,yy,g.st,ws[k]);xx+=ws[k]});ctx.font=font0});ctx.textAlign=al}
+      :fn=>{let ui=0;const ga=ctx.globalAlpha;lines.forEach((ln,i)=>{const yy=startY+i*lh+gOf(i);if(typeof ln==="string"&&!U){fn(ln,tx,yy);return}
         const t=typeof ln==="string"?ln:ln.t,ldx=typeof ln==="string"?0:ln.dx,m=typeof ln==="string"?"":ln.m;
         const al=ctx.textAlign;ctx.textAlign="left";const wT=ctx.measureText(t).width,st=l.align==="center"?tx-(ldx+wT)/2:l.align==="right"?tx-(ldx+wT):tx;
         if(m){if(U)ctx.globalAlpha=ga*U.f(ui,uN);fn(m,st,yy);ctx.globalAlpha=ga}
@@ -9191,7 +9207,8 @@ async function studioRenderCanvas(design,scale,anim){
       if(l.shadow){const sh=studioShadowOf(l),k=W/560;ctx.shadowColor=studioShadowRgba(sh);ctx.shadowBlur=sh.blur*k;ctx.shadowOffsetX=sh.x*k;ctx.shadowOffsetY=sh.y*k}
       if(l.neon){ctx.shadowColor=l.color;ctx.shadowBlur=fs*0.45;ctx.shadowOffsetY=0;drawL((t,a,b)=>ctx.fillText(t,a,b))}
       if(l.outline&&l.outline.enabled){ctx.lineJoin="round";ctx.lineWidth=(l.outline.width||2)*2*(W/560);ctx.strokeStyle=l.outline.color||"#000";drawL((t,a,b)=>ctx.strokeText(t,a,b));ctx.shadowColor="transparent"}
-      if(studioTfxPaint(ctx,l,fs,drawL))drawL((t,a,b)=>ctx.fillText(t,a,b));
+      if(studioTfxPaint(ctx,l,fs,drawL))drawL((t,a,b,sg,sw)=>{const f0=ctx.fillStyle;if(sg&&sg.c)ctx.fillStyle=sg.c;ctx.fillText(t,a,b);
+        if(sg&&(sg.u||sg.x)){const th=Math.max(1,fs*0.06);if(sg.u)ctx.fillRect(a,b+fs*0.36,sw,th);if(sg.x)ctx.fillRect(a,b-th/2+fs*0.02,sw,th)}ctx.fillStyle=f0});
     }
     ctx.restore();
   }
@@ -10156,13 +10173,45 @@ function studioMarkDirty(){
 /* Списки в тексте: l.list = "bullet" | "number"; маркер на каждый непустой абзац, висячий отступ (в em). */
 function studioListOf(l){if(!l.list||l.vertical||studioCanvText(l))return null;const paras=String(l.text||"").split("\n");let n=0;
   const marks=paras.map(p=>p.trim()?(l.list==="number"?(++n)+".":"•"):"");return{em:l.list==="number"?String(n).length*0.6+0.75:1.05,marks,paras}}
+/* ---------- v10 (26.11.2026): разные стили внутри одного текста (главная претензия к онлайн-редакторам) ----------
+   l.runs=[{s,e,c?,w?,i?,u?,x?}] — диапазоны символов l.text: цвет, жирность, курсив, подчёркнутый, зачёркнутый.
+   l.runsT — текст, к которому относятся диапазоны: если текст поменяли в другом месте (замена, орфография,
+   перевод, панель), диапазоны сдвигаются по общему началу/концу строки (studioRunsOf). */
+function studioRunsNorm(L,len,l){const keys=["c","w","i","u","x"],clean=r=>{const o={s:Math.max(0,Math.min(len,r.s)),e:Math.max(0,Math.min(len,r.e))};keys.forEach(k=>{if(r[k]!=null&&r[k]!==false&&r[k]!==""&&!(k==="c"&&l&&r[k]===l.color)&&!(k==="w"&&l&&String(r[k])===String(l.weight||"700")))o[k]=r[k]});return o};
+  /* разбиваем на элементарные отрезки и сливаем одинаковые соседние */
+  const cuts=new Set([0,len]);L.forEach(r=>{cuts.add(Math.max(0,Math.min(len,r.s)));cuts.add(Math.max(0,Math.min(len,r.e)))});const P=[...cuts].sort((a,b)=>a-b),out=[];
+  for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1];if(a>=b)continue;const st={};L.forEach(r=>{if(r.s<=a&&r.e>=b)keys.forEach(k=>{if(r[k]!=null)st[k]=r[k]})});const c=clean({s:a,e:b,...st});if(keys.some(k=>c[k]!=null)){const pr=out[out.length-1];if(pr&&pr.e===a&&keys.every(k=>pr[k]===c[k]))pr.e=b;else out.push(c)}}
+  return out}
+function studioRunsOf(l){if(!l||!Array.isArray(l.runs)||!l.runs.length)return null;const t=String(l.text||"");
+  if(l.runsT!==t&&l.runsT!=null){const o=String(l.runsT),n=t;let p=0;while(p<o.length&&p<n.length&&o[p]===n[p])p++;let q=0;while(q<o.length-p&&q<n.length-p&&o[o.length-1-q]===n[n.length-1-q])q++;
+    const oe=o.length-q,ne=n.length-q,map=(x,end)=>x<=p?x:x>=oe?x-oe+ne:(end?ne:p);l.runs=studioRunsNorm(l.runs.map(r=>({...r,s:map(r.s,false),e:map(r.e,true)})).filter(r=>r.e>r.s),t.length,l);l.runsT=t}
+  return l.runs.length?l.runs:null}
+const studioRunAt=(R,a,b)=>{const st={};(R||[]).forEach(r=>{if(r.s<=a&&r.e>=b)Object.assign(st,r)});delete st.s;delete st.e;return st};
+function studioRunSegs(R,a,b){const cuts=new Set([a,b]);(R||[]).forEach(r=>{if(r.s>a&&r.s<b)cuts.add(r.s);if(r.e>a&&r.e<b)cuts.add(r.e)});const P=[...cuts].sort((x,y)=>x-y),o=[];for(let i=0;i<P.length-1;i++)if(P[i]<P[i+1])o.push({a:P[i],b:P[i+1],st:studioRunAt(R,P[i],P[i+1])});return o}
+function studioRunCss(st){let c="";if(st.c)c+=`color:${esc(st.c)};-webkit-text-fill-color:${esc(st.c)};`;if(st.w)c+=`font-weight:${esc(String(st.w))};`;if(st.i)c+="font-style:italic;";const dec=[st.u?"underline":"",st.x?"line-through":""].filter(Boolean).join(" ");if(dec)c+=`text-decoration:${dec};text-decoration-thickness:.06em;text-underline-offset:.12em;`;return c}
+/* HTML фрагмента [a,b) текста слоя со стилями диапазонов (span data-rs — по ним стили читаются обратно при правке) */
+function studioRunsHtml(l,a,b){const t=String(l.text||""),R=studioRunsOf(l);if(a==null){a=0;b=t.length}if(!R)return esc(t.slice(a,b));
+  return studioRunSegs(R,a,b).map(g=>{const css=studioRunCss(g.st),tx=esc(t.slice(g.a,g.b));return css?`<span data-rs='${esc(JSON.stringify(g.st))}' style="${css}">${tx}</span>`:tx}).join("")}
+/* контейнер текста на холсте — flex: куски со стилями кладём в блочную обёртку, иначе они встанут в ряд */
+const studioRunsBlock=l=>studioRunsOf(l)?`<span class="stl-rt">${studioRunsHtml(l)}</span>`:esc(l.text);
+function studioRunsFromDom(root,raw){let text="";const runs=[];const walk=(n,st)=>{for(const c of n.childNodes){
+    if(c.nodeType===3){const s0=text.length;text+=c.data;if(Object.keys(st).length&&text.length>s0)runs.push({s:s0,e:text.length,...st});continue}
+    if(c.nodeType!==1)continue;if(c.tagName==="BR"){text+="\n";continue}
+    let s2=st;if(c.dataset&&c.dataset.rs){try{s2={...st,...JSON.parse(c.dataset.rs)}}catch(e){}}
+    const blk=/^(DIV|P)$/.test(c.tagName)&&!c.classList.contains("stl-wrap");if(blk&&text&&!text.endsWith("\n"))text+="\n";
+    if(c.classList&&c.classList.contains("stl-m"))continue;walk(c,s2)}};walk(root,{});return{text:raw?text:text.replace(/\n$/,""),runs}}
+function studioRunsApply(l,a,b,patch){const t=String(l.text||"");if(b<=a)return;const R=studioRunsOf(l)||[];
+  const cuts=new Set([0,t.length,a,b]);R.forEach(r=>{cuts.add(r.s);cuts.add(r.e)});const P=[...cuts].filter(x=>x>=0&&x<=t.length).sort((x,y)=>x-y),out=[];
+  for(let i=0;i<P.length-1;i++){const s0=P[i],e0=P[i+1];if(s0>=e0)continue;const st=studioRunAt(R,s0,e0);
+    if(s0>=a&&e0<=b)Object.entries(patch).forEach(([k,v])=>{if(v==null||v===false)delete st[k];else st[k]=v});out.push({s:s0,e:e0,...st})}
+  l.runs=studioRunsNorm(out,t.length,l);l.runsT=t;if(!l.runs.length){delete l.runs;delete l.runsT}}
 /* v10: отступ между абзацами l.paraGap (в долях кегля) — на холсте абзацы блоками с margin-top,
    в экспорте и в подборе размера тот же сдвиг перед каждым следующим абзацем. */
 const studioParaGap=l=>l.vertical||studioCanvText(l)?0:Math.max(0,+l.paraGap||0);
 function studioParaHtml(l){const g=studioParaGap(l);if(!g)return null;const t=String(l.text||"");if(!t.includes("\n"))return null;
-  return`<div class="stl-wrap">${t.split("\n").map((p,i)=>`<div class="stl-p"${i?` style="margin-top:${g}em"`:""}>${esc(p)||"&nbsp;"}</div>`).join("")}</div>`}
-function studioListHtml(l,inner){const L=studioListOf(l);if(!L)return null;const G=studioParaGap(l),mt=i=>i&&G?`margin-top:${G}em;`:"";
-  return`<div class="stl-wrap">${L.paras.map((p,i)=>L.marks[i]?`<div class="stl-p" style="${mt(i)}padding-left:${L.em}em;text-indent:-${L.em}em"><span class="stl-m" style="width:${L.em}em">${L.marks[i]}</span>${esc(p)}</div>`:`<div class="stl-p" style="${mt(i)}">${esc(p)||"&nbsp;"}</div>`).join("")}</div>`}
+  let off=0;return`<div class="stl-wrap">${t.split("\n").map((p,i)=>{const a=off;off+=p.length+1;return`<div class="stl-p"${i?` style="margin-top:${g}em"`:""}>${p?studioRunsHtml(l,a,a+p.length):"&nbsp;"}</div>`}).join("")}</div>`}
+function studioListHtml(l,inner){const L=studioListOf(l);if(!L)return null;const G=studioParaGap(l),mt=i=>i&&G?`margin-top:${G}em;`:"";let off=0;
+  return`<div class="stl-wrap">${L.paras.map((p,i)=>{const a=off;off+=p.length+1;const h=p?studioRunsHtml(l,a,a+p.length):"";return L.marks[i]?`<div class="stl-p" style="${mt(i)}padding-left:${L.em}em;text-indent:-${L.em}em"><span class="stl-m" style="width:${L.em}em">${L.marks[i]}</span>${h}</div>`:`<div class="stl-p" style="${mt(i)}">${h||"&nbsp;"}</div>`}).join("")}</div>`}
 function studioFitText(l,design,grow){
   if(l.type!=="text"||!l.text)return false;
   const f=STUDIO_FMT[design.format]||STUDIO_FMT.square,ctx=(studioFitText.c||(studioFitText.c=document.createElement("canvas"))).getContext("2d");
@@ -11009,7 +11058,10 @@ function studioPptxSp(l,id,cx,cy){const E=v=>Math.round(v),x=E(l.x/100*cx),y=E(l
   const col=studioHex6(l.color||"#000000").slice(1).toUpperCase(),b=+String(l.weight||"700")>=600?' b="1"':"",font=studioX(studioFontOf(l)),al={left:"l",center:"ctr",right:"r"}[l.align]||"l";
   const spc=Math.round((+l.letterSpacing||0)/100*fsPt*100),rPr=`<a:rPr lang="ru-RU" sz="${Math.max(100,Math.min(400000,Math.round(fsPt*100)))}"${b}${l.upper?' cap="all"':""}${spc?` spc="${spc}"`:""} dirty="0"><a:solidFill><a:srgbClr val="${col}"/></a:solidFill><a:latin typeface="${font}"/><a:cs typeface="${font}"/></a:rPr>`;
   const gapPt=studioParaGap(l)*fsPt,pPr=i=>`<a:pPr algn="${al}"><a:lnSpc><a:spcPct val="${Math.round((+l.lineHeight||1.18)*100000)}"/></a:lnSpc>${i&&gapPt?`<a:spcBef><a:spcPts val="${Math.round(gapPt*100)}"/></a:spcBef>`:""}</a:pPr>`;
-  const paras=String(l.text).split("\n").map((t,i)=>t?`<a:p>${pPr(i)}<a:r>${rPr}<a:t>${studioX(t)}</a:t></a:r></a:p>`:`<a:p>${pPr(i)}<a:endParaRPr lang="ru-RU" sz="${Math.round(fsPt*100)}" dirty="0"/></a:p>`).join("");
+  const RR=studioRunsOf(l),full=String(l.text);let po=0;const runR=(a,b)=>!RR?`<a:r>${rPr}<a:t>${studioX(full.slice(a,b))}</a:t></a:r>`:studioRunSegs(RR,a,b).map(g=>{let r=rPr;const st=g.st;
+      if(st.w)r=r.replace(/ b="1"/,"").replace("<a:rPr ",`<a:rPr b="${+String(st.w)>=600?1:0}" `);if(st.i)r=r.replace("<a:rPr ",'<a:rPr i="1" ');if(st.u)r=r.replace("<a:rPr ",'<a:rPr u="sng" ');if(st.x)r=r.replace("<a:rPr ",'<a:rPr strike="sngStrike" ');
+      if(st.c)r=r.replace(/<a:srgbClr val="[0-9A-F]{6}"\/>/,`<a:srgbClr val="${studioHex6(st.c).slice(1).toUpperCase()}"/>`);return`<a:r>${r}<a:t>${studioX(full.slice(g.a,g.b))}</a:t></a:r>`}).join("");
+  const paras=String(l.text).split("\n").map((t,i)=>{const a=po;po+=t.length+1;return t?`<a:p>${pPr(i)}${runR(a,a+t.length)}</a:p>`:`<a:p>${pPr(i)}<a:endParaRPr lang="ru-RU" sz="${Math.round(fsPt*100)}" dirty="0"/></a:p>`}).join("");
   const bg=l.bgColor?studioHex6(l.bgColor).slice(1).toUpperCase():"",ins=bg?E(w*0.04):0,rad=bg?Math.min(50000,Math.round(Math.min(50,+l.bgRadius||0)/50*50000)):0;
   return`<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="Текст ${id}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm${l.rotation?` rot="${Math.round(((l.rotation%360)+360)%360*60000)}"`:""}><a:off x="${x}" y="${y}"/><a:ext cx="${Math.max(1,w)}" cy="${Math.max(1,h)}"/></a:xfrm><a:prstGeom prst="${bg&&rad?"roundRect":"rect"}"><a:avLst>${bg&&rad?`<a:gd name="adj" fmla="val ${rad}"/>`:""}</a:avLst></a:prstGeom>${bg?`<a:solidFill><a:srgbClr val="${bg}"/></a:solidFill>`:"<a:noFill/>"}</p:spPr><p:txBody><a:bodyPr wrap="square" lIns="${ins}" tIns="0" rIns="${ins}" bIns="0" anchor="ctr" rtlCol="0"><a:noAutofit/></a:bodyPr><a:lstStyle/>${paras}</p:txBody></p:sp>`}
 async function studioPptx(){const d=studioDesign();studioPagesSync(d);const pages=studioPagesOf(d),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,cx=12192000,cy=Math.round(cx*F.h/F.w),enc=new TextEncoder();
@@ -11765,6 +11817,7 @@ editor(){
         if(flB){studioBeforeChange();l.filterName=flB.dataset.actFilter;l.filter={...STUDIO_FILTERS[flB.dataset.actFilter]};studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const fitB=e.target.closest("[data-act-fit]");
         if(fitB){studioBeforeChange();const ch=studioFitText(l,studioDesign(),fitB.dataset.actFit==="grow");studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();toast(ch?"Размер текста подобран: "+l.fontSize:"Текст уже влезает",{tone:ch?"success":undefined});return}
+        if(e.target.closest("[data-act-runsreset]")){studioBeforeChange();delete l.runs;delete l.runsT;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         if(e.target.closest("[data-act-ccreset]")){studioBeforeChange();const P=l.photo||(l.photo={});["exp","temp","tint","lvB","lvW","mid"].forEach(k=>delete P[k]);studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const tbg=e.target.closest("[data-act-textbg]");
         if(tbg){studioBeforeChange();if(tbg.dataset.actTextbg){l.bgColor=l.bgColor||"#16c784";l.bgRadius=l.bgRadius==null?24:l.bgRadius}else delete l.bgColor;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
@@ -12040,7 +12093,7 @@ async function studioToSvg(d,ids){
   if(!ids){if(d.bg.type==="image"&&d.bg.image)body+=`<image href="${studioSvgEsc(d.bg.image)}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/>`;else if(["gradient","pattern","mesh"].includes(d.bg.type)){const c=document.createElement("canvas");c.width=W;c.height=H;await studioPaintBg(c.getContext("2d"),d.bg,W,H);body+=`<image href="${c.toDataURL("image/png")}" x="0" y="0" width="${W}" height="${H}"/>`}else if(d.bg.type!=="none")body+=`<rect width="${W}" height="${H}" fill="${d.bg.color||"#fff"}"/>`}
   const mc=document.createElement("canvas").getContext("2d");
   for(const l of ls){
-    if(studioPerspOn(l)||l.type==="3d"||(l.type==="text"&&(studioCanvText(l)||studioParaGap(l)||(l.tfx&&["block","long","sticker"].includes(l.tfx.type))))||(l.type==="image"&&l.src&&(studioFadeOn(l)||studioCCOn(studioPhotoOf(l))))){try{const c=await studioRenderCanvas({...d,bg:{type:"none"},layers:[l],pages:undefined},1);body+=`<image href="${c.toDataURL("image/png")}" x="0" y="0" width="${W}" height="${H}"/>`}catch(e){}continue}
+    if(studioPerspOn(l)||l.type==="3d"||(l.type==="text"&&(studioCanvText(l)||studioParaGap(l)||studioRunsOf(l)||(l.tfx&&["block","long","sticker"].includes(l.tfx.type))))||(l.type==="image"&&l.src&&(studioFadeOn(l)||studioCCOn(studioPhotoOf(l))))){try{const c=await studioRenderCanvas({...d,bg:{type:"none"},layers:[l],pages:undefined},1);body+=`<image href="${c.toDataURL("image/png")}" x="0" y="0" width="${W}" height="${H}"/>`}catch(e){}continue}
     const x=l.x/100*W,y=l.y/100*H,w=l.w/100*W,h=l.h/100*H,cx=x+w/2,cy=y+h/2;
     const tf=`translate(${cx} ${cy}) rotate(${l.rotation||0}) scale(${l.flipH?-1:1} ${l.flipV?-1:1}) skewX(${l.skewX||0}) skewY(${l.skewY||0}) translate(${-cx} ${-cy})`;
     let el="";
@@ -12955,7 +13008,7 @@ async function studioVectorPdf(){
         const fx=studioFillOf(l),sk=studioStrokeOf(l),eff=(l.effect&&l.effect.shadow)||(l.blendMode&&l.blendMode!=="normal")||l.skewX||l.skewY;
         const vecShape=l.type==="shape"&&!eff&&["solid","none"].includes(fx.type)&&(!sk.enabled||sk.dash==="solid"||!sk.dash);
         const vecPath=l.type==="path"&&!eff&&["solid","none"].includes(fx.type)&&(!sk.enabled||!sk.dash||sk.dash==="solid");
-        const vecText=l.type==="text"&&!eff&&!l.shadow&&!l.neon&&!(l.outline&&l.outline.enabled)&&!l.tfx&&!(l.grad&&l.grad.enabled)&&!studioCanvText(l)&&!l.vertical&&!studioListOf(l)&&!studioParaGap(l);
+        const vecText=l.type==="text"&&!eff&&!l.shadow&&!l.neon&&!(l.outline&&l.outline.enabled)&&!l.tfx&&!(l.grad&&l.grad.enabled)&&!studioCanvText(l)&&!l.vertical&&!studioListOf(l)&&!studioParaGap(l)&&!studioRunsOf(l);
         if(studioPerspOn(l)||!vecShape&&!vecPath&&!vecText){const r=studioRotBox?studioRotBox(l):null,mg=Math.max(24,0.15*Math.max(W,H)),bx=r?{x:r.x1/100*F.w-mg,y:r.y1/100*F.h-mg,w:(r.x2-r.x1)/100*F.w+2*mg,h:(r.y2-r.y1)/100*F.h+2*mg}:{x:X-W*0.3,y:Y-H*0.3,w:W*1.6,h:H*1.6};
           await placeRaster({...pd,bg:{type:"color",color:"transparent"},layers:[l]},bx);rasterized.push(studioLayerLabel(l));continue}
         let pre="q ";if(op<1){const g="G"+Object.keys(gs).length;gs[g]=op;pre+=`/${g} gs `}
@@ -13792,16 +13845,47 @@ function studioShowGuides(xs,ys,gaps){
 }
 function studioInlineEdit(layerEl,l){
   const t=layerEl.querySelector(".stud-layer-text");if(!t)return;
-  const before=l.text;if(studioListOf(l))t.textContent=l.text;t.contentEditable="true";t.focus();
+  const before=l.text,runs0=JSON.stringify(studioRunsOf(l)||[]);if(studioListOf(l)||studioParaGap(l)||studioRunsOf(l))t.innerHTML=studioRunsBlock(l);t.contentEditable="true";t.focus();
   const r=document.createRange();r.selectNodeContents(t);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);
-  const finish=keep=>{t.removeEventListener("blur",onBlur);t.removeEventListener("keydown",onKey);t.contentEditable="false";
-    const v=t.innerText.replace(/\n$/,"");
-    if(keep&&v.trim()&&v!==before){studioBeforeChange();l.text=v;if(l.comp)l.textOverride=true;NEON.save()}
+  /* v10: мини-панель стилей фрагмента — жирный/курсив/подчёркнутый/зачёркнутый/цвет для выделенной части */
+  const bar=studioRtBar(t,l,layerEl);
+  const finish=keep=>{t.removeEventListener("blur",onBlur);t.removeEventListener("keydown",onKey);t.removeEventListener("paste",onPaste);t.contentEditable="false";bar.remove();
+    const R=studioRunsFromDom(t),v=R.text;
+    if(keep&&v.trim()){const tmp={...l,text:v};tmp.runs=studioRunsNorm(R.runs,v.length,l);const nr=JSON.stringify(tmp.runs);
+      if(v!==before||nr!==runs0){studioBeforeChange();l.text=v;if(tmp.runs.length){l.runs=tmp.runs;l.runsT=v}else{delete l.runs;delete l.runsT}if(l.comp)l.textOverride=true;NEON.save()}}
     studioPatchLayerDom(l);studioRenderSidebar(document)};
-  const onBlur=()=>finish(true);
-  const onKey=e=>{e.stopPropagation();if(e.key==="Escape"){e.preventDefault();finish(false)}else if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();t.blur()}};
-  t.addEventListener("blur",onBlur);t.addEventListener("keydown",onKey);
+  const onBlur=()=>setTimeout(()=>{if(bar.contains(document.activeElement)||bar._busy)return;finish(true)},0);
+  const onKey=e=>{e.stopPropagation();if(e.key==="Escape"){e.preventDefault();finish(false)}else if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();t.blur()}
+    else if((e.ctrlKey||e.metaKey)&&!e.altKey&&["b","i","u","и","ш","г"].includes(e.key.toLowerCase())){e.preventDefault();bar._apply({b:"w",и:"w",i:"i",ш:"i",u:"u",г:"u"}[e.key.toLowerCase()])}};
+  const onPaste=e=>{e.preventDefault();const tx=(e.clipboardData||window.clipboardData).getData("text/plain");document.execCommand("insertText",false,tx)};
+  t.addEventListener("blur",onBlur);t.addEventListener("keydown",onKey);t.addEventListener("paste",onPaste);
+  bar._finish=finish;
 }
+function studioRtOffsets(t){const sel=getSelection();if(!sel.rangeCount)return null;const rg=sel.getRangeAt(0);if(!t.contains(rg.startContainer)||!t.contains(rg.endContainer))return null;
+  const len=(node,off)=>{const p=document.createRange();p.setStart(t,0);p.setEnd(node,off);const d=document.createElement("div");d.append(p.cloneContents());return studioRunsFromDom(d,true).text.length};
+  return[len(rg.startContainer,rg.startOffset),len(rg.endContainer,rg.endOffset)]}
+function studioRtSelect(t,a,b){let n=0,sa=null,sb=null;const walk=nd=>{for(const c of nd.childNodes){if(c.nodeType===3){const L=c.data.length;if(sa==null&&a<=n+L)sa=[c,a-n];if(sb==null&&b<=n+L)sb=[c,b-n];n+=L}else if(c.tagName==="BR")n++;else if(c.nodeType===1)walk(c)}};walk(t);
+  const r=document.createRange();if(sa)r.setStart(...sa);else r.setStart(t,t.childNodes.length);if(sb)r.setEnd(...sb);else r.setEnd(t,t.childNodes.length);const s=getSelection();s.removeAllRanges();s.addRange(r)}
+function studioRtBar(t,l,layerEl){document.querySelectorAll(".stud-rtbar").forEach(x=>x.remove());const bar=document.createElement("div");bar.className="stud-rtbar";bar.setAttribute("role","toolbar");bar.setAttribute("aria-label","Стиль выделенного фрагмента");
+  const cols=[...new Set([...(S.studio.brand&&S.studio.brand.colors||[]),"#e11d48","#f59e0b","#16a34a","#2563eb","#7c3aed","#111827","#ffffff"])].slice(0,10);
+  bar.innerHTML=`<button type="button" data-rt="w" data-tip="Жирный (Ctrl+B)"><b>Ж</b></button><button type="button" data-rt="i" data-tip="Курсив (Ctrl+I)"><i>К</i></button><button type="button" data-rt="u" data-tip="Подчёркнутый (Ctrl+U)"><u>Ч</u></button><button type="button" data-rt="x" data-tip="Зачёркнутый"><s>З</s></button><span class="sep"></span>${cols.map(c=>`<button type="button" class="sw" data-rtc="${c}" style="background:${c}" data-tip="Цвет фрагмента ${c}"></button>`).join("")}<label class="sw pick" data-tip="Свой цвет">${ic("pipette",13)}<input type="color" data-rtpick value="${esc(studioHex6(l.color||"#000000"))}"></label><button type="button" data-rt="reset" data-tip="Убрать стили фрагмента">${ic("eraser",14)}</button>`;
+  document.body.append(bar);const place=()=>{const r=layerEl.getBoundingClientRect(),bw=bar.offsetWidth;bar.style.left=Math.max(8,Math.min(innerWidth-bw-8,r.left+r.width/2-bw/2))+"px";bar.style.top=Math.max(8,r.top-bar.offsetHeight-10)+"px"};place();
+  let saved=null;const remember=()=>{const o=studioRtOffsets(t);if(o)saved=o};document.addEventListener("selectionchange",remember);
+  const apply=(k,val)=>{const o=studioRtOffsets(t)||saved;if(!o||o[0]===o[1]){toast("Выделите часть текста",{tone:"warning"});return}const[a,b]=o;
+    const R=studioRunsFromDom(t),v=R.text;l.text=v;l.runs=studioRunsNorm(R.runs,v.length,l);l.runsT=v;
+    const segs=studioRunSegs(studioRunsOf(l)||[],a,b),base=+String(l.weight||"700");let patch;
+    if(k==="w"){const all=segs.every(g=>+String(g.st.w||base)>=600);patch={w:all?(base>=600?"400":null):(base>=600?null:"800")}}
+    else if(k==="reset")patch={c:null,w:null,i:null,u:null,x:null};
+    else if(k==="c")patch={c:val};
+    else{const all=segs.every(g=>g.st[k]);patch={[k]:all?null:true}}
+    studioRunsApply(l,a,b,patch);t.innerHTML=studioRunsBlock(l);t.focus();studioRtSelect(t,a,b);saved=[a,b]};
+  bar._apply=apply;
+  bar.addEventListener("mousedown",e=>{if(!e.target.closest("[data-rtpick],label.pick"))e.preventDefault()});
+  bar.addEventListener("click",e=>{const b=e.target.closest("[data-rt]"),c=e.target.closest("[data-rtc]");if(b)apply(b.dataset.rt);else if(c)apply("c",c.dataset.rtc)});
+  const pick=bar.querySelector("[data-rtpick]");pick.addEventListener("pointerdown",()=>{bar._busy=true});pick.addEventListener("input",e=>{bar._busy=true;apply("c",e.target.value);bar._busy=true});
+  pick.addEventListener("change",()=>{bar._busy=false;t.focus();if(saved)studioRtSelect(t,...saved)});
+  const rm=bar.remove.bind(bar);bar.remove=()=>{document.removeEventListener("selectionchange",remember);rm()};
+  return bar}
 let studioClipboard=null;
 function studioSelIds(){const d=studioDesign();return studioMultiSel.length?studioMultiSel.slice():d.selectedId?[d.selectedId]:[]}
 document.addEventListener("keydown",e=>{
