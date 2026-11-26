@@ -1821,6 +1821,7 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 .stn-mention{position:absolute;left:8px;right:8px;top:calc(100% - 4px);z-index:5;background:var(--surface);border:1px solid var(--line-2);border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,.15);padding:4px;display:flex;flex-direction:column}.stn-mention button{display:flex;flex-direction:column;align-items:flex-start;border:0;background:none;padding:5px 8px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--ink)}.stn-mention button:hover{background:var(--surface-2)}.stn-mention small{color:var(--ink-3);font-size:11px}
 .bk-feed{display:flex;gap:8px;align-items:center;margin:8px 0 4px;flex-wrap:wrap}.bk-feed-l{display:flex;gap:6px;align-items:center;font-size:13px;font-weight:600;white-space:nowrap}
 .stud-lgrid .lg-c{position:absolute;top:0;bottom:0;background:rgba(236,72,153,.10);border-left:1px solid rgba(236,72,153,.35);border-right:1px solid rgba(236,72,153,.35)}.stud-lgrid .lg-r{position:absolute;left:0;right:0;background:rgba(236,72,153,.07);border-top:1px solid rgba(236,72,153,.3);border-bottom:1px solid rgba(236,72,153,.3)}
+.stud-glyphs{position:fixed;z-index:61;width:360px;max-height:320px;overflow:auto;padding:8px;border-radius:12px;background:var(--surface);border:1px solid var(--line-2);box-shadow:0 8px 24px rgba(0,0,0,.18)}.stud-glyphs .sg-t{font-size:11px;color:var(--ink-3);margin:4px 2px}.stud-glyphs .sg-g{display:grid;grid-template-columns:repeat(10,1fr);gap:2px}.stud-glyphs .sg-g button{height:30px;border:0;border-radius:6px;background:none;color:var(--ink);font-size:17px;cursor:pointer;font-family:inherit}.stud-glyphs .sg-g button:hover{background:var(--surface-2)}
 .stud-rtbar{position:fixed;z-index:60;display:flex;align-items:center;gap:3px;padding:4px;border-radius:12px;background:var(--surface);border:1px solid var(--line-2);box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .stud-rtbar button{min-width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--ink);cursor:pointer;font:14px/1 var(--font-display,inherit);display:grid;place-items:center;padding:0 4px}.stud-rtbar button:hover{background:var(--surface-2)}
 .stud-rtbar .sep{width:1px;height:20px;background:var(--line);margin:0 3px}.stud-rtbar .sw{min-width:20px;width:20px;height:20px;border-radius:50%;border:1px solid var(--line-2);padding:0;position:relative}
@@ -8151,7 +8152,7 @@ function studioPathD(l){return[studioContourD(l.points,l.closed),...(l.subs||[])
 function studioLayerInner(l){
   if(l.type==="3d")return studio3dInner(l);
   if(l.type==="text"&&studioCanvText(l)){studioEnsureFont(studioFontOf(l));return`<canvas class="stud-curve" style="position:absolute;left:-50%;top:-100%;width:200%;height:300%;display:block;pointer-events:none"></canvas>`}
-  if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}${studioTfxCss(l)}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent${studioListOf(l)||studioParaGap(l)?";display:block;width:100%":""}">${studioListHtml(l)||studioParaHtml(l)||studioRunsBlock(l)}</span>`:studioListHtml(l)||studioParaHtml(l)||studioRunsBlock(l)}</div>`}
+  if(l.type==="text"){studioEnsureFont(studioFontOf(l));return`<div class="stud-layer-text" style="color:${esc(l.color)};font-weight:${esc(l.weight)};text-align:${esc(l.align)};justify-content:${l.align==="center"?"center":l.align==="right"?"flex-end":"flex-start"};writing-mode:${l.vertical?"vertical-rl":"horizontal-tb"};font-family:'${esc(studioFontOf(l))}',var(--font-display);line-height:${+l.lineHeight||1.18};letter-spacing:${(+l.letterSpacing||0)/100}em;${l.kernOff?"font-kerning:none;":""}text-transform:${l.upper?"uppercase":"none"};${l.bgColor?`background:${esc(l.bgColor)};padding:0 4%;box-sizing:border-box;`:""}${l.shadow?`text-shadow:${studioShadowCss(studioShadowOf(l))};`:""}${l.neon?`text-shadow:0 0 6px ${esc(l.color)},0 0 18px ${esc(l.color)},0 0 32px ${esc(l.color)};`:""}${l.outline&&l.outline.enabled?`-webkit-text-stroke:${l.outline.width||2}px ${esc(l.outline.color||"#000")};paint-order:stroke fill;`:""}${studioTfxCss(l)}">${l.grad&&l.grad.enabled?`<span style="background:linear-gradient(${+l.grad.angle||90}deg,${esc(l.color)},${esc(l.grad.color2||"#0ea5e9")});-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent${studioListOf(l)||studioParaGap(l)?";display:block;width:100%":""}">${studioListHtml(l)||studioParaHtml(l)||studioRunsBlock(l)}</span>`:studioListHtml(l)||studioParaHtml(l)||studioRunsBlock(l)}</div>`}
   if(l.type==="video"){const v=l.video||{};return`<div class="stud-layer-image" style="${studioMaskCss(l)}"><video src="${esc(studioVideoSrc(v))}" muted loop autoplay playsinline preload="auto" data-t0="${+v.trim0||0}" data-t1="${+v.trim1||0}" style="width:100%;height:100%;object-fit:cover;object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1})"></video><span class="vid-badge">${ic("film",12)}</span></div>`}
   if(l.type==="image"){const bd=l.border&&l.border.enabled?`box-shadow:inset 0 0 0 ${l.border.width||4}px ${esc(l.border.color||"#fff")};`:"";
     return l.src?`<div style="width:100%;height:100%;filter:${studioDropCss(l,true)};${studioFadeCss(l)}"><div class="stud-layer-image" style="${studioMaskCss(l)};position:relative">${studioPhotoDefs(l)}<img src="${esc(l.src)}" alt="" draggable="false" style="object-position:${l.fx!=null?l.fx:50}% ${l.fy!=null?l.fy:50}%;transform:scale(${l.zoom||1});filter:${studioPhotoFilter(l)}">${studioPhotoOverlays(l)}${bd?`<span style="position:absolute;inset:0;${bd};border-radius:inherit"></span>`:""}</div></div>`:`<div class="stud-layer-image stud-layer-empty" style="${studioMaskCss(l)}">${ic("image",22)}</div>`}
@@ -8879,7 +8880,7 @@ function studioPropsHtml0(){
       <div class="pp-row"><span class="pp-l">Роль для ИИ</span><nv-select options=":—|headline:Заголовок|subheadline:Подзаголовок|cta:Кнопка|badge:Плашка|disclaimer:Мелкий текст" value="${esc(l.role||"")}" data-prop="role"></nv-select></div>`)
     +studioTsSecHtml(l)
     +(studioRunsOf(l)?`<div class="pp-row" style="margin:4px 0"><span class="pp-hint" style="flex:1;margin:0">В тексте есть фрагменты с другим стилем</span><button type="button" class="pp-btn" data-act-runsreset>${ic("eraser",14)}Сбросить</button></div>`:`<p class="pp-hint" style="margin:4px 0">Двойной клик по тексту → выделите слово — появится панель: жирный, курсив, цвет фрагмента.</p>`)
-    +ppSec("spacing","Интервалы и изгиб",`${ppRng("Межстрочный","lineHeight",+l.lineHeight||1.18,0.8,2,0.05)}${ppRng("Межбуквенный","letterSpacing",+l.letterSpacing||0,-5,30,1)}${ppRng("Между абзацами","paraGap",+l.paraGap||0,0,2,0.05)}${ppRng("Изгиб по дуге","curve",+l.curve||0,-100,100,5)}<div class="pp-l" style="margin:8px 0 4px">Форма текста</div><div class="stud-warps">${[["none","Нет"]].concat(STUDIO_WARPS).map(([v,t])=>`<button type="button" class="${(l.warp||"none")===v&&!+l.curve||(v==="none"&&!studioWarpOn(l))?"on":""}" data-prop-set="warp" data-val="${v}">${studioWarpIcon(v)}<span>${t}</span></button>`).join("")}</div>${studioWarpOn(l)?ppRng("Сила","warpAmt",l.warpAmt==null?50:+l.warpAmt,-100,100,5):""}`)
+    +ppSec("spacing","Интервалы и изгиб",`${ppRng("Межстрочный","lineHeight",+l.lineHeight||1.18,0.8,2,0.05)}${ppRng("Межбуквенный","letterSpacing",+l.letterSpacing||0,-5,30,1)}${ppRng("Между абзацами","paraGap",+l.paraGap||0,0,2,0.05)}<div class="pp-row"><span class="pp-l">Кернинг шрифта</span>${ppSeg([["Авто",`data-prop-set="kernOff" data-val=""`,!l.kernOff,"Пары букв по таблице шрифта (AV, Ту, Г.)"],["Выкл",`data-prop-set="kernOff" data-val="1"`,!!l.kernOff,"Без кернинга"]])}</div><p class="pp-hint" style="margin:2px 0 6px">Ручной кернинг пары: двойной клик по тексту, курсор между буквами, Alt+← / Alt+→.</p>${ppRng("Изгиб по дуге","curve",+l.curve||0,-100,100,5)}<div class="pp-l" style="margin:8px 0 4px">Форма текста</div><div class="stud-warps">${[["none","Нет"]].concat(STUDIO_WARPS).map(([v,t])=>`<button type="button" class="${(l.warp||"none")===v&&!+l.curve||(v==="none"&&!studioWarpOn(l))?"on":""}" data-prop-set="warp" data-val="${v}">${studioWarpIcon(v)}<span>${t}</span></button>`).join("")}</div>${studioWarpOn(l)?ppRng("Сила","warpAmt",l.warpAmt==null?50:+l.warpAmt,-100,100,5):""}`)
     +ppSec("tcolor","Цвет",`${ppSeg([["Цвет",'data-act-tgrad=""',!g],["Градиент",'data-act-tgrad="1"',g]])}
       ${ppColor(g?"Цвет 1":"Цвет","color",l.color)}
       ${g?ppColor("Цвет 2","grad.color2",l.grad.color2||"#0ea5e9")+ppRng("Угол","grad.angle",+l.grad.angle||90,0,360,5):""}`)
@@ -9284,7 +9285,7 @@ async function studioRenderCanvas(design,scale,anim){
       }
       const pad=l.bgColor?w2*0.04:0;
       ctx.fillStyle=l.color;ctx.font=`${esc(String(l.weight||"700"))} ${fs}px "${studioFontOf(l)}","Onest",Arial,sans-serif`;
-      if("letterSpacing" in ctx)ctx.letterSpacing=((+l.letterSpacing||0)/100*fs)+"px";
+      if("letterSpacing" in ctx)ctx.letterSpacing=((+l.letterSpacing||0)/100*fs)+"px";if("fontKerning" in ctx)ctx.fontKerning=l.kernOff?"none":"normal";
       ctx.textBaseline="middle";ctx.textAlign=l.align==="center"?"center":l.align==="right"?"right":"left";
       const tx=l.align==="center"?x2+w2/2:l.align==="right"?x2+w2-pad:x2+pad,maxW=w2-pad*2;
       const raw=String(l.text||"");const txt=l.upper?raw.toUpperCase():raw;const lines=[],LI=studioListOf(l),PG=studioParaGap(l)*fs,brk=[];
@@ -9296,18 +9297,18 @@ async function studioRenderCanvas(design,scale,anim){
         for(const word of words){const test=cur?cur+" "+word:word;if(ctx.measureText(test).width>mw&&cur){push(cur);cur=word}else cur=test}
         if(cur)push(cur);
       }
-      const RU=!(A&&A.units)&&studioRunsOf(l),fontOf=st=>`${st.i?"italic ":""}${esc(String(st.w||l.weight||"700"))} ${fs}px "${studioFontOf(l)}","Onest",Arial,sans-serif`,font0=ctx.font;
+      const RU=!(A&&A.units)&&studioRunsOf(l),ls0=ctx.letterSpacing,fontOf=st=>{if("letterSpacing" in ctx)ctx.letterSpacing=(((+l.letterSpacing||0)/100+(+st.k||0))*fs)+"px";return`${st.i?"italic ":""}${esc(String(st.w||l.weight||"700"))} ${fs}px "${studioFontOf(l)}","Onest",Arial,sans-serif`},font0=ctx.font;
       if(RU){/* переносим заново с учётом позиций символов и ширины жирных/курсивных кусков */lines.length=0;brk.length=0;let po=0;
-        const segW=(a,b)=>{let w=0;for(const g of studioRunSegs(RU,a,b)){ctx.font=fontOf(g.st);w+=ctx.measureText(txt.slice(g.a,g.b)).width}ctx.font=font0;return w};
+        const segW=(a,b)=>{let w=0;for(const g of studioRunSegs(RU,a,b)){ctx.font=fontOf(g.st);w+=ctx.measureText(txt.slice(g.a,g.b)).width}ctx.font=font0;if(ls0!=null)ctx.letterSpacing=ls0;return w};
         for(const[pi,para]of txt.split("\n").entries()){if(pi)brk.push(lines.length);const ws=[...para.matchAll(/\S+/g)].map(m=>[po+m.index,po+m.index+m[0].length]);
           const mk=LI&&LI.marks[pi],dx=mk?LI.em*fs:0,mw=maxW-dx;let first=true;const push=(a,b)=>{lines.push({t:txt.slice(a,b),off:a,dx,m:first&&mk?mk:""});first=false};
           if(!ws.length)lines.push({t:"",off:po,dx:0,m:""});else{let a=ws[0][0],b=ws[0][1];for(const[s0,e0]of ws.slice(1)){if(segW(a,e0)>mw){push(a,b);a=s0}b=e0}push(a,b)}po+=para.length+1}}
       const U=A&&A.units;let uN=0;if(U)lines.forEach(ln=>{const t=typeof ln==="string"?ln:ln.t;uN+=U.kind==="words"?(t.match(/\S+/g)||[]).length:[...t.replace(/\s/g,"")].length});
       const gOf=i=>{let n=0;for(const b of brk)if(b<=i)n++;return n*PG};
       const drawL=RU?fn=>{const al=ctx.textAlign;ctx.textAlign="left";lines.forEach((ln,i)=>{const yy=startY+i*lh+gOf(i),G=studioRunSegs(RU,ln.off,ln.off+ln.t.length);
-          const ws=G.map(g=>{ctx.font=fontOf(g.st);return ctx.measureText(txt.slice(g.a,g.b)).width}),tot=ws.reduce((a,b)=>a+b,0);ctx.font=font0;
+          const ws=G.map(g=>{ctx.font=fontOf(g.st);return ctx.measureText(txt.slice(g.a,g.b)).width}),tot=ws.reduce((a,b)=>a+b,0);ctx.font=font0;if(ls0!=null)ctx.letterSpacing=ls0;
           const st=l.align==="center"?tx-(ln.dx+tot)/2:l.align==="right"?tx-(ln.dx+tot):tx;if(ln.m)fn(ln.m,st,yy,null);let xx=st+ln.dx;
-          G.forEach((g,k)=>{ctx.font=fontOf(g.st);fn(txt.slice(g.a,g.b),xx,yy,g.st,ws[k]);xx+=ws[k]});ctx.font=font0});ctx.textAlign=al}
+          G.forEach((g,k)=>{ctx.font=fontOf(g.st);fn(txt.slice(g.a,g.b),xx,yy,g.st,ws[k]);xx+=ws[k]});ctx.font=font0;if(ls0!=null)ctx.letterSpacing=ls0});ctx.textAlign=al}
       :fn=>{let ui=0;const ga=ctx.globalAlpha;lines.forEach((ln,i)=>{const yy=startY+i*lh+gOf(i);if(typeof ln==="string"&&!U){fn(ln,tx,yy);return}
         const t=typeof ln==="string"?ln:ln.t,ldx=typeof ln==="string"?0:ln.dx,m=typeof ln==="string"?"":ln.m;
         const al=ctx.textAlign;ctx.textAlign="left";const wT=ctx.measureText(t).width,st=l.align==="center"?tx-(ldx+wT)/2:l.align==="right"?tx-(ldx+wT):tx;
@@ -10291,7 +10292,7 @@ function studioListOf(l){if(!l.list||l.vertical||studioCanvText(l))return null;c
    l.runs=[{s,e,c?,w?,i?,u?,x?}] — диапазоны символов l.text: цвет, жирность, курсив, подчёркнутый, зачёркнутый.
    l.runsT — текст, к которому относятся диапазоны: если текст поменяли в другом месте (замена, орфография,
    перевод, панель), диапазоны сдвигаются по общему началу/концу строки (studioRunsOf). */
-function studioRunsNorm(L,len,l){const keys=["c","w","i","u","x"],clean=r=>{const o={s:Math.max(0,Math.min(len,r.s)),e:Math.max(0,Math.min(len,r.e))};keys.forEach(k=>{if(r[k]!=null&&r[k]!==false&&r[k]!==""&&!(k==="c"&&l&&r[k]===l.color)&&!(k==="w"&&l&&String(r[k])===String(l.weight||"700")))o[k]=r[k]});return o};
+function studioRunsNorm(L,len,l){const keys=["c","w","i","u","x","k"],clean=r=>{const o={s:Math.max(0,Math.min(len,r.s)),e:Math.max(0,Math.min(len,r.e))};keys.forEach(k=>{if(r[k]!=null&&r[k]!==false&&r[k]!==""&&!(k==="c"&&l&&r[k]===l.color)&&!(k==="w"&&l&&String(r[k])===String(l.weight||"700")))o[k]=r[k]});return o};
   /* разбиваем на элементарные отрезки и сливаем одинаковые соседние */
   const cuts=new Set([0,len]);L.forEach(r=>{cuts.add(Math.max(0,Math.min(len,r.s)));cuts.add(Math.max(0,Math.min(len,r.e)))});const P=[...cuts].sort((a,b)=>a-b),out=[];
   for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1];if(a>=b)continue;const st={};L.forEach(r=>{if(r.s<=a&&r.e>=b)keys.forEach(k=>{if(r[k]!=null)st[k]=r[k]})});const c=clean({s:a,e:b,...st});if(keys.some(k=>c[k]!=null)){const pr=out[out.length-1];if(pr&&pr.e===a&&keys.every(k=>pr[k]===c[k]))pr.e=b;else out.push(c)}}
@@ -10302,10 +10303,10 @@ function studioRunsOf(l){if(!l||!Array.isArray(l.runs)||!l.runs.length)return nu
   return l.runs.length?l.runs:null}
 const studioRunAt=(R,a,b)=>{const st={};(R||[]).forEach(r=>{if(r.s<=a&&r.e>=b)Object.assign(st,r)});delete st.s;delete st.e;return st};
 function studioRunSegs(R,a,b){const cuts=new Set([a,b]);(R||[]).forEach(r=>{if(r.s>a&&r.s<b)cuts.add(r.s);if(r.e>a&&r.e<b)cuts.add(r.e)});const P=[...cuts].sort((x,y)=>x-y),o=[];for(let i=0;i<P.length-1;i++)if(P[i]<P[i+1])o.push({a:P[i],b:P[i+1],st:studioRunAt(R,P[i],P[i+1])});return o}
-function studioRunCss(st){let c="";if(st.c)c+=`color:${esc(st.c)};-webkit-text-fill-color:${esc(st.c)};`;if(st.w)c+=`font-weight:${esc(String(st.w))};`;if(st.i)c+="font-style:italic;";const dec=[st.u?"underline":"",st.x?"line-through":""].filter(Boolean).join(" ");if(dec)c+=`text-decoration:${dec};text-decoration-thickness:.06em;text-underline-offset:.12em;`;return c}
+function studioRunCss(st,l){let c="";if(st.k)c+=`letter-spacing:${(((+(l&&l.letterSpacing)||0)/100)+(+st.k)).toFixed(3)}em;`;if(st.c)c+=`color:${esc(st.c)};-webkit-text-fill-color:${esc(st.c)};`;if(st.w)c+=`font-weight:${esc(String(st.w))};`;if(st.i)c+="font-style:italic;";const dec=[st.u?"underline":"",st.x?"line-through":""].filter(Boolean).join(" ");if(dec)c+=`text-decoration:${dec};text-decoration-thickness:.06em;text-underline-offset:.12em;`;return c}
 /* HTML фрагмента [a,b) текста слоя со стилями диапазонов (span data-rs — по ним стили читаются обратно при правке) */
 function studioRunsHtml(l,a,b){const t=String(l.text||""),R=studioRunsOf(l);if(a==null){a=0;b=t.length}if(!R)return esc(t.slice(a,b));
-  return studioRunSegs(R,a,b).map(g=>{const css=studioRunCss(g.st),tx=esc(t.slice(g.a,g.b));return css?`<span data-rs='${esc(JSON.stringify(g.st))}' style="${css}">${tx}</span>`:tx}).join("")}
+  return studioRunSegs(R,a,b).map(g=>{const css=studioRunCss(g.st,l),tx=esc(t.slice(g.a,g.b));return css?`<span data-rs='${esc(JSON.stringify(g.st))}' style="${css}">${tx}</span>`:tx}).join("")}
 /* контейнер текста на холсте — flex: куски со стилями кладём в блочную обёртку, иначе они встанут в ряд */
 const studioRunsBlock=l=>studioRunsOf(l)?`<span class="stl-rt">${studioRunsHtml(l)}</span>`:esc(l.text);
 function studioRunsFromDom(root,raw){let text="";const runs=[];const walk=(n,st)=>{for(const c of n.childNodes){
@@ -10393,7 +10394,6 @@ function studioLutApply(src,L,tab,ch,out){const n=L.n,m=n-1,s=m/255,len=src.leng
     const I=(R,G,B)=>((R*n+G)*n+B)*ch;const c000=I(r0,g0,b0),c001=I(r0,g0,b1),c010=I(r0,g1,b0),c011=I(r0,g1,b1),c100=I(r1,g0,b0),c101=I(r1,g0,b1),c110=I(r1,g1,b0),c111=I(r1,g1,b1);
     for(let k=0;k<ch;k++){const a=tab[c000+k]+(tab[c001+k]-tab[c000+k])*fb,b2=tab[c010+k]+(tab[c011+k]-tab[c010+k])*fb,c=tab[c100+k]+(tab[c101+k]-tab[c100+k])*fb,d=tab[c110+k]+(tab[c111+k]-tab[c110+k])*fb;
       const e=a+(b2-a)*fg,f=c+(d-c)*fg;out[i*ch+k]=Math.round(e+(f-e)*fr)}}return out}
-async function studioDeflate(u8){const cs=new CompressionStream("deflate"),w=cs.writable.getWriter();w.write(u8);w.close();return new Uint8Array(await new Response(cs.readable).arrayBuffer())}
 async function studioCanvasCmyk(c){const L=await studioCmykLut(),id=c.getContext("2d").getImageData(0,0,c.width,c.height).data;return studioDeflate(studioLutApply(id,L,L.cmyk,4))}
 /* предпросмотр печати: canvas → как будет на бумаге; mark — подсветить пиксели, которые сильно поменяются (вне охвата) */
 async function studioCmykProof(c,mark){const L=await studioCmykLut(),g=c.getContext("2d"),im=g.getImageData(0,0,c.width,c.height),src=im.data,pr=studioLutApply(src,L,L.proof,3),o=new ImageData(c.width,c.height),d=o.data;let bad=0;
@@ -11241,7 +11241,7 @@ function studioPptxSp(l,id,cx,cy){const E=v=>Math.round(v),x=E(l.x/100*cx),y=E(l
   const gapPt=studioParaGap(l)*fsPt,pPr=i=>`<a:pPr algn="${al}"><a:lnSpc><a:spcPct val="${Math.round((+l.lineHeight||1.18)*100000)}"/></a:lnSpc>${i&&gapPt?`<a:spcBef><a:spcPts val="${Math.round(gapPt*100)}"/></a:spcBef>`:""}</a:pPr>`;
   const RR=studioRunsOf(l),full=String(l.text);let po=0;const runR=(a,b)=>!RR?`<a:r>${rPr}<a:t>${studioX(full.slice(a,b))}</a:t></a:r>`:studioRunSegs(RR,a,b).map(g=>{let r=rPr;const st=g.st;
       if(st.w)r=r.replace(/ b="1"/,"").replace("<a:rPr ",`<a:rPr b="${+String(st.w)>=600?1:0}" `);if(st.i)r=r.replace("<a:rPr ",'<a:rPr i="1" ');if(st.u)r=r.replace("<a:rPr ",'<a:rPr u="sng" ');if(st.x)r=r.replace("<a:rPr ",'<a:rPr strike="sngStrike" ');
-      if(st.c)r=r.replace(/<a:srgbClr val="[0-9A-F]{6}"\/>/,`<a:srgbClr val="${studioHex6(st.c).slice(1).toUpperCase()}"/>`);return`<a:r>${r}<a:t>${studioX(full.slice(g.a,g.b))}</a:t></a:r>`}).join("");
+      if(st.k){const sp=Math.round(((+l.letterSpacing||0)/100+(+st.k))*fsPt*100);r=r.replace(/ spc="-?\d+"/,"").replace("<a:rPr ",`<a:rPr spc="${sp}" `)}if(st.c)r=r.replace(/<a:srgbClr val="[0-9A-F]{6}"\/>/,`<a:srgbClr val="${studioHex6(st.c).slice(1).toUpperCase()}"/>`);return`<a:r>${r}<a:t>${studioX(full.slice(g.a,g.b))}</a:t></a:r>`}).join("");
   const paras=String(l.text).split("\n").map((t,i)=>{const a=po;po+=t.length+1;return t?`<a:p>${pPr(i)}${runR(a,a+t.length)}</a:p>`:`<a:p>${pPr(i)}<a:endParaRPr lang="ru-RU" sz="${Math.round(fsPt*100)}" dirty="0"/></a:p>`}).join("");
   const bg=l.bgColor?studioHex6(l.bgColor).slice(1).toUpperCase():"",ins=bg?E(w*0.04):0,rad=bg?Math.min(50000,Math.round(Math.min(50,+l.bgRadius||0)/50*50000)):0;
   return`<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="Текст ${id}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm${l.rotation?` rot="${Math.round(((l.rotation%360)+360)%360*60000)}"`:""}><a:off x="${x}" y="${y}"/><a:ext cx="${Math.max(1,w)}" cy="${Math.max(1,h)}"/></a:xfrm><a:prstGeom prst="${bg&&rad?"roundRect":"rect"}"><a:avLst>${bg&&rad?`<a:gd name="adj" fmla="val ${rad}"/>`:""}</a:avLst></a:prstGeom>${bg?`<a:solidFill><a:srgbClr val="${bg}"/></a:solidFill>`:"<a:noFill/>"}</p:spPr><p:txBody><a:bodyPr wrap="square" lIns="${ins}" tIns="0" rIns="${ins}" bIns="0" anchor="ctr" rtlCol="0"><a:noAutofit/></a:bodyPr><a:lstStyle/>${paras}</p:txBody></p:sp>`}
@@ -12005,7 +12005,7 @@ editor(){
         if(tbg){studioBeforeChange();if(tbg.dataset.actTextbg){l.bgColor=l.bgColor||"#16c784";l.bgRadius=l.bgRadius==null?24:l.bgRadius}else delete l.bgColor;studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const set=e.target.closest("[data-prop-set]");
         if(set){
-          const k=set.dataset.propSet,boolKeys=["autoW","video.muted","closed","stroke.enabled","vertical","upper","shadow","neon","lockRatio","showValues","qrMargin","photo.duo"];if(k==="tblHead"||k==="tblZebra"){l[k==="tblHead"?"head":"zebra"]=set.dataset.val==="1";studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
+          const k=set.dataset.propSet,boolKeys=["kernOff","autoW","video.muted","closed","stroke.enabled","vertical","upper","shadow","neon","lockRatio","showValues","qrMargin","photo.duo"];if(k==="tblHead"||k==="tblZebra"){l[k==="tblHead"?"head":"zebra"]=set.dataset.val==="1";studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
           if(k==="warp"){studioBeforeChange();if(set.dataset.val==="none")delete l.warp;else{l.warp=set.dataset.val;l.curve=0}studioPatchLayerDom(l);studioLayoutStage(document,[l.id]);studioRenderSidebar(root);NEON.save();return}
           studioSetPath(l,k,boolKeys.includes(k)?set.dataset.val==="1":set.dataset.val);
           studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return;
@@ -12753,7 +12753,6 @@ async function studioExportVideo(o){
    VideoEncoder в Chrome не умеет alpha:"keep", поэтому кодируем два VP8-потока с одинаковыми ключевыми кадрами:
    цвет и маску прозрачности (яркость = альфа), маску кладём в BlockAdditional (webm-muxer с правкой NEON).
    Так пишет и сам Chrome (MediaRecorder): ролик с прозрачностью играет в браузерах, OBS, After Effects (VP8 alpha). */
-async function studioLoadScript(src){if(document.querySelector(`script[data-src="${src}"]`))return;await new Promise((ok,no)=>{const s=document.createElement("script");s.src=src;s.dataset.src=src;s.onload=ok;s.onerror=()=>no(new Error("не загрузился "+src));document.head.append(s)})}
 async function studioExportWebm(o){o=o||{};const d0=o.design||studioDesign(),d={...d0,bg:{type:"none"}},F=STUDIO_FMT[d.format]||STUDIO_FMT.square;
   if(!window.VideoEncoder){toast("Браузер не умеет собирать видео — откройте в свежем Chrome, Edge или Яндекс Браузере",{tone:"warning"});return}
   const TL=studioTimeline(d);if(!TL){toast("Сначала добавьте анимацию — «Анимировать всё» или у элементов",{tone:"warning"});return}
@@ -14131,11 +14130,25 @@ function studioInlineEdit(layerEl,l){
     studioPatchLayerDom(l);studioRenderSidebar(document)};
   const onBlur=()=>setTimeout(()=>{if(bar.contains(document.activeElement)||bar._busy)return;finish(true)},0);
   const onKey=e=>{e.stopPropagation();if(e.key==="Escape"){e.preventDefault();finish(false)}else if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();t.blur()}
+    else if(e.altKey&&!e.ctrlKey&&(e.key==="ArrowLeft"||e.key==="ArrowRight")){e.preventDefault();bar._kern((e.key==="ArrowRight"?1:-1)*(e.shiftKey?0.05:0.01))}
     else if((e.ctrlKey||e.metaKey)&&!e.altKey&&["b","i","u","и","ш","г"].includes(e.key.toLowerCase())){e.preventDefault();bar._apply({b:"w",и:"w",i:"i",ш:"i",u:"u",г:"u"}[e.key.toLowerCase()])}};
   const onPaste=e=>{e.preventDefault();const tx=(e.clipboardData||window.clipboardData).getData("text/plain");document.execCommand("insertText",false,tx)};
   t.addEventListener("blur",onBlur);t.addEventListener("keydown",onKey);t.addEventListener("paste",onPaste);
   bar._finish=finish;
 }
+/* панель глифов: типографские знаки + все символы текущего шрифта (cmap из opentype.js), вставка в позицию курсора */
+const STUDIO_TYPO="«»„“”‘’—–…№₽€$£¥©®™°±×÷≈≠≤≥∞→←↑↓↔✓✗•·½¼¾²³‰§¶†★☆♥♦♠♣✔✘❤⚡☎✉⌚☀☂";
+async function studioGlyphPanel(bar,l){let pop=document.querySelector(".stud-glyphs");if(pop){pop.remove();return}
+  pop=document.createElement("div");pop.className="stud-glyphs";const fam=studioFontOf(l);
+  pop.innerHTML=`<div class="sg-t">Знаки</div><div class="sg-g" style="font-family:'${esc(fam)}'">${[...STUDIO_TYPO].map(c=>`<button type="button" data-g="${esc(c)}">${esc(c)}</button>`).join("")}</div><div class="sg-t">Символы шрифта «${esc(fam)}»</div><div class="sg-g" data-sgfont style="font-family:'${esc(fam)}'"><span class="muted" style="font-size:12px">Загружаю…</span></div>`;
+  document.body.append(pop);const r=bar.getBoundingClientRect();pop.style.left=Math.max(8,Math.min(innerWidth-pop.offsetWidth-8,r.left))+"px";pop.style.top=(r.bottom+6)+"px";
+  pop.addEventListener("mousedown",e=>e.preventDefault());pop.addEventListener("click",e=>{const b=e.target.closest("[data-g]");if(b)document.execCommand("insertText",false,b.dataset.g)});
+  const close=e=>{if(!pop.isConnected){document.removeEventListener("mousedown",close,true);return}if(!pop.contains(e.target)&&!bar.contains(e.target)){pop.remove();document.removeEventListener("mousedown",close,true)}};document.addEventListener("mousedown",close,true);
+  try{await studioLoadScript("vendor/opentype-1.3.4.min.js","https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js");const set=new Set();
+    for(const sub of ["latin","cyrillic","latin-ext"]){const f=await studioOtFont(fam,l.weight||700,sub);if(f&&f.tables&&f.tables.cmap)Object.keys(f.tables.cmap.glyphIndexMap).forEach(u=>{u=+u;if(u>32&&!(u>=127&&u<160)&&!(u>=0xE000&&u<0xF900))set.add(u)})}
+    const box=pop.querySelector("[data-sgfont]");if(!box)return;const L=[...set].sort((a,b)=>a-b).slice(0,1200);
+    box.innerHTML=L.length?L.map(u=>{const c=String.fromCodePoint(u);return`<button type="button" data-g="${esc(c)}" title="U+${u.toString(16).toUpperCase().padStart(4,"0")}">${esc(c)}</button>`}).join(""):'<span class="muted" style="font-size:12px">Для этого шрифта список недоступен (свой шрифт или нет в Fontsource)</span>'}
+  catch(e){const box=pop.querySelector("[data-sgfont]");if(box)box.innerHTML='<span class="muted" style="font-size:12px">Не удалось прочитать шрифт</span>'}}
 function studioRtOffsets(t){const sel=getSelection();if(!sel.rangeCount)return null;const rg=sel.getRangeAt(0);if(!t.contains(rg.startContainer)||!t.contains(rg.endContainer))return null;
   const len=(node,off)=>{const p=document.createRange();p.setStart(t,0);p.setEnd(node,off);const d=document.createElement("div");d.append(p.cloneContents());return studioRunsFromDom(d,true).text.length};
   return[len(rg.startContainer,rg.startOffset),len(rg.endContainer,rg.endOffset)]}
@@ -14143,23 +14156,30 @@ function studioRtSelect(t,a,b){let n=0,sa=null,sb=null;const walk=nd=>{for(const
   const r=document.createRange();if(sa)r.setStart(...sa);else r.setStart(t,t.childNodes.length);if(sb)r.setEnd(...sb);else r.setEnd(t,t.childNodes.length);const s=getSelection();s.removeAllRanges();s.addRange(r)}
 function studioRtBar(t,l,layerEl){document.querySelectorAll(".stud-rtbar").forEach(x=>x.remove());const bar=document.createElement("div");bar.className="stud-rtbar";bar.setAttribute("role","toolbar");bar.setAttribute("aria-label","Стиль выделенного фрагмента");
   const cols=[...new Set([...(S.studio.brand&&S.studio.brand.colors||[]),"#e11d48","#f59e0b","#16a34a","#2563eb","#7c3aed","#111827","#ffffff"])].slice(0,10);
-  bar.innerHTML=`<button type="button" data-rt="w" data-tip="Жирный (Ctrl+B)"><b>Ж</b></button><button type="button" data-rt="i" data-tip="Курсив (Ctrl+I)"><i>К</i></button><button type="button" data-rt="u" data-tip="Подчёркнутый (Ctrl+U)"><u>Ч</u></button><button type="button" data-rt="x" data-tip="Зачёркнутый"><s>З</s></button><span class="sep"></span>${cols.map(c=>`<button type="button" class="sw" data-rtc="${c}" style="background:${c}" data-tip="Цвет фрагмента ${c}"></button>`).join("")}<label class="sw pick" data-tip="Свой цвет">${ic("pipette",13)}<input type="color" data-rtpick value="${esc(studioHex6(l.color||"#000000"))}"></label><button type="button" data-rt="reset" data-tip="Убрать стили фрагмента">${ic("eraser",14)}</button>`;
+  bar.innerHTML=`<button type="button" data-rt="w" data-tip="Жирный (Ctrl+B)"><b>Ж</b></button><button type="button" data-rt="i" data-tip="Курсив (Ctrl+I)"><i>К</i></button><button type="button" data-rt="u" data-tip="Подчёркнутый (Ctrl+U)"><u>Ч</u></button><button type="button" data-rt="x" data-tip="Зачёркнутый"><s>З</s></button><span class="sep"></span>${cols.map(c=>`<button type="button" class="sw" data-rtc="${c}" style="background:${c}" data-tip="Цвет фрагмента ${c}"></button>`).join("")}<label class="sw pick" data-tip="Свой цвет">${ic("pipette",13)}<input type="color" data-rtpick value="${esc(studioHex6(l.color||"#000000"))}"></label><span class="sep"></span><button type="button" data-rtk="-1" data-tip="Плотнее: пара букв у курсора или выделение (Alt+←, с Shift — сильнее)">${ic("chevrons-right-left",14)}</button><button type="button" data-rtk="1" data-tip="Свободнее (Alt+→)">${ic("chevrons-left-right",14)}</button><button type="button" data-rt="glyphs" data-tip="Глифы и спецсимволы">Ω</button><button type="button" data-rt="reset" data-tip="Убрать стили фрагмента">${ic("eraser",14)}</button>`;
   document.body.append(bar);const place=()=>{const r=layerEl.getBoundingClientRect(),bw=bar.offsetWidth;bar.style.left=Math.max(8,Math.min(innerWidth-bw-8,r.left+r.width/2-bw/2))+"px";bar.style.top=Math.max(8,r.top-bar.offsetHeight-10)+"px"};place();
   let saved=null;const remember=()=>{const o=studioRtOffsets(t);if(o)saved=o};document.addEventListener("selectionchange",remember);
   const apply=(k,val)=>{const o=studioRtOffsets(t)||saved;if(!o||o[0]===o[1]){toast("Выделите часть текста",{tone:"warning"});return}const[a,b]=o;
     const R=studioRunsFromDom(t),v=R.text;l.text=v;l.runs=studioRunsNorm(R.runs,v.length,l);l.runsT=v;
     const segs=studioRunSegs(studioRunsOf(l)||[],a,b),base=+String(l.weight||"700");let patch;
     if(k==="w"){const all=segs.every(g=>+String(g.st.w||base)>=600);patch={w:all?(base>=600?"400":null):(base>=600?null:"800")}}
-    else if(k==="reset")patch={c:null,w:null,i:null,u:null,x:null};
+    else if(k==="reset")patch={c:null,w:null,i:null,u:null,x:null,k:null};
+    else if(k==="glyphs")return;
     else if(k==="c")patch={c:val};
     else{const all=segs.every(g=>g.st[k]);patch={[k]:all?null:true}}
     studioRunsApply(l,a,b,patch);t.innerHTML=studioRunsBlock(l);t.focus();studioRtSelect(t,a,b);saved=[a,b]};
   bar._apply=apply;
+  /* кернинг пары (курсор между буквами) или трекинг выделения: k — добавка к разрядке в em, у каждой буквы своя */
+  const kern=delta=>{const o=studioRtOffsets(t)||saved;if(!o)return;let[a,b]=o;const col=a===b;if(col){if(a<1)return;a=a-1}const R=studioRunsFromDom(t),v=R.text;l.text=v;l.runs=studioRunsNorm(R.runs,v.length,l);l.runsT=v;
+    for(const g of studioRunSegs(studioRunsOf(l)||[],a,col?a+1:b)){const nk=Math.round(((+g.st.k||0)+delta)*1000)/1000;studioRunsApply(l,g.a,g.b,{k:nk||null})}
+    t.innerHTML=studioRunsBlock(l);t.focus();if(col)studioRtSelect(t,a+1,a+1);else studioRtSelect(t,a,b);saved=col?[a+1,a+1]:[a,b]};
+  bar._kern=kern;
+  bar.addEventListener("click",e=>{const k=e.target.closest("[data-rtk]");if(k)kern(+k.dataset.rtk*(e.shiftKey?0.05:0.01));if(e.target.closest('[data-rt="glyphs"]'))studioGlyphPanel(bar,l)});
   bar.addEventListener("mousedown",e=>{if(!e.target.closest("[data-rtpick],label.pick"))e.preventDefault()});
   bar.addEventListener("click",e=>{const b=e.target.closest("[data-rt]"),c=e.target.closest("[data-rtc]");if(b)apply(b.dataset.rt);else if(c)apply("c",c.dataset.rtc)});
   const pick=bar.querySelector("[data-rtpick]");pick.addEventListener("pointerdown",()=>{bar._busy=true});pick.addEventListener("input",e=>{bar._busy=true;apply("c",e.target.value);bar._busy=true});
   pick.addEventListener("change",()=>{bar._busy=false;t.focus();if(saved)studioRtSelect(t,...saved)});
-  const rm=bar.remove.bind(bar);bar.remove=()=>{document.removeEventListener("selectionchange",remember);rm()};
+  const rm=bar.remove.bind(bar);bar.remove=()=>{document.removeEventListener("selectionchange",remember);const gp=document.querySelector(".stud-glyphs");if(gp)gp.remove();rm()};
   return bar}
 let studioClipboard=null;
 function studioSelIds(){const d=studioDesign();return studioMultiSel.length?studioMultiSel.slice():d.selectedId?[d.selectedId]:[]}
