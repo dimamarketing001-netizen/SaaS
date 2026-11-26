@@ -1806,6 +1806,9 @@ nv-settings-row:first-child .sr-r,.card-b>nv-settings-row:first-child .sr-r{bord
 body[data-cb="prot"] .stud-stage{filter:url(#neon-cb-prot)}body[data-cb="deut"] .stud-stage{filter:url(#neon-cb-deut)}body[data-cb="trit"] .stud-stage{filter:url(#neon-cb-trit)}body[data-cb="gray"] .stud-stage{filter:url(#neon-cb-gray)}
 body[data-cb] #stud-stage-host{position:relative}body[data-cb] #stud-stage-host::before{position:absolute;left:10px;top:10px;z-index:5;padding:3px 10px;border-radius:999px;background:var(--ink);color:var(--surface);font-size:11.5px;pointer-events:none}
 body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}body[data-cb="deut"] #stud-stage-host::before{content:"Дейтеранопия"}body[data-cb="trit"] #stud-stage-host::before{content:"Тританопия"}body[data-cb="gray"] #stud-stage-host::before{content:"Оттенки серого"}
+.h5-sizes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.h5-sizes button{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:64px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink-2);font:11px var(--font-mono,monospace);cursor:pointer;padding:4px}
+.h5-sizes button i{display:block;max-width:44px;max-height:36px;border:1.5px solid currentColor;border-radius:2px}.h5-sizes button.on{border-color:var(--svc-ink);color:var(--svc-ink);background:var(--svc-soft,transparent)}
+.h5-res{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;padding:8px 10px;border-radius:10px;border:1px solid var(--line)}.h5-res.ok{color:var(--ok,#15803d)}.h5-res.bad{color:var(--danger,#e11d48)}
 .s2-favable{position:relative}.s2-fav{position:absolute;left:2px;top:2px;width:18px;height:18px;display:grid;place-items:center;border-radius:5px;font-size:13px;line-height:1;color:#f59e0b;background:color-mix(in srgb,var(--surface) 88%,transparent);opacity:0;transition:opacity .12s;cursor:pointer;z-index:2;font-style:normal;text-indent:0}
 .s2-favable:hover>.s2-fav,.s2-fav.on{opacity:1}.s2-fav:hover{transform:scale(1.15)}
 .s2-fav-empty{text-align:center;color:var(--ink-3);padding:24px 8px;font-size:12.5px;line-height:1.45}.s2-fav-empty p{margin:8px 0 0}
@@ -10852,10 +10855,70 @@ function studioMenu(x,y,items){
   setTimeout(()=>document.addEventListener("mousedown",out,true));
   m.addEventListener("click",e=>{const b=e.target.closest("[data-i]");if(!b)return;close();items[+b.dataset.i][2]()});
 }
+/* ---------- v10 (26.11.2026): HTML5-баннер для РСЯ / медийки (по требованиям Яндекс Директа) ----------
+   Дизайн подгоняется под размер баннера (studioRefit на временном формате), слои режутся на картинки:
+   фон + подряд идущие статичные слои — одной картинкой, каждый анимированный слой — своей (обрезка по
+   непрозрачным пикселям). Анимация — CSS keyframes с теми же формулами, что в видео (studioAnimIn).
+   Клик: <a id="click_area" target="_blank"> + yandexHTML5BannerApi.getClickURLNum(1), для Google — clickTag.
+   Лимиты Яндекса: архив ≤ 512 КБ, index.html < 150 КБ, файлов ≤ 20, имена латиницей. */
+const STUDIO_H5_SIZES=[[240,400],[300,250],[300,600],[160,600],[240,600],[300,300],[300,500],[320,50],[320,100],[320,480],[336,280],[480,320],[728,90],[970,250],[1000,120]];
+function studioH5Crop(c,skip){const g=c.getContext("2d"),W=c.width,H=c.height;if(skip)return{x:0,y:0,w:W,h:H,c};const d=g.getImageData(0,0,W,H).data;let x0=W,y0=H,x1=-1,y1=-1;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(d[(y*W+x)*4+3]>2){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
+  if(x1<0)return null;const o=document.createElement("canvas");o.width=x1-x0+1;o.height=y1-y0+1;o.getContext("2d").drawImage(c,-x0,-y0);return{x:x0,y:y0,w:o.width,h:o.height,c:o}}
+function studioH5Anim(l,i,bx,by,W,H,len){const a=l.anim||{};let ty=a.type||"none";if(/^(type|words|chars)$/.test(ty))ty="fade";
+  const dl=+a.delay||0,du=Math.max(0.1,+a.dur||0.6),ox=((l.x+l.w/2)/100*W-bx).toFixed(1),oy=((l.y+l.h/2)/100*H-by).toFixed(1),ez="cubic-bezier(.33,1,.68,1)";
+  const K={fade:"from{opacity:0}to{opacity:1}",up:`from{opacity:0;transform:translateY(${(0.08*H).toFixed(1)}px)}to{opacity:1;transform:none}`,left:`from{opacity:0;transform:translateX(${(-0.1*W).toFixed(1)}px)}to{opacity:1;transform:none}`,
+    right:`from{opacity:0;transform:translateX(${(0.1*W).toFixed(1)}px)}to{opacity:1;transform:none}`,zoom:"from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}",
+    pop:"0%{opacity:0;transform:scale(.5)}33%{opacity:1}70%{transform:scale(1.08)}100%{opacity:1;transform:none}",pulse:"from{opacity:0}50%{opacity:1}to{opacity:1}"}[ty];
+  const css=[],anims=[];if(K){css.push(`@keyframes a${i}{${K}}`);anims.push(`a${i} ${du}s ${ty==="pop"?"linear":ez} ${dl}s both`)}
+  if(ty==="pulse"){css.push(`@keyframes p${i}{0%,100%{transform:none}50%{transform:scale(1.05)}}`);anims.push(`p${i} .9s ease-in-out ${(dl+du).toFixed(2)}s infinite`)}
+  if(a.out&&len){const os=Math.max(0,len-0.65);css.push(`@keyframes o${i}{from{opacity:1;transform:none}to{opacity:0;transform:${a.out==="down"?`translateY(${(0.08*H).toFixed(1)}px)`:a.out==="zoom"?"scale(.7)":"none"}}}`);anims.push(`o${i} .5s ease-in ${os.toFixed(2)}s forwards`)}
+  return{css:css.join(""),anim:anims.join(","),origin:`${ox}px ${oy}px`}}
+async function studioHtml5Build(d0,w,h,url,scale){const key="__h5";STUDIO_FMT[key]={w,h,label:"HTML5"};
+  try{const d=studioRefit(JSON.parse(JSON.stringify({...d0,pages:undefined})),key);d.format=key;await studioFontsReady(d);d.layers.forEach(l=>{if(l.type==="text"&&!l.hidden)studioFitText(l,d)});
+    const isA=l=>!!(l.anim&&((l.anim.type&&l.anim.type!=="none")||l.anim.out)),vis=d.layers.filter(l=>!l.hidden),chunks=[];
+    chunks.push({bg:true,layers:[]});for(const l of vis){const last=chunks[chunks.length-1];if(isA(l))chunks.push({anim:l,layers:[l]});else if(last.anim||!last.layers)chunks.push({layers:[l]});else last.layers.push(l)}
+    if(chunks.length>19)throw new Error(`слишком много анимированных элементов (${chunks.length} картинок, можно до 19) — объедините часть`);
+    const files=[],items=[],css=[],len=d.animLen||5,enc=new TextEncoder();let n=0;
+    for(const[ci,ch]of chunks.entries()){const c=await studioRenderCanvas({...d,bg:ch.bg?d.bg:{type:"none"},layers:ch.layers},scale);
+      const cr=studioH5Crop(c,ch.bg);if(!cr)continue;const jpg=ch.bg,name=ch.bg?"bg.jpg":`l${++n}.png`;
+      const blob=await new Promise(r=>cr.c.toBlob(r,jpg?"image/jpeg":"image/png",jpg?0.86:undefined));files.push({name,data:new Uint8Array(await blob.arrayBuffer())});
+      const bx=cr.x/scale,by=cr.y/scale,bw=cr.w/scale,bh=cr.h/scale,alt=ch.layers.map(l=>l.type==="text"?l.text:l.alt||"").filter(Boolean).join(" ").replace(/\s+/g," ").slice(0,160);
+      let st=`left:${bx.toFixed(1)}px;top:${by.toFixed(1)}px;width:${bw.toFixed(1)}px;height:${bh.toFixed(1)}px`;
+      if(ch.anim){const A=studioH5Anim(ch.anim,ci,bx,by,w,h,len);css.push(A.css);if(A.anim)st+=`;animation:${A.anim};transform-origin:${A.origin}`}
+      items.push(`<img src="${name}" alt="${esc(alt)}" style="${st}">`)}
+    const title=(vis.find(l=>l.type==="text"&&l.role==="headline")||vis.find(l=>l.type==="text")||{}).text||d0.name||"Реклама";
+    const html=`<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="ad.size" content="width=${w},height=${h}"><meta name="viewport" content="width=${w},height=${h}"><title>${esc(String(title).replace(/\s+/g," ").slice(0,80))}</title>
+<script>var clickTag=${JSON.stringify(url||"")};<\/script>
+<style>html,body{margin:0;padding:0;overflow:hidden;background:transparent}#b{position:relative;width:${w}px;height:${h}px;overflow:hidden}#b img{position:absolute;display:block;max-width:none}#click_area{position:absolute;inset:0;z-index:9;display:block}${css.join("")}@media (prefers-reduced-motion:reduce){#b img{animation:none!important}}</style></head>
+<body><div id="b">${items.join("")}<a id="click_area" href="#" target="_blank" aria-label="${esc(String(title).replace(/\s+/g," ").slice(0,120))}"></a></div>
+<script>(function(){var a=document.getElementById("click_area");try{if(window.yandexHTML5BannerApi&&yandexHTML5BannerApi.getClickURLNum){a.href=yandexHTML5BannerApi.getClickURLNum(1)}else if(clickTag){a.href=clickTag}}catch(e){if(clickTag)a.href=clickTag}})();<\/script></body></html>`;
+    files.unshift({name:"index.html",data:enc.encode(html)});
+    return{zip:studioZip(files),files,html}}finally{delete STUDIO_FMT[key]}}
+function studioHtml5Dlg(){const d=studioDesign();studioPagesSync(d);const F=STUDIO_FMT[d.format]||STUDIO_FMT.square,r0=F.w/F.h;
+  const best=STUDIO_H5_SIZES.slice().sort((a,b)=>Math.abs(Math.log(a[0]/a[1]/r0))-Math.abs(Math.log(b[0]/b[1]/r0)))[0];let cur=best.join("x");
+  const anim=d.layers.some(l=>l.anim&&l.anim.type&&l.anim.type!=="none");
+  const {root}=overlay("modal",{title:"HTML5-баннер",subtitle:"ZIP по требованиям Яндекс Директа (РСЯ, медийка) и Google Ads: index.html, картинки, анимация CSS",service:"studio",size:"md",
+    body:`<div class="stack" style="gap:10px"><div class="pp-l">Размер баннера</div><div class="h5-sizes">${STUDIO_H5_SIZES.map(([w,h])=>{const k=w+"x"+h,rr=w/h;return`<button type="button" data-h5s="${k}" class="${k===cur?"on":""}"><i style="aspect-ratio:${w}/${h};${rr>=1?"width:34px":"height:34px"}"></i><span>${w}×${h}</span></button>`}).join("")}</div>
+      <p class="pp-hint">Ближе всего к пропорциям дизайна — ${best[0]}×${best[1]}. Для сильно отличающихся размеров элементы переставятся автоматически — проверьте результат.</p>
+      <nv-input label="Ссылка на сайт (для Google — clickTag; Яндекс подставит свою)" data-h5url placeholder="https://"></nv-input>
+      <label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-h5hd checked> Чёткость ×2 для экранов Retina (файлы тяжелее)</label>
+      ${anim?"":'<p class="pp-hint" style="color:var(--warn,#b45309)">В дизайне нет анимации — баннер будет статичным. Добавьте её во вкладке «Анимация» или кнопкой «Анимировать всё».</p>'}<div data-h5out></div></div>`,
+    actions:[{label:"Закрыть"},{label:"Скачать ZIP",variant:"primary",icon:"download",fn:()=>{go();return false}}]});
+  root.addEventListener("click",e=>{const b=e.target.closest("[data-h5s]");if(!b)return;cur=b.dataset.h5s;root.querySelectorAll("[data-h5s]").forEach(x=>x.classList.toggle("on",x===b))});
+  const out=root.querySelector("[data-h5out]");
+  const go=async()=>{const[w,h]=cur.split("x").map(Number),ui=root.querySelector("[data-h5url] input"),url=(ui&&ui.value||"").trim(),hd=root.querySelector("[data-h5hd]").checked;
+    out.innerHTML='<p class="muted">Собираю баннер…</p>';
+    try{let r=await studioHtml5Build(d,w,h,url,hd?2:1),sz=r.zip.size,note="";
+      if(hd&&sz>512*1024){r=await studioHtml5Build(d,w,h,url,1);sz=r.zip.size;note=" Чёткость ×2 не влезла в 512 КБ — собрано в обычной."}
+      const hs=r.files[0].data.length,ok=sz<=512*1024&&hs<150*1024&&r.files.length<=20;
+      studioDownload(r.zip,(d.name||"banner").replace(/[^A-Za-z0-9._~-]+/g,"_").replace(/^_+|_+$/g,"").slice(0,40)+`_${w}x${h}_html5.zip`);
+      out.innerHTML=`<div class="h5-res ${ok?"ok":"bad"}">${ic(ok?"check-circle-2":"alert-triangle",16)}<span>Архив ${Math.round(sz/1024)} КБ (лимит 512), index.html ${Math.round(hs/1024)} КБ (лимит 150), файлов ${r.files.length} (лимит 20).${note}${ok?" Подходит для загрузки в Директ.":" Превышен лимит — упростите дизайн или уберите тяжёлые фото."}</span></div>`}
+    catch(err){out.innerHTML=`<p class="pp-hint" style="color:var(--danger,#e11d48)">Не получилось: ${esc(err.message||String(err))}</p>`}}}
 function studioDownloadMenu(btn){
   const r=btn.getBoundingClientRect();
   const multi=studioPagesOf(studioDesign()).length>1;
-  studioMenu(r.left,r.bottom+4,[["Проверить макет…","поля, текст, фото, вес",studioCheckDesign],["Мокапы…","телефон, ноутбук, печать",studioMockups],"-",["PNG",multi?"текущая страница":"лучшее качество",()=>studioExport("png")],["JPEG","меньше файл",()=>studioExport("jpeg")],["PNG без фона","прозрачный",()=>studioExport("png-alpha")],["PNG ×2","высокое разрешение",()=>studioExport("scale:2")],["SVG","вектор",()=>studioExportSvg(false)],["Видео MP4","анимация",()=>studioExportVideo()],["GIF","анимация, до 640 px",()=>studioExportGif()],...(studioSelIds().length?[["Выделенное в PNG","без фона",()=>studioExportSelection()],["Выделенное в SVG","вектор",()=>studioExportSvg(true)]]:[]),["PNG нужной ширины…","",studioExportWidth],["JPEG до 1 МБ","сжать",()=>studioExportUnder(1024)],["JPEG до 300 КБ","для соцсетей",()=>studioExportUnder(300)],"-",
+  studioMenu(r.left,r.bottom+4,[["Проверить макет…","поля, текст, фото, вес",studioCheckDesign],["Мокапы…","телефон, ноутбук, печать",studioMockups],"-",["PNG",multi?"текущая страница":"лучшее качество",()=>studioExport("png")],["JPEG","меньше файл",()=>studioExport("jpeg")],["PNG без фона","прозрачный",()=>studioExport("png-alpha")],["PNG ×2","высокое разрешение",()=>studioExport("scale:2")],["SVG","вектор",()=>studioExportSvg(false)],["Видео MP4","анимация",()=>studioExportVideo()],["GIF","анимация, до 640 px",()=>studioExportGif()],["HTML5-баннер…","РСЯ и медийка, zip",studioHtml5Dlg],...(studioSelIds().length?[["Выделенное в PNG","без фона",()=>studioExportSelection()],["Выделенное в SVG","вектор",()=>studioExportSvg(true)]]:[]),["PNG нужной ширины…","",studioExportWidth],["JPEG до 1 МБ","сжать",()=>studioExportUnder(1024)],["JPEG до 300 КБ","для соцсетей",()=>studioExportUnder(300)],"-",
     ["PDF",multi?"все страницы":"для печати",()=>studioExportPages("pdf")],["PDF для типографии","вылеты и метки реза",studioPrintDlg],["PDF векторный","фигуры и текст кривыми",studioVectorPdf],["ZIP",multi?"все страницы PNG":"PNG в архиве",()=>studioExportPages("zip")],["Все форматы","PNG пачкой",studioExportAll],"-",["В рекламу…","в проект Директа",studioToAds]]);
 }
 function studioMoreMenu(btn){
