@@ -11231,7 +11231,7 @@ function studioDownloadMenu(btn){
   {const R=studioReviewOf(studioDesign());if(R.st==="review"||R.st==="changes")toast(R.st==="review"?"Дизайн ещё на согласовании — финальную версию лучше скачивать после «Утверждено»":"По дизайну просили правки — проверьте комментарии перед скачиванием",{tone:"warning",timeout:6000})}
   const r=btn.getBoundingClientRect();
   const multi=studioPagesOf(studioDesign()).length>1;
-  studioMenu(r.left,r.bottom+4,[["Проверить макет…","поля, текст, фото, вес",studioCheckDesign],["Мокапы…","телефон, ноутбук, печать",studioMockups],"-",["PNG",multi?"текущая страница":"лучшее качество",()=>studioExport("png")],["JPEG","меньше файл",()=>studioExport("jpeg")],["PNG без фона","прозрачный",()=>studioExport("png-alpha")],["PNG ×2","высокое разрешение",()=>studioExport("scale:2")],["SVG","вектор",()=>studioExportSvg(false)],["Видео MP4","анимация",()=>studioExportVideo()],["GIF","анимация, до 640 px",()=>studioExportGif()],["HTML5-баннер…","РСЯ и медийка, zip",studioHtml5Dlg],...(studioSelIds().length?[["Выделенное в PNG","без фона",()=>studioExportSelection()],["Выделенное в SVG","вектор",()=>studioExportSvg(true)]]:[]),["PNG нужной ширины…","",studioExportWidth],["JPEG до 1 МБ","сжать",()=>studioExportUnder(1024)],["JPEG до 300 КБ","для соцсетей",()=>studioExportUnder(300)],"-",
+  studioMenu(r.left,r.bottom+4,[["Проверить макет…","поля, текст, фото, вес",studioCheckDesign],["Мокапы…","телефон, ноутбук, печать",studioMockups],"-",["PNG",multi?"текущая страница":"лучшее качество",()=>studioExport("png")],["JPEG","меньше файл",()=>studioExport("jpeg")],["PNG без фона","прозрачный",()=>studioExport("png-alpha")],["PNG ×2","высокое разрешение",()=>studioExport("scale:2")],["SVG","вектор",()=>studioExportSvg(false)],["Видео MP4","анимация",()=>studioExportVideo()],["GIF","анимация, до 640 px",()=>studioExportGif()],["HTML5-баннер…","РСЯ и медийка, zip",studioHtml5Dlg],["WebM прозрачный","анимация без фона",()=>studioExportWebm()],["Lottie (JSON)…","анимация для сайта и приложений",studioLottieDlg],...(studioSelIds().length?[["Выделенное в PNG","без фона",()=>studioExportSelection()],["Выделенное в SVG","вектор",()=>studioExportSvg(true)]]:[]),["PNG нужной ширины…","",studioExportWidth],["JPEG до 1 МБ","сжать",()=>studioExportUnder(1024)],["JPEG до 300 КБ","для соцсетей",()=>studioExportUnder(300)],"-",
     ["PDF",multi?"все страницы":"для печати",()=>studioExportPages("pdf")],["PDF для типографии","вылеты и метки реза",studioPrintDlg],["PDF векторный","фигуры и текст кривыми",studioVectorPdf],["PowerPoint (PPTX)","тексты редактируются",studioPptx],["ZIP",multi?"все страницы PNG":"PNG в архиве",()=>studioExportPages("zip")],["Все форматы","PNG пачкой",studioExportAll],"-",["В рекламу…","в проект Директа",studioToAds]]);
 }
 function studioMoreMenu(btn){
@@ -12705,6 +12705,64 @@ async function studioExportVideo(o){
   }catch(e){toast("Не удалось собрать видео: "+(e.message||e),{tone:"danger"})}
   finally{studioImgCache=null;try{enc.close()}catch(e){}bar.remove()}
 }
+/* ---------- v11 (26.11.2026): WebM с прозрачностью ----------
+   VideoEncoder в Chrome не умеет alpha:"keep", поэтому кодируем два VP8-потока с одинаковыми ключевыми кадрами:
+   цвет и маску прозрачности (яркость = альфа), маску кладём в BlockAdditional (webm-muxer с правкой NEON).
+   Так пишет и сам Chrome (MediaRecorder): ролик с прозрачностью играет в браузерах, OBS, After Effects (VP8 alpha). */
+async function studioLoadScript(src){if(document.querySelector(`script[data-src="${src}"]`))return;await new Promise((ok,no)=>{const s=document.createElement("script");s.src=src;s.dataset.src=src;s.onload=ok;s.onerror=()=>no(new Error("не загрузился "+src));document.head.append(s)})}
+async function studioExportWebm(o){o=o||{};const d0=o.design||studioDesign(),d={...d0,bg:{type:"none"}},F=STUDIO_FMT[d.format]||STUDIO_FMT.square;
+  if(!window.VideoEncoder){toast("Браузер не умеет собирать видео — откройте в свежем Chrome, Edge или Яндекс Браузере",{tone:"warning"});return}
+  const TL=studioTimeline(d);if(!TL){toast("Сначала добавьте анимацию — «Анимировать всё» или у элементов",{tone:"warning"});return}
+  try{await studioLoadScript("vendor/webm-muxer-5.1.3.js")}catch(e){toast(e.message,{tone:"danger"});return}
+  const sc=Math.min(1,1280/Math.max(F.w,F.h)),W=Math.round(F.w*sc/2)*2,H=Math.round(F.h*sc/2)*2,fps=30,len=TL.len,N2=Math.round(len*fps),cfg={codec:"vp8",width:W,height:H,bitrate:6e6,framerate:fps};
+  const ok=await VideoEncoder.isConfigSupported(cfg).catch(()=>({supported:false}));if(!ok.supported){toast("Кодек VP8 недоступен в этом браузере",{tone:"danger"});return}
+  const bar=document.createElement("div");bar.className="vid-prog";bar.innerHTML=`<b>Собираю WebM с прозрачностью…</b><i><span></span></i><small>0 / ${N2}</small>`;document.body.append(bar);
+  const A=[],B=[];let failed=null,meta0=null;
+  const encA=new VideoEncoder({output:(ch,meta)=>{const u=new Uint8Array(ch.byteLength);ch.copyTo(u);A.push({u,type:ch.type,ts:ch.timestamp});if(meta&&meta.decoderConfig&&!meta0)meta0=meta},error:e=>{failed=e}});
+  const encB=new VideoEncoder({output:ch=>{const u=new Uint8Array(ch.byteLength);ch.copyTo(u);B.push(u)},error:e=>{failed=e}});
+  encA.configure(cfg);encB.configure(cfg);
+  const out=document.createElement("canvas");out.width=W;out.height=H;const octx=out.getContext("2d",{willReadFrequently:true}),msk=document.createElement("canvas");msk.width=W;msk.height=H;const mctx=msk.getContext("2d");
+  studioImgCache=new Map();
+  try{for(let i=0;i<N2&&!failed;i++){const c=await TL.frame(i/fps,sc);octx.clearRect(0,0,W,H);octx.drawImage(c,0,0,W,H);
+      const im=octx.getImageData(0,0,W,H),px=im.data;for(let k=0;k<px.length;k+=4){const a=px[k+3];px[k]=px[k+1]=px[k+2]=a;px[k+3]=255}mctx.putImageData(im,0,0);
+      const ts=Math.round(i*1e6/fps),key=i%(fps*2)===0,fa=new VideoFrame(out,{timestamp:ts,duration:Math.round(1e6/fps),alpha:"discard"}),fb=new VideoFrame(msk,{timestamp:ts,duration:Math.round(1e6/fps)});
+      encA.encode(fa,{keyFrame:key});encB.encode(fb,{keyFrame:key});fa.close();fb.close();
+      if(encA.encodeQueueSize>6||encB.encodeQueueSize>6)await new Promise(r=>setTimeout(r,10));
+      if(i%5===0){bar.querySelector("span").style.width=(i/N2*100)+"%";bar.querySelector("small").textContent=i+" / "+N2}}
+    await encA.flush();await encB.flush();if(failed)throw failed;if(A.length!==B.length)throw new Error("потоки цвета и прозрачности разошлись");
+    const muxer=new WebMMuxer.Muxer({target:new WebMMuxer.ArrayBufferTarget(),video:{codec:"V_VP8",width:W,height:H,frameRate:fps,alpha:true},firstTimestampBehavior:"offset"});
+    A.forEach((a,i)=>muxer.addVideoChunkRaw(a.u,a.type,a.ts,{...(i===0&&meta0?meta0:{}),alphaSideData:B[i]}));muxer.finalize();
+    const blob=new Blob([muxer.target.buffer],{type:"video/webm"});if(o.blob)return blob;
+    studioDownload(blob,(d0.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+"_"+W+"x"+H+"_alpha.webm");toast(`WebM с прозрачностью: ${(blob.size/1048576).toFixed(1)} МБ, ${len} с. Фон дизайна не включён`,{tone:"success"})}
+  catch(e){toast("Не удалось собрать WebM: "+(e.message||e),{tone:"danger"})}
+  finally{studioImgCache=null;try{encA.close();encB.close()}catch(e){}bar.remove()}}
+/* ---------- v11: Lottie (JSON, bodymovin 5.7) ----------
+   Как HTML5-баннер: фон + статичные слои подряд — одной картинкой, каждый анимированный слой — своей (PNG внутри
+   JSON), анимация — ключевые кадры прозрачности/позиции/масштаба по тем же формулам, что видео и HTML5. */
+function studioLottieKf(frames){/* frames: [[t,value[]]...] → анимированное свойство с плавным выходом (cubic-bezier .33,1,.68,1) */
+  if(frames.length<2)return{a:0,k:frames[0][1]};return{a:1,k:frames.map(([t,v],i)=>i<frames.length-1?{t,s:v,o:{x:[0.33],y:[1]},i:{x:[0.68],y:[1]}}:{t,s:v})}}
+async function studioLottieBuild(d0,withBg){const F=studioFmtOf(d0),sc=Math.min(1,1080/Math.max(F.w,F.h)),W=Math.round(F.w*sc),H=Math.round(F.h*sc),fps=30,d=JSON.parse(JSON.stringify({...d0,pages:undefined}));
+  await studioFontsReady(d);const len=d.animLen||5,N=Math.round(len*fps),isA=l=>!!(l.anim&&((l.anim.type&&l.anim.type!=="none")||l.anim.out)),vis=d.layers.filter(l=>!l.hidden),chunks=[{bg:true,layers:[]}];
+  for(const l of vis){const last=chunks[chunks.length-1];if(isA(l))chunks.push({anim:l,layers:[l]});else if(last.anim)chunks.push({layers:[l]});else last.layers.push(l)}
+  const assets=[],layers=[];let n=0;
+  for(const ch of chunks){const c=await studioRenderCanvas({...d,bg:ch.bg&&withBg?d.bg:{type:"none"},layers:ch.layers},sc),cr=studioH5Crop(c,false);if(!cr)continue;const id="img_"+(n++);
+    assets.push({id,w:cr.w,h:cr.h,u:"",p:cr.c.toDataURL("image/png"),e:1});
+    const l=ch.anim,cx=l?(l.x+l.w/2)/100*W:cr.x+cr.w/2,cy=l?(l.y+l.h/2)/100*H:cr.y+cr.h/2,ks={o:{a:0,k:100},r:{a:0,k:0},p:{a:0,k:[cx,cy,0]},a:{a:0,k:[cx-cr.x,cy-cr.y,0]},s:{a:0,k:[100,100,100]}};
+    if(l){const a=l.anim;let ty=a.type||"none";if(/^(type|words|chars)$/.test(ty))ty="fade";const dl=(+a.delay||0)*fps,du=Math.max(0.1,+a.dur||0.6)*fps,f0=Math.round(dl),f1=Math.round(dl+du);
+      const O=[],P=[],S=[];
+      if(ty!=="none"){O.push([0,[0]],[f0,[0]],[ty==="pop"?Math.round(dl+du/3):ty==="pulse"?Math.round(dl+du/2):f1,[100]]);
+        if(ty==="up")P.push([0,[cx,cy+0.08*H,0]],[f0,[cx,cy+0.08*H,0]],[f1,[cx,cy,0]]);if(ty==="left")P.push([0,[cx-0.1*W,cy,0]],[f0,[cx-0.1*W,cy,0]],[f1,[cx,cy,0]]);if(ty==="right")P.push([0,[cx+0.1*W,cy,0]],[f0,[cx+0.1*W,cy,0]],[f1,[cx,cy,0]]);
+        if(ty==="zoom")S.push([0,[70,70,100]],[f0,[70,70,100]],[f1,[100,100,100]]);if(ty==="pop")S.push([0,[50,50,100]],[f0,[50,50,100]],[Math.round(dl+du*0.7),[108,108,100]],[f1,[100,100,100]]);
+        if(ty==="pulse"){S.push([0,[100,100,100]],[f1,[100,100,100]]);for(let t=f1+13.5,k=1;t<N;t+=13.5,k++)S.push([Math.round(t),k%2?[105,105,100]:[100,100,100]])}}
+      if(a.out){const os=Math.round((len-0.65)*fps),oe=Math.min(N,os+15);if(!O.length)O.push([0,[100]]);O.push([os,[100]],[oe,[0]]);if(a.out==="down"){if(!P.length)P.push([0,[cx,cy,0]]);P.push([os,[cx,cy,0]],[oe,[cx,cy+0.08*H,0]])}if(a.out==="zoom"){if(!S.length)S.push([0,[100,100,100]]);S.push([os,[100,100,100]],[oe,[70,70,100]])}}
+      const srt=A=>A.sort((x,y)=>x[0]-y[0]).filter((x,i,arr)=>!i||x[0]>arr[i-1][0]);if(O.length)ks.o=studioLottieKf(srt(O));if(P.length)ks.p=studioLottieKf(srt(P));if(S.length)ks.s=studioLottieKf(srt(S))}
+    layers.unshift({ddd:0,ind:0,ty:2,nm:l?(studioLayerLabel(l)||l.type):ch.bg?"Фон":"Статичные элементы",refId:id,sr:1,ks,ao:0,ip:0,op:N,st:0,bm:0})}
+  layers.forEach((x,i)=>x.ind=i+1);
+  return{v:"5.7.4",fr:fps,ip:0,op:N,w:W,h:H,nm:d0.name||"NEON",ddd:0,assets,layers,markers:[]}}
+function studioLottieDlg(){const d=studioDesign();studioPagesSync(d);const anim=d.layers.some(l=>l.anim&&l.anim.type&&l.anim.type!=="none");
+  overlay("modal",{title:"Lottie (JSON)",subtitle:"Анимация для сайтов, приложений и Telegram-ботов: один лёгкий JSON, играет lottie-web / LottieFiles / Android / iOS.",service:"studio",
+    body:`<div class="stack" style="gap:8px"><label class="pl-chk" style="border-radius:10px"><input type="checkbox" data-lt-bg checked><span>С фоном дизайна (снимите — будет прозрачная анимация поверх сайта)</span></label>${anim?"":'<p class="pp-hint" style="color:var(--warn,#b45309)">В дизайне нет анимации — получится статичная картинка в Lottie.</p>'}<p class="pp-hint">Картинки встроены в файл. Тексты — картинками, поэтому шрифты на стороне сайта не нужны.</p></div>`,
+    actions:[{label:"Отмена"},{label:"Скачать JSON",variant:"primary",icon:"download",fn:async r=>{try{const J=await studioLottieBuild(d,r.querySelector("[data-lt-bg]").checked),txt=JSON.stringify(J);studioDownload(new Blob([txt],{type:"application/json"}),(d.name||"design").replace(/[\\/:*?"<>|]+/g,"_")+"_lottie.json");toast(`Lottie: ${Math.round(txt.length/1024)} КБ, ${J.layers.length} слоёв, ${Math.round(J.op/J.fr*10)/10} с`,{tone:"success"})}catch(e){toast("Lottie не собрался: "+(e.message||e),{tone:"danger"})}}}]})}
 /* ---------- GIF из анимации: свой кодировщик (палитра median cut, дизеринг Байера, LZW, дельта-кадры) ---------- */
 function studioGifPalette(samples){
   /* samples: Uint8ClampedArray RGBA (несколько кадров подряд) → 255 цветов (индекс 255 — прозрачный) */
