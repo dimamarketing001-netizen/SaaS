@@ -1812,6 +1812,7 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 .vec-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}.vec-prev{width:100%;max-height:340px;border:1px solid var(--line);border-radius:10px;background:repeating-conic-gradient(#e5e7eb 0 25%,#fff 0 50%) 0 0/16px 16px;overflow:hidden}
 @media (max-width:640px){.vec-wrap{grid-template-columns:1fr}}
 .stl-rt{display:block;width:100%}
+.bk-feed{display:flex;gap:8px;align-items:center;margin:8px 0 4px;flex-wrap:wrap}.bk-feed-l{display:flex;gap:6px;align-items:center;font-size:13px;font-weight:600;white-space:nowrap}
 .stud-lgrid .lg-c{position:absolute;top:0;bottom:0;background:rgba(236,72,153,.10);border-left:1px solid rgba(236,72,153,.35);border-right:1px solid rgba(236,72,153,.35)}.stud-lgrid .lg-r{position:absolute;left:0;right:0;background:rgba(236,72,153,.07);border-top:1px solid rgba(236,72,153,.3);border-bottom:1px solid rgba(236,72,153,.3)}
 .stud-rtbar{position:fixed;z-index:60;display:flex;align-items:center;gap:3px;padding:4px;border-radius:12px;background:var(--surface);border:1px solid var(--line-2);box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .stud-rtbar button{min-width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--ink);cursor:pointer;font:14px/1 var(--font-display,inherit);display:grid;place-items:center;padding:0 4px}.stud-rtbar button:hover{background:var(--surface-2)}
@@ -12963,9 +12964,26 @@ function studioParseTable(txt){
   row.push(cell);rows.push(row);
   return rows.map(r=>r.map(c=>c.trim())).filter(r=>r.some(Boolean));
 }
-const STUDIO_BULK_ROLE={headline:/заголов|title|headline|назван|товар|оффер/,subheadline:/подзаг|описан|subtitle|текст/,cta:/кнопк|cta|button|призыв/,badge:/скидк|цена|price|бейдж|badge|акци/,disclaimer:/дисклейм|сноск|мелк|правов/};
+const STUDIO_BULK_ROLE={headline:/заголов|title|headline|назван|товар|оффер/,price:/^цена$|price/,oldprice:/старая|oldprice/,subheadline:/подзаг|описан|subtitle|текст/,cta:/кнопк|cta|button|призыв/,badge:/скидк|цена|price|бейдж|badge|акци/,disclaimer:/дисклейм|сноск|мелк|правов/};
 function studioBulkFill(text,head,row){return String(text||"").replace(/\{\{\s*([^}]+?)\s*\}\}/g,(m,k)=>{const i=head.findIndex(h=>h.toLowerCase()===k.toLowerCase());return i<0?m:(row[i]||"")})}
-function studioBulkCreate(){
+/* v11 (26.11.2026): товарный фид → таблица для массового создания. YML (Яндекс Маркет: offer/name|model,
+   price, oldprice, picture, url, categoryId, vendor, description) или CSV/Google-таблица (как есть).
+   Добавляем готовые колонки: «Цена» (29 990 ₽), «Старая цена», «Скидка» (−30%). null — это не фид. */
+function studioParseFeed(text,o){o=o||{};const t=String(text||"").replace(/^﻿/,"");if(!/<offer[\s>]/i.test(t)&&!/<item[\s>]/i.test(t))return null;
+  let doc;try{doc=new DOMParser().parseFromString(t,"text/xml")}catch(e){return null}if(doc.querySelector("parsererror")&&!doc.querySelector("offer,item"))return null;
+  const cats={};doc.querySelectorAll("category").forEach(c=>{cats[c.getAttribute("id")]=c.textContent.trim()});
+  const cur0=(doc.querySelector("currency[rate='1'],currency")||{getAttribute:()=>"RUB"}).getAttribute("id")||"RUB";
+  const sym=c=>({RUB:"₽",RUR:"₽",USD:"$",EUR:"€",KZT:"₸",BYN:"Br",UAH:"₴"}[String(c||cur0).toUpperCase()]||String(c||""));
+  const money=(v,c)=>{const n=+String(v||"").replace(",",".").replace(/[^\d.]/g,"");return n?n.toLocaleString("ru-RU",{maximumFractionDigits:2}).replace(/ /g," ")+" "+sym(c):""};
+  const strip=h=>String(h||"").replace(/<[^>]+>/g," ").replace(/&nbsp;/g," ").replace(/\s+/g," ").trim();
+  const g=(el,...names)=>{for(const n of names){const x=el.getElementsByTagName(n)[0];if(x&&x.textContent.trim())return x.textContent.trim()}return""};
+  const head=["Название","Цена","Старая цена","Скидка","Фото","Ссылка","Категория","Производитель","Описание","Цена число"],rows=[head];
+  for(const el of doc.querySelectorAll("offer,item")){const name=g(el,"name","title","g:title")||[g(el,"typePrefix"),g(el,"vendor"),g(el,"model")].filter(Boolean).join(" ");
+    const cur=g(el,"currencyId"),p=+String(g(el,"price","g:price")).replace(",",".").replace(/[^\d.]/g,""),op=+String(g(el,"oldprice","g:sale_price")).replace(",",".").replace(/[^\d.]/g,"");
+    const old=op&&op>p?op:0,disc=old?Math.round((1-p/old)*100):0;if(o.sale&&!disc)continue;
+    rows.push([name,money(p,cur),old?money(old,cur):"",disc?"−"+disc+"%":"",g(el,"picture","g:image_link","image"),g(el,"url","link","g:link"),cats[g(el,"categoryId")]||g(el,"g:product_type"),g(el,"vendor","g:brand"),strip(g(el,"description","g:description")).slice(0,300),p||""])}
+  return rows}
+function studioBulkCreate(prefill){
   const d=studioDesign();studioPagesSync(d);
   const tpl=JSON.parse(JSON.stringify({bg:d.bg,layers:d.layers}));
   const slots=tpl.layers.filter(l=>["text","image","qr"].includes(l.type)&&!l.hidden);
@@ -12990,7 +13008,8 @@ function studioBulkCreate(){
     <p class="pp-hint" style="margin-top:6px">${mode==="pages"?"Создам новый дизайн, где каждая строка — страница. Текущий дизайн не изменится.":mode==="designs"?"Каждая строка сохранится отдельным дизайном в «Мои дизайны».":"Ничего не сохраняю — сразу скачаю архив картинок."} Пустая ячейка скрывает слой на этой странице. Длинный текст уменьшится, чтобы влезть в рамку.</p>`};
   const {root,close}=overlay("modal",{title:"Массовое создание",subtitle:"Один макет → десятки креативов из таблицы: товары, цены, города, офферы.",size:"lg",service:"studio",
     body:`<div class="bk"><div class="row" style="gap:8px;align-items:flex-start"><nv-textarea data-bk-ta rows="5" placeholder="Заголовок&#9;Цена&#9;Фото&#10;Диван «Лофт»&#9;29 990 ₽&#9;https://…" aria-label="Таблица" style="flex:1"></nv-textarea>
-      <div class="stack" style="gap:6px"><label class="nv-btn v-secondary s-sm" for="bk-file">${ic("file-spreadsheet",15)}CSV-файл</label><input type="file" id="bk-file" accept=".csv,.tsv,.txt,text/csv" class="sr"><nv-button size="sm" variant="ghost" icon="wand-2" data-bk-demo>Пример</nv-button></div></div>
+      <div class="stack" style="gap:6px"><label class="nv-btn v-secondary s-sm" for="bk-file">${ic("file-spreadsheet",15)}CSV / YML-файл</label><input type="file" id="bk-file" accept=".csv,.tsv,.txt,.xml,.yml,text/csv,text/xml,application/xml" class="sr"><nv-button size="sm" variant="ghost" icon="wand-2" data-bk-demo>Пример</nv-button></div></div>
+      <div class="bk-feed"><span class="bk-feed-l">${ic("shopping-bag",15)}Товарный фид</span><input type="url" class="num" data-bk-feed placeholder="Ссылка на YML (Яндекс Маркет), CSV или Google Таблицу" style="flex:1;text-align:left;padding:0 10px"><label class="row" style="gap:5px;font-size:12.5px;white-space:nowrap"><input type="checkbox" data-bk-sale> только со скидкой</label><nv-button size="sm" variant="secondary" icon="download" data-bk-feedgo>Загрузить</nv-button><nv-button size="sm" variant="ghost" icon="layout-template" data-bk-prodtpl hint="Добавить на страницу фото и тексты {{Название}}, {{Цена}}, {{Старая цена}}, {{Скидка}}">Поля товара на макет</nv-button></div>
       <div id="bk-out">${out()}</div></div>`,
     actions:[{label:"Отмена"},{label:"Создать",variant:"primary",icon:"layers",fn:()=>{if(busy)return false;if(!rows.length){toast("Вставьте таблицу",{tone:"warning"});return false}
       const mapped=slots.filter(l=>map[l.id]&&map[l.id]!=="-");if(!mapped.length){toast("Привяжите хотя бы один слой к колонке",{tone:"warning"});return false}
@@ -13002,7 +13021,21 @@ function studioBulkCreate(){
   const hookTa=()=>{const t=ta();if(t&&!t._bk){t._bk=1;t.addEventListener("input",onTa);t.addEventListener("paste",()=>setTimeout(onTa,0))}};hookTa();new MutationObserver(hookTa).observe(root.querySelector("[data-bk-ta]"),{childList:true,subtree:true});
   root.addEventListener("nv-change",e=>{const s=e.target.closest("[data-bk-map]");if(s){map[s.dataset.bkMap]=e.detail.value;return}
     if(e.target.closest("[data-bk-mode]")){mode=e.detail.value;root.querySelector("#bk-out").innerHTML=out()}});
-  root.querySelector("#bk-file").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;let t=await f.text();if(t.includes("�")){try{t=new TextDecoder("windows-1251").decode(await f.arrayBuffer())}catch(_){}}ta().value=t;reparse(t)});
+  const feedIn=t=>{const T=studioParseFeed(t,{sale:!!(root.querySelector("[data-bk-sale]")||{}).checked});if(!T){ta().value=t;reparse(t);return}
+    if(T.length<2){toast("В фиде не нашлось товаров"+((root.querySelector("[data-bk-sale]")||{}).checked?" со скидкой":""),{tone:"warning"});return}
+    const tsv=T.map(r=>r.map(c=>String(c==null?"":c).replace(/[\t\r\n]+/g," ").trim()).join("\t")).join("\n");ta().value=tsv;reparse(tsv);toast(`Фид: товаров ${T.length-1}${T.length-1>200?" — в работу пойдут первые 200":""}`,{tone:"success"})};
+  root.querySelector("#bk-file").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;let t=await f.text();if(t.includes("�")){try{t=new TextDecoder("windows-1251").decode(await f.arrayBuffer())}catch(_){}}feedIn(t)});
+  root.querySelector("[data-bk-prodtpl]").addEventListener("click",()=>{const keep=ta().value;studioBeforeChange();const D=studioDesign(),br=(S.studio.brand&&S.studio.brand.colors||[])[0]||"#e11d48",T=(o)=>Object.assign(studioLayerDefaults("text"),o);
+      const add=[Object.assign(studioLayerDefaults("image"),{x:5,y:6,w:50,h:88,radius:24,placeholder:true}),
+        T({text:"{{Название}}",x:59,y:10,w:37,h:30,fontSize:4.6,weight:"700",color:"#111827",align:"left",role:"headline"}),
+        T({text:"{{Цена}}",x:59,y:52,w:37,h:13,fontSize:7.5,weight:"800",color:br,align:"left",role:"price"}),
+        T({text:"{{Старая цена}}",x:59,y:66,w:37,h:8,fontSize:4,weight:"500",color:"#6b7280",align:"left",runs:[{s:0,e:15,x:true}],runsT:"{{Старая цена}}"}),
+        T({text:"{{Скидка}}",x:8,y:9,w:16,h:9,fontSize:4.2,weight:"800",color:"#ffffff",bgColor:br,bgRadius:30,align:"center",role:"badge",autoW:true})];
+      D.layers.push(...add);NEON.save();N.refresh();close();setTimeout(()=>studioBulkCreate(keep),60)});
+  if(prefill)setTimeout(()=>{const t=ta();if(t){t.value=prefill;reparse(prefill)}},80);
+  root.querySelector("[data-bk-feedgo]").addEventListener("click",async()=>{let u=(root.querySelector("[data-bk-feed]").value||"").trim();if(!/^https?:\/\//i.test(u)){toast("Вставьте ссылку http(s)",{tone:"warning"});return}
+    const gs=u.match(/docs\.google\.com\/spreadsheets\/d\/([\w-]+)/);if(gs){const gid=(u.match(/[#&?]gid=(\d+)/)||[])[1];u=`https://docs.google.com/spreadsheets/d/${gs[1]}/export?format=csv${gid?"&gid="+gid:""}`}
+    toast("Скачиваю фид…");try{const r=await apiPost("/api/v1/studio/fetch-feed",{url:u});feedIn(r.text||"")}catch(err){toast(err.message||"Фид не скачался",{tone:"danger"})}});
   root.querySelector("[data-bk-demo]").addEventListener("click",()=>{
     const ex=[["Диван «Лофт»","Скидка до 30%","Купить","29 990 ₽","Москва"],["Кресло «Сканди»","Доставка за 1 день","Заказать","12 490 ₽","Казань"],["Стол «Дуб»","Массив, 10 лет гарантии","Смотреть","18 700 ₽","Сочи"]];
     const cols=[];/* [заголовок колонки, (r)=>значение] */
