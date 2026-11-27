@@ -2170,6 +2170,12 @@ body[data-cb="prot"] #stud-stage-host::before{content:"Протанопия"}bod
 .pp-chips button:hover{border-color:var(--svc-ink);color:var(--ink)}
 .pp-chips button.on{background:var(--svc-soft);border-color:color-mix(in srgb,var(--svc-ink) 45%,transparent);color:var(--svc-ink)}
 .pp-hint{font-size:11.5px;color:var(--ink-3);margin:0;line-height:1.4}
+.art-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}
+.art-grid button{display:flex;flex-direction:column;gap:4px;padding:4px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);cursor:pointer;text-align:left;color:var(--ink-2);font-size:11px;line-height:1.25}
+.art-grid button:hover{border-color:var(--svc-ink);color:var(--ink)}
+.art-grid .art-th{aspect-ratio:1;border-radius:5px;background:var(--surface-2,#f3f3f3) center/contain no-repeat;display:grid;place-items:center;overflow:hidden}
+.art-grid .art-th img{width:100%;height:100%;object-fit:contain;display:block}
+.art-grid .art-th.wait::after{content:"";width:16px;height:16px;border-radius:50%;border:2px solid var(--line-2);border-top-color:var(--svc-ink);animation:spin .8s linear infinite}
 .pp-ing{align-items:center;gap:6px;font-size:12px;color:var(--svc-ink);background:var(--svc-soft)}
 .pp-ing span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .stud-loupe{position:fixed;z-index:9500;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -8303,6 +8309,38 @@ function studioPhotoFxHtml(l){const P=studioPhotoOf(l),on=!!P.duo,n=[on?"дуо�
   return ppSec("photofx","Эффекты фото",`<div class="pp-row"><span class="pp-l">Дуотон</span>${ppSeg([["Выкл",'data-prop-set="photo.duo" data-val="0"',!on],["Вкл",'data-prop-set="photo.duo" data-val="1"',on]])}</div>
     ${on?`<div class="duo-pre">${STUDIO_DUOS.map(([a,b],i)=>`<button type="button" data-act-duo="${i}" style="background:linear-gradient(90deg,${a},${b})" aria-label="Дуотон ${i+1}"></button>`).join("")}</div>`+ppColor("Тени","photo.duo1",studioHex6(P.duo1||"#1e1b4b"))+ppColor("Света","photo.duo2",studioHex6(P.duo2||"#f472b6")):""}
     ${ppRng("Виньетка","photo.vig",+P.vig||0,0,100,1)}${ppRng("Зерно","photo.grain",+P.grain||0,0,100,1)}`,n.join(", "))}
+/* «Рисунок по фото» в эффектах фото: направление → сразу сетка вариантов (миниатюры считаются в браузере), «Персонаж» — лицо перерисовывается под стиль.
+   Клик по варианту — фото заменяется вектором в этом стиле (фото скрыто, его можно вернуть в «Слоях»). */
+const studioArtFx={lid:null,dir:null,char:true,th:{},tok:0,kp:null,kpSrc:null,kpErr:""};
+function studioArtFxHtml(l){const A=studioArtFx,mine=A.lid===l.id,dir=mine?A.dir:null,V=dir?STUDIO_TOON_V.filter(v=>v.dir===dir):[];
+  return ppSec("photoart","Рисунок по фото",`<div class="pp-chips">${STUDIO_TOON_DIRS.map(([k,lb])=>`<button type="button" data-act-artdir="${k}" class="${dir===k?"on":""}">${lb}</button>`).join("")}</div>
+    <div class="pp-chips" style="margin-top:6px"><button type="button" data-act-artchar class="${A.char?"on":""}" data-tip="ИИ находит лицо: глаза, нос, рот и пропорции перерисовываются под стиль">${ic("smile",14)}Персонаж</button>${dir?`<button type="button" data-act-artopen>${ic("sliders-horizontal",14)}Тонкая настройка</button>`:""}</div>
+    ${dir?`<div class="art-grid">${V.map(v=>{const t=mine&&A.th[v.id];return`<button type="button" data-act-artv="${v.id}" data-tip="Заменить фото рисунком"><span class="art-th${t?"":" wait"}" data-art-th="${v.id}">${t?`<img src="${t}" alt="">`:""}</span><span>${esc(v.name)}</span></button>`}).join("")}</div>
+      <p class="pp-hint" data-art-info style="margin-top:6px">${A.kpErr&&A.char?"Персонаж недоступен: "+esc(A.kpErr):"Нажмите на вариант — фото заменится вектором в этом стиле."}</p>`:`<p class="pp-hint" style="margin-top:6px">Выберите направление — появятся варианты стиля сразу на этом фото.</p>`}`,dir?STUDIO_TOON_DIRS.find(d=>d[0]===dir)[1]:"")}
+/* картинка слоя (с кадрированием и эффектами) → canvas не больше max по длинной стороне */
+async function studioLayerCanvas(l,max){const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,bw=l.w/100*F.w,bh=l.h/100*F.h,sc=Math.min(3,max/Math.max(bw,bh));
+  const full=await studioRenderCanvas({...d,bg:{type:"none"},layers:[{...l,hidden:false,rotation:0,flipH:false,flipV:false,anim:undefined,opacity:100}],pages:undefined},sc);
+  const cv=document.createElement("canvas");cv.width=Math.max(4,Math.round(bw*sc));cv.height=Math.max(4,Math.round(bh*sc));cv.getContext("2d").drawImage(full,-Math.round(l.x/100*full.width),-Math.round(l.y/100*full.height));return cv}
+/* точки лица для слоя — один запрос к ИИ на картинку */
+async function studioArtKp(l,cv){const A=studioArtFx;if(!A.char)return null;if(A.kpSrc===l.src&&A.kp)return A.kp;
+  try{const sc=Math.min(1,1024/Math.max(cv.width,cv.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(cv.width*sc));c.height=Math.max(1,Math.round(cv.height*sc));c.getContext("2d").drawImage(cv,0,0,c.width,c.height);
+    const r=await apiPost("/api/v1/studio/ai/face-points",{image:c.toDataURL("image/jpeg",0.88)});A.kp=Array.isArray(r.people)?r.people:[];A.kpSrc=l.src;A.kpErr="";return A.kp}
+  catch(e){A.kpErr=e.message||String(e);return null}}
+async function studioArtFxGen(l){const A=studioArtFx,tok=++A.tok,info=()=>document.querySelector("[data-art-info]");
+  try{const cv=await studioLayerCanvas(l,1024),kp=await studioArtKp(l,cv);if(tok!==A.tok)return;
+    const sc=Math.min(1,360/Math.max(cv.width,cv.height)),w=Math.max(8,Math.round(cv.width*sc)),h=Math.max(8,Math.round(cv.height*sc)),k=document.createElement("canvas");k.width=w;k.height=h;const g=k.getContext("2d");g.imageSmoothingQuality="high";g.drawImage(cv,0,0,w,h);const px=g.getImageData(0,0,w,h).data;
+    for(const v of STUDIO_TOON_V.filter(x=>x.dir===A.dir)){if(tok!==A.tok)return;if(A.th[v.id])continue;
+      const T=await studioToonTrace(new Uint8ClampedArray(px),w,h,{style:v.id,up:sc,kp:kp||undefined});if(tok!==A.tok)return;
+      A.th[v.id]="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(studioToonSvg(T,studioToonColors(T,{style:v.id}),true));
+      const el=document.querySelector(`[data-art-th="${v.id}"]`);if(el){el.classList.remove("wait");el.innerHTML=`<img src="${A.th[v.id]}" alt="">`}await studioTrYield()}
+    const i=info();if(i&&A.char&&A.kpErr)i.textContent="Персонаж недоступен: "+A.kpErr;else if(i&&A.char&&kp&&!kp.length)i.textContent="Лицо анфас не найдено — варианты без перерисовки лица."}
+  catch(e){const i=info();if(i)i.textContent="Не получилось: "+(e.message||e)}}
+/* выбранный вариант в полном качестве → вектор на сервере → картинка-слой вместо фото */
+async function studioArtFxApply(l,vid){const A=studioArtFx;toast("Рисую «"+studioToonVOf(vid).name+"»…",{timeout:4000});
+  try{const cv=await studioLayerCanvas(l,1400),kp=await studioArtKp(l,cv),w=cv.width,h=cv.height,T=await studioToonTrace(cv.getContext("2d").getImageData(0,0,w,h).data,w,h,{style:vid,up:1,kp:kp||undefined});
+    const svg=studioToonSvg(T,studioToonColors(T,{style:vid}),true),r=await apiPost("/api/v1/studio/vectors",{svg,name:"drawing.svg"});
+    studioVecInsertImage(API_BASE+r.url,w,h,{layer:l})}
+  catch(e){toast("Не получилось: "+(e.message||e),{tone:"danger"})}}
 function studioFilterCss(f){if(!f)return"none";const p=[];if(f.brightness!=null&&f.brightness!==100)p.push(`brightness(${f.brightness}%)`);if(f.contrast!=null&&f.contrast!==100)p.push(`contrast(${f.contrast}%)`);if(f.saturate!=null&&f.saturate!==100)p.push(`saturate(${f.saturate}%)`);if(f.grayscale)p.push(`grayscale(${f.grayscale}%)`);if(f.sepia)p.push(`sepia(${f.sepia}%)`);if(f.hue)p.push(`hue-rotate(${f.hue}deg)`);if(f.blur)p.push(`blur(${f.blur}px)`);return p.join(" ")||"none"}
 function studioShadowOf(l){return l.fx&&typeof l.fx==="object"?l.fx:null}
 /* Тень: у текста — l.shadow (вкл) + l.shadowSet, у остальных — l.effect.shadow.
@@ -9046,7 +9084,7 @@ function studioPropsHtml0(){
       ${bd?ppColor("Цвет рамки","border.color",l.border.color||"#ffffff")+ppRng("Толщина","border.width",l.border.width||4,1,20,1):""}`)
     +(l.src?ppSec("filters","Фильтры",`<div class="stud-presets">${Object.keys(STUDIO_FILTERS).map(k=>`<button type="button" class="${(l.filterName||"none")===k?"on":""}" data-act-filter="${k}"><i style="filter:${studioFilterCss(STUDIO_FILTERS[k])}"></i>${STUDIO_FILTER_LABELS[k]}</button>`).join("")}</div>
       ${["brightness:Яркость:50:150","contrast:Контраст:50:160","saturate:Насыщенность:0:200","blur:Размытие:0:12"].map(x=>{const[k,lb,mn,mx]=x.split(":"),v=fl[k]!=null?fl[k]:(k==="blur"?0:100);return ppRng(lb,"filter."+k,v,+mn,+mx,1)}).join("")}`,l.filterName&&l.filterName!=="none"?STUDIO_FILTER_LABELS[l.filterName]:""):"")
-    +(l.src?studioPhotoCCHtml(l)+studioPhotoFxHtml(l):"")
+    +(l.src?studioPhotoCCHtml(l)+studioPhotoFxHtml(l)+studioArtFxHtml(l):"")
     +studioShadowSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
   }
   return"";
@@ -11388,9 +11426,9 @@ const studioDarkOf=(v,c)=>Math.min(v,c[0]*0.55);
 /* группы, что лежат в основном у краёв кадра, — фон: даже если цвет «телесный», в кожу не считаем (центр группы делаем нейтральным) */
 function studioToonBgFix(Q,cen,W,H){const m=Math.max(2,Math.round(Math.min(W,H)*0.05)),tot=new Float64Array(cen.length),edge=new Float64Array(cen.length);
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const k=Q.lb[y*W+x];if(k<0)continue;tot[k]++;if(x<m||y<m||x>=W-m||y>=H-m)edge[k]++}
-  return cen.map((c,k)=>tot[k]&&edge[k]/tot[k]>0.42&&studioIsSkin(...c)?[c[0],c[1]*0.25,c[2]*0.25]:c)}
+  return cen.map((c,k)=>tot[k]&&edge[k]/tot[k]>0.42&&studioSkinC(c)?[c[0],c[1]*0.25,c[2]*0.25]:c)}
 /* средний тон кожи по цветовым группам (вес — число пикселей); нет кожи — null */
-function studioToonSkinOf(Q,cen,n,sm){const isk=cen.map(c=>studioIsSkin(...c)),h=new Float64Array(101);let m=0,a=0,b=0;
+function studioToonSkinOf(Q,cen,n,sm){const isk=cen.map(c=>studioSkinC(c)),h=new Float64Array(101);let m=0,a=0,b=0;
   for(let i=0;i<n;i++){const k=Q.lb[i];if(k<0||!isk[k])continue;h[Math.max(0,Math.min(100,Math.round(sm[i*3])))]++;a+=sm[i*3+1];b+=sm[i*3+2];m++}
   if(m<n*0.02)return null;const pc=q=>{let acc=0;for(let L=0;L<=100;L++){acc+=h[L];if(acc>=q*m)return L}return 100};return{p30:pc(0.3),p60:pc(0.6),p75:pc(0.75),a:a/m,b:b/m}}
 /* «персонажные» цвета: тёплые волосы — в золото (светлые) или каштан (тёмные), нейтральное — в крем/белый/серо-лиловый */
@@ -11403,23 +11441,23 @@ function studioToonHair(c,L,lit){const C=Math.hypot(c[1],c[2]),h=Math.atan2(c[2]
 const STUDIO_TOON_RULES={
   comic:()=>{/* Marvel: 3 ступени, сочно, «пятна чёрного» в глубоких тенях, штриховка в полутени */
     const SK=["#c8734f","#f0a983"],DL=26;
-    return(L,a,b,c)=>{if(L<studioDarkOf(DL,c))return["#0d0d0d",""];if(studioIsLip(L,a,b)&&studioIsSkin(...c)===false&&!studioToonHair(c,L,true)||studioIsLip(L,a,b)&&a>16)return[L<c[0]-4?"#a1232f":"#d8343f",""];const lv=L>=c[0]+4?2:L>=c[0]-8?1:0;if(studioIsSkin(...c)){const sl=L>=c[0]-8?1:0;return[studioSkinCol(SK[sl],c,sl?"lit":"shade"),sl===0?"hc":""]}
+    return(L,a,b,c)=>{if(L<studioDarkOf(DL,c))return["#0d0d0d",""];if(studioIsLip(L,a,b)&&studioSkinC(c)===false&&!studioToonHair(c,L,true)||studioIsLip(L,a,b)&&a>16)return[L<c[0]-4?"#a1232f":"#d8343f",""];const lv=L>=c[0]+4?2:L>=c[0]-8?1:0;if(studioSkinC(c)){const sl=L>=c[0]-8?1:0;return[studioSkinCol(SK[sl],c,sl?"lit":"shade"),sl===0?"hc":""]}
       const hr=studioToonHair(c,L,lv>0);if(hr&&Math.hypot(c[1],c[2])>=7)return[lv===2?hr:hr,lv===0?"hc":""];const LL=Math.max(10,Math.min(94,c[0]+[-12,0,12][lv]));return[studioDtHex(...studioDtLab2Rgb(LL,c[1]*2.1,c[2]*2.1)),lv===0?"hc":""]}},
   cartoon:()=>{/* 2D-мультфильм: крупные формы, светло и тепло, тень — тот же цвет темнее, без чёрного */
     const SK=["#f0a98e","#ffd3bd"],DL=26;
-    return(L,a,b,c)=>{const lv=L>=c[0]-3?1:0,sk=studioIsSkin(...c);if(studioIsLip(L,a,b)&&a>16)return[lv?"#e06a7a":"#b8475a",""];if(L<studioDarkOf(DL,c))return[studioDtHex(...studioDtLab2Rgb(20,c[1]*1.2,c[2]*1.2)),""];
+    return(L,a,b,c)=>{const lv=L>=c[0]-3?1:0,sk=studioSkinC(c);if(studioIsLip(L,a,b)&&a>16)return[lv?"#e06a7a":"#b8475a",""];if(L<studioDarkOf(DL,c))return[studioDtHex(...studioDtLab2Rgb(20,c[1]*1.2,c[2]*1.2)),""];
       if(sk)return[studioSkinCol(SK[lv],c,lv?"lit":"shade"),""];const hr=studioToonHair(c,L,lv);if(hr)return[hr,""];return[studioDtHex(...studioDtLab2Rgb(Math.min(94,lv?c[0]+8:c[0]-6),c[1]*1.7,c[2]*1.8)),""]}},
   anime:()=>{/* аниме 90-х: кожа — светлый тон и одна резкая тень; остальное насыщенно, блики почти белые */
     const SK=["#f5b9a6","#ffe4d6"],DL=20;
-    return(L,a,b,c)=>{if(L<studioDarkOf(DL,c))return["#241a22",""];const sk=studioIsSkin(...c),lit=L>=c[0]-4;if(studioIsLip(L,a,b)&&a>16)return[lit?"#f08a98":"#d4606f",""];if(sk)return[lit?studioSkinCol(SK[1],c,"lit"):studioSkinCol(SK[0],c,"shade"),""];
+    return(L,a,b,c)=>{if(L<studioDarkOf(DL,c))return["#241a22",""];const sk=studioSkinC(c),lit=L>=c[0]-4;if(studioIsLip(L,a,b)&&a>16)return[lit?"#f08a98":"#d4606f",""];if(sk)return[lit?studioSkinCol(SK[1],c,"lit"):studioSkinCol(SK[0],c,"shade"),""];
       if(L>86)return[studioDtHex(...studioDtLab2Rgb(96,c[1]*0.35,c[2]*0.35)),""];const hr=studioToonHair(c,L,lit);if(hr)return[hr,""];return[studioDtHex(...studioDtLab2Rgb(lit?Math.min(90,c[0]+10):Math.max(18,c[0]-14),c[1]*1.6,c[2]*1.6)),""]}},
   manga:()=>(L)=>L<22?["#111111",""]:L<34?["#d0d0d0","ht3"]:L<47?["#dcdcdc","ht2"]:L<61?["#e8e8e8","ht1"]:["#ffffff",""],
   clear:()=>{/* ligne claire: плоские цвета группы без теней, светло и чисто */
     const DL=18;
-    return(L,a,b,c)=>{if(L<studioDarkOf(DL,c))return["#141414",""];if(studioIsLip(L,a,b)&&a>16)return["#d9465a",""];const sk=studioIsSkin(...c);if(sk)return[studioSkinCol("#f9cdb4",c,"flat"),""];const hr=studioToonHair(c,L,true);if(hr)return[hr,""];return[studioDtHex(...studioDtLab2Rgb(Math.min(92,c[0]+6),c[1]*1.4,c[2]*1.4)),""]}},
+    return(L,a,b,c)=>{if(L<studioDarkOf(DL,c))return["#141414",""];if(studioIsLip(L,a,b)&&a>16)return["#d9465a",""];const sk=studioSkinC(c);if(sk)return[studioSkinCol("#f9cdb4",c,"flat"),""];const hr=studioToonHair(c,L,true);if(hr)return[hr,""];return[studioDtHex(...studioDtLab2Rgb(Math.min(92,c[0]+6),c[1]*1.4,c[2]*1.4)),""]}},
   popart:()=>{/* Лихтенштейн: кожа белая в красных точках, волосы и прочее — основные цвета, тёмное — чёрное */
     const DL=28;
-    return(L,a,b,c)=>{if(L<studioDarkOf(DL,c))return["#111111",""];if(studioIsLip(L,a,b))return["#e3242b",""];if(studioIsSkin(...c))return[L<c[0]-6?studioSkinCol("#f6d4c8",c,"shade"):studioSkinCol("#fff6ef",c,"lit"),"bd"];if(L>82)return["#ffffff",""];
+    return(L,a,b,c)=>{if(L<studioDarkOf(DL,c))return["#111111",""];if(studioIsLip(L,a,b))return["#e3242b",""];if(studioSkinC(c))return[L<c[0]-6?studioSkinCol("#f6d4c8",c,"shade"):studioSkinCol("#fff6ef",c,"lit"),"bd"];if(L>82)return["#ffffff",""];
       const C=Math.hypot(c[1],c[2]),h=Math.atan2(c[2],c[1])*180/Math.PI;if(C>16&&h<45&&h>-40&&c[1]>c[2]*0.9)return["#e3242b",""];if(C>=12&&h>=35&&h<115)return[L<55?"#e0a800":"#ffd400",""];return[L<50?"#14408f":"#1f5fbf",""]}},
   sketch:()=>(L)=>L<20?["#c4c4c4","hx2"]:L<32?["#d4d4d4","hx1"]:L<46?["#e2e2e2","hh1"]:["#f6f1e6",""]};
 /* двусторонний фильтр в Lab (5×5, несколько проходов): кожа и фон ровнее, края черт остаются резкими */
@@ -11505,8 +11543,8 @@ function studioToonVRule(V,ctx){const mk=(hx,tx,f)=>[hx,tx||"",f||hx],dk=(hx,d)=
   const SK=V.skin,DL=V.darkL||0;
   return(L,a,b,c,gi)=>{if(V.dark&&L<studioDarkOf(DL,c))return mk(V.dark,V.tx&&V.tx.dark?"dark":"");if(V.lips&&studioIsLip(L,a,b)&&a>16)return mk(V.lips);
     const lit=V.flat?true:L>=c[0]-4,C=Math.hypot(c[1],c[2]),h=Math.atan2(c[2],c[1])*180/Math.PI;
-    if(SK&&studioIsSkin(...c)){const fl=V.flat||SK[0]===SK[1];return lit?mk(studioSkinCol(SK[1],c,fl?"flat":"lit"),V.tx&&V.tx.skin?"skin":""):mk(studioSkinCol(SK[0],c,fl?"flat":"shade"),V.tx&&V.tx.skinShade?"skinShade":"")}
-    const neutral=C<9||(c[0]>62&&C<24),hair=!neutral&&((C>=7&&h>=40&&h<115)||c[0]<34);
+    if(SK&&studioSkinC(c)){const fl=V.flat||SK[0]===SK[1];return lit?mk(studioSkinCol(SK[1],c,fl?"flat":"lit"),V.tx&&V.tx.skin?"skin":""):mk(studioSkinCol(SK[0],c,fl?"flat":"shade"),V.tx&&V.tx.skinShade?"skinShade":"")}
+    const neutral=C<9||(c[0]>62&&C<24),hair=!neutral&&((C>=7&&h>=40&&h<115)||c[0]<34)||neutral&&c[0]<24&&!!V.hair;/* чёрные волосы — тоже волосы, а не фон */
     if(hair&&V.hair)return lit?mk(V.hair[1],V.tx&&V.tx.hair?"hair":""):mk(V.hair[0],V.tx&&V.tx.hair?"hair":"");
     if(neutral&&V.bg)return mk(c[0]>=55||V.flat?V.bg[V.bg.length>1&&!lit?1:0]:V.bg[1],V.tx&&V.tx.bg?"bg":"");
     if(V.pal){let col;if(V.cyc)col=V.pal[gi%V.pal.length];else{let best=V.pal[0],bd=1e9;for(const p of V.pal){const q=studioLab(...studioHexRgb(p)),d=Math.hypot(q[1]-c[1]*1.3,q[2]-c[2]*1.3)+Math.abs(q[0]-c[0])*0.4;if(d<bd){bd=d;best=p}}col=best}return mk(lit?col:tint(col))}
@@ -11518,39 +11556,164 @@ function studioToonPat(id,p,base){const q=base*(p.s||1),r=v=>v.toFixed(2),a=p.a|
   if(p.t==="cross")return`<pattern id="${id}" width="${r(q)}" height="${r(q)}" patternUnits="userSpaceOnUse" patternTransform="rotate(${a})"><rect width="${r(q)}" height="${r(q*(p.r||0.2))}" fill="${p.c}"/><rect width="${r(q*(p.r||0.2))}" height="${r(q)}" fill="${p.c}"/></pattern>`;
   /* зерно: несколько точек разного размера в клетке */
   return`<pattern id="${id}" width="${r(q*3)}" height="${r(q*3)}" patternUnits="userSpaceOnUse">${[[0.3,0.4,1],[1.7,0.9,0.7],[2.4,2.2,1.1],[0.9,2.6,0.6],[2.1,1.3,0.5],[1.2,1.6,0.8]].map(([x,y,k])=>`<circle cx="${r(x*q)}" cy="${r(y*q)}" r="${r(q*(p.r||0.15)*k)}" fill="${p.c}"/>`).join("")}</pattern>`}
+/* ===== Персонаж по фото: ИИ даёт точки лица (/ai/face-points), здесь — деформация пропорций под стиль (глаза, нос, рот, подбородок, голова),
+   кожа по лицу (а не по цвету) и стилизованные глаза поверх рисунка. Точки kp — доли картинки 0..1. ===== */
+const STUDIO_CHAR_RIG={
+  ani:{eye:[1.38,1.8],nose:0.5,mouth:0.7,chin:0.08,jaw:0.08,head:1.08,eyes:"anime"},
+  man:{eye:[1.25,1.55],nose:0.6,mouth:0.78,chin:0.06,jaw:0.06,head:1.02,eyes:"manga"},
+  car:{eye:[1.42,1.55],nose:0.75,mouth:0.92,chin:0.04,jaw:0.04,head:1.18,eyes:"disney"},
+  "car-simpsons":{eye:[1.3,1.3],nose:1.2,mouth:1.0,chin:-0.04,jaw:-0.02,head:1.1,eyes:"simpsons"},
+  "car-rick":{eye:[1.25,1.25],nose:0.9,mouth:1.0,chin:0,jaw:0,head:1.12,eyes:"simpsons"},
+  "car-southpark":{eye:[1.2,1.2],nose:0.45,mouth:0.75,chin:0.08,jaw:-0.06,head:1.4,eyes:"simpsons"},
+  "car-sponge":{eye:[1.5,1.5],nose:1.2,mouth:1.1,chin:0,jaw:-0.03,head:1.15,eyes:"simpsons"},
+  "car-gravity":{eye:[1.3,1.3],nose:1.0,mouth:1.0,chin:0,jaw:0,head:1.12,eyes:"dotwhite"},
+  "car-adventure":{eye:[0.8,0.8],nose:0.4,mouth:0.9,chin:0.06,jaw:0.05,head:1.25,eyes:"dot"},
+  "car-betty":{eye:[1.5,1.6],nose:0.6,mouth:0.8,chin:0.05,jaw:0.05,head:1.3,eyes:"dotwhite"},
+  "car-arcane":{eye:[1.08,1.1],nose:0.95,mouth:0.95,chin:0.02,jaw:0.02,head:1.0,eyes:null},
+  com:{eye:[0.95,0.86],nose:1.0,mouth:1.0,chin:-0.035,jaw:-0.05,head:0.96,eyes:null},
+  cl:{eye:[0.75,0.75],nose:1.12,mouth:0.9,chin:0.02,jaw:0.02,head:1.1,eyes:"dot"},
+  pop:{eye:[1.08,1.12],nose:0.9,mouth:1.12,chin:0.02,jaw:0.02,head:1.0,eyes:null},
+  sk:null};
+const studioCharRig=V=>V.id in STUDIO_CHAR_RIG?STUDIO_CHAR_RIG[V.id]:STUDIO_CHAR_RIG[V.dir]||null;
+const studioCharRot=(v,a)=>[v[0]*Math.cos(a)-v[1]*Math.sin(a),v[0]*Math.sin(a)+v[1]*Math.cos(a)];
+function studioCharFace(kp,W,H){const P=p=>Array.isArray(p)&&p.length>=2?[p[0]*W,p[1]*H]:null,B=b=>Array.isArray(b)&&b.length===4?[b[0]*W,b[1]*H,b[2]*W,b[3]*H]:null,md=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2],ln=(a,b)=>Math.hypot(b[0]-a[0],b[1]-a[1]);
+  const f={eL:P(kp.eye_l),eR:P(kp.eye_r),bL:B(kp.eye_l_box),bR:B(kp.eye_r_box),nose:P(kp.nose_tip),mL:P(kp.mouth_l),mR:P(kp.mouth_r),lt:P(kp.lip_top),lb:P(kp.lip_bot),chin:P(kp.chin),jL:P(kp.jaw_l),jR:P(kp.jaw_r),brL:P(kp.brow_l),brR:P(kp.brow_r),ms:typeof kp.mouth==='string'?kp.mouth:null};
+  if(!f.eL||!f.eR)return null;f.D=ln(f.eL,f.eR);if(f.D<4)return null;f.a=Math.atan2(f.eR[1]-f.eL[1],f.eR[0]-f.eL[0]);f.ec=md(f.eL,f.eR);
+  const dn=[-Math.sin(f.a),Math.cos(f.a)],at=k=>[f.ec[0]+dn[0]*f.D*k,f.ec[1]+dn[1]*f.D*k];f.dn=dn;
+  f.chin=f.chin||at(1.9);f.nose=f.nose||at(0.8);f.mouth=f.mL&&f.mR?md(md(f.mL,f.mR),f.lt&&f.lb?md(f.lt,f.lb):md(f.mL,f.mR)):at(1.3);
+  const eb=b=>b?[Math.max(f.D*0.3,Math.min(f.D*0.75,b[2]-b[0])),Math.max(f.D*0.08,Math.min(f.D*0.4,b[3]-b[1]))]:[f.D*0.5,f.D*0.2];f.ewL=eb(f.bL);f.ewR=eb(f.bR);
+  f.mw=f.mL&&f.mR?Math.max(f.D*0.5,ln(f.mL,f.mR)):f.D*0.9;return f}
+function studioCharOps(f,R){const ops=[],a=f.a,D=f.D,bulge=(c,rx,ry,sx,sy)=>ops.push({t:"b",c,rx,ry,sx,sy,a}),move=(c,r,d)=>ops.push({t:"m",c,r,d});
+  if(R.head&&R.head!==1)bulge([f.ec[0]+f.dn[0]*D*0.35,f.ec[1]+f.dn[1]*D*0.35],D*2.7,D*3.1,R.head,R.head);
+  if(R.chin){const s=R.chin*D*2;move(f.chin,D*1.15,[f.dn[0]*s,f.dn[1]*s])}
+  if(R.jaw)for(const j of[f.jL,f.jR])if(j){const t=[f.chin[0]-j[0],f.chin[1]-j[1]],l=Math.hypot(...t)||1;move(j,D*0.95,[-t[0]/l*R.jaw*D*2,-t[1]/l*R.jaw*D*2])}
+  if(R.nose&&R.nose!==1)bulge(f.nose,D*0.45,D*0.45,R.nose,R.nose);
+  if(R.mouth&&R.mouth!==1)bulge(f.mouth,f.mw*0.85,f.mw*0.55,R.mouth,R.mouth);
+  if(R.eye)for(const[c,w]of[[f.eL,f.ewL],[f.eR,f.ewR]])bulge(c,w[0]*1.1,Math.max(w[1]*2.8,w[0]*0.8),R.eye[0],R.eye[1]);
+  return ops}
+function studioCharBack(ops,x,y){for(let i=ops.length-1;i>=0;i--){const o=ops[i],dx=x-o.c[0],dy=y-o.c[1];
+    if(o.t==="b"){const u=studioCharRot([dx,dy],-o.a),t2=(u[0]/o.rx)**2+(u[1]/o.ry)**2;if(t2>=1)continue;const k=(1-t2)**2,v=studioCharRot([u[0]*(1-(1-1/o.sx)*k),u[1]*(1-(1-1/o.sy)*k)],o.a);x=o.c[0]+v[0];y=o.c[1]+v[1]}
+    else{const t2=(dx*dx+dy*dy)/(o.r*o.r);if(t2>=1)continue;const k=(1-t2)**2;x-=o.d[0]*k;y-=o.d[1]*k}}return[x,y]}
+function studioCharWarp(px,W,H,ops){const out=new Uint8ClampedArray(px);if(!ops.length)return out;
+  /* только внутри рамки, которую задевают операции */
+  let x0=W,y0=H,x1=0,y1=0;for(const o of ops){const r=o.t==="b"?Math.max(o.rx,o.ry):o.r;x0=Math.min(x0,o.c[0]-r);y0=Math.min(y0,o.c[1]-r);x1=Math.max(x1,o.c[0]+r);y1=Math.max(y1,o.c[1]+r)}
+  x0=Math.max(0,Math.floor(x0));y0=Math.max(0,Math.floor(y0));x1=Math.min(W-1,Math.ceil(x1));y1=Math.min(H-1,Math.ceil(y1));
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){let[sx,sy]=studioCharBack(ops,x+0.5,y+0.5);sx=Math.max(0,Math.min(W-1.001,sx-0.5));sy=Math.max(0,Math.min(H-1.001,sy-0.5));
+    const xa=sx|0,ya=sy|0,fx=sx-xa,fy=sy-ya,i=(y*W+x)*4,a=(ya*W+xa)*4,b=a+4,c=a+W*4,d=c+4;
+    for(let k=0;k<3;k++)out[i+k]=(px[a+k]*(1-fx)+px[b+k]*fx)*(1-fy)+(px[c+k]*(1-fx)+px[d+k]*fx)*fy}
+  return out}
+function studioCharFwd(ops,p){let q=[p[0],p[1]];for(let it=0;it<24;it++){const s=studioCharBack(ops,q[0],q[1]);q=[q[0]+(p[0]-s[0])*0.8,q[1]+(p[1]-s[1])*0.8]}return q}
+/* цвет радужки — тёмная часть пятна вокруг зрачка */
+function studioCharIris(px,W,H,c,w){const arr=[],r=Math.max(2,w[0]*0.2);for(let y=Math.round(c[1]-r);y<=c[1]+r;y++)for(let x=Math.round(c[0]-r);x<=c[0]+r;x++){if(x<0||y<0||x>=W||y>=H)continue;const i=(y*W+x)*4;arr.push([px[i]+px[i+1]+px[i+2],px[i],px[i+1],px[i+2]])}
+  arr.sort((a,b)=>a[0]-b[0]);const s=arr.slice(Math.floor(arr.length*0.15),Math.max(1,Math.floor(arr.length*0.5)));if(!s.length)return[90,60,45];return[1,2,3].map(k=>s.reduce((m,v)=>m+v[k],0)/s.length)}
+const studioCharViv=(rgb,L,k)=>{const m=(rgb[0]+rgb[1]+rgb[2])/3,c=rgb.map(v=>m+(v-m)*k),cm=Math.max(1,(c[0]+c[1]+c[2])/3);return studioDtHex(...c.map(v=>Math.max(0,Math.min(255,Math.round(v*L/cm)))))};
+/* подготовка: точки → лица, деформация всей картинки (один проход на всех людей) */
+function studioCharPrep(px,W,H,kps,R){const faces=[];for(const kp of kps||[]){if(Math.abs(+kp.yaw||0)>0.45)continue;/* профиль — черты не перерисовываем */const F=studioCharFace(kp,W,H);if(F)faces.push(F)}if(!faces.length)return null;
+  const ops=R?faces.flatMap(F=>studioCharOps(F,R)):[];
+  faces.forEach(F=>{const ir=[F.eL,F.eR].map((e,j)=>studioCharIris(px,W,H,e,j?F.ewR:F.ewL)),m=[0,1,2].map(k=>(ir[0][k]+ir[1][k])/2);F.iris={mid:studioCharViv(m,100,1.45),dark:studioCharViv(m,38,1.3),lit:studioCharViv(m,175,1.3)}});
+  faces.forEach(F=>{const fw=p=>studioCharFwd(ops,p),ec=fw(F.ec),ch=fw(F.chin),ln=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]),dE=ln(ec,ch);
+    const cL=F.jL&&F.jR?ln(fw(F.jL),fw(F.jR))/2*1.12:F.D*(R?R.eye[0]*0.15+0.85:1)*1.02;
+    F.ov={c:[ec[0]+F.dn[0]*dE*0.32,ec[1]+F.dn[1]*dE*0.32],rx:Math.max(F.D*0.85,cL),ry:dE*0.74,a:F.a};
+    F.w={eL:fw(F.eL),eR:fw(F.eR),nose:fw(F.nose),mouth:fw(F.mouth),bL:F.brL?fw(F.brL):null,bR:F.brR?fw(F.brR):null,chin:ch}});
+  let mask=null;if(R&&R.eyes&&typeof document!=="undefined"){const cv=document.createElement("canvas");cv.width=W;cv.height=H;const g=cv.getContext("2d");
+    const el=(c,rx,ry,a,col)=>{g.fillStyle=col;g.beginPath();g.ellipse(c[0],c[1],Math.max(1,rx),Math.max(1,ry),a,0,Math.PI*2);g.fill()};
+    for(const F of faces){el(F.ov.c,F.ov.rx*0.9,F.ov.ry*0.92,F.a,"#010000")}
+    for(const F of faces){const D=F.D,ek=Math.max(1,R.eye?R.eye[0]:1);for(const[e,w]of[[F.w.eL,F.ewL],[F.w.eR,F.ewR]])el(e,w[0]*ek*0.85,Math.max(w[1]*2.4,w[0]*0.55)*ek,F.a,"#020000");
+      for(const b of[F.w.bL,F.w.bR])if(b)el(b,D*0.36,D*0.16,F.a,"#020000");el(F.w.nose,D*0.3,D*0.36,F.a,"#020000");el(F.w.mouth,F.mw*0.7*(R.mouth||1),F.mw*0.42,F.a,"#020000")}
+    const d=g.getImageData(0,0,W,H).data;mask=new Uint8Array(W*H);for(let i=0;i<W*H;i++)mask[i]=d[i*4+3]>200?d[i*4]:0}
+  return{px:R?studioCharWarp(px,W,H,ops):px,faces,ops,R,mask}}
+/* кожа по лицу: группы цвета, что занимают щёки/лоб/переносицу, — кожа; «телесные» по цвету, но далёкие от лица — нет */
+function studioCharSkin(Q,cen,W,H,ch){const cnt=new Float64Array(cen.length);let tot=0;
+  for(const F of ch.faces){const rt=[Math.cos(F.a),Math.sin(F.a)],D=F.D,pt=(u,v)=>studioCharFwd(ch.ops,[F.ec[0]+rt[0]*D*u+F.dn[0]*D*v,F.ec[1]+rt[1]*D*u+F.dn[1]*D*v]);
+    for(const[u,v,r]of[[-0.55,0.6,0.16],[0.55,0.6,0.16],[0,-0.5,0.16],[0,0.32,0.07],[-0.3,1.05,0.1],[0.3,1.05,0.1]]){const c=pt(u,v),rr=Math.max(1,D*r);
+      for(let y=Math.round(c[1]-rr);y<=c[1]+rr;y++)for(let x=Math.round(c[0]-rr);x<=c[0]+rr;x++){if(x<0||y<0||x>=W||y>=H)continue;const k=Q.lb[y*W+x];if(k<0)continue;cnt[k]++;tot++}}}
+  if(tot<20)return;const face=[];cnt.forEach((v,k)=>{if(v/tot>=0.08&&cen[k][0]>8)face.push(k)});if(!face.length)return;face.sort((a,b)=>cnt[b]-cnt[a]);
+  cen.forEach((c,k)=>{if(face.includes(k)){c.sk=true;return}if(!studioIsSkin(...c)){c.sk=false;return}c.sk=face.some(j=>Math.hypot(c[0]-cen[j][0],(c[1]-cen[j][1])*1.5,(c[2]-cen[j][2])*1.5)<22)});
+  ch.skinG=face;let m=0;const sk=[0,0,0];for(const k of face){if(!cen[k].sk)continue;const w=cnt[k];m+=w;for(let j=0;j<3;j++)sk[j]+=cen[k][j]*w}
+  if(m){ch.skLab=sk.map(v=>v/m);ch.skLab.sk=true}else{ch.skLab=cen[face[0]].slice();ch.skLab.sk=true}}
+const studioSkinC=c=>c.sk!=null?c.sk:studioIsSkin(...c);
+/* внутри лица: кожа и блики (светлее кожи, нейтральные или того же оттенка) → ровная кожа; волосы (темнее/другой оттенок) — как есть */
+function studioCharFlat(m,c,sk){if(m===2)return true;if(m!==1)return false;if(studioSkinC(c))return true;if(c[0]<sk[0]-10)return false;const C=Math.hypot(c[1],c[2]);if(C<25)return true;
+  const d=Math.abs(Math.atan2(c[2],c[1])-Math.atan2(sk[2],sk[1]))*57.3;return Math.min(d,360-d)<35}
+/* стилизованные глаза поверх рисунка */
+function studioCharEyes(kind,F,ops,R,ink,uid,skin){if(!kind)return"";const k=Math.max(1,F.D/120),deg=F.a*180/Math.PI,f=v=>(+v).toFixed(1);let s="";
+  for(const[side,c0,w0]of[["l",F.eL,F.ewL],["r",F.eR,F.ewR]]){const c=studioCharFwd(ops,c0),ex=w0[0]*(R.eye?R.eye[0]:1),open=Math.min(1,Math.max(0.3,(w0[1]/w0[0])/0.4)),out=side==="l"?-1:1,id=`ch${uid}${side}`;
+    const g=`<g transform="translate(${f(c[0])} ${f(c[1])}) rotate(${f(deg)})">`;
+    if(kind==="anime"||kind==="manga"||kind==="disney"){const w=ex*(kind==="disney"?0.6:0.64),h=w*(kind==="anime"?1.08:kind==="manga"?0.95:0.88)*open,ir=w*(kind==="disney"?0.52:0.58),top=-h*0.6,bot=h*0.5;
+      const mono=kind==="manga",iC=mono?"#2a2a2a":F.iris.mid,iD=mono?"#000":F.iris.dark,iL=mono?"#777":F.iris.lit;
+      const eye=`M${f(-w)} ${f(top*0.25)}Q${f(-w*0.6)} ${f(top)} 0 ${f(top)}Q${f(w*0.75)} ${f(top)} ${f(w)} ${f(top*0.2)}Q${f(w*0.75)} ${f(bot)} 0 ${f(bot)}Q${f(-w*0.7)} ${f(bot)} ${f(-w)} ${f(top*0.25)}Z`;
+      s+=`<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${iD}"/><stop offset=".55" stop-color="${iC}"/><stop offset="1" stop-color="${iL}"/></linearGradient><clipPath id="c${id}"><path d="${eye}" transform="scale(${out} 1)"/></clipPath></defs>`;
+      s+=g+(skin?`<ellipse rx="${f(w*1.25)}" ry="${f(Math.abs(top)*1.15)}" cy="${f(bot*0.1)}" fill="${skin}"/>`:"")+`<path fill="#fffdf8" d="${eye}" transform="scale(${out} 1)"/>`;
+      s+=`<g clip-path="url(#c${id})"><ellipse cy="${f((bot+top)*0.06)}" rx="${f(ir*0.82)}" ry="${f(ir*(kind==="disney"?0.95:1.12))}" fill="url(#${id})"/><ellipse cy="${f((bot+top)*0.04)}" rx="${f(ir*0.36)}" ry="${f(ir*0.5)}" fill="${iD}"/><path d="M${f(-w)} ${f(top*1.1)}L${f(w)} ${f(top*1.1)}L${f(w)} ${f(top*0.15)}Q0 ${f(top*0.45)} ${f(-w)} ${f(top*0.15)}Z" fill="#000" opacity=".2"/></g>`;
+      s+=`<ellipse cx="${f(-ir*0.3*out)}" cy="${f(-ir*0.42)}" rx="${f(ir*0.24)}" ry="${f(ir*0.3)}" fill="#fff"/><circle cx="${f(ir*0.3*out)}" cy="${f(ir*0.4)}" r="${f(ir*0.11)}" fill="#fff" opacity=".9"/>`;
+      const lw=h*(kind==="disney"?0.15:0.22);
+      s+=`<path transform="scale(${out} 1)" fill="${ink}" d="M${f(-w*1.08)} ${f(top*0.15)}Q${f(-w*0.6)} ${f(top*1.12)} 0 ${f(top*1.08)}Q${f(w*0.8)} ${f(top*1.05)} ${f(w*1.22)} ${f(top*0.05)}L${f(w*1.34)} ${f(-top*0.14)}Q${f(w*0.95)} ${f(top*0.55)} 0 ${f(top*1.08-lw)}Q${f(-w*0.55)} ${f(top*1.12-lw)} ${f(-w*0.95)} ${f(top*0.2+lw*0.3)}Z"/>`;
+      s+=`<path transform="scale(${out} 1)" fill="none" stroke="${ink}" stroke-width="${f(1.4*k)}" stroke-linecap="round" d="M${f(-w*0.35)} ${f(bot*1.02)}Q${f(w*0.3)} ${f(bot*1.08)} ${f(w*0.8)} ${f(bot*0.55)}"/></g>`}
+    else if(kind==="simpsons"){const r=ex*0.62;s+=g+`<circle cx="${f(out*r*0.12)}" r="${f(r)}" fill="#fff" stroke="${ink}" stroke-width="${f(2*k)}"/><circle cx="${f(out*r*0.05)}" cy="${f(r*0.05)}" r="${f(r*0.14)}" fill="${ink}"/></g>`}
+    else if(kind==="dotwhite"){const r=ex*0.42;s+=g+`<ellipse rx="${f(r)}" ry="${f(r*1.15)}" fill="#fff" stroke="${ink}" stroke-width="${f(1.6*k)}"/><ellipse cx="${f(out*r*0.1)}" cy="${f(r*0.1)}" rx="${f(r*0.34)}" ry="${f(r*0.44)}" fill="${ink}"/><circle cy="${f(-r*0.1)}" r="${f(r*0.1)}" fill="#fff"/></g>`}
+    else if(kind==="dot"){const r=Math.max(1.5*k,F.D*0.055);s+=g+(skin?`<ellipse rx="${f(ex*0.62)}" ry="${f(ex*0.4)}" fill="${skin}"/>`:"")+`<ellipse rx="${f(r)}" ry="${f(r*1.35)}" fill="${ink}"/></g>`}}
+  return s}
+/* линии внутри лица убираем (контур, центр которого внутри овала лица): их заменят нарисованные черты */
+function studioCharInk(ink,ch){if(!ch||!ch.mask||!ink)return ink;const E=ch.faces.map(F=>({c:F.ov.c,rx:F.ov.rx*0.86,ry:F.ov.ry*0.88,a:F.a}));
+  return ink.split("M").slice(1).filter(m=>{const n=m.replace(/Z/g,"").split(/[C ]/).filter(Boolean).map(Number);let x=0,y=0,k=0;for(let i=0;i+1<n.length;i+=2){x+=n[i];y+=n[i+1];k++}if(!k)return false;x/=k;y/=k;
+    return!E.some(e=>{const u=studioCharRot([x-e.c[0],y-e.c[1]],-e.a);return(u[0]/e.rx)**2+(u[1]/e.ry)**2<1})}).map(m=>"M"+m).join("")}
+/* нарисованные черты лица: брови, нос, рот, румянец — по типу глаз стиля */
+function studioCharFeat(kind,F,R,ink,lip){const f=v=>(+v).toFixed(1),D=F.D,deg=f(F.a*180/Math.PI),k=Math.max(1,D/120),g=(p,body)=>`<g transform="translate(${f(p[0])} ${f(p[1])}) rotate(${deg})">${body}</g>`;let s="";
+  const toF=p=>{const v=[p[0]-F.ec[0],p[1]-F.ec[1]];return[v[0]*Math.cos(-F.a)-v[1]*Math.sin(-F.a),v[0]*Math.sin(-F.a)+v[1]*Math.cos(-F.a)]};
+  const mc=F.mL&&F.mR?toF([(F.mL[0]+F.mR[0])/2,(F.mL[1]+F.mR[1])/2]):null,lc=F.lt&&F.lb?toF([(F.lt[0]+F.lb[0])/2,(F.lt[1]+F.lb[1])/2]):mc;
+  const ms=F.ms,smile=ms==='smile'||ms==='teeth'?0.32:mc&&lc?Math.max(-0.2,Math.min(0.4,(lc[1]-mc[1])/F.mw*3)):0.1,open=ms==='teeth'||ms==='open'?(ms==='open'?0.6:0.36):ms?0:F.lt&&F.lb&&Math.hypot(F.lt[0]-F.lb[0],F.lt[1]-F.lb[1])/F.mw>0.6?0.4:0;
+  /* румянец */
+  if(kind==="anime"||kind==="disney")for(const e of[F.w.eL,F.w.eR]){const p=[e[0]+F.dn[0]*D*0.55,e[1]+F.dn[1]*D*0.55];s+=g(p,`<ellipse rx="${f(D*0.24)}" ry="${f(D*0.09)}" fill="${kind==="manga"?"#000":"#ff7d8e"}" opacity="${kind==="manga"?0.12:0.32}"/>`)}
+  /* брови */
+  const bw=kind==="simpsons"||kind==="dotwhite"?0:kind==="dot"?0.035:kind==="disney"?0.05:0.045;
+  if(bw)[[F.w.bL,F.w.eL,-1],[F.w.bR,F.w.eR,1]].forEach(([b,e,o])=>{const p=b||[e[0]-F.dn[0]*D*0.42,e[1]-F.dn[1]*D*0.42],L=D*(kind==="dot"?0.22:0.34),t=D*bw;
+    s+=g(p,`<path transform="scale(${o} 1)" fill="${ink}" d="M${f(-L)} ${f(t*0.6)}Q${f(-L*0.1)} ${f(-t*2.4)} ${f(L)} ${f(-t*0.2)}Q${f(L*0.05)} ${f(-t*1.1)} ${f(-L)} ${f(t*0.6)}Z"/>`)});
+  /* нос */
+  const n=F.w.nose,nk=R.nose||1;
+  if(kind==="anime"||kind==="manga")s+=g(n,`<path fill="none" stroke="${ink}" stroke-width="${f(1.3*k)}" stroke-linecap="round" d="M${f(-D*0.03)} ${f(-D*0.06)}L${f(D*0.04)} ${f(D*0.02)}"/>`);
+  else if(kind==="disney")s+=g(n,`<path fill="none" stroke="${ink}" stroke-width="${f(1.4*k)}" stroke-linecap="round" d="M${f(-D*0.1)} ${f(D*0.02)}Q0 ${f(D*0.08)} ${f(D*0.1)} ${f(D*0.02)}"/>`);
+  else if(kind==="simpsons")s+=g(n,`<path fill="none" stroke="${ink}" stroke-width="${f(2*k)}" stroke-linecap="round" d="M${f(-D*0.12)} ${f(-D*0.3)}Q${f(-D*0.2*nk)} ${f(D*0.06)} ${f(D*0.04)} ${f(D*0.06)}"/>`);
+  else s+=g(n,`<path fill="none" stroke="${ink}" stroke-width="${f(1.4*k)}" stroke-linecap="round" d="M${f(-D*0.08)} 0Q${f(D*0.02)} ${f(D*0.09)} ${f(D*0.09)} ${f(-D*0.02)}"/>`);
+  /* рот: улыбка/открытый */
+  const mw=F.mw*(R.mouth||1)*(kind==="simpsons"?1.1:kind==="anime"||kind==="manga"?0.62:0.8),cy=smile*mw*0.35,sw=f((kind==="simpsons"?2:1.5)*k);
+  if(open>0.22){const h=Math.min(0.6,open)*mw*0.7;s+=g(F.w.mouth,`<path fill="#5a1620" stroke="${ink}" stroke-width="${sw}" stroke-linejoin="round" d="M${f(-mw/2)} ${f(-cy*0.3)}Q0 ${f(cy*0.4)} ${f(mw/2)} ${f(-cy*0.3)}Q${f(mw*0.3)} ${f(h)} 0 ${f(h)}Q${f(-mw*0.3)} ${f(h)} ${f(-mw/2)} ${f(-cy*0.3)}Z"/><path fill="#fff" d="M${f(-mw*0.4)} ${f(-cy*0.2)}Q0 ${f(cy*0.45)} ${f(mw*0.4)} ${f(-cy*0.2)}L${f(mw*0.34)} ${f(h*0.28)}Q0 ${f(h*0.4)} ${f(-mw*0.34)} ${f(h*0.28)}Z"/><ellipse cy="${f(h*0.78)}" rx="${f(mw*0.22)}" ry="${f(h*0.18)}" fill="#e26a76"/>`)}
+  else{s+=g(F.w.mouth,(lip&&kind==="disney"?`<path fill="${lip}" d="M${f(-mw/2)} 0Q0 ${f(-mw*0.12)} ${f(mw/2)} 0Q0 ${f(mw*0.22)} ${f(-mw/2)} 0Z" opacity=".85"/>`:"")+`<path fill="none" stroke="${ink}" stroke-width="${sw}" stroke-linecap="round" d="M${f(-mw/2)} ${f(-cy)}Q0 ${f(cy)} ${f(mw/2)} ${f(-cy)}"/>`)}
+  return s}
+function studioCharSvg(T,C){const ch=T.char;if(!ch||!ch.R||!ch.R.eyes)return"";const lip=(T.V&&T.V.lips)||"#d65c6c";return ch.faces.map((F,i)=>(ch.mask?studioCharFeat(ch.R.eyes,F,ch.R,C.ink,lip):"")+studioCharEyes(ch.R.eyes,F,ch.ops,ch.R,C.ink,i,ch.mask?null:ch.skinHex)).join("")}
 async function studioToonTrace(px0,W,H,o,prog){const V0=studioToonVOf(o.style||"comic");if(V0.fam!=="rule")return studioToonTraceV(px0,W,H,V0,o,prog);
+  const ch=o.kp&&o.kp.length?studioCharPrep(px0,W,H,o.kp,studioCharRig(V0)):null;if(ch)px0=ch.px;
   const style=V0.rule,P={...STUDIO_TOON_P[style],...(o.over||{})},n=W*H,k=Math.max(1,W/900);prog&&prog("Сглаживаю…");await studioTrYield();
   const lab=studioDtLabArr(studioTrMedian(px0,W,H,1),n),sm=studioBilateralLab(lab,W,H,P.it,P.sr);
   /* цветовые группы (по сглаженной картинке) — чтобы правила стиля знали «чей» это цвет: кожа, волосы, фон */
   const pS=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){const r=studioDtLab2Rgb(sm[i*3],sm[i*3+1],sm[i*3+2]);pS[i*4]=r[0];pS[i*4+1]=r[1];pS[i*4+2]=r[2];pS[i*4+3]=255}
-  studioTrKmeans.minShare=0.004;const Q=studioTrKmeans(pS,W,H,Math.max(P.K,13)),cen=studioToonBgFix(Q,Q.col.map(h=>studioLab(...studioHexRgb(h))),W,H);studioToonSkinRef=studioToonSkinOf(Q,cen,n,sm);
+  studioTrKmeans.minShare=0.004;const Q=studioTrKmeans(pS,W,H,Math.max(P.K,13)),cen=studioToonBgFix(Q,Q.col.map(h=>studioLab(...studioHexRgb(h))),W,H);if(ch)studioCharSkin(Q,cen,W,H,ch);studioToonSkinRef=studioToonSkinOf(Q,cen,n,sm);
   prog&&prog("Рисую в стиле…");await studioTrYield();
-  const rule=STUDIO_TOON_RULES[style](),px=new Uint8ClampedArray(n*4),pal=new Map();
-  for(let i=0;i<n;i++){const c=cen[Q.lb[i]]||[sm[i*3],sm[i*3+1],sm[i*3+2]],[hx,cls]=rule(sm[i*3],sm[i*3+1],sm[i*3+2],c);if(!pal.has(hx))pal.set(hx,cls);const v=parseInt(hx.slice(1),16);px[i*4]=v>>16;px[i*4+1]=(v>>8)&255;px[i*4+2]=v&255;px[i*4+3]=255}
+  const rule=STUDIO_TOON_RULES[style](),px=new Uint8ClampedArray(n*4),pal=new Map();if(ch&&ch.skinG){const c=cen[ch.skinG[0]];ch.skinHex=rule(ch.skLab[0]+2,ch.skLab[1],ch.skLab[2],ch.skLab)[0]}
+  const msk=ch&&ch.skinHex&&ch.mask,skC=msk?ch.skLab:null;for(let i=0;i<n;i++){let c=cen[Q.lb[i]]||[sm[i*3],sm[i*3+1],sm[i*3+2]],[hx,cls]=msk&&studioCharFlat(msk[i],c,skC)?rule(msk[i]===2?skC[0]:skC[0]+Math.max(-14,Math.min(6,(sm[i*3]-skC[0])*0.3)),skC[1],skC[2],skC):rule(sm[i*3],sm[i*3+1],sm[i*3+2],c);if(!pal.has(hx))pal.set(hx,cls);const v=parseInt(hx.slice(1),16);px[i*4]=v>>16;px[i*4+1]=(v>>8)&255;px[i*4+2]=v&255;px[i*4+3]=255}
   prog&&prog("Контуры…");await studioTrYield();
   const T=await studioTraceImage(px,W,H,{colors:Math.min(64,pal.size+2),size:W,blur:0,sharp:0,speckle:P.speckle*k*k,err:0.8*k,corner:125,smooth:2,merge:2.5,order:"lum",up:1,minShare:0.0004},prog);
   /* класс слоя — по ближайшему цвету стиля */
   const PL=[...pal].map(([h,c])=>[studioHexRgb(h),c,h]);T.cls=T.layers.map(Ly=>{const q=studioHexRgb(Ly.color);let b=PL[0],bd=1e9;for(const e of PL){const d=(e[0][0]-q[0])**2+(e[0][1]-q[1])**2+(e[0][2]-q[2])**2;if(d<bd){bd=d;b=e}}Ly.color=b[2];return b[1]});
   prog&&prog("Линии…");await studioTrYield();
-  T.ink=studioToonInk(sm,W,H,{sig:P.sig*k,thr:P.thr,minA:P.inkMin*k*k,err:0.6*k});T.toon=true;T.P=P;T.style=style;T.vid=V0.id;return T}
+  T.ink=studioToonInk(sm,W,H,{sig:P.sig*k,thr:P.thr,minA:P.inkMin*k*k,err:0.6*k});T.toon=true;T.P=P;T.style=style;T.vid=V0.id;T.char=ch;T.ink=studioCharInk(T.ink,ch);return T}
 /* движок вариантов: сглаживание → цветовые группы → правило варианта → трассировка → фактуры и цвета показа по слоям */
-async function studioToonTraceV(px0,W,H,V,o,prog){const ov=o.over||{},n=W*H,k=Math.max(1,W/900);prog&&prog("Сглаживаю…");await studioTrYield();
+async function studioToonTraceV(px0,W,H,V,o,prog){const ov=o.over||{},n=W*H,k=Math.max(1,W/900),ch=o.kp&&o.kp.length?studioCharPrep(px0,W,H,o.kp,studioCharRig(V)):null;if(ch)px0=ch.px;prog&&prog("Сглаживаю…");await studioTrYield();
   const lab=studioDtLabArr(studioTrMedian(px0,W,H,1),n),sm=studioBilateralLab(lab,W,H,ov.it||V.it||5,10);
   const pS=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){const r=studioDtLab2Rgb(sm[i*3],sm[i*3+1],sm[i*3+2]);pS[i*4]=r[0];pS[i*4+1]=r[1];pS[i*4+2]=r[2];pS[i*4+3]=255}
-  studioTrKmeans.minShare=0.004;const Q=studioTrKmeans(pS,W,H,Math.max(ov.K||V.K||8,V.cyc?0:13)),cen=studioToonBgFix(Q,Q.col.map(h=>studioLab(...studioHexRgb(h))),W,H);studioToonSkinRef=studioToonSkinOf(Q,cen,n,sm);
+  studioTrKmeans.minShare=0.004;const Q=studioTrKmeans(pS,W,H,Math.max(ov.K||V.K||8,V.cyc?0:13)),cen=studioToonBgFix(Q,Q.col.map(h=>studioLab(...studioHexRgb(h))),W,H);if(ch)studioCharSkin(Q,cen,W,H,ch);studioToonSkinRef=studioToonSkinOf(Q,cen,n,sm);
   /* пороги яркости по долям картинки (каждый цвет палитры займёт свою часть) */
   const ctx={cutL:[]};if(V.fam==="post"){const cut=V.cut||V.lv.slice(1).map((_,j)=>(j+1)/V.lv.length);
     /* пороги яркости по долям; для «по лицу» — среднее порогов по коже и по всей картинке (устойчиво, даже если кожа найдена частично) */
     const qs=mask=>{const h=new Float64Array(101);let m=0;for(let i=0;i<n;i++){if(mask&&!mask[i])continue;h[Math.max(0,Math.min(100,Math.round(sm[i*3])))]++;m++}if(!m)return null;const out=[];let acc=0,j=0;for(let L=0;L<=100&&j<cut.length;L++){acc+=h[L]/m;while(j<cut.length&&acc>=cut[j]){out.push(L+0.5);j++}}while(out.length<cut.length)out.push(100);return out};
-    const g=qs(null);let sk=null;if(V.qSkin){const msk=new Uint8Array(n);let m=0;for(let i=0;i<n;i++){const c=cen[Q.lb[i]];if(c&&studioIsSkin(...c)){msk[i]=1;m++}}if(m>=n*0.04)sk=qs(msk)}
+    const g=qs(null);let sk=null;if(V.qSkin){const msk=new Uint8Array(n);let m=0;for(let i=0;i<n;i++){const c=cen[Q.lb[i]];if(c&&studioSkinC(c)){msk[i]=1;m++}}if(m>=n*0.04)sk=qs(msk)}
     ctx.cutL=sk?g.map((v,k)=>(v+sk[k])/2):g}
-  prog&&prog("Рисую в стиле…");await studioTrYield();const rule=studioToonVRule(V,ctx),px=new Uint8ClampedArray(n*4),pal=new Map();
-  for(let i=0;i<n;i++){const gi=Q.lb[i],c=cen[gi]||[sm[i*3],sm[i*3+1],sm[i*3+2]],[hx,tx,f]=rule(sm[i*3],sm[i*3+1],sm[i*3+2],c,gi<0?0:gi);if(!pal.has(hx))pal.set(hx,[tx,f]);const v=parseInt(hx.slice(1),16);px[i*4]=v>>16;px[i*4+1]=(v>>8)&255;px[i*4+2]=v&255;px[i*4+3]=255}
+  prog&&prog("Рисую в стиле…");await studioTrYield();const rule=studioToonVRule(V,ctx),px=new Uint8ClampedArray(n*4),pal=new Map();if(ch&&ch.skinG){const g=ch.skinG[0],c=cen[g];ch.skinHex=rule(ch.skLab[0]+2,ch.skLab[1],ch.skLab[2],ch.skLab,g)[0]}
+  const msk=ch&&ch.skinHex&&ch.mask,skC=msk?ch.skLab:null;for(let i=0;i<n;i++){const gi=Q.lb[i],c=cen[gi]||[sm[i*3],sm[i*3+1],sm[i*3+2]],[hx,tx,f]=msk&&studioCharFlat(msk[i],c,skC)?rule(msk[i]===2?skC[0]:skC[0]+Math.max(-14,Math.min(6,(sm[i*3]-skC[0])*0.3)),skC[1],skC[2],skC,ch.skinG[0]):rule(sm[i*3],sm[i*3+1],sm[i*3+2],c,gi<0?0:gi);if(!pal.has(hx))pal.set(hx,[tx,f]);const v=parseInt(hx.slice(1),16);px[i*4]=v>>16;px[i*4+1]=(v>>8)&255;px[i*4+2]=v&255;px[i*4+3]=255}
   prog&&prog("Контуры…");await studioTrYield();
   const T=await studioTraceImage(px,W,H,{colors:Math.min(64,pal.size+2),size:W,blur:0,sharp:0,speckle:(V.speckle||100)*k*k,err:0.8*k,corner:125,smooth:2,merge:2.2,order:"lum",up:1,minShare:0.0004},prog);
   const PL=[...pal].map(([h,m])=>[studioHexRgb(h),m,h]);T.cls=[];T.fillV=[];T.layers.forEach(Ly=>{const q=studioHexRgb(Ly.color);let b=PL[0],bd=1e9;for(const e of PL){const d=(e[0][0]-q[0])**2+(e[0][1]-q[1])**2+(e[0][2]-q[2])**2;if(d<bd){bd=d;b=e}}Ly.color=b[2];T.cls.push(b[1][0]);T.fillV.push(b[1][1])});
   prog&&prog("Линии…");await studioTrYield();const I=V.ink;
-  T.ink=I?studioToonInk(sm,W,H,{sig:(ov.sig||I.sig)*k,thr:ov.thr!=null?ov.thr:I.thr,minA:(I.min||26)*k*k,err:0.6*k}):"";T.toon=true;T.V=V;T.vid=V.id;T.style=V.id;T.P={ink:I?I.c:"#111111",ol:V.ol||null};return T}
+  T.ink=I?studioToonInk(sm,W,H,{sig:(ov.sig||I.sig)*k,thr:ov.thr!=null?ov.thr:I.thr,minA:(I.min||26)*k*k,err:0.6*k}):"";T.toon=true;T.V=V;T.vid=V.id;T.char=ch;T.ink=studioCharInk(T.ink,ch);T.style=V.id;T.P={ink:I?I.c:"#111111",ol:V.ol||null};return T}
 /* раскраска стиля по слоям палитры: заливка, растр/штриховка поверх, фон, линии */
 function studioToonColors(T,st){if(T.V){const V=T.V,edit=st.palEdit||{},base=Math.max(4,T.W/170),out={fill:[],ovl:[],bg:V.paper||"#ffffff",ink:st.inkColor||(V.ink?V.ink.c:"#111111"),pat:""},used=new Set();
     T.layers.forEach((Ly,i)=>{out.fill.push(edit[i]||T.fillV[i]||Ly.color);const c=T.cls[i];out.ovl.push(c?"vt_"+c:null);if(c)used.add(c)});
@@ -11569,10 +11732,10 @@ function studioToonSvg(T,C,full,o){let body="";
     if(v==="hx1")body+=`<path fill="url(#hx1a)" d="${d}"/>`;else if(v==="hx2")body+=`<path fill="url(#hx2a)" d="${d}"/><path fill="url(#hx2b)" d="${d}"/>`;else body+=`<path fill="url(#${v})" d="${d}"/>`});
   /* обводка цветовых форм: границы всех слоёв, кроме нижнего (его граница — край картинки) */
   const OL=T.P&&T.P.ol,kW=Math.max(1,T.W/900),ol=OL&&!(o&&o.noInk)?`<g fill="none" stroke="${C.olc||OL[1]}" stroke-width="${(OL[0]*kW).toFixed(2)}" stroke-opacity="${OL[2]}" stroke-linejoin="round">${T.layers.slice(1).map(Ly=>`<path d="${Ly.paths.map(sg=>studioTrD(sg)).join("")}"/>`).join("")}</g>`:"";
-  return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${T.W} ${T.H}"${full?` width="${T.W}" height="${T.H}"`:' preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%"'}><defs>${C.pat}</defs><rect width="${T.W}" height="${T.H}" fill="${C.bg}"/><g fill-rule="evenodd" stroke-linejoin="round">${body}</g>${ol}${o&&o.noInk?"":`<path fill="${C.ink}" fill-rule="evenodd" d="${T.ink}"/>`}</svg>`}
+  return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${T.W} ${T.H}"${full?` width="${T.W}" height="${T.H}"`:' preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%"'}><defs>${C.pat}</defs><rect width="${T.W}" height="${T.H}" fill="${C.bg}"/><g fill-rule="evenodd" stroke-linejoin="round">${body}</g>${ol}${o&&o.noInk?"":`<path fill="${C.ink}" fill-rule="evenodd" d="${T.ink}"/>`}${studioCharSvg(T,C)}</svg>`}
 const studioTrD=(segs,k=1)=>{const f=v=>(Math.round(v*k*100)/100);let d=`M${f(segs[0][0][0])} ${f(segs[0][0][1])}`;for(const B of segs)d+=`C${f(B[1][0])} ${f(B[1][1])} ${f(B[2][0])} ${f(B[2][1])} ${f(B[3][0])} ${f(B[3][1])}`;return d+"Z"};
 function studioTraceSvg(T,full){return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${T.W} ${T.H}"${full?` width="${T.W}" height="${T.H}"`:' preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%"'}>${T.layers.map(L=>`<path fill="${L.color}" fill-rule="evenodd" d="${L.paths.map(sg=>studioTrD(sg)).join("")}"/>`).join("")}</svg>`}
-window.NEON_TRACE={image:(...a)=>studioTraceImage(...a),svg:(...a)=>studioTraceSvg(...a),guess:(...a)=>studioTraceGuess(...a),presets:STUDIO_TRACE_PRESETS,detail:(...a)=>studioDetailTrace(...a),detailSvg:(...a)=>studioDetailSvg(...a),colors:(...a)=>studioDtColors(...a),palette:(...a)=>studioDtPalette(...a),toon:(...a)=>studioToonTrace(...a),toonColors:(...a)=>studioToonColors(...a),toonSvg:(...a)=>studioToonSvg(...a),ink:(...a)=>studioToonInk(...a),labArr:(...a)=>studioDtLabArr(...a),median:(...a)=>studioTrMedian(...a),bilat:(...a)=>studioBilateralLab(...a),skinRef:()=>studioToonSkinRef};
+window.NEON_TRACE={image:(...a)=>studioTraceImage(...a),svg:(...a)=>studioTraceSvg(...a),guess:(...a)=>studioTraceGuess(...a),presets:STUDIO_TRACE_PRESETS,detail:(...a)=>studioDetailTrace(...a),detailSvg:(...a)=>studioDetailSvg(...a),colors:(...a)=>studioDtColors(...a),palette:(...a)=>studioDtPalette(...a),toon:(...a)=>studioToonTrace(...a),toonColors:(...a)=>studioToonColors(...a),toonSvg:(...a)=>studioToonSvg(...a),ink:(...a)=>studioToonInk(...a),labArr:(...a)=>studioDtLabArr(...a),median:(...a)=>studioTrMedian(...a),bilat:(...a)=>studioBilateralLab(...a),skinRef:()=>studioToonSkinRef,char:{rig:STUDIO_CHAR_RIG,prep:(...a)=>studioCharPrep(...a),face:(...a)=>studioCharFace(...a)}};
 /* в дизайн: каждый цвет — слой-кривая (точки в % рамки, ручки Безье), всё — группа «Вектор из фото» */
 function studioTraceToLayers(T,box){const g="g"+studioUid(),pt=(p,W,H)=>({x:p[0]/W*100,y:p[1]/H*100});
   const toPts=segs=>segs.map((B,i)=>{const prev=segs[(i-1+segs.length)%segs.length],p=pt(B[0],T.W,T.H),o=pt(B[1],T.W,T.H),inn=pt(prev[2],T.W,T.H);return{x:p.x,y:p.y,type:"smooth",in:{dx:inn.x-p.x,dy:inn.y-p.y},out:{dx:o.x-p.x,dy:o.y-p.y}}});
@@ -11587,7 +11750,9 @@ async function studioTraceDlg(src,o0){if(studioVxOpen)studioVxOpen.close();
   /* «Фото — детально»: стиль и цвета меняются мгновенно по готовым контурам */
   const ds={style:"photo",bright:0,contrast:0,sat:0,hue:0,grad:true,palK:12,palEdit:{},duo:["#14213d","#fca311"],pop:["#1a1a2e","#e94560","#f5a623","#fdf6e3"],outline:false,olc:"#111111"};let pal=null,painted={};
   /* «Рисунок по фото»: результат по стилю кэшируется — повторный выбор стиля мгновенный */
-  const ts={palEdit:{},ink:null,showInk:true},tcache=new Map();const isTn=()=>!!(T&&T.toon);
+  const ts={palEdit:{},ink:null,showInk:true,char:true},tcache=new Map();let kpP=null,kpErr="";
+  /* «Персонаж»: точки лица от ИИ — один запрос на картинку, дальше все стили считаются в браузере */
+  const getKp=()=>kpP||(kpP=(async()=>{try{const sc=Math.min(1,1024/Math.max(cv.width,cv.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(cv.width*sc));c.height=Math.max(1,Math.round(cv.height*sc));c.getContext("2d").drawImage(cv,0,0,c.width,c.height);kpErr="";const r=await apiPost("/api/v1/studio/ai/face-points",{image:c.toDataURL("image/jpeg",0.88)});return Array.isArray(r.people)?r.people:[]}catch(e){kpErr=e.message||String(e);return[]}})());const isTn=()=>!!(T&&T.toon);
   const tnKeys=["sig","thr","it","K"],tnOver=()=>{const O={};tnKeys.forEach(k=>{if(o["tn_"+k]!=null)O[k]=o["tn_"+k]});return O};
   const tcols=()=>studioToonColors(T,{style:o.style,palEdit:ts.palEdit,inkColor:ts.ink});
   const isD=()=>!!(T&&T.regions),gradOn=()=>ds.grad&&!["pal","pop"].includes(ds.style);
@@ -11601,7 +11766,8 @@ async function studioTraceDlg(src,o0){if(studioVxOpen)studioVxOpen.close();
         <div class="vx-tnh">Вариант · ${STUDIO_TOON_V.filter(v=>v.dir===cur.dir).length}</div><div class="vx-tnv">${STUDIO_TOON_V.filter(v=>v.dir===cur.dir).map(V=>`<button type="button" data-tst="${V.id}" class="${V.id===cur.id?"on":""}"><span>${esc(V.name)}</span><b>${sw(V)}</b></button>`).join("")}</div>`})()}
       ${(()=>{const V_=studioToonVOf(o.style),P={...(V_.fam==="rule"?STUDIO_TOON_P[V_.rule]:{sig:(V_.ink||{}).sig||1,thr:(V_.ink||{}).thr||0.3,it:V_.it||5,K:V_.K||8}),...tnOver()},r=(k,lb,mn,mx,st,u)=>`<nv-range data-tn="${k}" label="${lb}" min="${mn}" max="${mx}" step="${st}" value="${P[k]}" unit="${u||""}"></nv-range>`;
         return r("sig","Толщина линий",0.4,3,0.05)+r("thr","Порог линий (меньше — больше линий)",0.05,1.5,0.05)+r("it","Упрощение (сглаживание)",1,8,1)+r("K","Цветовых групп",3,16,1)})()}
-      <p class="muted" style="font-size:12px;margin:0">Рисунок строится из самого фото — лицо узнаётся. Это стилизация, а не перерисовка в персонажа.</p>`
+      <nv-switch data-tnchar label="Персонаж" description="ИИ находит лицо, а глаза, нос, рот и пропорции перерисовываются под стиль (аниме — большие глаза, мультфильм — крупнее голова)" ${ts.char?"checked":""}></nv-switch>
+      <p class="muted" style="font-size:12px;margin:0">Рисунок строится из самого фото — человек узнаётся. С «Персонажем» лицо рисуется заново в манере стиля; лица в профиль остаются как на фото.</p>`
     :preset==="detail"?`${rng("regions","Детализация, областей до",3000,150000,1000)}${rng("merge","Склейка похожих",0.5,8,0.5,"ΔE")}${rng("minA","Мельче не делить",1,40,1,"px²")}${rng("err","Точность контуров",0.2,2,0.05,"px")}${rng("compact","Форма: по краям ↔ ровно",2,20,1)}${rng("size","Разрешение",600,2400,100,"px")}
       <p class="muted" style="font-size:12px;margin:0">Каждая область — отдельный контур. Больше областей и меньше склейка — точнее, но тяжелее файл.</p>`
     :`${rng("colors","Цветов (не больше)",2,64,1)}${rng("size","Детализация",400,2400,50,"px")}${rng("err","Допуск кривых",0.3,4,0.05,"px")}${rng("speckle","Убирать пятна до",0,200,2,"px²")}${rng("corner","Острые углы до",60,160,5,"°")}${rng("blur","Убрать шум JPEG",0,3,1)}
@@ -11651,8 +11817,8 @@ async function studioTraceDlg(src,o0){if(studioVxOpen)studioVxOpen.close();
     if(D){cols.innerHTML=styleHtml();return}cols.innerHTML=T&&T.layers.length?T.layers.map((L,i)=>`<label class="vx-col"><input type="checkbox" data-vxcol="${i}" ${off.has(i)?"":"checked"}><i style="background:${L.color}"></i><code>${L.color}</code><small>${L.paths.length} ${studioPlural(L.paths.length,["контур","контура","контуров"])}</small></label>`).join(""):'<p class="muted" style="font-size:12px;margin:0">Появятся после расчёта</p>'};
   const run=async()=>{if(!cv)return;if(busy){again=true;return}busy=true;info.textContent="Считаю…";const t0=performance.now();
     try{const sc=Math.min(3,o.size/Math.max(cv.width,cv.height)),w=Math.max(8,Math.round(cv.width*sc)),h=Math.max(8,Math.round(cv.height*sc)),k=document.createElement("canvas");k.width=w;k.height=h;const g=k.getContext("2d");g.imageSmoothingQuality="high";g.drawImage(cv,0,0,w,h);
-      if(preset==="toon"){const key=JSON.stringify([o.style,tnOver(),w,h]);T=tcache.get(key);if(!T){T=await studioToonTrace(g.getImageData(0,0,w,h).data,w,h,{style:o.style,over:tnOver(),up:sc},m=>{info.textContent=m});tcache.set(key,T)}ts.palEdit={};paintCols();paint();
-        info.textContent=`Рисунок «${studioToonVOf(o.style).name}»: ${T.layers.length} цветов + линии, SVG ≈ ${Math.round(svgOf(true).length/1024)} КБ, ${((performance.now()-t0)/1000).toFixed(1)} с. Другие стили — сверху справа.`}
+      if(preset==="toon"){let kp=null;if(ts.char){info.textContent="ИИ ищет лицо…";kp=await getKp()}const key=JSON.stringify([o.style,tnOver(),w,h,kp?kp.length:0]);T=tcache.get(key);if(!T){T=await studioToonTrace(g.getImageData(0,0,w,h).data,w,h,{style:o.style,over:tnOver(),up:sc,kp},m=>{info.textContent=m});tcache.set(key,T)}ts.palEdit={};paintCols();paint();
+        const chN=T.char?T.char.faces.length:0;info.textContent=`Рисунок «${studioToonVOf(o.style).name}»: ${T.layers.length} цветов + линии${chN?`, персонаж: ${chN} ${studioPlural(chN,["лицо","лица","лиц"])}`:""}, SVG ≈ ${Math.round(svgOf(true).length/1024)} КБ, ${((performance.now()-t0)/1000).toFixed(1)} с.${ts.char&&!chN?(kpErr?" Персонаж недоступен: "+kpErr:" Лицо анфас не найдено — обычный рисунок."):""}`}
       else if(preset==="detail"){T=await studioDetailTrace(g.getImageData(0,0,w,h).data,w,h,{...o,up:sc},m=>{info.textContent=m});pal=null;paintCols();paint();
         const mb=svgOf(true).length/1048576;info.textContent=`Областей: ${T.regions.length} — каждая отдельным контуром. SVG ≈ ${mb>=1?mb.toFixed(1)+" МБ":Math.round(mb*1024)+" КБ"}, ${((performance.now()-t0)/1000).toFixed(1)} с. Цвет и стиль справа меняются сразу.`}
       else{T=await studioTraceImage(g.getImageData(0,0,w,h).data,w,h,{...o,up:sc},m=>{info.textContent=m});off=new Set();paintCols();paint();
@@ -11660,7 +11826,7 @@ async function studioTraceDlg(src,o0){if(studioVxOpen)studioVxOpen.close();
       info.textContent=T.layers.length?`Цветов: ${T.layers.length}, кривых Безье: ${segs}, SVG ≈ ${kb} КБ, ${((performance.now()-t0)/1000).toFixed(1)} с. Больше цветов и детализации — точнее, но тяжелее.`:"Ничего не нашлось — выключите «Убрать фон» или добавьте цветов"}}
     catch(e){info.textContent="Не получилось: "+(e.message||e)}busy=false;if(again){again=false;run()}};
   let tm=0;const soon=()=>{clearTimeout(tm);tm=setTimeout(run,250)};
-  const setSrc=c=>{cv=c;srcUrl=cv.toDataURL("image/png");const G=studioTraceGuess(cv);preset=G.preset;o={...STUDIO_TRACE_PRESETS[preset],dropBg:G.dropBg};$("[data-vxctl]").innerHTML=ctl();T=null;off=new Set();zoom=0;paintCols();paint();run()};
+  const setSrc=c=>{cv=c;kpP=null;tcache.clear();srcUrl=cv.toDataURL("image/png");const G=studioTraceGuess(cv),tn=o0&&o0.toon&&!cv.__seen;cv.__seen=1;preset=tn?"toon":G.preset;o={...STUDIO_TRACE_PRESETS[preset],dropBg:G.dropBg};if(tn)o.style=o0.toon;$("[data-vxctl]").innerHTML=ctl();T=null;off=new Set();zoom=0;paintCols();paint();run()};
   const loadFile=async f=>{if(!f||!/^image\//.test(f.type)){toast("Нужна картинка (PNG, JPG, WebP)",{tone:"warning"});return}const url=URL.createObjectURL(f);
     try{const img=await studioLoadImg(url),sc=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(img.naturalWidth*sc));c.height=Math.max(1,Math.round(img.naturalHeight*sc));c.getContext("2d").drawImage(img,0,0,c.width,c.height);setSrc(c)}
     catch(e){toast("Не удалось открыть картинку",{tone:"danger"})}finally{setTimeout(()=>URL.revokeObjectURL(url),5000)}};
@@ -11673,7 +11839,7 @@ async function studioTraceDlg(src,o0){if(studioVxOpen)studioVxOpen.close();
     else if(k==="ins"&&(isD()||isTn()))insDetail(false);else if(k==="ins2")insDetail(true);
     else if(k==="ins"){const R=Tf();if(!R||!R.layers.length){toast(cv?"Сначала дождитесь результата":"Сначала загрузите картинку",{tone:"warning"});return}close();studioTraceInsert(R,o0)}});
   /* вставка детального вектора: целиком — файлом на сервере (дизайн остаётся лёгким, все градиенты на месте); кривыми — слой на каждый цвет */
-  const insDetail=async curves=>{if(curves&&isTn()){const C=tcols(),F=T.layers.map((L,i)=>({color:C.fill[i],paths:L.paths}));const T2={W:T.W,H:T.H,seam:true,layers:F};close();studioTraceInsert(T2,o0);if(ts.showInk&&T.ink)studioToonInkLayer(T,C.ink);return}
+  const insDetail=async curves=>{if(curves&&isTn()){const C=tcols(),F=T.layers.map((L,i)=>({color:C.fill[i],paths:L.paths}));const T2={W:T.W,H:T.H,seam:true,layers:F};close();studioTraceInsert(T2,o0);if(ts.showInk&&T.ink)studioToonInkLayer(T,C.ink);if(T.char&&T.char.R&&T.char.R.eyes)studioCharFeatLayer(T,C);return}
     if(!isD()&&!isTn()){toast("Сначала дождитесь результата",{tone:"warning"});return}const C=dcols();
     if(!curves){const svg=svgOf(true);if(svg.length>18e6){toast(`Вектор ${Math.round(svg.length/1048576)} МБ — больше, чем можно вставить в дизайн (18 МБ). Скачайте SVG или уменьшите «Детализацию».`,{tone:"warning",timeout:8000});return}
       const prev=info.textContent;info.textContent="Сохраняю вектор…";try{const r=await apiPost("/api/v1/studio/vectors",{svg,name:"vector.svg"});close();studioVecInsertImage(API_BASE+r.url,T.W,T.H,o0)}
@@ -11693,6 +11859,7 @@ async function studioTraceDlg(src,o0){if(studioVxOpen)studioVxOpen.close();
   root.addEventListener("nv-change",e=>{const el=e.target;
     if(el.matches("[data-tn]")){o["tn_"+el.dataset.tn]=+e.detail.value;soon();return}
     if(el.matches("[data-tnshow]")){ts.showInk=!!e.detail.value;paint();return}
+    if(el.matches("[data-tnchar]")){ts.char=!!e.detail.value;if(ts.char&&kpErr)kpP=null;run();return}
     if(el.matches("[data-dt]")){const k=el.dataset.dt;ds[k]=+e.detail.value;if(k==="palK"){pal=null;paintCols();recolor()}else adjPreview();return}
     if(el.matches("[data-dtgrad]")){ds.grad=!!e.detail.value;recolor();return}
     if(el.matches("[data-dtol]")){ds.outline=!!e.detail.value;paintCols();recolor();return}
@@ -11721,6 +11888,11 @@ async function studioTraceDlg(src,o0){if(studioVxOpen)studioVxOpen.close();
 function studioToonInkLayer(T,color){/* линии рисунка — отдельной кривой поверх цветов */const segsOf=d=>{const out=[];for(const m of d.split("M").slice(1)){const nums=m.replace(/Z/g,"").split(/[C ]/).filter(Boolean).map(Number);const p0=[nums[0],nums[1]],S=[];let cur=p0;for(let k=2;k+5<nums.length;k+=6){const B=[cur,[nums[k],nums[k+1]],[nums[k+2],nums[k+3]],[nums[k+4],nums[k+5]]];S.push(B);cur=B[3]}if(S.length)out.push(S)}return out};
   const paths=segsOf(T.ink);if(!paths.length)return;const d=studioDesign(),sel=d.layers.find(l=>l.id===d.selectedId),box=sel?{x:sel.x,y:sel.y,w:sel.w,h:sel.h,rotation:sel.rotation||0}:{x:15,y:15,w:70,h:70};
   const R=studioTraceToLayers({W:T.W,H:T.H,layers:[{color,paths}]},box),l=R.layers[0];l.name="Линии рисунка";if(sel&&sel.group)l.group=sel.group;d.layers.push(l);studioNormGroups(d);NEON.save();N.refresh()}
+/* черты персонажа (глаза, брови, нос, рот) при вставке кривыми — отдельным векторным слоем поверх, в той же рамке и группе */
+async function studioCharFeatLayer(T,C){const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${T.W} ${T.H}" width="${T.W}" height="${T.H}">${studioCharSvg(T,C)}</svg>`;
+  try{const r=await apiPost("/api/v1/studio/vectors",{svg,name:"character.svg"}),d=studioDesign(),sel=d.layers.find(l=>l.id===d.selectedId),box=sel?{x:sel.x,y:sel.y,w:sel.w,h:sel.h,rotation:sel.rotation||0}:{x:15,y:15,w:70,h:70};
+    const l=Object.assign(studioLayerDefaults("image"),box,{src:API_BASE+r.url,name:"Черты лица"});if(sel&&sel.group)l.group=sel.group;d.layers.push(l);studioNormGroups(d);NEON.save();N.refresh()}
+  catch(e){toast("Черты лица не вставились: "+(e.message||e),{tone:"warning"})}}
 function studioVecInsertImage(url,W,H,o0){const d=studioDesign(),F=studioFmtOf(d);studioBeforeChange();let box;
   if(o0&&o0.layer){const l=o0.layer;box={x:l.x,y:l.y,w:l.w,h:l.h,rotation:l.rotation||0}}else{const ar=W/H,fa=F.w/F.h;let w=70,h=w*fa/ar;if(h>70){h=70;w=h*ar/fa}box={x:(100-w)/2,y:(100-h)/2,w,h}}
   const l=Object.assign(studioLayerDefaults("image"),box,{src:url,name:"Вектор из фото"});
@@ -11736,11 +11908,11 @@ function studioTraceInsert(T,o0){const d=studioDesign(),F=studioFmtOf(d);studioB
 async function studioTraceFromFile(f){if(!f||!/^image\//.test(f.type)){toast("Нужна картинка (PNG, JPG, WebP)",{tone:"warning"});return}
   const url=URL.createObjectURL(f);try{const img=await studioLoadImg(url),sc=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(img.naturalWidth*sc));c.height=Math.max(1,Math.round(img.naturalHeight*sc));c.getContext("2d").drawImage(img,0,0,c.width,c.height);studioTraceDlg({canvas:c})}
   catch(e){toast("Не удалось открыть картинку",{tone:"danger"})}finally{setTimeout(()=>URL.revokeObjectURL(url),5000)}}
-async function studioVectorizeDlg(){const l=studioSelected();if(!l||l.type!=="image"||!l.src){toast("Выберите картинку",{tone:"warning"});return}
+async function studioVectorizeDlg(toon){const l=studioSelected();if(!l||l.type!=="image"||!l.src){toast("Выберите картинку",{tone:"warning"});return}
   const d=studioDesign(),F=STUDIO_FMT[d.format]||STUDIO_FMT.square,bw=l.w/100*F.w,bh=l.h/100*F.h,sc=Math.min(3,1600/Math.max(bw,bh));
   const full=await studioRenderCanvas({...d,bg:{type:"none"},layers:[{...l,rotation:0,flipH:false,flipV:false,anim:undefined,opacity:100}],pages:undefined},sc);
   const cv=document.createElement("canvas");cv.width=Math.max(4,Math.round(bw*sc));cv.height=Math.max(4,Math.round(bh*sc));cv.getContext("2d").drawImage(full,-Math.round(l.x/100*full.width),-Math.round(l.y/100*full.height));
-  studioTraceDlg({canvas:cv},{layer:l})}
+  studioTraceDlg({canvas:cv},{layer:l,toon:typeof toon==="string"?toon:null})}
 function studioVecApply(l,res,W,H,smooth){if(!res.length){toast("Нет кривых",{tone:"warning"});return false}const d=studioDesign();studioBeforeChange();
   const g="g"+studioUid(),i=d.layers.indexOf(l),add=res.slice().reverse().map((r,k)=>{const[first,...rest]=r.loops;
     return Object.assign(studioLayerDefaults("path"),{x:l.x,y:l.y,w:l.w,h:l.h,rotation:l.rotation||0,points:studioVecToPts(first,W,H,smooth),subs:rest.map(P=>({points:studioVecToPts(P,W,H,smooth),closed:true})),closed:true,fillRule:"evenodd",
@@ -12811,6 +12983,11 @@ editor(){
         if(tfB){const k=tfB.dataset.actTfx;studioBeforeChange();if(l.tfx&&l.tfx.type===k)delete l.tfx;else{l.tfx={type:k,...STUDIO_TFX_DEF[k]};l.neon=false;l.shadow=false;if(l.outline)l.outline.enabled=false}studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const olB=e.target.closest("[data-act-outline]");
         if(olB){studioBeforeChange();l.outline={color:"#000000",width:2,...(l.outline||{}),enabled:!!olB.dataset.actOutline};studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
+        const arD=e.target.closest("[data-act-artdir]");
+        if(arD){const A=studioArtFx;if(A.lid!==l.id){A.lid=l.id;A.th={}}A.dir=arD.dataset.actArtdir;studioRenderSidebar(root);studioArtFxGen(l);return}
+        if(e.target.closest("[data-act-artchar]")){const A=studioArtFx;A.char=!A.char;A.th={};A.kpErr="";studioRenderSidebar(root);if(A.lid===l.id&&A.dir)studioArtFxGen(l);return}
+        const arV=e.target.closest("[data-act-artv]");if(arV){studioArtFxApply(l,arV.dataset.actArtv);return}
+        if(e.target.closest("[data-act-artopen]")){const A=studioArtFx,v=STUDIO_TOON_V.find(x=>x.dir===A.dir);studioVectorizeDlg(v&&v.id);return}
         const duB=e.target.closest("[data-act-duo]");
         if(duB){const D=STUDIO_DUOS[+duB.dataset.actDuo];studioBeforeChange();l.photo={...(l.photo||{}),duo:true,duo1:D[0],duo2:D[1]};studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const flB=e.target.closest("[data-act-filter]");
