@@ -8341,6 +8341,36 @@ async function studioArtFxApply(l,vid){const A=studioArtFx;toast("Рисую «"
     const svg=studioToonSvg(T,studioToonColors(T,{style:vid}),true),r=await apiPost("/api/v1/studio/vectors",{svg,name:"drawing.svg"});
     studioVecInsertImage(API_BASE+r.url,w,h,{layer:l})}
   catch(e){toast("Не получилось: "+(e.message||e),{tone:"danger"})}}
+/* «Персонаж ИИ»: генеративная перерисовка человека целиком (локальная SD-очередь через бэкенд), минуты на вариант */
+const STUDIO_CAI_STYLES=[["anime","Аниме"],["pixar","3D-мультфильм"],["comic","Комикс"],["toon","Мультяшный"]];
+const studioCAI={lid:null,style:"anime",job:null,st:null,imgs:[],err:"",timer:0,t0:0};
+function studioCAIInfo(){const C=studioCAI,s=C.st;if(C.err)return"Не получилось: "+esc(C.err);if(!C.job)return"ИИ перерисует человека целиком — лицо, причёску, одежду и фон — с сохранением позы и сходства. Около 4 минут на вариант.";
+  if(!s||s.status==="queued")return s&&s.position>1?`В очереди: перед вами ${s.position-1}. Можно продолжать работу — варианты появятся здесь.`:"Готовлю генерацию…";
+  if(s.status==="running"){const m=Math.max(1,Math.round((Date.now()-C.t0)/60000));return`Рисую: готово ${s.done||0} из ${s.total||2} · идёт ${m} мин. Можно продолжать работу.`}
+  if(s.status==="failed")return"Не получилось: "+esc(s.error||"ошибка генерации");return"Готово — нажмите на вариант, чтобы заменить им фото."}
+function studioCAIHtml(l){const C=studioCAI,mine=C.lid===l.id,busy=mine&&(C.pending||!!C.job&&(!C.st||!/done|failed/.test(C.st.status)));
+  return ppSec("photocai","Персонаж ИИ",`<div class="pp-chips">${STUDIO_CAI_STYLES.map(([k,lb])=>`<button type="button" data-act-caistyle="${k}" class="${C.style===k?"on":""}"${busy?" disabled":""}>${lb}</button>`).join("")}</div>
+    <button type="button" class="pp-btn pri" data-act-caigo style="margin-top:8px;width:100%"${busy?" disabled":""}>${ic("sparkles",14)}${busy?"Генерация идёт…":"Создать 2 варианта"}</button>
+    ${mine&&C.imgs.length?`<div class="art-grid">${C.imgs.map((s,i)=>`<button type="button" data-act-caiuse="${i}" data-tip="Заменить фото этим персонажем"><span class="art-th"><img src="${s}" alt=""></span><span>Вариант ${i+1}</span></button>`).join("")}</div>`:""}
+    <p class="pp-hint" data-cai-info style="margin-top:6px">${mine?studioCAIInfo():"ИИ перерисует человека целиком — лицо, причёску, одежду и фон — с сохранением позы и сходства. Около 4 минут на вариант."}</p>`,busy?"идёт":"")}
+async function studioCAIStart(l){const C=studioCAI;clearTimeout(C.timer);Object.assign(C,{lid:l.id,job:null,st:null,imgs:[],err:"",t0:Date.now(),pending:true});studioRenderSidebar(document);
+  try{const cv=await studioLayerCanvas(l,1024),r=await apiPost("/api/v1/studio/ai/character",{image:cv.toDataURL("image/jpeg",0.9),style:C.style,variants:2});
+    C.pending=false;if(C.lid!==l.id)return;C.job=r.id;C.st={status:"queued",position:r.position||0};studioRenderSidebar(document);studioCAIPoll()}
+  catch(e){C.pending=false;C.err=e.message||String(e);studioRenderSidebar(document)}}
+async function studioCAIPoll(){const C=studioCAI,job=C.job;if(!job)return;
+  try{const s=await api("/api/v1/studio/ai/character/"+job);if(C.job!==job)return;
+    if(s.status==="running"&&(!C.st||C.st.status!=="running"))C.t0=Date.now();C.st=s;
+    if(s.status==="done"){C.imgs=s.images||[];toast("Персонаж готов — выберите вариант в панели «Персонаж ИИ»",{tone:"success",timeout:6000});studioRenderSidebar(document);return}
+    if(s.status==="failed"){studioRenderSidebar(document);return}
+    const el=document.querySelector("[data-cai-info]");if(el)el.innerHTML=studioCAIInfo()}
+  catch(e){if(C.job!==job)return;C.err=e.message||String(e);studioRenderSidebar(document);return}
+  C.timer=setTimeout(studioCAIPoll,8000)}
+async function studioCAIUse(l,i){const C=studioCAI,src=C.imgs[i];if(!src)return;
+  const im=await new Promise((ok,no)=>{const x=new Image();x.onload=()=>ok(x);x.onerror=no;x.src=src});
+  const c=document.createElement("canvas");c.width=im.naturalWidth;c.height=im.naturalHeight;c.getContext("2d").drawImage(im,0,0);
+  const d=studioDesign();studioBeforeChange();const n=Object.assign(studioLayerDefaults("image"),{x:l.x,y:l.y,w:l.w,h:l.h,rotation:l.rotation||0,src:c.toDataURL("image/jpeg",0.92),name:"Персонаж ИИ"});
+  const k=d.layers.indexOf(l);l.hidden=true;d.layers.splice(k+1,0,n);d.selectedId=n.id;studioMultiSel=[];NEON.save();N.refresh();
+  toast("Фото заменено персонажем. Исходное фото скрыто в слоях — его можно вернуть.",{tone:"success",timeout:6000})}
 function studioFilterCss(f){if(!f)return"none";const p=[];if(f.brightness!=null&&f.brightness!==100)p.push(`brightness(${f.brightness}%)`);if(f.contrast!=null&&f.contrast!==100)p.push(`contrast(${f.contrast}%)`);if(f.saturate!=null&&f.saturate!==100)p.push(`saturate(${f.saturate}%)`);if(f.grayscale)p.push(`grayscale(${f.grayscale}%)`);if(f.sepia)p.push(`sepia(${f.sepia}%)`);if(f.hue)p.push(`hue-rotate(${f.hue}deg)`);if(f.blur)p.push(`blur(${f.blur}px)`);return p.join(" ")||"none"}
 function studioShadowOf(l){return l.fx&&typeof l.fx==="object"?l.fx:null}
 /* Тень: у текста — l.shadow (вкл) + l.shadowSet, у остальных — l.effect.shadow.
@@ -9084,7 +9114,7 @@ function studioPropsHtml0(){
       ${bd?ppColor("Цвет рамки","border.color",l.border.color||"#ffffff")+ppRng("Толщина","border.width",l.border.width||4,1,20,1):""}`)
     +(l.src?ppSec("filters","Фильтры",`<div class="stud-presets">${Object.keys(STUDIO_FILTERS).map(k=>`<button type="button" class="${(l.filterName||"none")===k?"on":""}" data-act-filter="${k}"><i style="filter:${studioFilterCss(STUDIO_FILTERS[k])}"></i>${STUDIO_FILTER_LABELS[k]}</button>`).join("")}</div>
       ${["brightness:Яркость:50:150","contrast:Контраст:50:160","saturate:Насыщенность:0:200","blur:Размытие:0:12"].map(x=>{const[k,lb,mn,mx]=x.split(":"),v=fl[k]!=null?fl[k]:(k==="blur"?0:100);return ppRng(lb,"filter."+k,v,+mn,+mx,1)}).join("")}`,l.filterName&&l.filterName!=="none"?STUDIO_FILTER_LABELS[l.filterName]:""):"")
-    +(l.src?studioPhotoCCHtml(l)+studioPhotoFxHtml(l)+studioArtFxHtml(l):"")
+    +(l.src?studioPhotoCCHtml(l)+studioPhotoFxHtml(l)+studioCAIHtml(l)+studioArtFxHtml(l):"")
     +studioShadowSecHtml(l)+studioPosHtml(l)+studioLayerSecHtml(l);
   }
   return"";
@@ -12983,6 +13013,10 @@ editor(){
         if(tfB){const k=tfB.dataset.actTfx;studioBeforeChange();if(l.tfx&&l.tfx.type===k)delete l.tfx;else{l.tfx={type:k,...STUDIO_TFX_DEF[k]};l.neon=false;l.shadow=false;if(l.outline)l.outline.enabled=false}studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
         const olB=e.target.closest("[data-act-outline]");
         if(olB){studioBeforeChange();l.outline={color:"#000000",width:2,...(l.outline||{}),enabled:!!olB.dataset.actOutline};studioPatchLayerDom(l);studioRenderSidebar(root);NEON.save();return}
+        const caS=e.target.closest("[data-act-caistyle]");
+        if(caS){studioCAI.style=caS.dataset.actCaistyle;studioRenderSidebar(root);return}
+        if(e.target.closest("[data-act-caigo]")){studioCAIStart(l);return}
+        const caU=e.target.closest("[data-act-caiuse]");if(caU){studioCAIUse(l,+caU.dataset.actCaiuse);return}
         const arD=e.target.closest("[data-act-artdir]");
         if(arD){const A=studioArtFx;if(A.lid!==l.id){A.lid=l.id;A.th={}}A.dir=arD.dataset.actArtdir;studioRenderSidebar(root);studioArtFxGen(l);return}
         if(e.target.closest("[data-act-artchar]")){const A=studioArtFx;A.char=!A.char;A.th={};A.kpErr="";studioRenderSidebar(root);if(A.lid===l.id&&A.dir)studioArtFxGen(l);return}
